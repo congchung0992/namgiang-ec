@@ -920,7 +920,9 @@ return {parse:parse,nz:nz,num:num};})();
 (()=>{
 const fm=(v,d=1)=>(+v||0).toLocaleString("vi-VN",{minimumFractionDigits:d,maximumFractionDigits:d});
 const n0=v=>Math.round(+v||0).toLocaleString("vi-VN");
-const nq=v=>(+v||0).toLocaleString("vi-VN",{maximumFractionDigits:2});
+const nq=v=>(+v||0).toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const Z0=/^[-–]?\s*0([.,]0+)?\s*(%|đ|tỷ|tr|triệu)?$/;
+function dashZeros(root){(root||document).querySelectorAll("table.t td").forEach(td=>{if(td.querySelector("input,select,button,svg,.mbar,.st"))return;const t=td.textContent.trim();if(Z0.test(t)||t==="–"){const b=td.querySelector("b");if(b)b.textContent="-";else td.textContent="-"}})}
 const ty=v=>fm((+v||0)/1e9,2);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const COL={home:["#16171C","#4A4D5C","#E2E2E7","#16171C"],proj:["#0A2486","#3D5BFF","#E1E7FB","#0A2486"],boq:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],rev:["#12A150","#4FD889","#DAF4E4","#0B6B34"],cost:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"],prog:["#2D3CE6","#7FA2FF","#E0E5FD","#1E2BC4"],mat:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],hr:["#8B5CF6","#C2A6FF","#ECE4FE","#5B32C8"],rep:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],week:["#1E2BC4","#5B8CFF","#E3E8FE","#1E2BC4"],brief:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],inbox:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"]};
@@ -1066,8 +1068,8 @@ function bsheet(p,s,sub){if(s==="week")return weekView(p);const c=calc(p),mg=pct
     const gr=(g,i)=>`<tr class="gr gs" data-gi="${i}"><td colspan="4">${esc(g.k)}</td><td class="r">${n0(g.rev)}</td><td colspan="3"></td><td class="r" data-c="gv">${n0(g.v)}</td><td class="r" data-c="gn">${n0(g.n)}</td><td class="r" data-c="gm">${n0(g.m)}</td><td class="r" data-c="gt">${n0(g.t)}</td><td class="r" data-c="gg">${n0(g.rev-g.t)}</td><td></td></tr>`;
     let g1=null,gi=-1;const rows=sel.lines.map(l=>{let hd="";const k=l.g1||sel.name;if(k!==g1){g1=k;gi++;hd=gr(G[gi],gi)}
       const cc=p.cost[l.code]||{},lc=lineCost(p,l),bu=l.qty?l.total/l.qty:l.total,gp=(l.total||0)-lc.t;
-      return hd+`<tr data-line="${l.code}" data-gi="${gi}"><td class="num" style="color:var(--muted);white-space:nowrap">${l.code}</td><td style="min-width:220px">${esc(l.name)}${l.spec?`<small class="spec">${esc(l.spec)}</small>`:""}${l.warn?`<small class="spec" style="color:#C0141B">${esc(l.warn)}</small>`:""}</td><td>${esc(l.unit)}</td><td class="r">${nq(l.qty)}</td><td class="r">${n0(l.total)}<small class="spec">${n0(bu)}/${esc(l.unit||"đvt")}</small></td>
-        <td class="r"><input class="ci" inputmode="decimal" data-f="v" value="${cc.v!=null?n0(cc.v):""}" placeholder="${l.uVL!=null?n0(l.uVL*p.ratio/100):l.nc==null?n0(bu*p.ratio/100):"–"}" aria-label="Đơn giá vốn vật tư"></td><td class="r"><input class="ci" inputmode="decimal" data-f="n" value="${cc.n!=null?n0(cc.n):""}" placeholder="${l.uNC!=null?n0(l.uNC*p.ratio/100):"–"}" aria-label="Đơn giá vốn nhân công"></td><td class="r"><input class="ci" inputmode="decimal" data-f="m" value="${cc.m!=null?n0(cc.m):""}" placeholder="0" aria-label="Đơn giá vốn máy, thiết bị thi công"></td>
+      return hd+`<tr data-line="${l.code}" data-gi="${gi}"><td class="num" style="color:var(--muted);white-space:nowrap">${l.code}</td><td style="min-width:220px">${esc(l.name)}${l.spec?`<small class="spec">${esc(l.spec)}</small>`:""}${l.warn?`<small class="spec" style="color:#C0141B">${esc(l.warn)}</small>`:""}</td><td>${esc(l.unit)}</td><td class="r">${nq(l.qty)}</td><td class="r">${Math.round(l.total)?n0(l.total):"-"}<small class="spec">${Math.round(bu)?n0(bu)+"/"+esc(l.unit||"đvt"):"-"}</small></td>
+        <td class="r"><input class="ci" inputmode="decimal" data-f="v" value="${cc.v!=null?n0(cc.v):""}" placeholder="${(x=>x?n0(x):"-")(l.uVL!=null?l.uVL*p.ratio/100:l.nc==null?bu*p.ratio/100:0)}" aria-label="Đơn giá vốn vật tư"></td><td class="r"><input class="ci" inputmode="decimal" data-f="n" value="${cc.n!=null?n0(cc.n):""}" placeholder="${(x=>x?n0(x):"-")(l.uNC!=null?l.uNC*p.ratio/100:0)}" aria-label="Đơn giá vốn nhân công"></td><td class="r"><input class="ci" inputmode="decimal" data-f="m" value="${cc.m!=null?n0(cc.m):""}" placeholder="-" aria-label="Đơn giá vốn máy, thiết bị thi công"></td>
         <td class="r" data-c="tv">${n0(lc.v)}</td><td class="r" data-c="tn">${n0(lc.n)}</td><td class="r" data-c="tm">${n0(lc.m)}</td><td class="r" data-c="t"><b>${n0(lc.t)}</b></td><td class="r" data-c="g" style="color:${gp<0?"#C0141B":"inherit"}">${n0(gp)}</td><td data-c="s">${lc.est?st("warn","Ước tính"):st("ok","Đã nhập")}</td></tr>`}).join("");
     const bar=(lab,v,col,k)=>`<div class="bk"><span><i style="background:${col}"></i>${lab}</span><b class="num" data-k="${k}">${n0(v)}</b><em data-k="${k}p">${sc.cost?fm(pct(v,sc.cost)):"0"}% giá vốn</em></div>`;
     return `<div class="vgrid">${k3}
@@ -1320,7 +1322,7 @@ function route(){const h=(location.hash||"#tong-quan").slice(1);let top="tong-qu
   else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){top="du-an";const L=p.boq?BSHEETS:SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:"home",sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
   {const np=waiting(decisions()).length;document.getElementById("pills").innerHTML=TOP.map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=!isHome;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;}else{requestAnimationFrame(()=>{try{drawMap()}catch(e){}})}
+  if(!isHome){view.innerHTML=html;dashZeros(view)}else{requestAnimationFrame(()=>{try{drawMap()}catch(e){}})}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -1373,7 +1375,7 @@ view.addEventListener("change",e=>{const t=e.target;if(!cur||t.dataset.wa!=="rea
 view.addEventListener("keydown",e=>{if(e.key==="Enter"&&["wn","wc","wq","wv"].includes(e.target.id)){e.preventDefault();document.getElementById("wadd").click()}});
 view.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList.contains("ci")){e.preventDefault();const all=[...view.querySelectorAll("input.ci[data-f]")],i=all.indexOf(e.target);(all[i+3]||all[i+1]||e.target).focus()}});
 /* cập nhật số khi nhập giá vốn, không vẽ lại cả trang */
-function refresh(code){const p=cur,c=calc(p),mg=pct(c.gp,c.rev),set=(el,sel,v)=>{const x=el&&el.querySelector(sel);if(x)x.innerHTML=v};
+function refresh(code){setTimeout(()=>dashZeros(view));const p=cur,c=calc(p),mg=pct(c.gp,c.rev),set=(el,sel,v)=>{const x=el&&el.querySelector(sel);if(x)x.innerHTML=v};
   const tr=view.querySelector(`tr[data-line="${code}"]`);if(tr){const h=p.hms.find(h=>h.lines.some(x=>x.code===code)),l=h.lines.find(x=>x.code===code),lc=lineCost(p,l),gp=(l.total||0)-lc.t;
     set(tr,'[data-c="tv"]',n0(lc.v));set(tr,'[data-c="tn"]',n0(lc.n));set(tr,'[data-c="tm"]',n0(lc.m));set(tr,'[data-c="t"]',`<b>${n0(lc.t)}</b>`);const g=tr.querySelector('[data-c="g"]');g.textContent=n0(gp);g.style.color=gp<0?"#C0141B":"inherit";set(tr,'[data-c="s"]',lc.est?st("warn","Ước tính"):st("ok","Đã nhập"));
     const G=groups(p,h),gi=+tr.dataset.gi,gg=G[gi],gr=view.querySelector(`tr.gs[data-gi="${gi}"]`);if(gg&&gr){set(gr,'[data-c="gv"]',n0(gg.v));set(gr,'[data-c="gn"]',n0(gg.n));set(gr,'[data-c="gm"]',n0(gg.m));set(gr,'[data-c="gt"]',n0(gg.t));set(gr,'[data-c="gg"]',n0(gg.rev-gg.t))}
