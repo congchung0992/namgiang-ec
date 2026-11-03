@@ -26,3 +26,7 @@ manifest.webmanifest    Cho phép "Thêm vào màn hình chính" trên điện t
 2. Đăng nhập thật và phân quyền theo vai trò (ban giám đốc, kế toán, chỉ huy trưởng).
 3. Màn chi tiết từng phân hệ: Dự án, Doanh thu, Chi phí, Tiến độ, Vật liệu, Nhân sự, Báo cáo.
 4. Nhập dữ liệu từ Excel, xuất báo cáo.
+
+## Trợ lý AI (khung chat)
+- Nút tin nhắn ở góc phải dưới mở khung chat. Chưa kết nối Claude thì trợ lý trả lời từ số liệu trên web.
+- Kết nối Claude: vào Cloudflare → Workers & Pages → namgiang-ic → Settings → Variables and Secrets, thêm biến bí mật `ANTHROPIC_API_KEY` (khoá lấy ở console.anthropic.com), rồi triển khai lại. Mã xử lý nằm ở `functions/api/chat.js`; khoá không nằm trong mã nguồn.
