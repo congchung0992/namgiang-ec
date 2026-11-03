@@ -354,6 +354,21 @@ table.bt{min-width:1180px}
 .ms.mit b{font-size:14.5px}
 @media (max-width:1180px){.dc{grid-template-columns:140px minmax(0,1fr) 120px}.dc .da{grid-column:1 / -1}}
 @media (max-width:760px){.dc{grid-template-columns:minmax(0,1fr) auto}.dc .tag{grid-column:1 / -1}.dc .da{grid-column:1 / -1;justify-content:flex-start}}
+.wt td{vertical-align:top}
+.t tr.wcons td{background:rgba(253,235,211,.35)}
+.back.sm{padding:5px 10px;font-size:12px;margin:6px 0 0}
+.seg2{display:inline-flex;background:#fff;border-radius:99px;padding:3px;box-shadow:inset 0 0 0 1px var(--line)}
+.seg2 button{border:0;background:transparent;border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.seg2 button[data-wa="done"][aria-pressed="true"]{background:#12A150;color:#fff}
+.seg2 button[data-wa="miss"][aria-pressed="true"]{background:#E1141B;color:#fff}
+.fi.sel{padding:7px 10px;font-size:13px;min-width:170px}
+.wadd{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr) auto;gap:8px;margin-top:14px;align-items:center}
+.wadd .fi{font-size:13px;padding:9px 12px}
+.wsug{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+.wsug .back.sm{margin:0}
+@media (max-width:1180px){.wadd{grid-template-columns:repeat(2,minmax(0,1fr))}.wadd .fi:first-child{grid-column:1 / -1}}
+@media (max-width:760px){.wadd{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){table.wt{min-width:0}.wt thead{display:none}.wt,.wt tbody{display:block}.wt tr{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.wt td{display:block;border:0!important;padding:0!important;min-width:0!important}.wt td:first-child{flex:1 1 100%}.wt td:nth-child(2):before{content:"Tổ đội: ";color:var(--muted)}.wt td:last-child{margin-left:auto}.fi.sel{min-width:0;width:100%}.t tr.wcons{background:rgba(253,235,211,.45);border-radius:14px;padding-inline:10px!important}.t tr.wcons td{background:transparent}.wt td:empty{display:none}}
 /* ==end-m1-css== */
 @media (max-width:1180px){.vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.span2{grid-column:1 / -1}}
 @media (max-width:760px){
@@ -897,9 +912,10 @@ const n0=v=>Math.round(+v||0).toLocaleString("vi-VN");
 const nq=v=>(+v||0).toLocaleString("vi-VN",{maximumFractionDigits:2});
 const ty=v=>fm((+v||0)/1e9,2);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const COL={home:["#16171C","#4A4D5C","#E2E2E7","#16171C"],proj:["#0A2486","#3D5BFF","#E1E7FB","#0A2486"],boq:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],rev:["#12A150","#4FD889","#DAF4E4","#0B6B34"],cost:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"],prog:["#2D3CE6","#7FA2FF","#E0E5FD","#1E2BC4"],mat:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],hr:["#8B5CF6","#C2A6FF","#ECE4FE","#5B32C8"],rep:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],brief:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],inbox:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"]};
+const COL={home:["#16171C","#4A4D5C","#E2E2E7","#16171C"],proj:["#0A2486","#3D5BFF","#E1E7FB","#0A2486"],boq:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],rev:["#12A150","#4FD889","#DAF4E4","#0B6B34"],cost:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"],prog:["#2D3CE6","#7FA2FF","#E0E5FD","#1E2BC4"],mat:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],hr:["#8B5CF6","#C2A6FF","#ECE4FE","#5B32C8"],rep:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],week:["#1E2BC4","#5B8CFF","#E3E8FE","#1E2BC4"],brief:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],inbox:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"]};
 I.boq='<path d="M4 4h16v16H4zM4 9h16M4 14h16M9 9v11"/>';
 I.brief='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';I.inbox='<path d="M4 13l2.5-7h11L20 13v6H4zM4 13h4.5l1 2.5h5l1-2.5H20"/>';
+I.week='<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8.5 15l2.5 2.5 4.5-5"/>';
 I.up='<path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>';
 const sv=k=>`--c:${COL[k][0]};--c2:${COL[k][1]};--t:${COL[k][2]};--cd:${COL[k][3]}`;
 const pill=(k,label,go,cur)=>`<button class="pill" data-go="${go}" aria-current="${!!cur}" style="${sv(k)}"><span class="dot">${ic(k,2)}</span>${label}</button>`;
@@ -1022,10 +1038,10 @@ const LEAD=n=>/Kết cấu thép/.test(n)?30:/Thiết bị/.test(n)?45:/Cửa/.t
 
 /* ---------- Danh sách sheet ---------- */
 const SHEETS=[["home","Tổng quan"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
-const BSHEETS=[["home","Tổng quan"],["boq","BOQ & Giá vốn"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
+const BSHEETS=[["home","Tổng quan"],["boq","BOQ & Giá vốn"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["mat","Vật liệu"],["hr","Nhân sự"]];
 const later=(t,items)=>card(t,"Phần này sẽ làm ở bước tiếp theo",ms(items),"span3");
 
-function bsheet(p,s,sub){const c=calc(p),mg=pct(c.gp,c.rev);
+function bsheet(p,s,sub){if(s==="week")return weekView(p);const c=calc(p),mg=pct(c.gp,c.rev);
   const k3=kc("proj","Giá trị hợp đồng",ty(c.rev),"tỷ",`Chưa VAT · hồ sơ ${esc(p.qcode||"")} ngày ${esc(p.date||"")}`)+kc("cost","Giá vốn dự thầu",ty(c.cost),"tỷ",`${n0(c.ent)}/${n0(c.cnt)} dòng đã nhập · còn lại ước tính ${fm(p.ratio,0)}%`,"gv")+kc(mg>=10?"rev":"mat","Lãi gộp dự kiến",ty(c.gp),"tỷ",`Biên lãi ${fm(mg)}% doanh thu`,"lg");
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
     return `<div class="vgrid">${k3}
@@ -1188,6 +1204,40 @@ function report(){const A=allPJ(),T=k=>A.reduce((a,p)=>a+p[k],0);return `<div cl
   <div class="vgrid">${kc("proj","Tổng giá trị hợp đồng",fm(T("value")),"tỷ",A.length+" công trình")}${kc("rev","Tổng nghiệm thu",fm(T("billed")),"tỷ","Đã thu "+fm(T("collected"))+" tỷ")}${kc("cost","Tổng chi phí",fm(T("cost")),"tỷ",Math.round(T("cost")/T("billed")*100)+"% giá trị nghiệm thu")}
   ${card("So sánh các dự án","Bấm vào tên để mở dự án",`<div class="tw"><table class="t"><thead><tr><th>Công trình</th><th class="r">Giá trị HĐ</th><th class="r">Nghiệm thu</th><th class="r">Chi phí</th><th class="r">Công nợ</th><th style="min-width:130px">Tiến độ</th></tr></thead><tbody>${A.map(p=>`<tr data-go="da-${p.id}" style="cursor:pointer"><td><b>${esc(p.name)}</b><div style="font-size:12px;color:var(--muted)">${esc(p.code)}${p.demo?" · Mẫu":""}</div></td><td class="r">${fm(p.value)}</td><td class="r">${fm(p.billed)}</td><td class="r">${fm(p.cost)}</td><td class="r">${fm(p.billed-p.collected)}</td><td>${p.boq?`<span class="sub">Chưa lập tiến độ</span>`:`<div class="mbar" style="--c:${lv(p)[0]==="bad"?"#E1141B":"#2D3CE6"}"><i style="width:${p.actual}%"></i><em style="left:${p.plan}%"></em></div>`}</td></tr>`).join("")}</tbody></table></div>`,"span3")}</div>`}
 
+/* ---------- Kế hoạch tuần + PPC (Last Planner) ---------- */
+const REASONS=["Việc trước chưa xong","Thiếu bản vẽ, thông tin","Thiếu vật tư","Thiếu nhân lực","Thiếu máy, thiết bị","Mặt bằng, thời tiết","Chờ phê duyệt, nghiệm thu","Cam kết quá sức","Khác"];
+const monday=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const k=(x.getDay()+6)%7;return addD(x,-k)};
+const wk=d=>{const m=monday(d);return m.getFullYear()+"-"+("0"+(m.getMonth()+1)).slice(-2)+"-"+("0"+m.getDate()).slice(-2)};
+const wkDate=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+let curWeek=null;
+function W(p,k){if(!p.weeks)p.weeks={};return p.weeks[k]||(p.weeks[k]={tasks:[]})}
+function ppcOf(w){const c=w.tasks.filter(t=>!t.cons),m=c.filter(t=>t.done===true||t.done===false),d=c.filter(t=>t.done===true).length;return{commit:c.length,marked:m.length,done:d,ppc:c.length&&m.length===c.length?d/c.length*100:null,part:m.length?d/m.length*100:null}}
+const ppcCol=v=>v==null?"proj":v>=70?"rev":v>=50?"mat":"cost";
+function weekSuggest(p,k){const tl=timeline(p),a=Math.round((wkDate(k)-tl.st)/864e5),b=a+7;return tl.T.filter(x=>{const q=p.sched.t[x.key];return q&&q.s<b&&q.s+q.d>a})}
+function weekView(p){const k=curWeek||wk(new Date());curWeek=k;const w=W(p,k),r=ppcOf(w),d0=wkDate(k);
+  const keys=Object.keys(p.weeks||{}).filter(x=>x<=k).sort().slice(-8),hist=keys.map(x=>({k:x,...ppcOf(p.weeks[x])})).filter(x=>x.commit);
+  const done4=hist.filter(x=>x.ppc!=null).slice(-4),avg=done4.length?done4.reduce((a,x)=>a+x.ppc,0)/done4.length:null;
+  const rs={};Object.values(p.weeks||{}).forEach(x=>x.tasks.forEach(t=>{if(t.done===false&&!t.cons){const q=t.reason||"Chưa ghi lý do";rs[q]=(rs[q]||0)+1}}));const rsl=Object.entries(rs).sort((a,b)=>b[1]-a[1]),rmax=rsl.length?rsl[0][1]:1;
+  const sug=weekSuggest(p,k).filter(x=>!w.tasks.some(t=>t.key===x.key));
+  const row=t=>`<tr data-wt="${t.id}" class="${t.cons?"wcons":""}"><td style="min-width:200px"><b>${esc(t.name)}</b>${t.note?`<small class="spec">${esc(t.note)}</small>`:""}</td><td>${esc(t.crew||"–")}</td>
+    <td>${t.cons?`${st("warn","Còn vướng")}<small class="spec">${esc(t.cons)}</small><button class="back sm" data-wa="clear">Đã gỡ vướng</button>`:st("ok","Sẵn sàng")}</td>
+    <td>${t.cons?`<span class="sub">Không tính PPC</span>`:`<div class="seg2"><button data-wa="done" aria-pressed="${t.done===true}">Xong</button><button data-wa="miss" aria-pressed="${t.done===false}">Không xong</button></div>`}</td>
+    <td>${t.done===false&&!t.cons?`<select class="fi sel" data-wa="reason"><option value="">Chọn lý do…</option>${REASONS.map(x=>`<option${t.reason===x?" selected":""}>${x}</option>`).join("")}</select>`:""}</td>
+    <td class="r"><button class="back sm" data-wa="del" aria-label="Xoá việc">Xoá</button></td></tr>`;
+  const W8=900,H8=230,L=34,B=24,cw=(W8-L)/Math.max(hist.length,1),y=v=>8+(H8-8-B)*(1-v/100);
+  let g=[0,50,70,100].map(v=>`<line x1="${L}" x2="${W8}" y1="${y(v)}" y2="${y(v)}" stroke="${v===70?"#12A150":"#E4E5EA"}" ${v===70?'stroke-dasharray="5 4"':""}/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#8C8E97">${v}%</text>`).join("");
+  hist.forEach((h,i)=>{const v=h.ppc!=null?h.ppc:(h.part||0),x=L+i*cw+cw/2,bw=Math.min(36,cw*.5),c=COL[ppcCol(h.ppc)][0];g+=`<rect x="${x-bw/2}" y="${y(v)}" width="${bw}" height="${y(0)-y(v)}" rx="4" fill="${c}" ${h.ppc==null?'fill-opacity=".35"':""}><title>Tuần ${fd(wkDate(h.k))}: ${fm(v,0)}%</title></rect><text x="${x}" y="${H8-6}" text-anchor="middle" font-size="11" fill="#8C8E97">${fd(wkDate(h.k)).slice(0,5)}</text>`});
+  return `<div class="vgrid">${kc(ppcCol(r.ppc),"PPC tuần này",r.ppc!=null?fm(r.ppc,0):r.part!=null?fm(r.part,0):"–",r.ppc!=null||r.part!=null?"%":"",r.commit?`${r.done}/${r.commit} việc cam kết đã xong${r.marked<r.commit?" · còn "+(r.commit-r.marked)+" việc chưa đánh giá":""}`:"Chưa có việc cam kết")}${kc("prog","Việc trong kế hoạch",w.tasks.length,"việc",`${r.commit} sẵn sàng · ${w.tasks.length-r.commit} còn vướng`)}${kc(ppcCol(avg),"PPC trung bình 4 tuần",avg!=null?fm(avg,0):"–",avg!=null?"%":"","Mục tiêu từ 70% trở lên")}
+  <section class="card span3"><div class="bh"><div><h3>Kế hoạch tuần ${fd(d0)} – ${fd(addD(d0,6))}</h3><span class="sub">Chỉ đưa vào việc đã sẵn sàng · việc còn vướng không tính PPC · cuối tuần đánh dấu Xong hoặc Không xong, không tính xong một phần</span></div>
+    <div class="bh" style="gap:6px"><button class="back" data-wn="-1" style="margin:0">‹ Tuần trước</button><button class="back" data-wn="0" style="margin:0">Tuần này</button><button class="back" data-wn="1" style="margin:0">Tuần sau ›</button></div></div>
+    <div class="tw" style="margin-top:12px"><table class="t wt"><thead><tr><th>Công việc</th><th>Tổ đội</th><th>Sẵn sàng</th><th>Kết quả</th><th>Lý do không xong</th><th></th></tr></thead><tbody>${w.tasks.map(row).join("")||`<tr><td colspan="6" class="sub">Chưa có việc nào. Thêm việc ở ô bên dưới hoặc chọn từ gợi ý theo tiến độ.</td></tr>`}</tbody></table></div>
+    <div class="wadd"><input class="fi" id="wn" placeholder="Công việc cam kết (vd: Đổ bê tông móng trục 1–5)" list="wsug"><datalist id="wsug">${weekSuggest(p,k).map(x=>`<option value="${esc(x.name)} · ${esc(x.h.name)}">`).join("")}</datalist>
+      <input class="fi" id="wc" placeholder="Tổ đội / thầu phụ"><input class="fi" id="wq" placeholder="Khối lượng, ghi chú"><input class="fi" id="wv" placeholder="Còn vướng gì? (để trống nếu sẵn sàng)"><button class="pill" id="wadd" style="${sv("prog")}"><span class="dot">+</span>Thêm việc</button></div>
+    ${sug.length?`<div class="wsug"><span class="sub">Theo tiến độ, tuần này đang chạy:</span>${sug.slice(0,8).map(x=>`<button class="back sm" data-ws="${esc(x.key)}">+ ${esc(x.name)} · ${esc(x.h.name)}</button>`).join("")}</div>`:""}
+  </section>
+  ${card("PPC theo tuần","Vạch xanh: mục tiêu 70% · cột nhạt: tuần chưa đánh giá xong",hist.length?`<div class="chart"><svg viewBox="0 0 ${W8} ${H8}" role="img">${g}</svg></div>`:`<div class="sub">Chưa có dữ liệu tuần.</div>`,"span2")}
+  ${card("Lý do không hoàn thành","Cộng dồn mọi tuần · xử lý lý do đứng đầu trước",rsl.length?rsl.map(([n,c])=>`<div class="hm"><div>${esc(n)}</div><div class="mbar" style="--c:#C21FC9"><i style="width:${c/rmax*100}%"></i></div><b class="num">${c}</b></div>`).join(""):`<div class="sub">Chưa có việc nào không xong.</div>`)}</div>`}
+
 /* ---------- Doanh nghiệp một người: Bản tin sáng + Hộp quyết định ---------- */
 if(!DB.dec)DB.dec={};
 const delayCost=(p,tl)=>{const ind=p.hms.filter(h=>h.code[0]==="B").reduce((a,h)=>a+h.total,0);return tl.end?ind/tl.end:0};
@@ -1198,6 +1248,7 @@ function decisions(){const out=[],now=new Date(),d0=new Date(now.getFullYear(),n
     if(p.sched&&p.sched.auto)out.push({id:p.id+"|td",t:"td",p,title:"Duyệt tiến độ hệ thống đề xuất",due:tl.st,why:`Khởi công ${fd(tl.st)} · ${tl.end} ngày · ${tl.T.length} công việc`,go:`da-${p.id}-prog`});
     if(!p.termsOk)out.push({id:p.id+"|dk",t:"dk",p,title:"Xác nhận điều khoản thanh toán",due:tl.st,why:`Đang giả định tạm ứng ${p.terms.adv}%, giữ lại ${p.terms.ret}%, chủ đầu tư trả sau ${p.terms.pay} ngày`,go:`da-${p.id}-rev`});
     if(cf.peak>0)out.push({id:p.id+"|von|"+cf.pm,t:"von",p,title:`Chuẩn bị vốn ${ty(cf.peak)} tỷ`,val:cf.peak,due:null,why:`Dòng tiền âm sâu nhất vào ${cf.pm}`,go:`da-${p.id}-rev`});
+    {const lk=wk(addD(new Date(),-7)),lw=(p.weeks||{})[lk];if(lw){const r=ppcOf(lw);if(r.commit&&r.marked<r.commit)out.push({id:p.id+"|wk|"+lk,t:"td",p,title:"Đánh giá kết quả kế hoạch tuần trước",due:addD(wkDate(lk),7),why:`${r.commit-r.marked}/${r.commit} việc cam kết chưa đánh dấu Xong hoặc Không xong`,go:`da-${p.id}-week`})}}
     c.hs.filter(x=>x.cnt&&x.ent<x.cnt).sort((a,b)=>b.rev-a.rev).slice(0,3).forEach(x=>out.push({id:p.id+"|gv|"+x.h.code,t:"gv",p,title:`Chốt giá vốn ${x.h.name}`,val:x.rev,due:addD(tl.st,-7),why:`${n0(x.cnt-x.ent)}/${n0(x.cnt)} dòng đang ước tính ${fm(p.ratio,0)}% giá thầu`,go:`da-${p.id}-boq-${x.h.code.toLowerCase()}`}))});
   PJ.filter(p=>p.billed>p.collected).slice(0,2).forEach((p,i)=>out.push({id:"demo|tt|"+p.id,t:"tt",p,demo:1,title:`Duyệt thanh toán thầu phụ đợt ${3+i}`,val:(p.billed-p.collected)*1e9*.18,due:addD(d0,2+i*3),why:"Hồ sơ đã đủ biên bản nghiệm thu (số liệu mẫu)",go:`da-${p.id}-cost`}));
   const rank=x=>x.due?+x.due:9e15;
@@ -1220,6 +1271,7 @@ function brief(){const now=new Date(),L=decisions(),P=waiting(L),B=DB.projects.m
   const exc=[];B.forEach(({p,c,ord,cf})=>{const late=ord.filter(o=>o.od<now);if(late.length)exc.push(["#E1141B",`${p.name}: ${late.length} vật tư đã quá hạn đặt`,late.slice(0,3).map(o=>o.n).join(", ")]);
     if(cf.peak>0)exc.push(["#C21FC9",`${p.name}: cần ứng ${ty(cf.peak)} tỷ`,"Vào "+cf.pm]);
     c.hs.filter(x=>x.rev>0&&x.cost/x.rev>0.92).forEach(x=>exc.push(["#E1141B",`${p.name}: ${x.h.name} lãi mỏng`,`Giá vốn ${fm(x.cost/x.rev*100)}% doanh thu`]));
+    {const lk=wk(addD(now,-7)),lw=(p.weeks||{})[lk];if(lw){const r=ppcOf(lw);if(r.ppc!=null&&r.ppc<70){const rs={};lw.tasks.forEach(t=>{if(t.done===false&&t.reason)rs[t.reason]=(rs[t.reason]||0)+1});const top=Object.entries(rs).sort((a,b)=>b[1]-a[1])[0];exc.unshift(["#E1141B",`${p.name}: PPC tuần trước ${fm(r.ppc,0)}%`,top?"Lý do nhiều nhất: "+top[0]:"Chưa ghi lý do không xong"])}}}
     if(c.ent<c.cnt)exc.push(["#F08A24",`${p.name}: ${n0(c.cnt-c.ent)} dòng giá vốn còn ước tính`,"Biên lãi chưa chắc chắn"])});
   slow.forEach(p=>exc.push(["#E1141B",`${p.name}: chậm ${p.plan-p.actual}% (mẫu)`,"Kế hoạch "+p.plan+"% · thực tế "+p.actual+"%"]));
   const day=["Chủ nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"][now.getDay()];
@@ -1283,6 +1335,17 @@ view.addEventListener("click",e=>{const b=e.target.closest("[data-dec]");if(!b)r
   const pr=DB.projects.find(p=>id.startsWith(p.id+"|"));if(pr&&s==="ok"){if(id.endsWith("|td"))pr.sched.auto=0;if(id.endsWith("|dk"))pr.termsOk=1}
   if(pr&&s==="undo"){if(id.endsWith("|dk"))pr.termsOk=0}
   persist();keep(route)});
+view.addEventListener("click",e=>{if(!cur)return;const t=e.target;
+  const n=t.closest("[data-wn]");if(n){const v=+n.dataset.wn;curWeek=v===0?wk(new Date()):wk(addD(wkDate(curWeek||wk(new Date())),7*v));keep(route);return}
+  const w=W(cur,curWeek||wk(new Date())),id36=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  if(t.closest("#wadd")){const g=i=>(document.getElementById(i).value||"").trim(),nm=g("wn");if(!nm){document.getElementById("wn").focus();return}
+    const sg=weekSuggest(cur,curWeek).find(x=>nm===x.name+" · "+x.h.name);w.tasks.push({id:id36(),name:nm,key:sg?sg.key:null,crew:g("wc"),note:g("wq"),cons:g("wv"),done:null,reason:""});persist();keep(route);return}
+  const s=t.closest("[data-ws]");if(s){const x=weekSuggest(cur,curWeek).find(y=>y.key===s.dataset.ws);if(x){w.tasks.push({id:id36(),name:x.name+" · "+x.h.name,key:x.key,crew:"",note:"",cons:"",done:null,reason:""});persist();keep(route)}return}
+  const a=t.closest("[data-wa]");if(a&&a.tagName!=="SELECT"){const tr=a.closest("tr[data-wt]"),tk=w.tasks.find(x=>x.id===tr.dataset.wt);if(!tk)return;const k=a.dataset.wa;
+    if(k==="done")tk.done=tk.done===true?null:true;if(k==="miss")tk.done=tk.done===false?null:false;if(k==="clear")tk.cons="";if(k==="del")w.tasks=w.tasks.filter(x=>x!==tk);
+    if(tk.done!==false)tk.reason="";persist();keep(route)}});
+view.addEventListener("change",e=>{const t=e.target;if(!cur||t.dataset.wa!=="reason")return;const w=W(cur,curWeek),tr=t.closest("tr[data-wt]"),tk=w.tasks.find(x=>x.id===tr.dataset.wt);if(tk){tk.reason=t.value;persist();keep(route)}});
+view.addEventListener("keydown",e=>{if(e.key==="Enter"&&["wn","wc","wq","wv"].includes(e.target.id)){e.preventDefault();document.getElementById("wadd").click()}});
 view.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList.contains("ci")){e.preventDefault();const all=[...view.querySelectorAll("input.ci[data-f]")],i=all.indexOf(e.target);(all[i+2]||all[i+1]||e.target).focus()}});
 /* cập nhật số khi nhập giá vốn, không vẽ lại cả trang */
 function refresh(code){const p=cur,c=calc(p),mg=pct(c.gp,c.rev);
