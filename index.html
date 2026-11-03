@@ -183,6 +183,63 @@ main{padding-block:16px 32px;min-width:0}
   .pie-wrap,.rev-body{grid-template-columns:1fr}
   .rev-body .col:first-child{min-height:150px}
 }
+/* ===== Điện thoại & máy tính bảng ===== */
+.g1{grid-column:2;grid-row:1}.g2{grid-column:3;grid-row:1}.g3{grid-column:4;grid-row:1}
+.kpis{display:contents}
+.mtop{display:none}
+.kdots{display:none}
+@media (max-width:1180px){
+  .g1,.g2,.g3{grid-column:auto;grid-row:auto}
+}
+@media (max-width:760px){
+  body{font-size:14px}
+  main{padding-block:0 28px}
+  .mtop{display:flex;align-items:center;gap:10px;padding-block:calc(12px + env(safe-area-inset-top,0px)) 6px}
+  .mtop .mark{width:40px;height:40px;flex:none}
+  .mtop .mark img{width:19px}
+  .mtop .ttl{flex:1;min-width:0;line-height:1.2}
+  .mtop .ttl b{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .mtop .ttl span{font-size:12px;color:var(--muted)}
+  .mtop .round{width:40px;height:40px;flex:none}
+  .mtop .avatar{width:36px;height:36px;font-size:13px;border:0;cursor:pointer;box-shadow:0 0 0 2px #fff}
+  .top{position:sticky;top:0;z-index:20;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px))) calc(-1 * max(16px,env(safe-area-inset-right,0px)));
+    padding:8px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:rgba(236,236,238,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .top .search,.top .round{display:none}
+  .pills{padding:2px 0 4px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+  .pill{scroll-snap-align:start;padding:6px 13px 6px 6px;font-size:13px}
+  .grid{gap:14px;margin-top:8px}
+  .card{border-radius:22px;padding:18px}
+  /* lời chào + bản đồ */
+  .hello{min-height:320px}
+  .hello h1{font-size:24px}
+  /* 3 ô số liệu: dải thẻ vuốt ngang */
+  .kpis{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px))) calc(-1 * max(16px,env(safe-area-inset-right,0px)));
+    padding:4px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));scroll-padding-inline:16px}
+  .kpis::-webkit-scrollbar{display:none}
+  .glass{flex:0 0 84%;scroll-snap-align:start;min-height:230px;border-radius:26px;padding:20px}
+  .glass:hover{transform:none}
+  .led{font-size:52px;margin-top:12px}
+  .kdots{display:flex;justify-content:center;gap:6px;margin-top:-12px}
+  .kdots i{width:6px;height:6px;border-radius:99px;background:#C9CAD2;transition:width .25s,background .25s}
+  .kdots i.on{width:18px;background:var(--ink)}
+  /* chi phí theo nhóm */
+  .pie{min-height:0}
+  .pie-wrap{grid-template-columns:1fr;gap:16px}
+  .pie-wrap #donut{max-width:230px}
+  .mini{order:2}
+  .total b{font-size:30px}
+  /* doanh thu & chi phí */
+  .rev{min-height:0}
+  .rev-body{grid-template-columns:1fr;gap:18px}
+  .rev-body .col:first-child{min-height:150px}
+  .rev-body .col:last-child .area{min-height:170px}
+  /* trợ lý */
+  .ai{min-height:0;padding:24px 20px}
+  .ai h2{font-size:26px}
+  .ask{margin-top:22px}
+  .note{text-align:center}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* ===== Màn giới thiệu & đăng nhập ===== */
 .shell{transition:opacity .9s ease,filter .9s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
@@ -276,6 +333,12 @@ main{padding-block:16px 32px;min-width:0}
         <button class="ri" style="margin-top:auto" title="Đăng xuất" aria-label="Đăng xuất" onclick="showIntro()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg></button>
   </aside>
   <main>
+    <div class="mtop">
+      <div class="mark"><img src="img/mark.png" alt="Nam Giang"></div>
+      <div class="ttl"><b>Nam Giang IC</b><span>Hệ thống quản trị</span></div>
+      <button class="round" aria-label="Thông báo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15zM10 20a2 2 0 004 0"/></svg><span class="badge"></span></button>
+      <button class="avatar" title="Đăng xuất" aria-label="Tài khoản · đăng xuất" onclick="showIntro()">C</button>
+    </div>
     <div class="top">
       <div class="pills" id="pills"></div>
       <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" placeholder="Tìm công trình, vật tư, nhân sự"></label>
@@ -294,26 +357,30 @@ main{padding-block:16px 32px;min-width:0}
         <div class="legend-sites"><span><i style="background:var(--orange)"></i>Đúng tiến độ</span><span><i style="background:var(--red)"></i>Đang chậm</span></div>
       </section>
 
-      <button class="glass g1" style="grid-column:2;grid-row:1" id="t-rev">
+      <div class="kpis" id="kpis">
+      <button class="glass g1" id="t-rev">
         <div class="gt"><div><h3>Doanh thu tháng 10</h3><small>tỷ đồng</small></div><span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg></span></div>
         <div class="led">50,2<small>tỷ</small></div>
         <svg class="deco" viewBox="0 0 200 120" preserveAspectRatio="none"><path d="M0 120 L100 10 L200 120Z" fill="rgba(255,255,255,.07)"/><path d="M100 10 L200 120 L200 120 L140 120Z" fill="rgba(255,255,255,.06)"/><circle cx="100" cy="10" r="4" fill="rgba(255,255,255,.55)"/></svg>
         <div class="gfoot"><div><span class="up">▲ 14,4%</span><p>so với tháng 9</p></div></div>
       </button>
 
-      <button class="glass g2" style="grid-column:3;grid-row:1" id="t-pay">
+      <button class="glass g2" id="t-pay">
         <div class="gt"><div><h3>Hồ sơ chờ thanh toán</h3><small>đã nghiệm thu, chưa thu tiền</small></div><span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg></span></div>
         <div class="led">12<small>hồ sơ</small></div>
         <svg class="deco" viewBox="0 0 200 120" preserveAspectRatio="none" id="spark" style="top:44%;bottom:auto;height:30%"></svg>
         <div class="gfoot"><div><p style="margin:0"><b style="font-size:16px;color:#fff">48,4 tỷ</b> công nợ phải thu</p><p>2 hồ sơ quá hạn trên 30 ngày</p></div></div>
       </button>
 
-      <button class="glass g3" style="grid-column:4;grid-row:1" id="t-prog">
+      <button class="glass g3" id="t-prog">
         <div class="gt"><div><h3>Tiến độ trung bình</h3><small>khối lượng hoàn thành</small></div><span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg></span></div>
         <div class="led">57<small>%</small></div>
         <div class="gfoot"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="rgba(255,255,255,.12)"/><path d="M22 22 L22 4 A18 18 0 0 1 39.1 27.6 Z" fill="rgba(255,255,255,.85)"/></svg>
           <div style="text-align:right"><span class="up">+4%</span><p>so với tháng trước</p></div></div>
       </button>
+
+      </div>
+      <div class="kdots" id="kdots" aria-hidden="true"></div>
 
       <section class="card pie">
         <h3>Chi phí theo nhóm</h3><span class="sub">Lũy kế 4 công trình, năm 2026</span>
@@ -450,6 +517,10 @@ document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.clo
   window.showIntro=()=>{intro.hidden=false;start()};
   start();
 })();
+/* ===== Chấm chỉ vị trí dải thẻ trên điện thoại ===== */
+(()=>{const k=document.getElementById("kpis"),d=document.getElementById("kdots");if(!k||!d)return;
+  const cards=[...k.children];d.innerHTML=cards.map((_,i)=>`<i class="${i?"":"on"}"></i>`).join("");
+  k.addEventListener("scroll",()=>{const i=Math.round(k.scrollLeft/(cards[0].offsetWidth+12));[...d.children].forEach((x,j)=>x.classList.toggle("on",j===i))},{passive:true})})();
 /* ===== Toàn màn hình ===== */
 document.getElementById("fs").addEventListener("click",async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){document.getElementById("fs").title="Trình duyệt này chưa cho phép toàn màn hình, hãy nhấn F11"}});
 /* ===== Trợ lý (phác thảo) ===== */
