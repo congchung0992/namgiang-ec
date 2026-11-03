@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nam Giang IC · Hệ thống quản trị</title>
+<meta name="description" content="Hệ thống quản trị nội bộ Công ty Cổ phần Đầu tư và Xây lắp Nam Giang: doanh thu, chi phí, tiến độ, vật liệu, nhân sự.">
+<meta name="theme-color" content="#4E6BFF">
+<link rel="icon" type="image/png" href="img/mark.png">
+<link rel="apple-touch-icon" href="img/mark.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<style>
+/* Bố cục: nền xám sáng, thanh biểu tượng bên trái, thanh phân hệ dạng viên thuốc trên cùng; lưới 4 cột: bản đồ chấm + 3 ô kính màu số LED / biểu đồ tròn mờ + biểu đồ thu chi + thẻ trợ lý */
+:root{
+  --bg:#ECECEE; --panel:rgba(255,255,255,.62); --panel-solid:#F7F7F8; --line:rgba(20,22,30,.07);
+  --ink:#16171C; --ink2:#4A4C55; --muted:#8C8E97; --pill:#FFFFFF;
+  --green:#12A150; --magenta:#C21FC9; --blue:#2D3CE6; --violet:#8B5CF6; --orange:#F08A24; --red:#E1141B;
+  --ok:#139A4B; --ok-soft:#DDF5E6;
+  --f:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 600px at 85% -10%,#F6F6F8 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#E4E4E8 0%,transparent 60%)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+.shell{display:grid;grid-template-columns:72px minmax(0,1fr);min-height:100vh;padding-right:max(16px,env(safe-area-inset-right,0px))}
+/* thanh trái */
+.rail{display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 0;padding-left:env(safe-area-inset-left,0px);position:sticky;top:0;height:100vh}
+.mark{width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 6px 18px -8px rgba(225,20,27,.45),inset 0 0 0 1px var(--line)}
+.mark img{width:22px;height:auto}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FFB38A,#F06A6A);display:grid;place-items:center;color:#fff;font-weight:600;font-size:14px;box-shadow:0 0 0 3px #fff}
+.rail nav{display:flex;flex-direction:column;gap:6px;margin-top:40px}
+.ri{width:42px;height:42px;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;color:var(--ink2);transition:background .2s}
+.ri:hover{background:rgba(255,255,255,.7)}
+.ri[aria-current="true"]{background:#fff;color:var(--ink);box-shadow:0 4px 14px -6px rgba(0,0,0,.18)}
+.ri svg,.pill svg{width:18px;height:18px}
+
+main{padding-block:16px 32px;min-width:0}
+/* thanh trên */
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;padding:4px 2px}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--pill);border:0;border-radius:99px;padding:9px 14px 9px 12px;font-size:13px;font-weight:500;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.04),inset 0 0 0 1px var(--line);color:var(--ink2)}
+.pill[aria-current="true"]{background:var(--ink);color:#fff;box-shadow:none}
+.pill .dot{width:22px;height:22px;border-radius:50%;background:var(--bg);display:grid;place-items:center}
+.pill[aria-current="true"] .dot{background:rgba(255,255,255,.15)}
+.pill .dot svg{width:13px;height:13px}
+.search{display:flex;align-items:center;gap:8px;background:#fff;border-radius:99px;padding:9px 14px;min-width:200px;box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
+.search input{border:0;outline:0;background:transparent;min-width:0;flex:1;font-size:13px}
+.round{width:38px;height:38px;border-radius:50%;background:#fff;border:0;display:grid;place-items:center;box-shadow:inset 0 0 0 1px var(--line);position:relative}
+.round svg{width:17px;height:17px}
+.round .badge{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px #fff}
+
+/* lưới */
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,1fr));grid-template-rows:auto auto;gap:16px;margin-top:18px}
+.card{background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:26px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 1px 2px rgba(0,0,0,.03);padding:22px;min-width:0;position:relative;overflow:hidden}
+.card h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.005em}
+.sub{color:var(--muted);font-size:12.5px}
+
+/* lời chào + bản đồ */
+.hello{grid-column:1;grid-row:1;min-height:330px;display:flex;flex-direction:column;justify-content:space-between}
+.hello h1{margin:0;font-size:clamp(26px,2.3vw,32px);font-weight:600;letter-spacing:-.02em;line-height:1.15;position:relative;z-index:1}
+.chip{display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:99px;padding:6px 6px 6px 12px;font-size:12.5px;box-shadow:inset 0 0 0 1px var(--line);margin-top:12px;position:relative;z-index:1}
+.chip b{background:var(--ink);color:#fff;border-radius:99px;padding:3px 10px;font-weight:500;font-size:12px}
+.map{position:absolute;inset:0;pointer-events:none}
+.map canvas{position:absolute;right:0;top:0;height:100%;width:100%}
+.site{position:absolute;display:flex;gap:7px;align-items:flex-start;font-size:11.5px;line-height:1.3;z-index:1;max-width:150px}
+.site.l{flex-direction:row-reverse;text-align:right}
+.site i{flex:none;width:12px;height:12px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px rgba(240,138,36,.2);margin-top:2px}
+.site i.late{background:var(--red);box-shadow:0 0 0 4px rgba(225,20,27,.18)}
+.site b{display:block;font-weight:600}
+.site span{color:var(--ink2)}
+.site em{font-style:normal;font-size:10.5px;background:var(--ok-soft);color:var(--ok);padding:1px 6px;border-radius:99px;margin-left:4px}
+.legend-sites{display:flex;gap:14px;font-size:12px;color:var(--ink2);position:relative;z-index:1}
+.legend-sites span{display:inline-flex;align-items:center;gap:6px}
+.legend-sites i{width:8px;height:8px;border-radius:50%}
+
+/* ô kính màu */
+.glass{border-radius:30px;padding:22px;color:#fff;min-height:330px;display:flex;flex-direction:column;position:relative;overflow:hidden;isolation:isolate;border:0;text-align:left;transition:transform .25s}
+.glass:hover{transform:translateY(-3px)}
+.glass::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--g)}
+.glass::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(160deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,0) 32%),radial-gradient(120% 70% at 50% 120%,rgba(255,255,255,.18),transparent 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px rgba(255,255,255,.2)}
+.g1{--g:radial-gradient(90% 75% at 50% 42%,#04140A 0%,#0A5A2A 38%,#16B357 72%,#5BE08F 100%);box-shadow:0 30px 50px -28px rgba(18,161,80,.7)}
+.g2{--g:radial-gradient(90% 75% at 50% 40%,#2A0430 0%,#8E1496 40%,#D53BDB 75%,#F08AF0 100%);box-shadow:0 30px 50px -28px rgba(194,31,201,.7)}
+.g3{--g:radial-gradient(95% 80% at 45% 35%,#06092E 0%,#1E2BC4 45%,#3D5BFF 78%,#7FA2FF 100%);box-shadow:0 30px 50px -28px rgba(45,60,230,.7)}
+.gt{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.gt h3{font-size:14.5px;font-weight:500;color:rgba(255,255,255,.95)}
+.gt small{display:block;font-size:12px;color:rgba(255,255,255,.65);margin-top:2px}
+.go{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.go svg{width:15px;height:15px}
+.led{margin-top:18px;font-size:clamp(44px,4.4vw,64px);font-weight:300;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.18)}
+.led small{font-size:.42em;font-weight:400;letter-spacing:-.01em;margin-left:6px;opacity:.85}
+.led svg{display:block}
+.gfoot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.up{display:inline-flex;align-items:center;gap:4px;background:#2BD36B;color:#06381A;font-weight:600;font-size:11.5px;padding:2px 8px;border-radius:99px}
+.gfoot p{margin:6px 0 0;font-size:12px;color:rgba(255,255,255,.8)}
+.deco{position:absolute;left:0;right:0;bottom:0;height:46%;z-index:-1;pointer-events:none}
+
+/* biểu đồ tròn */
+.pie{grid-column:1;grid-row:2;min-height:330px}
+.pie-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:center;margin-top:12px}
+.pie-wrap #donut{max-width:240px;justify-self:center;width:100%}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mc{background:rgba(255,255,255,.75);border-radius:14px;padding:10px 12px;box-shadow:inset 0 0 0 1px var(--line)}
+.mc .s{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink2)}
+.mc .s i{width:7px;height:7px;border-radius:50%}
+.mc b{display:block;font-size:15px;font-weight:600;margin-top:2px;letter-spacing:-.01em}
+.pie svg{display:block;width:100%;height:auto}
+.total{margin-top:14px;display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
+.total b{white-space:nowrap}
+.total b{font-size:34px;font-weight:300;letter-spacing:-.03em}
+
+/* thu chi */
+.rev{grid-column:2 / span 2;grid-row:2;min-height:330px;display:flex;flex-direction:column}
+.seg{display:inline-flex;background:#fff;border-radius:99px;padding:3px;margin-top:12px;box-shadow:inset 0 0 0 1px var(--line);align-self:flex-start}
+.seg button{border:0;background:transparent;border-radius:99px;padding:7px 18px;font-size:13px;color:var(--ink2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.rev-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:14px;flex:1;margin-top:16px;min-height:200px}
+.col{display:flex;flex-direction:column;min-width:0;border-left:1px solid rgba(139,92,246,.35);padding-left:10px}
+.col .ch{display:inline-flex;align-items:center;gap:4px;background:var(--ok-soft);color:var(--ok);font-weight:600;font-size:11px;padding:1px 7px;border-radius:99px;align-self:flex-start}
+.col .ch.dn{background:#FDE4E4;color:#C0262D}
+.col .vs{font-size:11.5px;color:var(--muted);margin-left:6px}
+.col b{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-top:6px;display:block}
+.col .lab{font-size:11.5px;color:var(--muted)}
+.col .area{flex:1;position:relative;margin-top:10px;min-height:110px}
+.col svg{position:absolute;inset:0;width:100%;height:100%}
+.tip{position:absolute;transform:translate(-50%,-115%);background:var(--ink);color:#fff;font-size:11.5px;font-weight:600;padding:5px 9px;border-radius:9px;white-space:nowrap;pointer-events:none}
+.tip small{display:block;font-weight:400;color:rgba(255,255,255,.6);font-size:10px}
+
+/* trợ lý */
+.ai{grid-column:4;grid-row:2;border-radius:30px;padding:24px;min-height:330px;color:#fff;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;overflow:hidden;isolation:isolate;
+  background:radial-gradient(70% 55% at 85% 100%,rgba(255,150,90,.95),transparent 70%),radial-gradient(70% 60% at 10% 90%,rgba(236,92,190,.85),transparent 70%),radial-gradient(90% 70% at 50% 0%,#2F6BFF 0%,#5A8BFF 40%,transparent 80%),#8C9FFF;
+  box-shadow:0 30px 50px -28px rgba(70,90,255,.6),inset 0 1px 0 rgba(255,255,255,.5)}
+.ai .spark{width:42px;height:42px;margin-top:22px}
+.ai h2{margin:14px 0 0;font-size:28px;font-weight:300;letter-spacing:-.02em;line-height:1.1}
+.ai p{margin:10px 0 0;font-size:13px;color:rgba(255,255,255,.88);max-width:28ch}
+.ask{margin-top:auto;width:100%;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.2);border-radius:14px;padding:4px 4px 4px 14px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.ask input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;font-size:13px;padding:8px 0}
+.ask input::placeholder{color:rgba(255,255,255,.8)}
+.ask button{width:34px;height:34px;border-radius:10px;border:0;background:rgba(255,255,255,.25);color:#fff;display:grid;place-items:center}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.sugg button{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:99px;padding:5px 10px;font-size:11.5px}
+.ai .reply{margin-top:10px;font-size:12px;background:rgba(0,0,0,.14);border-radius:12px;padding:8px 10px;text-align:left;width:100%}
+.note{color:var(--muted);font-size:12px;margin-top:18px}
+
+/* Màn hình ngang (16:9): vừa khít một màn, không cuộn */
+@media (min-width:1181px) and (min-height:680px){
+  .shell{height:100vh}
+  main{display:flex;flex-direction:column;height:100vh;padding-block:16px}
+  .grid{flex:1;min-height:0;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+  .hello,.glass,.pie,.rev,.ai{min-height:0}
+  .pie{display:flex;flex-direction:column}
+  .pie-wrap{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .pie-wrap #donut{height:100%;max-height:230px;display:flex;align-items:center}
+  .pie-wrap #donut svg{height:100%;width:100%}
+  .total{margin-top:8px}
+  .note{display:none}
+}
+@media (max-width:1180px){
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .hello{grid-column:1 / -1;grid-row:auto}
+  .glass{grid-row:auto}
+  .pie{grid-column:1 / span 2;grid-row:auto}
+  .ai{grid-column:3;grid-row:auto}
+  .rev{grid-column:1 / -1;grid-row:auto}
+}
+@media (max-width:760px){
+  .shell{grid-template-columns:minmax(0,1fr);padding-left:max(16px,env(safe-area-inset-left,0px))}
+  .rail{display:none}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .hello,.pie,.ai,.rev{grid-column:1}
+  .glass{min-height:240px}
+  .search{min-width:0;flex:1}
+  .pie-wrap,.rev-body{grid-template-columns:1fr}
+  .rev-body .col:first-child{min-height:150px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ===== Màn giới thiệu & đăng nhập ===== */
+.shell{transition:opacity .9s ease,filter .9s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
+.shell.pre{opacity:0;filter:blur(14px);transform:scale(.965)}
+#intro{position:fixed;inset:0;z-index:60;overflow:hidden;background:#F4F4F8;color:#1B2463;transition:opacity .8s ease}
+#intro.gone{opacity:0;pointer-events:none}
+#intro .glow{position:absolute;inset:0;background:radial-gradient(70% 55% at 50% 110%,#D9DCF7 0%,rgba(217,220,247,0) 70%),radial-gradient(40% 40% at 50% 50%,#FFFFFF 0%,rgba(255,255,255,0) 100%)}
+#intro .grad{position:absolute;inset:-8%;opacity:0;transition:opacity 1.3s ease;
+  background:radial-gradient(55% 60% at 8% 85%,#F7B3CB 0%,rgba(247,179,203,0) 70%),radial-gradient(55% 55% at 92% 15%,#4E6BFF 0%,rgba(78,107,255,0) 70%),radial-gradient(60% 60% at 70% 95%,#7B4DFF 0%,rgba(123,77,255,0) 70%),linear-gradient(135deg,#EBD9F6 0%,#A9B6FF 55%,#6D5BFF 100%)}
+#intro.s3 .grad,#intro.s4 .grad{opacity:1}
+#intro .brand{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(1);display:flex;flex-direction:column;align-items:center;gap:14px;transition:transform 1s cubic-bezier(.2,.8,.2,1),top 1s cubic-bezier(.2,.8,.2,1);animation:brandIn 1s cubic-bezier(.2,.8,.2,1) both}
+#intro .brand img{height:96px;width:auto;display:block;filter:drop-shadow(0 10px 22px rgba(225,20,27,.18))}
+#intro .brand small{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:#5A6190;font-weight:500}
+@keyframes brandIn{from{transform:translate(-50%,-50%) scale(.86);filter:blur(8px)}to{transform:translate(-50%,-50%) scale(1);filter:none}}
+#intro.s2 .brand,#intro.s3 .brand,#intro.s4 .brand{top:12%;transform:translate(-50%,-50%) scale(.62)}
+#intro.s2 .brand small,#intro.s3 .brand small{opacity:0;transition:opacity .4s}
+#intro .stage{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:26px;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));text-align:center}
+#intro h1{margin:0;font-size:clamp(32px,4.6vw,60px);font-weight:500;letter-spacing:-.03em;line-height:1.12;min-height:2.3em;color:#1B2463;transition:opacity .6s,filter .6s,transform .6s}
+#intro h1 .car{display:inline-block;width:3px;height:.9em;background:#4E6BFF;margin-left:4px;vertical-align:-.08em;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+#intro.s3 h1,#intro.s4 h1{opacity:0;filter:blur(10px);transform:translateY(-24px)}
+.lg{position:relative;height:56px;width:170px;border-radius:99px;opacity:0;transform:scale(.6);transition:width .7s cubic-bezier(.2,.8,.2,1),background .5s,opacity .5s,transform .5s,box-shadow .5s;
+  background:linear-gradient(90deg,#4E6BFF,#8B5CF6 55%,#F17AB5);box-shadow:0 16px 36px -14px rgba(78,107,255,.7);display:flex;align-items:center;overflow:hidden}
+#intro.ready .lg{opacity:1;transform:none}
+.lg .lab{position:absolute;inset:0;border:0;background:transparent;color:#fff;font:600 15px var(--f);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:opacity .3s}
+#intro.s3 .lg,#intro.s4 .lg{width:min(460px,88vw);background:#fff;box-shadow:0 20px 50px -20px rgba(40,40,120,.45),inset 0 0 0 1px rgba(255,255,255,.9)}
+#intro.s3 .lg .lab{opacity:0;pointer-events:none}
+.lg form{position:absolute;inset:0;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 22px;opacity:0;pointer-events:none;transition:opacity .4s .35s}
+#intro.s3 .lg form{opacity:1;pointer-events:auto}
+.lg input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:500 15px var(--f);color:#1B2463}
+.lg input::placeholder{color:#8C90AE;font-weight:400}
+.lg .send{width:44px;height:44px;border-radius:50%;border:0;flex:none;background:linear-gradient(135deg,#4E6BFF,#8B5CF6);color:#fff;display:grid;place-items:center;box-shadow:0 6px 14px -6px rgba(78,107,255,.8)}
+.lg.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
+.hint{font-size:12.5px;color:rgba(27,36,99,.75);min-height:1.4em;opacity:0;transition:opacity .4s .5s}
+#intro.s3 .hint{opacity:1}
+.steps{display:flex;gap:6px;justify-content:center;margin-top:-14px;opacity:0;transition:opacity .4s .5s}
+#intro.s3 .steps{opacity:1}
+.steps i{width:22px;height:4px;border-radius:4px;background:rgba(255,255,255,.55)}
+.steps i.on{background:#fff}
+.skip{position:absolute;right:max(20px,env(safe-area-inset-right,0px));bottom:max(20px,env(safe-area-inset-bottom,0px));border:0;background:rgba(27,36,99,.08);color:#1B2463;border-radius:99px;padding:8px 14px;font:500 12.5px var(--f);z-index:2}
+.skip:hover{background:rgba(27,36,99,.14)}
+/* thẻ bay vào */
+.wg{position:absolute;opacity:0;filter:blur(16px);transform:translate(var(--fx,0),var(--fy,0)) scale(.9);transition:opacity 1s ease var(--d,0s),filter 1s ease var(--d,0s),transform 1.2s cubic-bezier(.2,.8,.2,1) var(--d,0s);border-radius:20px;padding:14px 16px;color:#fff;font-size:12px;pointer-events:none;
+  background:rgba(70,60,150,.32);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),0 20px 40px -24px rgba(30,20,90,.6)}
+#intro.s3 .wg{opacity:1;filter:none;transform:none}
+#intro.s4 .wg{opacity:0;filter:blur(8px);transform:translate(var(--cx,0),var(--cy,0)) scale(.35);transition-duration:.8s;transition-delay:0s}
+.wg b{display:block;font-size:26px;font-weight:300;letter-spacing:-.03em;line-height:1.1;margin-top:4px}
+.wg .t{opacity:.85;font-weight:500}
+.wg.c1{background:radial-gradient(90% 80% at 50% 40%,#0A5A2A,#16B357 70%,#5BE08F)}
+.wg.c2{background:radial-gradient(90% 80% at 50% 40%,#5A0B64,#C21FC9 70%,#F08AF0)}
+.wg.c3{background:radial-gradient(90% 80% at 45% 35%,#0E1680,#2D3CE6 65%,#7FA2FF)}
+.wg svg{display:block}
+@media (max-width:760px){.wg.hide-sm{display:none}#intro .brand img{height:72px}}
+@media (prefers-reduced-motion:reduce){#intro *,.shell{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div id="intro" class="s1" role="dialog" aria-label="Đăng nhập hệ thống Nam Giang">
+  <div class="glow"></div><div class="grad"></div>
+  <div class="wg c1" style="left:6%;top:16%;width:190px;--fx:-40vw;--fy:-10vh;--d:.05s"><span class="t">Doanh thu tháng 10</span><b>50,2 tỷ</b><span style="opacity:.8">▲ 14,4% so tháng 9</span></div>
+  <div class="wg" style="left:7%;top:58%;width:220px;--fx:-40vw;--fy:20vh;--d:.15s"><span class="t">Chi phí theo nhóm</span>
+    <svg width="120" height="64" viewBox="0 0 120 64"><path d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="12" stroke-linecap="round"/><path d="M10 60 A50 50 0 0 1 92 24" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round"/><text x="60" y="58" text-anchor="middle" fill="#fff" font-size="16" font-weight="300">88%</text></svg></div>
+  <div class="wg c2 hide-sm" style="left:24%;top:76%;width:170px;--fx:-10vw;--fy:40vh;--d:.25s"><span class="t">Hồ sơ chờ thanh toán</span><b>12 hồ sơ</b></div>
+  <div class="wg c3" style="right:6%;top:14%;width:180px;--fx:40vw;--fy:-12vh;--d:.1s"><span class="t">Tiến độ trung bình</span><b>57%</b><span style="opacity:.8">+4% so tháng trước</span></div>
+  <div class="wg hide-sm" style="right:7%;top:52%;width:250px;--fx:40vw;--fy:12vh;--d:.2s"><span class="t">Chi phí theo ngày</span>
+    <svg width="218" height="60" viewBox="0 0 218 60"></svg></div>
+  <div class="wg hide-sm" style="right:26%;top:78%;width:200px;--fx:12vw;--fy:40vh;--d:.3s"><span class="t">Công trình đang thi công</span><b>4</b><span style="opacity:.8">2 công trình đang chậm</span></div>
+  <div class="wg hide-sm" style="left:30%;top:6%;width:210px;--fx:0;--fy:-40vh;--d:.35s"><span class="t">Vật liệu &amp; Kho</span><b>2 mã sắp hết</b><span style="opacity:.8">Thép D25 · Cát vàng</span></div>
+  <div class="brand"><img src="img/logo.png" alt="Nam Giang"><small>Hệ thống quản trị</small></div>
+  <div class="stage">
+    <h1 id="typed" aria-live="polite"></h1>
+    <div class="lg" id="lg">
+      <button class="lab" id="start" type="button">Đăng nhập <span aria-hidden="true">→</span></button>
+      <form id="lgf" autocomplete="off" novalidate>
+        <input id="lgi" type="text" placeholder="Email công ty hoặc mã nhân viên" aria-label="Email công ty hoặc mã nhân viên">
+        <button class="send" aria-label="Tiếp tục"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </form>
+    </div>
+    <div class="steps"><i class="on" id="st1"></i><i id="st2"></i></div>
+    <div class="hint" id="hint">Bản phác thảo: nhập bất kỳ để vào hệ thống</div>
+  </div>
+  <button class="skip" id="skip" type="button">Bỏ qua giới thiệu</button>
+</div>
+
+<div class="shell pre">
+  <aside class="rail" aria-label="Thanh điều hướng">
+    <div class="mark"><img src="img/mark.png" alt="Nam Giang"></div>
+    <div class="avatar" title="Nguyễn Văn Chung">C</div>
+    <nav id="rail"></nav>
+    <button class="ri" style="margin-top:auto" title="Đăng xuất" aria-label="Đăng xuất" onclick="showIntro()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg></button>
+  </aside>
+  <main>
+    <div class="top">
+      <div class="pills" id="pills"></div>
+      <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" placeholder="Tìm công trình, vật tư, nhân sự"></label>
+      <button class="round" id="fs" aria-label="Xem toàn màn hình" title="Xem toàn màn hình"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      <button class="round" aria-label="Thông báo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15zM10 20a2 2 0 004 0"/></svg><span class="badge"></span></button>
+      <button class="round" aria-label="Cài đặt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 00-2-1.2L14 3h-4l-.6 2.6a7 7 0 00-2 1.2l-2.3-.9-2 3.4 2 1.5a7 7 0 000 2.4l-2 1.5 2 3.4 2.3-.9a7 7 0 002 1.2L10 21h4l.6-2.6a7 7 0 002-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></button>
+    </div>
+
+    <div class="grid">
+      <section class="card hello">
+        <div class="map"><canvas id="vn"></canvas><div id="sites"></div></div>
+        <div>
+          <h1>Chào anh Chung 👋</h1>
+          <p class="sub" style="margin:6px 0 0;position:relative">4 công trình đang thi công</p>
+        </div>
+        <div class="legend-sites"><span><i style="background:var(--orange)"></i>Đúng tiến độ</span><span><i style="background:var(--red)"></i>Đang chậm</span></div>
+      </section>
+
+      <button class="glass g1" style="grid-column:2;grid-row:1" id="t-rev">
+        <div class="gt"><div><h3>Doanh thu tháng 10</h3><small>tỷ đồng</small></div><span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg></span></div>
+        <div class="led">50,2<small>tỷ</small></div>
+        <svg class="deco" viewBox="0 0 200 120" preserveAspectRatio="none"><path d="M0 120 L100 10 L200 120Z" fill="rgba(255,255,255,.07)"/><path d="M100 10 L200 120 L200 120 L140 120Z" fill="rgba(255,255,255,.06)"/><circle cx="100" cy="10" r="4" fill="rgba(255,255,255,.55)"/></svg>
+        <div class="gfoot"><div><span class="up">▲ 14,4%</span><p>so với tháng 9</p></div></div>
+      </button>
+
+      <button class="glass g2" style="grid-column:3;grid-row:1" id="t-pay">
+        <div class="gt"><div><h3>Hồ sơ chờ thanh toán</h3><small>đã nghiệm thu, chưa thu tiền</small></div><span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg></span></div>
+        <div class="led">12<small>hồ sơ</small></div>
+        <svg class="deco" viewBox="0 0 200 120" preserveAspectRatio="none" id="spark" style="top:44%;bottom:auto;height:30%"></svg>
+        <div class="gfoot"><div><p style="margin:0"><b style="font-size:16px;color:#fff">48,4 tỷ</b> công nợ phải thu</p><p>2 hồ sơ quá hạn trên 30 ngày</p></div></div>
+      </button>
+
+      <button class="glass g3" style="grid-column:4;grid-row:1" id="t-prog">
+        <div class="gt"><div><h3>Tiến độ trung bình</h3><small>khối lượng hoàn thành</small></div><span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg></span></div>
+        <div class="led">57<small>%</small></div>
+        <div class="gfoot"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="rgba(255,255,255,.12)"/><path d="M22 22 L22 4 A18 18 0 0 1 39.1 27.6 Z" fill="rgba(255,255,255,.85)"/></svg>
+          <div style="text-align:right"><span class="up">+4%</span><p>so với tháng trước</p></div></div>
+      </button>
+
+      <section class="card pie">
+        <h3>Chi phí theo nhóm</h3><span class="sub">Lũy kế 4 công trình, năm 2026</span>
+        <div class="pie-wrap">
+          <div class="mini" id="mini"></div>
+          <div id="donut"></div>
+        </div>
+        <div class="total"><b class="num">364,4 tỷ</b><span class="sub">tổng chi phí · 88% giá trị nghiệm thu</span></div>
+      </section>
+
+      <section class="card rev">
+        <h3>Doanh thu &amp; Chi phí</h3>
+        <div class="seg" role="group" aria-label="Kỳ"><button data-p="w" aria-pressed="false">Tuần</button><button data-p="m" aria-pressed="true">Tháng</button><button data-p="y" aria-pressed="false">Năm</button></div>
+        <div class="rev-body" id="rev"></div>
+      </section>
+
+      <section class="ai">
+        <svg class="spark" viewBox="0 0 24 24" fill="#fff"><path d="M13 2L5 13h6l-2 9 9-12h-6l1-8z"/></svg>
+        <h2>Trợ lý<br>Nam Giang</h2>
+        <p>Hỏi về doanh thu, tiến độ, vật tư hay nhân sự của bất kỳ công trình nào.</p>
+        <form class="ask" id="askf"><input id="ask" placeholder="Anh cần hỏi gì?" autocomplete="off"><button aria-label="Gửi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
+        <div class="sugg"><button data-s="Công trình nào đang chậm?">Công trình nào chậm?</button><button data-s="Thép D25 còn bao nhiêu?">Tồn thép D25</button></div>
+        <div id="reply"></div>
+      </section>
+    </div>
+    <p class="note">Bản phác thảo giao diện · số liệu mẫu, chưa phải số liệu thật của Nam Giang.</p>
+  </main>
+</div>
+
+<script>
+/* ===== Biểu tượng ===== */
+const I={
+ home:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',
+ proj:'<path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5"/>',
+ rev:'<path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-6"/>',
+ cost:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
+ prog:'<path d="M4 6h9M8 12h12M6 18h8"/><circle cx="16" cy="6" r="2"/>',
+ mat:'<path d="M3 8l9-5 9 5-9 5-9-5zM3 8v8l9 5 9-5V8M12 13v8"/>',
+ hr:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.8a3 3 0 010 6M18.5 14.8c1.8.7 3 2.4 3.3 5.2"/>',
+ rep:'<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/>'};
+const ic=(k,w=1.8)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${I[k]}</svg>`;
+const NAV=[["home","Tổng quan"],["proj","Dự án"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"],["rep","Báo cáo"]];
+document.getElementById("pills").innerHTML=NAV.map((n,i)=>`<button class="pill" aria-current="${i===0}" data-i="${i}"><span class="dot">${ic(n[0],2)}</span>${n[1]}</button>`).join("");
+document.getElementById("rail").innerHTML=NAV.slice(0,7).map((n,i)=>`<button class="ri" aria-current="${i===0}" data-i="${i}" title="${n[1]}">${ic(n[0])}</button>`).join("");
+document.addEventListener("click",e=>{const b=e.target.closest("[data-i]");if(!b)return;document.querySelectorAll("[data-i]").forEach(x=>x.setAttribute("aria-current",x.dataset.i===b.dataset.i))});
+
+/* ===== Số dạng chấm LED 5×7 ===== */
+const F={"0":["01110","10001","10011","10101","11001","10001","01110"],"1":["00100","01100","00100","00100","00100","00100","01110"],"2":["01110","10001","00001","00010","00100","01000","11111"],"3":["11110","00001","00001","01110","00001","00001","11110"],"4":["00010","00110","01010","10010","11111","00010","00010"],"5":["11111","10000","11110","00001","00001","10001","01110"],"6":["00110","01000","10000","11110","10001","10001","01110"],"7":["11111","00001","00010","00100","01000","01000","01000"],"8":["01110","10001","10001","01110","10001","10001","01110"],"9":["01110","10001","10001","01111","00001","00010","01100"],",":["00","00","00","00","00","01","10"],"%":["11001","11010","00010","00100","01000","01011","10011"]};
+function led(str){const s=9,r=2.6;let x=0,dots="";
+  for(const ch of str){const g=F[ch];if(!g)continue;const w=g[0].length;
+    g.forEach((row,yy)=>[...row].forEach((c,xx)=>{const cx=x+xx*s+s/2,cy=yy*s+s/2;dots+=c==="1"?`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff"/>`:`<circle cx="${cx}" cy="${cy}" r="${r*.55}" fill="rgba(255,255,255,.13)"/>`}));x+=w*s+s}
+  return `<svg viewBox="0 0 ${x-s} ${7*s}" style="height:64px;width:auto;max-width:100%" aria-label="${str}" role="img">${dots}</svg>`}
+document.querySelectorAll("[data-led]").forEach(el=>el.innerHTML=led(el.dataset.led));
+/* đường xu hướng ô tím */
+(()=>{const v=[30,38,34,52,47,60,72,66,84,78,95];const pts=v.map((y,i)=>`${i*20},${120-y}`).join(" ");
+ document.getElementById("spark").innerHTML=`<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+ ${Array.from({length:40},(_,i)=>`<line x1="${i*5+2}" y1="120" x2="${i*5+2}" y2="40" stroke="rgba(255,255,255,.08)" stroke-width="1"/>`).join("")}
+ <polygon points="0,120 ${pts} 200,120" fill="url(#sg)"/><polyline points="${pts}" fill="none" stroke="#fff" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="160" cy="${120-84}" r="4" fill="#fff"/>`})();
+
+/* ===== Bản đồ chấm Việt Nam + công trình ===== */
+const VN=[[102.1,22.4],[102.9,22.8],[103.9,22.6],[104.8,22.9],[105.6,23.1],[106.7,22.9],[107.5,21.6],[106.7,20.7],[105.9,19.9],[105.7,19.0],[106.4,18.0],[107.1,17.0],[108.2,16.1],[108.9,15.3],[109.2,13.8],[109.3,12.5],[109.0,11.5],[108.0,10.7],[107.0,10.4],[106.8,10.0],[106.2,9.3],[105.1,8.6],[104.8,9.6],[105.1,10.0],[104.5,10.4],[105.2,10.9],[106.2,11.4],[107.5,12.3],[107.6,13.6],[107.5,14.7],[107.0,15.5],[106.6,16.4],[105.6,17.8],[104.6,18.9],[103.9,19.2],[104.4,19.7],[103.2,20.6],[102.6,21.3]];
+const SITES=[{n:"Hà Nội",c:"CT3 Long Biên · 49%",lat:21.03,lon:105.88},{n:"Tuyên Quang",c:"THPT Chuyên · 84%",lat:21.82,lon:105.21,ok:1,l:1},{n:"Đà Nẵng",c:"KS Sơn Trà · 22%",lat:16.07,lon:108.22,late:1,l:1},{n:"Long An",c:"KCN Long Hậu · 71%",lat:10.65,lon:106.70,late:1}];
+function drawMap(){
+  const card=document.querySelector(".hello"),cv=document.getElementById("vn"),R=card.getBoundingClientRect(),d=devicePixelRatio||1;
+  cv.width=R.width*d;cv.height=R.height*d;const x=cv.getContext("2d");x.scale(d,d);
+  const oy=92,H=R.height-oy-40,k=H/15.2,ox=R.width*0.6-(105.6-101.8)*k;
+  const P=(lon,lat)=>[ox+(lon-101.8)*k,oy+(23.5-lat)*k];
+  const path=new Path2D();VN.forEach((p,i)=>{const [a,b]=P(p[0],p[1]);i?path.lineTo(a,b):path.moveTo(a,b)});path.closePath();
+  const st=5;for(let yy=0;yy<R.height;yy+=st)for(let xx=0;xx<R.width;xx+=st){
+    const inn=x.isPointInPath(path,xx*d,yy*d);x.fillStyle=inn?"rgba(22,23,28,.42)":"rgba(22,23,28,.04)";x.beginPath();x.arc(xx,yy,inn?1.5:1,0,7);x.fill()}
+  const box=document.getElementById("sites");
+  box.innerHTML=SITES.map(s=>{const [a,b]=P(s.lon,s.lat);const left=a+(R.width<520?-0:0);return `<div class="site${s.l?" l":""}" style="${s.l?`right:${R.width-a-6}px`:`left:${a-6}px`};top:${b-8}px"><i class="${s.late?"late":""}"></i><div><b>${s.n}</b><span>${s.c}</span>${s.ok?'<em>Vượt KH</em>':""}</div></div>`}).join("");
+}
+drawMap();document.fonts?.ready.then(drawMap);addEventListener("resize",drawMap);
+
+/* ===== Biểu đồ tròn mờ ===== */
+const CG=[["Vật liệu",178.6,"#2D3CE6","#7FA2FF"],["Nhân công",84.2,"#C21FC9","#F08AF0"],["Thầu phụ",61.5,"#F08A24","#FFC38A"],["Máy thi công",24.8,"#12A150","#6BE59B"],["Chi phí chung",15.3,"#8C8E97","#D5D6DB"]];
+document.getElementById("mini").innerHTML=CG.slice(0,4).map(c=>`<div class="mc"><span class="s"><i style="background:${c[2]}"></i>${c[0]}</span><b class="num">${c[1].toLocaleString("vi-VN",{minimumFractionDigits:1})} tỷ</b></div>`).join("");
+(()=>{const T=CG.reduce((s,c)=>s+c[1],0),cx=110,cy=110,R=100,r=38;let a=-Math.PI/2,defs="",paths="";
+ CG.forEach((c,i)=>{const sw=c[1]/T*Math.PI*2,gap=.035,a0=a+gap,a1=a+sw-gap;const p=(ang,rad)=>[cx+Math.cos(ang)*rad,cy+Math.sin(ang)*rad];
+  const big=(a1-a0)>Math.PI?1:0;const [x0,y0]=p(a0,R),[x1,y1]=p(a1,R),[x2,y2]=p(a1,r),[x3,y3]=p(a0,r);const mid=(a0+a1)/2,[gx,gy]=p(mid,R*.68);
+  defs+=`<radialGradient id="pg${i}" cx="${gx}" cy="${gy}" r="${R*.75}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${c[2]}"/><stop offset="1" stop-color="${c[3]}" stop-opacity=".55"/></radialGradient>`;
+  const off=i===0?8:0,[dx,dy]=[Math.cos(mid)*off,Math.sin(mid)*off];
+  paths+=`<path transform="translate(${dx} ${dy})" d="M${x0} ${y0}A${R} ${R} 0 ${big} 1 ${x1} ${y1}L${x2} ${y2}A${r} ${r} 0 ${big} 0 ${x3} ${y3}Z" fill="url(#pg${i})" filter="url(#soft)"><title>${c[0]}: ${c[1]} tỷ</title></path>`;a+=sw});
+ const [tx,ty]=[cx+Math.cos(-Math.PI/2+CG[0][1]/T*Math.PI)*(R+8),cy+Math.sin(-Math.PI/2+CG[0][1]/T*Math.PI)*(R+8)];
+ document.getElementById("donut").innerHTML=`<svg viewBox="-10 -10 240 240" role="img" aria-label="Cơ cấu chi phí"><defs>${defs}<filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.4"/></filter></defs>${paths}
+ <g transform="translate(150 -2)"><rect x="-30" y="0" width="60" height="24" rx="9" fill="#16171C"/><text x="0" y="16" text-anchor="middle" font-size="11.5" font-weight="600" fill="#fff">49%</text></g></svg>`})();
+
+/* ===== Doanh thu & chi phí ===== */
+const PER={
+ w:{lab:["T2","T3","T4","T5","T6","T7","CN"],rev:11.6,revD:6,cost:[1.9,2.4,1.6,2.8,2.1,1.2,0.4],costT:12.4,costD:-3,unit:"tuần này",vs:"so với tuần trước"},
+ m:{lab:Array.from({length:31},(_,i)=>i+1+""),rev:50.2,revD:14,cost:[1.1,1.6,1.3,0.4,1.8,1.5,1.2,1.7,1.9,1.4,0.5,1.6,1.8,1.3,1.5,1.1,0.9,0.4,1.7,2.1,1.6,1.4,1.2,1.8,0.5,1.9,1.6,1.5,1.3,1.7,1.2],costT:43.1,costD:8,unit:"tháng 10/2026",vs:"so với tháng 9"},
+ y:{lab:["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12"],rev:391.2,revD:14,cost:[24.9,20.3,31.2,33,36.8,35.1,38.6,42.4,39.8,43.1,0,0],costT:345.2,costD:11,unit:"10 tháng 2026",vs:"so với cùng kỳ 2025"}};
+const fm=v=>v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1});
+function rev(p){const d=PER[p],mx=Math.max(...d.cost),n=d.cost.length,top=d.cost.indexOf(mx);
+ const bw=100/n;const bars=d.cost.map((v,i)=>`<rect x="${i*bw+bw*.14}" y="${100-v/mx*92}" width="${bw*.72}" height="${v/mx*92}" fill="${i===top?"#7C4DFF":"#C9A8FF"}" rx="0.6"><title>${d.lab[i]}: ${fm(v)} tỷ</title></rect>`).join("");
+ const ch=(v)=>`<span class="ch${v<0?" dn":""}">${v<0?"▼":"▲"} ${Math.abs(v)}%</span>`;
+ document.getElementById("rev").innerHTML=`
+  <div class="col"><div>${ch(d.revD)}<span class="vs">${d.vs}</span></div><b class="num">${fm(d.rev)} tỷ</b><span class="lab">doanh thu ${d.unit}</span>
+   <div class="area"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6D5BFF"/><stop offset="1" stop-color="#8B7BFF" stop-opacity=".85"/></linearGradient></defs><rect x="0" y="${100-Math.min(d.rev/(d.rev+d.costT)*130,92)}" width="100" height="100" fill="url(#rg)"/></svg></div></div>
+  <div class="col"><div>${ch(d.costD)}<span class="vs">${d.vs}</span></div><b class="num">${fm(d.costT)} tỷ</b><span class="lab">chi phí ${d.unit}</span>
+   <div class="area" id="carea"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${bars}</svg>
+   <span class="tip" style="left:${(top+.5)*bw}%;top:${100-92}%">${fm(mx)} tỷ<small>${p==="m"?"ngày "+d.lab[top]+"/10":d.lab[top]}</small></span></div></div>`;
+ document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.p===p))}
+document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.closest("button");if(b)rev(b.dataset.p)});rev("m");
+
+/* ===== Màn giới thiệu & đăng nhập ===== */
+(()=>{
+  const intro=document.getElementById("intro"),shell=document.querySelector(".shell"),typed=document.getElementById("typed");
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const L1="Quản trị mọi công trường",L2="trên một màn hình";
+  let timers=[];const later=(f,ms)=>timers.push(setTimeout(f,reduce?0:ms));
+  /* biểu đồ cột nhỏ trong thẻ bay */
+  const bars=[22,34,28,40,31,46,38,52,44,58,49,36,42,55];
+  intro.querySelector('.wg svg[width="218"]').innerHTML=bars.map((v,i)=>`<rect x="${i*15.5}" y="${60-v}" width="10" height="${v}" rx="2" fill="${i===9?"#fff":"rgba(255,255,255,.45)"}"/>`).join("");
+  function type(){let i=0;const full=L1+"\n"+L2;
+    const tick=()=>{i++;const s=full.slice(0,i);typed.innerHTML=s.replace("\n","<br>")+'<span class="car"></span>';
+      if(i<full.length)later(tick,full[i-1]==="\n"?260:42);else later(()=>intro.classList.add("ready"),250)};
+    if(reduce){typed.innerHTML=L1+"<br>"+L2;intro.classList.add("ready");return}tick()}
+  function start(){intro.className="s1";shell.classList.add("pre");typed.innerHTML="";step=1;inp.value="";inp.type="text";
+    inp.placeholder="Email công ty hoặc mã nhân viên";st1.className="on";st2.className="";hint.textContent="Bản phác thảo: nhập bất kỳ để vào hệ thống";
+    later(()=>{intro.className="s2";later(type,500)},1100)}
+  const lg=document.getElementById("lg"),inp=document.getElementById("lgi"),hint=document.getElementById("hint"),st1=document.getElementById("st1"),st2=document.getElementById("st2");let step=1;
+  document.getElementById("start").addEventListener("click",()=>{intro.classList.remove("s2");intro.classList.add("s3");later(()=>inp.focus(),700)});
+  document.getElementById("lgf").addEventListener("submit",e=>{e.preventDefault();
+    if(!inp.value.trim()){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent=step===1?"Anh nhập email hoặc mã nhân viên trước nhé":"Anh nhập mật khẩu để vào hệ thống";return}
+    if(step===1){step=2;inp.value="";inp.type="password";inp.placeholder="Mật khẩu";st2.className="on";hint.textContent="Bước 2/2 · nhấn Enter để vào";inp.focus();return}
+    enter()});
+  function enter(){timers.forEach(clearTimeout);timers=[];
+    const W=innerWidth/2,H=innerHeight/2;intro.querySelectorAll(".wg").forEach(w=>{const r=w.getBoundingClientRect();w.style.setProperty("--cx",(W-r.left-r.width/2)+"px");w.style.setProperty("--cy",(H-r.top-r.height/2)+"px")});
+    intro.classList.add("s3","s4");
+    later(()=>{shell.classList.remove("pre");intro.classList.add("gone");later(()=>{drawMap&&drawMap()},50)},reduce?0:650);
+    later(()=>{intro.hidden=true},reduce?0:1500)}
+  document.getElementById("skip").addEventListener("click",()=>{intro.classList.add("s3");enter()});
+  window.showIntro=()=>{intro.hidden=false;start()};
+  start();
+})();
+/* ===== Toàn màn hình ===== */
+document.getElementById("fs").addEventListener("click",async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){document.getElementById("fs").title="Trình duyệt này chưa cho phép toàn màn hình, hãy nhấn F11"}});
+/* ===== Trợ lý (phác thảo) ===== */
+const ANS={"Công trình nào đang chậm?":"Khách sạn Sơn Trà chậm 8% và Nhà xưởng Long Hậu chậm 7% so với kế hoạch.","Thép D25 còn bao nhiêu?":"Kho CT3 Long Biên còn 11,2 tấn thép D25, dưới mức tối thiểu 25 tấn."};
+function say(q){document.getElementById("reply").innerHTML=`<div class="reply"><b>${q}</b><br>${ANS[q]||"Ở bản thật, trợ lý sẽ trả lời từ dữ liệu của hệ thống."}</div>`}
+document.querySelector(".sugg").addEventListener("click",e=>{const b=e.target.closest("button");if(b)say(b.dataset.s)});
+document.getElementById("askf").addEventListener("submit",e=>{e.preventDefault();const v=document.getElementById("ask").value.trim();if(v)say(v)});
+</script>
+
+</body>
+</html>

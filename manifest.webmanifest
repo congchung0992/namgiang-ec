@@ -1,0 +1,10 @@
+{
+  "name": "Nam Giang IC – Hệ thống quản trị",
+  "short_name": "Nam Giang IC",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ECECEE",
+  "theme_color": "#4E6BFF",
+  "lang": "vi",
+  "icons": [{ "src": "img/mark.png", "sizes": "140x163", "type": "image/png" }]
+}
