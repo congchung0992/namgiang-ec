@@ -392,6 +392,37 @@ table.bt{min-width:1180px}
   .cform input{font-size:16px}
 }
 @media (prefers-reduced-motion:reduce){.msg.wait i{animation:none}}
+/* ===== Chuyển động toàn web ===== */
+.mo-in{animation:moRise .75s cubic-bezier(.2,1.25,.4,1) var(--d,0ms) backwards}
+@keyframes moRise{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:none}}
+.mo-fade{animation:moFade .5s ease var(--d,0ms) backwards}
+@keyframes moFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.mo-bar{transform-box:fill-box;transform-origin:50% 100%;animation:moBarY .8s cubic-bezier(.2,1.2,.4,1) var(--d,0ms) backwards}
+.mo-bar.dn{transform-origin:50% 0}
+@keyframes moBarY{from{transform:scaleY(0)}to{transform:none}}
+.mo-x{transform-origin:0 50%;animation:moBarX .9s cubic-bezier(.2,1.1,.4,1) var(--d,0ms) backwards}
+@keyframes moBarX{from{transform:scaleX(0)}to{transform:none}}
+.mo-pie{transform-box:view-box;transform-origin:var(--ox,50%) var(--oy,50%);animation:moPie .9s cubic-bezier(.2,1.3,.4,1) var(--d,0ms) backwards}
+@keyframes moPie{from{opacity:0;transform:scale(.55) rotate(-35deg)}to{opacity:1;transform:none}}
+.mo-op{animation:moOp .7s ease var(--d,0ms) backwards}
+@keyframes moOp{from{opacity:0}}
+.mo-dot{transform-box:fill-box;transform-origin:center;animation:moDot .5s cubic-bezier(.2,1.6,.4,1) var(--d,0ms) backwards}
+@keyframes moDot{from{opacity:0;transform:scale(0)}to{opacity:1;transform:none}}
+.mo-line{stroke-dasharray:1;stroke-dashoffset:1;animation:moLine 1.4s cubic-bezier(.4,0,.2,1) var(--d,0ms) forwards}
+@keyframes moLine{to{stroke-dashoffset:0}}
+.shn{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;z-index:3}
+.shn::before{content:"";position:absolute;top:-20%;bottom:-20%;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:skewX(-18deg);animation:moShine 7s ease-in-out var(--sd,1.5s) infinite}
+@keyframes moShine{0%{left:-60%}22%,100%{left:130%}}
+.pill:active,.back:active,.round:active,.pc:active,.glass:active{transform:scale(.96)!important;transition:transform .1s}
+.kc{transition:transform .25s cubic-bezier(.2,1.3,.4,1),box-shadow .25s}
+.kc:hover{transform:translateY(-4px)}
+.card:not(.pc){transition:transform .3s cubic-bezier(.2,1.3,.4,1),box-shadow .3s}
+.card:not(.pc):hover{box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 18px 36px -26px rgba(20,20,60,.35)}
+#chat:not([hidden]){animation:moChat .45s cubic-bezier(.2,1.3,.4,1)}
+@keyframes moChat{from{opacity:0;transform:translateY(24px) scale(.94);transform-origin:100% 100%}to{opacity:1;transform:none}}
+.msg{animation:moFade .35s ease backwards}
+#chatfab{animation:moDot .6s cubic-bezier(.2,1.6,.4,1) 1s backwards}
+@media (prefers-reduced-motion:reduce){.mo-in,.mo-fade,.mo-op,.mo-bar,.mo-x,.mo-pie,.mo-dot,.msg,#chat,#chatfab{animation:none!important}.mo-line{animation:none!important;stroke-dashoffset:0}.shn{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* ===== Màn giới thiệu & đăng nhập ===== */
 .shell{transition:opacity .9s ease,filter .9s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
@@ -1169,7 +1200,7 @@ view.addEventListener("change",e=>{const t=e.target;
 view.addEventListener("change",e=>{const t=e.target;if(!cur)return;
   if(t.id==="sdate"){const d=pd(t.value);if(d){cur.sched.start=fd(d);cur.sched.auto=0;persist();keep(route)}else t.value=cur.sched.start}
   if(t.dataset.term){const v=parseVN(t.value);if(v!=null&&v>=0&&v<=(t.dataset.term==="pay"||t.dataset.term==="cost"?365:100)){cur.terms[t.dataset.term]=v;persist();keep(route)}else t.value=fm(cur.terms[t.dataset.term],0)}});
-const keep=f=>{const y=scrollY,g=document.getElementById("gw"),x=g?g.scrollLeft:0;f();scrollTo(0,y);const g2=document.getElementById("gw");if(g2)g2.scrollLeft=x};
+const keep=f=>{window.NOANIM=1;setTimeout(()=>window.NOANIM=0,50);const y=scrollY,g=document.getElementById("gw"),x=g?g.scrollLeft:0;f();scrollTo(0,y);const g2=document.getElementById("gw");if(g2)g2.scrollLeft=x};
 view.addEventListener("click",e=>{const r=e.target.closest("#repro");if(!r||!cur)return;if(r.dataset.ok){propose(cur);persist();keep(route)}else{r.dataset.ok=1;r.textContent="Bấm lần nữa để đề xuất lại";r.style.color="#C0141B"}});
 /* kéo thả thanh tiến độ */
 let drag=null;
@@ -1230,6 +1261,37 @@ addEventListener("hashchange",()=>{pending=null;route()});route();
 })();
 /* ===== Toàn màn hình ===== */
 document.getElementById("fs").addEventListener("click",async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){document.getElementById("fs").title="Trình duyệt này chưa cho phép toàn màn hình, hãy nhấn F11"}});
+/* ===== Chuyển động toàn web ===== */
+(()=>{
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;if(RM)return;
+const add=(el,c,d)=>{el.classList.remove(c);void el.getBoundingClientRect;el.style.setProperty("--d",d+"ms");el.classList.add(c)};
+const num=s=>{const m=s.match(/-?[\d.]+(,\d+)?/);if(!m)return null;const dec=(m[1]||"").length-1;const v=parseFloat(m[0].replace(/\./g,"").replace(",","."));return isFinite(v)?{v,dec:Math.max(dec,0),raw:m[0]}:null};
+function count(el){const t=[...el.childNodes].find(n=>n.nodeType===3&&n.textContent.trim());if(!t||/[\/–-]/.test(t.textContent))return;const n=num(t.textContent);if(!n||!n.v)return;const orig=t.textContent,t0=performance.now(),D=1100;
+  const f=now=>{const k=Math.min(1,(now-t0)/D),e=1-Math.pow(1-k,3),v=n.v*e;t.textContent=orig.replace(n.raw,v.toLocaleString("vi-VN",{minimumFractionDigits:n.dec,maximumFractionDigits:n.dec}));if(k<1)requestAnimationFrame(f);else t.textContent=orig};requestAnimationFrame(f)}
+function shine(root){root.querySelectorAll(".kc,.glass").forEach((el,i)=>{if(!el.querySelector(":scope>.shn")){const s=document.createElement("i");s.className="shn";s.style.setProperty("--sd",(1.2+i*.9)+"s");el.appendChild(s)}})}
+function animate(root){if(!root||window.NOANIM)return;
+  const blocks=[...root.querySelectorAll(".back,.vh,.phead,.sheets,.card,.kc,.glass,.ai,.plist>*")].filter(e=>!e.closest(".plist")||e.parentNode.classList.contains("plist"));
+  blocks.slice(0,40).forEach((e,i)=>add(e,"mo-in",Math.min(i,14)*55));
+  [...root.querySelectorAll(".card svg,.glass svg")].filter(s=>!s.closest(".deco,.go,button.round,.pill,.mark,.legend-sites,.gfoot")&&!s.classList.contains("deco")&&(s.getAttribute("viewBox")||"")!=="0 0 24 24").forEach(svg=>{let bi=0;
+    svg.querySelectorAll("rect").forEach(r=>{const t=r.querySelector("title");if(+r.getAttribute("height")<=0&&!t)return;if(t&&/ chi:/.test(t.textContent))r.classList.add("dn");add(r,"mo-bar",350+(bi++)*28)});
+    const vb=(svg.getAttribute("viewBox")||"0 0 200 200").split(/\s+/).map(Number);
+    svg.querySelectorAll("path[fill]").forEach((p,i)=>{if(p.getAttribute("fill")==="none")return;if(p.hasAttribute("transform")){add(p,"mo-op",300+i*70);return}p.style.setProperty("--ox",(vb[0]+vb[2]/2)+"px");p.style.setProperty("--oy",(vb[1]+vb[3]/2)+"px");add(p,"mo-pie",300+i*70)});
+    svg.querySelectorAll("polyline").forEach(l=>{l.setAttribute("pathLength","1");add(l,"mo-line",500)});
+    svg.querySelectorAll("circle").forEach((c,i)=>add(c,"mo-dot",700+i*45))});
+  root.querySelectorAll(".mbar i,.pbar i").forEach((e,i)=>add(e,"mo-x",300+Math.min(i,30)*35));
+  root.querySelectorAll(".gb").forEach((e,i)=>add(e,"mo-x",250+Math.min(i,80)*12));
+  root.querySelectorAll(".hm,.ms,tbody tr:not(.gr)").forEach((e,i)=>{if(i<60)add(e,"mo-fade",250+i*30)});
+  root.querySelectorAll("#sites .site").forEach((e,i)=>add(e,"mo-dot",500+i*120));
+  root.querySelectorAll(".kc .v,.glass .led").forEach(count);
+  shine(root)}
+window.moAnimate=animate;
+const view=document.getElementById("view"),grid=document.querySelector(".grid"),shell=document.querySelector(".shell");
+new MutationObserver(()=>animate(view)).observe(view,{childList:true});
+const rev=document.getElementById("rev");if(rev)new MutationObserver(()=>{if(!window.NOANIM)animate(rev)}).observe(rev,{childList:true});
+let homeWas=grid.hidden;new MutationObserver(()=>{if(homeWas&&!grid.hidden)animate(grid);homeWas=grid.hidden}).observe(grid,{attributes:true,attributeFilter:["hidden"]});
+let pre=shell.classList.contains("pre");new MutationObserver(()=>{const p=shell.classList.contains("pre");if(pre&&!p)setTimeout(()=>animate(grid.hidden?view:grid),250);pre=p}).observe(shell,{attributes:true,attributeFilter:["class"]});
+if(!pre)animate(grid.hidden?view:grid);
+})();
 /* ===== Trợ lý Nam Giang: khung chat nổi ===== */
 (()=>{
 const box=document.getElementById("chat"),fab=document.getElementById("chatfab"),log=document.getElementById("clog"),inp=document.getElementById("cin"),stt=document.getElementById("cst");
