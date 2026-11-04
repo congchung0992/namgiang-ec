@@ -9,7 +9,25 @@
 <link rel="icon" type="image/png" href="img/mark.png">
 <link rel="apple-touch-icon" href="img/mark.png">
 <link rel="manifest" href="manifest.webmanifest">
-<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}.fdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:14px}
+.fd{display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:0;border-radius:18px;padding:12px 14px;box-shadow:inset 0 0 0 1px var(--line);cursor:pointer;color:var(--ink);font:inherit;transition:transform .15s,box-shadow .15s}
+.fd:hover{box-shadow:inset 0 0 0 1px #0A2486}.fd:active{transform:scale(.98)}
+.fd[aria-current="true"]{background:linear-gradient(135deg,#0A2486,#4E6BFF);color:#fff;box-shadow:0 10px 22px -12px rgba(10,36,134,.8)}
+.fd svg{width:24px;height:24px;flex:none;color:#0A2486}.fd[aria-current="true"] svg{color:#fff}
+.fd b{display:block;font-size:13px;font-weight:600;line-height:1.3}.fd small{display:block;font-size:12px;opacity:.72}
+.fla{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+#fview{position:fixed;inset:0;z-index:300;background:rgba(16,18,40,.62);display:flex;align-items:center;justify-content:center;padding:24px}
+#fview .fvb{width:min(1100px,100%);height:min(90vh,100%);background:#fff;border-radius:24px;display:flex;flex-direction:column;overflow:hidden}
+#fview .fvh{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+#fview .fvh b{flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fview .fvc{flex:1;min-height:0;overflow:auto;background:#F4F4F6;display:flex}
+#fview iframe{flex:1;border:0;width:100%;height:100%;background:#fff}#fview img{max-width:100%;max-height:100%;margin:auto;object-fit:contain}
+#fview pre{margin:0;padding:16px;font-size:13px;white-space:pre-wrap;width:100%}#fview .fvm{margin:auto;padding:24px;text-align:center;font-size:14px;color:var(--ink2)}
+#fview .fvx{padding:12px;width:100%;min-width:0}
+.ftb .fn{min-width:200px;word-break:break-word}
+@media (max-width:760px){.ftb{min-width:0!important;width:100%}.ftb th:nth-child(2),.ftb th:nth-child(3),.ftb td:nth-child(2),.ftb td:nth-child(3){display:none}.ftb .fn{min-width:0}.ftb .fla{flex-direction:column;align-items:stretch}}
+@media (max-width:760px){.fdg{grid-template-columns:repeat(2,minmax(0,1fr))}#fview{padding:0}#fview .fvb{height:100%;border-radius:0}}
+</style>
 
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Encode+Sans+Expanded:wght@600&display=swap">
@@ -798,7 +816,7 @@ window.NGB=(function(){
         if(r.ok)return r;let c="";try{c=(await r.json()).error}catch(e){}
         throw new Error({too_large:"File quá lớn, tối đa 95 MB",forbidden:"Tài khoản này không có quyền với thư mục này",not_found:"Không tìm thấy file hoặc không có quyền",chua_ket_noi:"Chưa kết nối Google Drive",auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",empty:"File trống"}[c]||"Google Drive đang lỗi, anh thử lại sau")},
       async upload(pid,folder,file){await this.call({action:"upload",project:pid,folder,name:file.name},{method:"POST",headers:{"content-type":file.type||"application/octet-stream"},body:file})},
-      async download(id,name){const r=await this.call({action:"download",id},{method:"GET"}),u=URL.createObjectURL(await r.blob()),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000)},
+      async blob(id){return (await this.call({action:"download",id},{method:"GET"})).blob()},
       async remove(id){await this.call({action:"delete",id},{method:"DELETE"})}
     },
     queue(db,cb){lastDb=db;onState=cb;dirty=true;clearTimeout(timer);timer=setTimeout(run,300)},
@@ -1195,18 +1213,46 @@ const LEAD=n=>/Kết cấu thép/.test(n)?30:/Thiết bị/.test(n)?45:/Cửa/.t
 
 /* ---------- Danh sách sheet ---------- */
 const SHEETS=[["home","Tổng quan"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
-const BSHEETS=[["home","Tổng quan"],["boq","BOQ & Giá vốn"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["mat","Vật liệu"],["hr","Nhân sự"],["files","Hồ sơ"]];
+const BSHEETS=[["home","Tổng quan"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["mat","Vật liệu"],["hr","Nhân sự"]];
 /* Tab Hồ sơ: file lưu ở Google Drive qua api/drive; bảng quyền này chỉ để gọn màn hình, máy chủ kiểm tra lại (supabase/schema.sql) */
 const DF=[["01","Hồ sơ thầu","BOQ gốc, báo giá",["gd","qs"]],["02","Hợp đồng, phụ lục","Hợp đồng chủ đầu tư",["gd","qs","kt"]],["03","Tiến độ","Tiến độ được duyệt",["gd","qs","cht"]],["04","Nghiệm thu khối lượng","Biên bản, bảng khối lượng",["gd","qs","kt","cht"]],["05","Thanh toán, công nợ","Hồ sơ thanh toán đợt",["gd","qs","kt"]],["06","Vật tư","Báo giá nhà cung cấp, phiếu nhập",["gd","qs","kt"]],["07","Thầu phụ, tổ đội","Hợp đồng khoán, thầu phụ",["gd","qs","kt"]],["08","Nhật ký, ảnh","Nhật ký công trường, ảnh hiện trường",["gd","qs","kt","cht"]]];
 const fmtSize=b=>b==null?"-":b<1048576?fm(b/1024,0)+" KB":fm(b/1048576,1)+" MB";
+const LOCALF={open(){return new Promise((ok,er)=>{const q=indexedDB.open("ngic-files",1);q.onupgradeneeded=()=>q.result.createObjectStore("files",{keyPath:"id"});q.onsuccess=()=>ok(q.result);q.onerror=()=>er(q.error)})},
+  async tx(mode,fn){const db=await this.open();return new Promise((ok,er)=>{const t=db.transaction("files",mode),q=fn(t.objectStore("files"));t.oncomplete=()=>{db.close();ok(q&&q.result)};t.onerror=t.onabort=()=>{db.close();er(t.error||new Error("Không lưu được file trong trình duyệt"))}})},
+  async all(){return await this.tx("readonly",o=>o.getAll())||[]},
+  async list(pid){return (await this.all()).filter(x=>x.project_id===pid).sort((a,b)=>a.at<b.at?1:-1).map(({blob,...x})=>x)},
+  async put(pid,folder,file){const id="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);await this.tx("readwrite",o=>o.put({id,project_id:pid,folder,name:file.name,size:file.size,at:new Date().toISOString(),blob:file}))},
+  async get(id){return (await this.tx("readonly",o=>o.get(id)))},
+  async del(id){await this.tx("readwrite",o=>o.delete(id))},
+  async delProject(pid){for(const x of await this.all())if(x.project_id===pid)await this.del(x.id)}};
+const FS={list:pid=>NGApp.guest?LOCALF.list(pid):NGB.drive.list(pid),
+  upload:(pid,folder,f)=>{if(f.size>95*1048576)return Promise.reject(new Error("File quá lớn, tối đa 95 MB"));return NGApp.guest?LOCALF.put(pid,folder,f):NGB.drive.upload(pid,folder,f)},
+  blob:async id=>NGApp.guest?(await LOCALF.get(id)).blob:NGB.drive.blob(id),
+  remove:id=>NGApp.guest?LOCALF.del(id):NGB.drive.remove(id)};
 const filesView=()=>`<div class="sub" id="flmsg" style="min-height:18px;margin-bottom:8px"></div><div class="vgrid" id="fls"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`;
+let flSel=null;
 async function filesLoad(){const box=document.getElementById("fls"),p=cur;if(!box||!p)return;
-  if(NGApp.guest){box.innerHTML=`<section class="card span3" style="font-size:13px;color:var(--ink2)">Chế độ thử chưa lưu được file. Tab Hồ sơ dùng được sau khi đăng nhập bằng tài khoản được cấp.</section>`;return}
-  try{const L=await NGB.drive.list(p.id);if(!document.getElementById("fls")||cur!==p)return;const on=NGApp.drive,canDel=NGApp.board||p._role==="gd";
-    box.innerHTML=(on?"":`<section class="card span3" style="font-size:13px;color:var(--ink2)">Chưa kết nối Google Drive nên chưa tải file lên được. Quản trị viên cần đặt khoá Google trên Cloudflare.</section>`)+DF.filter(f=>NGApp.board||f[3].includes(p._role)).map(f=>{const R=L.filter(x=>x.folder===f[0]);
-      return card(`${f[0]} ${f[1]}`,f[2],`${R.length?`<div class="tw"><table class="t"><thead><tr><th>File</th><th class="r">Dung lượng</th><th>Ngày</th><th></th></tr></thead><tbody>${R.map(x=>`<tr><td style="min-width:200px">${esc(x.name)}</td><td class="r">${fmtSize(x.size)}</td><td class="num">${fd(new Date(x.at))}</td><td class="r" style="white-space:nowrap"><button class="back sm" style="margin:0" data-fd="${esc(x.id)}" data-n="${esc(x.name)}">Tải về</button>${canDel?` <button class="back sm" style="margin:0" data-fx="${esc(x.id)}">Xoá</button>`:""}</td></tr>`).join("")}</tbody></table></div>`:`<span class="sub">Chưa có file.</span>`}${on?`<div style="margin-top:12px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="${f[0]}" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file lên</label></div>`:""}`,"span3")}).join("")}
+  try{const L=await FS.list(p.id);if(!document.getElementById("fls")||cur!==p)return;const G=NGApp.guest,on=G||NGApp.drive,canDel=G||NGApp.board||p._role==="gd",F=DF.filter(f=>NGApp.board||f[3].includes(p._role));
+    if(!F.some(f=>f[0]===flSel))flSel=F.length?F[0][0]:null;const C=F.find(f=>f[0]===flSel),R=L.filter(x=>x.folder===flSel);
+    box.innerHTML=card("Thư mục dự án",G?"Chế độ thử · file tạm lưu trên trình duyệt này, đăng nhập rồi sẽ đưa lên Google Drive của công ty":on?"Bộ hồ sơ của dự án, lưu trên Google Drive của công ty · bấm vào thư mục để xem hoặc tải về":"Chưa kết nối Google Drive nên chưa tải file lên được",`<div class="fdg">${F.map(f=>{const n=L.filter(x=>x.folder===f[0]).length;return`<button class="fd" data-fsel="${f[0]}" aria-current="${f[0]===flSel}">${ic("files",1.8)}<span><b>${f[0]} ${f[1]}</b><small>${n?n+" file":"Chưa có file"}</small></span></button>`}).join("")}</div>`,"span3")+
+    (C?card(`${C[0]} ${C[1]}`,C[2],`${R.length?`<div class="tw"><table class="t ftb"><thead><tr><th>Tên file</th><th class="r">Dung lượng</th><th>Ngày tải lên</th><th></th></tr></thead><tbody>${R.map(x=>`<tr><td class="fn">${esc(x.name)}</td><td class="r">${fmtSize(x.size)}</td><td class="num">${fd(new Date(x.at))}</td><td><div class="fla"><button class="back sm" style="margin:0" data-fv="${esc(x.id)}" data-n="${esc(x.name)}">Xem</button><button class="back sm" style="margin:0" data-fd="${esc(x.id)}" data-n="${esc(x.name)}">Tải về</button>${canDel?`<button class="back sm" style="margin:0" data-fx="${esc(x.id)}">Xoá</button>`:""}</div></td></tr>`).join("")}</tbody></table></div>`:`<span class="sub">Thư mục này chưa có file.</span>`}${on?`<div style="margin-top:12px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="${C[0]}" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file lên</label></div>`:""}`,"span3"):"")}
   catch(e){const b=document.getElementById("fls");if(b)b.innerHTML=`<section class="card span3" style="color:#C0141B;font-size:13px">Không tải được danh sách hồ sơ: ${esc(e.message)}</section>`}}
 const flMsg=(m,bad)=>{const x=document.getElementById("flmsg");if(x){x.textContent=m||"";x.style.color=bad?"#C0141B":""}};
+const saveBlob=(b,name)=>{const u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000)};
+/* Xem file: chỉ mở các loại an toàn; HTML, SVG không bao giờ được hiển thị trực tiếp */
+const FVT={pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",webp:"image/webp",bmp:"image/bmp"};
+async function fileView(id,name){const ext=(name.split(".").pop()||"").toLowerCase();let wrap=document.getElementById("fview"),url=null;if(wrap)wrap.remove();
+  wrap=document.createElement("div");wrap.id="fview";wrap.setAttribute("role","dialog");wrap.setAttribute("aria-label","Xem file");wrap.innerHTML=`<div class="fvb"><div class="fvh"><b></b><button class="back sm" style="margin:0" id="fvd" disabled>Tải về</button><button class="back sm" style="margin:0" id="fvc">Đóng</button></div><div class="fvc"><div class="fvm">Đang mở file…</div></div></div>`;
+  wrap.querySelector("b").textContent=name;document.body.appendChild(wrap);const body=wrap.querySelector(".fvc"),msg=(t)=>{body.innerHTML="";const d=document.createElement("div");d.className="fvm";d.textContent=t;body.appendChild(d)};
+  const close=()=>{wrap.remove();if(url)URL.revokeObjectURL(url);removeEventListener("keydown",esck)},esck=e=>{if(e.key==="Escape")close()};addEventListener("keydown",esck);
+  wrap.querySelector("#fvc").onclick=close;wrap.onclick=e=>{if(e.target===wrap)close()};
+  try{const b=await FS.blob(id);if(!document.body.contains(wrap))return;const dl=wrap.querySelector("#fvd");dl.disabled=false;dl.onclick=()=>saveBlob(b,name);body.innerHTML="";
+    if(FVT[ext]){url=URL.createObjectURL(new Blob([b],{type:FVT[ext]}));if(ext==="pdf"){const f=document.createElement("iframe");f.title=name;f.src=url;body.appendChild(f)}else{const i=document.createElement("img");i.alt=name;i.src=url;body.appendChild(i)}}
+    else if(ext==="txt"||ext==="csv"){const t=await b.text(),pre=document.createElement("pre");pre.textContent=t.slice(0,200000);body.appendChild(pre)}
+    else if(["xlsx","xls","xlsm"].includes(ext)){await needX();const wb=XLSX.read(await b.arrayBuffer(),{type:"array"}),names=wb.SheetNames.filter((n,i)=>!((wb.Workbook&&wb.Workbook.Sheets&&wb.Workbook.Sheets[i])||{}).Hidden),show=n=>{const a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""}).slice(0,500),w=Math.min(40,Math.max(0,...a.map(r=>r.length)));return `<div class="tw"><table class="t"><tbody>${a.map(r=>`<tr>${[...Array(w)].map((_,j)=>`<td>${esc(r[j])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`};
+      const x=document.createElement("div");x.className="fvx";x.innerHTML=`${names.length>1?`<select class="fi sel" aria-label="Sheet" style="margin-bottom:10px">${names.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join("")}</select>`:""}<div class="fvt">${names.length?show(names[0]):"File không có sheet nào."}</div>`;body.appendChild(x);const sel=x.querySelector("select");if(sel)sel.onchange=()=>{x.querySelector(".fvt").innerHTML=show(names[+sel.value])}}
+    else msg("Loại file này chưa xem trực tiếp được trên web, anh bấm Tải về để mở bằng phần mềm trên máy.")}
+  catch(e){msg("Không mở được file: "+(e.message||""))}}
 const later=(t,items)=>card(t,"Phần này sẽ làm ở bước tiếp theo",ms(items),"span3");
 
 function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="week")return weekView(p);const c=calc(p),mg=pct(c.gp,c.rev);
@@ -1214,7 +1260,7 @@ function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="week")return 
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
     return `<div class="vgrid">${k3}
     ${card("Doanh thu và giá vốn theo hạng mục","Thanh màu: giá vốn so với doanh thu · vạch đen: mức 100%",c.hs.filter(x=>x.rev>0).map(x=>{const r=pct(x.cost,x.rev);return`<div class="hm" data-go="da-${p.id}-boq-${x.h.code.toLowerCase()}" style="cursor:pointer"><div>${esc(x.h.name)}<small>Doanh thu ${ty(x.rev)} tỷ · giá vốn ${ty(x.cost)} tỷ</small></div><div class="mbar" style="--c:${r>92?"#E1141B":"#0E9F9A"}"><i style="width:${Math.min(r,100)}%"></i><em style="left:calc(100% - 2px)"></em></div><b class="num">${fm(100-r)}%</b></div>`}).join(""),"span2")}
-    ${card("Việc cần chú ý","",ms([[c.ent<c.cnt?"#F08A24":"#12A150",c.ent<c.cnt?`${n0(c.cnt-c.ent)} dòng chưa nhập giá vốn`:"Đã nhập giá vốn đủ các dòng",`Đang ước tính ${fm(p.ratio,0)}% giá thầu cho các dòng còn thiếu`],...(warn?[["#E1141B",`${warn} dòng có ô thành tiền trống trong file`,"Bảng tổng hợp đang tính các dòng này bằng 0"]]:[]),...(lump?[["#2D3CE6",`${lump} khoản trọn gói chưa tách chi tiết`,"Ví dụ máy phát điện, chi phí quản lý"]]:[]),...(cf0.peak>0?[["#C21FC9","Cần ứng vốn tối đa "+ty(cf0.peak)+" tỷ","Vào "+cf0.pm+" · theo tiến độ và điều khoản giả định"]]:[]),["#8B5CF6",window.NGApp&&NGApp.drive?"Google Drive: đã kết nối":"Google Drive: chờ kết nối",window.NGApp&&NGApp.drive?"Hồ sơ lưu ở tab Hồ sơ, thư mục tự tạo khi tải file đầu tiên":"Sẽ dùng được khi quản trị viên đặt khoá Google"],...(saveOK?[]:[["#E1141B","Chưa lưu được lên máy chủ","Phần vừa sửa sẽ mất nếu tải lại trang, anh kiểm tra mạng"]])]))}
+    ${card("Việc cần chú ý","",ms([[c.ent<c.cnt?"#F08A24":"#12A150",c.ent<c.cnt?`${n0(c.cnt-c.ent)} dòng chưa nhập giá vốn`:"Đã nhập giá vốn đủ các dòng",`Đang ước tính ${fm(p.ratio,0)}% giá thầu cho các dòng còn thiếu`],...(warn?[["#E1141B",`${warn} dòng có ô thành tiền trống trong file`,"Bảng tổng hợp đang tính các dòng này bằng 0"]]:[]),...(lump?[["#2D3CE6",`${lump} khoản trọn gói chưa tách chi tiết`,"Ví dụ máy phát điện, chi phí quản lý"]]:[]),...(cf0.peak>0?[["#C21FC9","Cần ứng vốn tối đa "+ty(cf0.peak)+" tỷ","Vào "+cf0.pm+" · theo tiến độ và điều khoản giả định"]]:[]),["#8B5CF6",window.NGApp&&NGApp.drive?"Google Drive: đã kết nối":"Google Drive: chờ kết nối",window.NGApp&&NGApp.drive?"Hồ sơ lưu ở tab Thư mục dự án, thư mục tự tạo khi tải file đầu tiên":"Sẽ dùng được khi quản trị viên đặt khoá Google"],...(saveOK?[]:[["#E1141B","Chưa lưu được lên máy chủ","Phần vừa sửa sẽ mất nếu tải lại trang, anh kiểm tra mạng"]])]))}
     </div>`}
   if(s==="boq"){const sel=p.hms.find(h=>h.code.toLowerCase()===sub&&h.lines.length)||p.hms.find(h=>h.lines.length);const sc=c.hs.find(x=>x.h===sel),G=groups(p,sel);
     const gr=(g,i)=>`<tr class="gr gs" data-gi="${i}"><td colspan="4">${esc(g.k)}</td><td class="r">${n0(g.rev)}</td><td colspan="3"></td><td class="r" data-c="gv">${n0(g.v)}</td><td class="r" data-c="gn">${n0(g.n)}</td><td class="r" data-c="gm">${n0(g.m)}</td><td class="r" data-c="gt">${n0(g.t)}</td><td class="r" data-c="gg">${n0(g.rev-g.t)}</td><td></td></tr>`;
@@ -1322,7 +1368,7 @@ function localOld(){try{const d=STORE.load();return(d.projects||[]).filter(p=>!D
 function migCard(){const n=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().length:0;return n?card("Dữ liệu còn trên trình duyệt này",`Có ${n} dự án chưa đưa lên hệ thống · sau khi đưa lên, bản trên trình duyệt được giữ lại làm dự phòng`,`<button class="pill" id="mig" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Đưa lên hệ thống</button>`):""}
 /* Quyền trên giao diện: chỉ để gọn màn hình, máy chủ mới là nơi chặn thật (supabase/schema.sql) */
 const canOv=()=>!window.NGApp||NGApp.board||DB.projects.some(p=>p._role==="gd");
-const FIELD=["prog","week","mat","hr","files"],sheetsFor=b=>b&&b._noCost?BSHEETS.filter(x=>FIELD.includes(x[0])):BSHEETS;
+const FIELD=["prog","week","mat","hr","files"],sheetsFor=b=>b&&b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS;
 function projList(){const B=DB.projects,SP=canOv()?SAMPLES():[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
   <div class="plist">
   ${!window.NGApp||NGApp.board?`<label class="card pc upl" id="drop"><input type="file" id="boqf" accept=".xlsx,.xls,.xlsm" hidden>
@@ -1402,12 +1448,12 @@ function createFromPending(){const {r,form}=pending;if(!(Math.abs(r.check-r.info
   const p={id,code,name:form.name.trim()||"Dự án mới",cdt:form.cdt.trim(),loc:form.loc.trim(),qcode:form.qcode.trim(),date:form.date.trim(),file:pending.file,value:r.info.value,rounded:r.info.rounded||null,ratio:85,cost:{},created:new Date().toISOString(),hms:r.hms};
   if(old>=0){const m=boqMerge(oldP,r.hms),n={...oldP,...p,id:oldP.id,code:form.code.trim()||oldP.code,ratio:oldP.ratio,created:oldP.created,updated:new Date().toISOString(),cost:m.cost};["sched","weeks","xcost"].forEach(k=>{if(m[k])n[k]=m[k];else delete n[k]});GU.u=[];GU.r=[];GU.pid=null;DB.projects[old]=n;p.id=n.id}else DB.projects.unshift(p);
   const blob=pending.blob;persist();pending=null;location.hash="da-"+p.id;
-  if(NGApp.drive&&blob)NGB.saveNow(DB).then(k=>{if(k)return NGB.drive.upload(p.id,"01",blob)}).catch(()=>NGB.warn("Đã lưu dự án nhưng chưa lưu được file BOQ gốc lên Drive, anh tải lại ở tab Hồ sơ."))}
+  if(NGApp.guest&&blob)LOCALF.put(p.id,"01",blob).catch(()=>{});else if(NGApp.drive&&blob)NGB.saveNow(DB).then(k=>{if(k)return NGB.drive.upload(p.id,"01",blob)}).catch(()=>NGB.warn("Đã lưu dự án nhưng chưa lưu được file BOQ gốc lên Drive, anh tải lại ở tab Thư mục dự án."))}
 
 function projView(p,s,sub){const b=p.boq?DB.projects.find(x=>x.id===p.id):null,L=p.boq?sheetsFor(b):SHEETS;
   return `${backBtn("du-an","Danh sách dự án")}
   <div class="phead"><div><span class="code">${esc(p.code)}${p.demo?" · Mẫu":""}</span><h1 style="margin:10px 0 0;font-size:clamp(22px,2.4vw,32px);font-weight:600;letter-spacing:-.02em;line-height:1.2">${esc(p.name)}</h1>
-    <div class="meta"><span>📍 ${esc(p.loc)}</span><span>Chủ đầu tư: <b>${esc(p.cdt)}</b></span>${b?`<span>Hồ sơ: <b>${esc(b.qcode||"–")}</b> · ${esc(b.date||"")}</span><span>Thư mục Drive: <b>${window.NGApp&&NGApp.drive?"đã kết nối":"chờ kết nối"}</b></span>`:`<span>Chỉ huy trưởng: <b>${p.pm}</b></span>`}</div></div>${b?st("ok","Chuẩn bị thi công"):st(...lv(p))}</div>
+    <div class="meta"><span>📍 ${esc(p.loc)}</span><span>Chủ đầu tư: <b>${esc(p.cdt)}</b></span>${b?`<span>Hồ sơ: <b>${esc(b.qcode||"–")}</b> · ${esc(b.date||"")}</span><span><button class="back sm" style="margin:0" data-go="da-${p.id}-files">Mở thư mục dự án</button></span>`:`<span>Chỉ huy trưởng: <b>${p.pm}</b></span>`}</div></div>${b?st("ok","Chuẩn bị thi công"):st(...lv(p))}</div>
   <div class="sheets" role="tablist">${L.map(x=>pill(x[0],x[1],"da-"+p.id+(x[0]==="home"?"":"-"+x[0]),x[0]===s)).join("")}</div>
   ${b?bsheet(b,s,sub):sheet(p,s)}`}
 function report(){const A=allPJ(),T=k=>A.reduce((a,p)=>a+p[k],0);return `<div class="vh"><div><h1>Báo cáo tổng hợp</h1><p>Toàn công ty · ${DB.projects.length?DB.projects.length+" dự án từ BOQ":PJ.length+" công trình mẫu"}</p></div></div>
@@ -1683,7 +1729,7 @@ view.addEventListener("dragleave",e=>{const d=e.target.closest("#drop");if(d)d.c
 view.addEventListener("drop",e=>{const d=e.target.closest("#drop");if(!d)return;e.preventDefault();d.classList.remove("over");const f=e.dataTransfer.files[0];if(f)readBOQ(f)});
 view.addEventListener("click",e=>{if(e.target.closest("#mk")&&pending){createFromPending()}
   {const pv=pending&&e.target.closest("tr[data-pv]");if(pv){pending.sel=+pv.dataset.pv;pvRe();const d=view.querySelector("table.pvt");if(d)d.closest(".card").scrollIntoView({behavior:"smooth",block:"start"});return}}
-  const del=e.target.closest("#delp");if(del&&cur){if(del.dataset.ok){DB.projects=DB.projects.filter(p=>p!==cur);persist();location.hash="du-an"}else{del.dataset.ok=1;del.textContent="Bấm lần nữa để xoá hẳn";del.style.color="#C0141B"}}});
+  const del=e.target.closest("#delp");if(del&&cur){if(del.dataset.ok){if(NGApp.guest)LOCALF.delProject(cur.id).catch(()=>{});DB.projects=DB.projects.filter(p=>p!==cur);persist();location.hash="du-an"}else{del.dataset.ok=1;del.textContent="Bấm lần nữa để xoá hẳn";del.style.color="#C0141B"}}});
 view.addEventListener("click",e=>{const b=e.target.closest("[data-dec]");if(!b)return;const row=b.closest(".dc"),id=row.dataset.id,s=b.dataset.dec;
   if(s==="undo")delete DB.dec[id];else DB.dec[id]={s,at:new Date().toISOString()};
   const pr=DB.projects.find(p=>id.startsWith(p.id+"|"));if(pr&&s==="ok"){if(id.endsWith("|td"))pr.sched.auto=0;if(id.endsWith("|dk"))pr.termsOk=1}
@@ -1755,10 +1801,12 @@ window.NG={
   if(/gia tri|hop dong|doanh thu|bao nhieu tien|tong/.test(t))return`${N} có giá trị hợp đồng **${n0(c.rev)} đ** (chưa VAT), gồm ${c.hs.filter(x=>x.rev>0).length} hạng mục và ${n0(c.cnt)} dòng công việc.`;
   return"Câu này em chưa trả lời được bằng số liệu sẵn có. Khi web được kết nối Claude, em sẽ hiểu và trả lời câu hỏi tự do.\nAnh có thể hỏi về: **giá trị hợp đồng, lãi gộp, hạng mục, tiến độ, vật tư cần đặt, dòng tiền**."}};
 view.addEventListener("change",async e=>{const t=e.target;if(t.dataset.fu===undefined||!cur)return;const files=[...t.files],pid=cur.id,folder=t.dataset.fu;t.value="";
-  try{for(let i=0;i<files.length;i++){flMsg(`Đang tải ${i+1}/${files.length}: ${files[i].name}`);await NGB.drive.upload(pid,folder,files[i])}flMsg(`Đã lưu ${files.length} file lên Google Drive`);await filesLoad()}catch(er){flMsg(er.message,true);await filesLoad()}});
-view.addEventListener("click",async e=>{const d=e.target.closest("[data-fd]"),x=e.target.closest("[data-fx]");
-  if(d){flMsg("Đang tải về "+d.dataset.n);try{await NGB.drive.download(d.dataset.fd,d.dataset.n);flMsg("")}catch(er){flMsg(er.message,true)}return}
-  if(x){if(!x.dataset.ok){x.dataset.ok=1;x.textContent="Bấm lần nữa để xoá";return}try{await NGB.drive.remove(x.dataset.fx);flMsg("Đã chuyển file vào thùng rác của Google Drive");await filesLoad()}catch(er){flMsg(er.message,true)}}});
+  try{for(let i=0;i<files.length;i++){flMsg(`Đang tải ${i+1}/${files.length}: ${files[i].name}`);await FS.upload(pid,folder,files[i])}flMsg(`Đã lưu ${files.length} file vào thư mục`);await filesLoad()}catch(er){flMsg(er.message,true);await filesLoad()}});
+view.addEventListener("click",async e=>{const sel=e.target.closest("[data-fsel]"),v=e.target.closest("[data-fv]"),d=e.target.closest("[data-fd]"),x=e.target.closest("[data-fx]");
+  if(sel){flSel=sel.dataset.fsel;flMsg("");await filesLoad();return}
+  if(v){flMsg("");fileView(v.dataset.fv,v.dataset.n);return}
+  if(d){flMsg("Đang tải về "+d.dataset.n);try{saveBlob(await FS.blob(d.dataset.fd),d.dataset.n);flMsg("")}catch(er){flMsg(er.message,true)}return}
+  if(x){if(!x.dataset.ok){x.dataset.ok=1;x.textContent="Bấm lần nữa để xoá";return}try{await FS.remove(x.dataset.fx);flMsg(NGApp.guest?"Đã xoá file":"Đã chuyển file vào thùng rác của Google Drive");await filesLoad()}catch(er){flMsg(er.message,true)}}});
 window.NGApp={board:false,uid:null,drive:false,guest:false,
   /* Chế độ thử: không có phiên đăng nhập nên máy chủ không cho đọc ghi gì; số liệu chỉ nằm trên trình duyệt này, đăng nhập sau sẽ có nút đưa lên hệ thống */
   guestEnter(){const d=STORE.load();DB.projects=Array.isArray(d.projects)?d.projects:[];DB.dec=d.dec||{};DB.projects.forEach(p=>{if(!p.cost)p.cost={};if(p.ratio==null)p.ratio=85});NGApp.guest=true;NGApp.board=true;NGApp.uid=null;NGApp.drive=false;
@@ -1773,7 +1821,9 @@ view.addEventListener("click",e=>{const A=NGB.admin,t=e.target;
 view.addEventListener("change",e=>{const t=e.target;if(t.id==="admp"){admPid=t.value;adminLoad();return}
   if(t.dataset.mr!==undefined){admDo(()=>NGB.admin.setRole(admPid,t.closest("tr[data-mu]").dataset.mu,t.value))}});
 view.addEventListener("click",async e=>{const b=e.target.closest("#mig");if(!b||b.disabled)return;b.disabled=true;const old=STORE.load(),add=localOld();DB.projects=[...add,...DB.projects];DB.dec={...(old.dec||{}),...DB.dec};
-  if(await NGB.saveNow(DB)){localStorage.setItem("ngic.v1.bak",JSON.stringify(old));localStorage.removeItem("ngic.v1")}else{DB.projects=DB.projects.filter(p=>!add.includes(p))}route()});
+  if(await NGB.saveNow(DB)){localStorage.setItem("ngic.v1.bak",JSON.stringify(old));localStorage.removeItem("ngic.v1");
+    if(NGApp.drive){let left=0;for(const f of await LOCALF.all().catch(()=>[])){if(!DB.projects.some(p=>p.id===f.project_id))continue;try{await NGB.drive.upload(f.project_id,f.folder,new File([f.blob],f.name,{type:f.blob.type}));await LOCALF.del(f.id)}catch(er){left++}}if(left)NGB.warn(left+" file chưa đưa lên được Google Drive, vẫn còn trên trình duyệt này.")}
+  }else{DB.projects=DB.projects.filter(p=>!add.includes(p))}route()});
 NGBoot();
 })();
 /* ===== Toàn màn hình ===== */
