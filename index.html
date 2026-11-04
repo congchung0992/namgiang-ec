@@ -733,7 +733,7 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
         <h2>Trợ lý<br>Nam Giang</h2>
         <p>Hỏi về doanh thu, tiến độ, vật tư hay nhân sự của bất kỳ công trình nào.</p>
         <form class="ask" id="askf"><input id="ask" placeholder="Anh cần hỏi gì?" autocomplete="off"><button aria-label="Gửi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
-        <div class="sugg"><button data-s="Công trình nào đang chậm?">Công trình nào chậm?</button><button data-s="Thép D25 còn bao nhiêu?">Tồn thép D25</button></div>
+        <div class="sugg"><button data-s="Lãi gộp dự kiến bao nhiêu?">Lãi gộp dự kiến?</button><button data-s="Vật tư nào cần đặt sớm?">Vật tư cần đặt?</button></div>
         <div id="reply"></div>
       </section>
     </div>
@@ -872,7 +872,7 @@ const PER={
  y:{lab:["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12"],rev:391.2,revD:14,cost:[24.9,20.3,31.2,33,36.8,35.1,38.6,42.4,39.8,43.1,0,0],costT:345.2,costD:11,unit:"10 tháng 2026",vs:"so với cùng kỳ 2025"}};
 const fm=v=>v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1});
 let PCUR=PER,curP="m";
-function rev(p){curP=p;const d=PCUR[p],mx=Math.max(...d.cost,0)||1,n=d.cost.length,top=d.cost.indexOf(Math.max(...d.cost)),fm=d.f||(v=>v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1}));
+function rev(p){curP=p;const d=PCUR[p],mx0=Math.max(...d.cost,0),mx=mx0||1,n=d.cost.length,top=d.cost.indexOf(mx0),fm=d.f||(v=>v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1}));
  const bw=100/n;const bars=d.cost.map((v,i)=>`<rect x="${i*bw+bw*.14}" y="${100-v/mx*92}" width="${bw*.72}" height="${v/mx*92}" fill="${i===top?"#7C4DFF":"#C9A8FF"}" rx="0.6"><title>${d.lab[i]}: ${fm(v)} tỷ</title></rect>`).join("");
  const ch=(v)=>v==null?"":`<span class="ch${v<0?" dn":""}">${v<0?"▼":"▲"} ${Math.abs(v)}%</span>`;
  document.getElementById("rev").innerHTML=`
@@ -880,7 +880,7 @@ function rev(p){curP=p;const d=PCUR[p],mx=Math.max(...d.cost,0)||1,n=d.cost.leng
    <div class="area"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6D5BFF"/><stop offset="1" stop-color="#8B7BFF" stop-opacity=".85"/></linearGradient></defs><rect x="0" y="${100-Math.min(d.rev/(d.rev+d.costT)*130,92)}" width="100" height="100" fill="url(#rg)"/></svg></div></div>
   <div class="col"><div>${ch(d.costD)}<span class="vs">${d.vs}</span></div><b class="num">${fm(d.costT)} tỷ</b><span class="lab">chi phí ${d.unit}</span>
    <div class="area" id="carea"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${bars}</svg>
-   <span class="tip" style="left:${(top+.5)*bw}%;top:${100-92}%">${fm(mx)} tỷ<small>${d.tip?d.tip(top):p==="m"?"ngày "+d.lab[top]+"/10":d.lab[top]}</small></span></div></div>`;
+   ${mx0>0?`<span class="tip" style="left:${(top+.5)*bw}%;top:${100-92}%">${fm(mx0)} tỷ<small>${d.tip?d.tip(top):p==="m"?"ngày "+d.lab[top]+"/10":d.lab[top]}</small></span>`:""}</div></div>`;
  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.p===p))}
 document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.closest("button");if(b)rev(b.dataset.p)});rev("m");
 
@@ -1131,7 +1131,7 @@ function calc(p){let rev=0,ent=0,cnt=0,vl=0,nc=0,eq=0,cv=0,cn=0,cm=0;const hs=p.
 function groups(p,h){const G=[],ix={};h.lines.forEach(l=>{const k=l.g1||h.name;if(!(k in ix)){ix[k]=G.length;G.push({k,rev:0,v:0,n:0,m:0,t:0})}const g=G[ix[k]],c=lineCost(p,l);g.rev+=l.total||0;g.v+=c.v;g.n+=c.n;g.m+=c.m;g.t+=c.t});return G}
 const pct=(a,b)=>b?a/b*100:0;
 function asPJ(p){return{id:p.id,code:p.code,name:p.name,loc:p.loc,cdt:p.cdt,value:p.value/1e9,billed:0,collected:0,cost:0,plan:0,actual:0,boq:1}}
-const SAMPLES=()=>DB.projects.length?[]:PJ;
+const SAMPLES=()=>[];
 const allPJ=()=>[...DB.projects.map(asPJ),...SAMPLES()];
 
 /* tổng hợp vật liệu chính từ BOQ */
@@ -1369,7 +1369,7 @@ function migCard(){const n=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().le
 /* Quyền trên giao diện: chỉ để gọn màn hình, máy chủ mới là nơi chặn thật (supabase/schema.sql) */
 const canOv=()=>!window.NGApp||NGApp.board||DB.projects.some(p=>p._role==="gd");
 const FIELD=["prog","week","mat","hr","files"],sheetsFor=b=>b&&b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS;
-function projList(){const B=DB.projects,SP=canOv()?SAMPLES():[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
+function projList(){const B=DB.projects,SP=canOv()?SAMPLES():[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":window.NGApp&&NGApp.board?"Chưa có dự án nào, anh tải BOQ để tạo dự án đầu tiên":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
   <div class="plist">
   ${!window.NGApp||NGApp.board?`<label class="card pc upl" id="drop"><input type="file" id="boqf" accept=".xlsx,.xls,.xlsm" hidden>
     <div class="row"><div><h3>Thêm dự án từ BOQ</h3><div class="loc">Kéo thả file Excel vào đây hoặc bấm để chọn file</div></div><span class="pill" style="${sv("boq")};pointer-events:none"><span class="dot">${ic("up",2)}</span>Tải BOQ lên</span></div>
@@ -1456,7 +1456,7 @@ function projView(p,s,sub){const b=p.boq?DB.projects.find(x=>x.id===p.id):null,L
     <div class="meta"><span>📍 ${esc(p.loc)}</span><span>Chủ đầu tư: <b>${esc(p.cdt)}</b></span>${b?`<span>Hồ sơ: <b>${esc(b.qcode||"–")}</b> · ${esc(b.date||"")}</span><span><button class="back sm" style="margin:0" data-go="da-${p.id}-files">Mở thư mục dự án</button></span>`:`<span>Chỉ huy trưởng: <b>${p.pm}</b></span>`}</div></div>${b?st("ok","Chuẩn bị thi công"):st(...lv(p))}</div>
   <div class="sheets" role="tablist">${L.map(x=>pill(x[0],x[1],"da-"+p.id+(x[0]==="home"?"":"-"+x[0]),x[0]===s)).join("")}</div>
   ${b?bsheet(b,s,sub):sheet(p,s)}`}
-function report(){const A=allPJ(),T=k=>A.reduce((a,p)=>a+p[k],0);return `<div class="vh"><div><h1>Báo cáo tổng hợp</h1><p>Toàn công ty · ${DB.projects.length?DB.projects.length+" dự án từ BOQ":PJ.length+" công trình mẫu"}</p></div></div>
+function report(){const A=allPJ(),T=k=>A.reduce((a,p)=>a+p[k],0);return `<div class="vh"><div><h1>Báo cáo tổng hợp</h1><p>Toàn công ty · ${DB.projects.length} dự án từ BOQ</p></div></div>
   <div class="vgrid">${kc("proj","Tổng giá trị hợp đồng",fm(T("value")),"tỷ",A.length+" công trình")}${kc("rev","Tổng nghiệm thu",fm(T("billed")),"tỷ","Đã thu "+fm(T("collected"))+" tỷ")}${kc("cost","Tổng chi phí",fm(T("cost")),"tỷ",(T("billed")?Math.round(T("cost")/T("billed")*100)+"% giá trị nghiệm thu":"Chưa có phiếu chi thực tế"))}
   ${card("So sánh các dự án","Bấm vào tên để mở dự án",`<div class="tw"><table class="t"><thead><tr><th>Công trình</th><th class="r">Giá trị HĐ</th><th class="r">Nghiệm thu</th><th class="r">Chi phí</th><th class="r">Công nợ</th><th style="min-width:130px">Tiến độ</th></tr></thead><tbody>${A.map(p=>`<tr data-go="da-${p.id}" style="cursor:pointer"><td><b>${esc(p.name)}</b><div style="font-size:12px;color:var(--muted)">${esc(p.code)}${p.demo?" · Mẫu":""}</div></td><td class="r">${fm(p.value)}</td><td class="r">${fm(p.billed)}</td><td class="r">${fm(p.cost)}</td><td class="r">${fm(p.billed-p.collected)}</td><td>${p.boq?`<span class="sub">Chưa lập tiến độ</span>`:`<div class="mbar" style="--c:${lv(p)[0]==="bad"?"#E1141B":"#2D3CE6"}"><i style="width:${p.actual}%"></i><em style="left:${p.plan}%"></em></div>`}</td></tr>`).join("")}</tbody></table></div>`,"span3")}</div>`}
 
@@ -1531,7 +1531,7 @@ function brief(){const now=new Date(),L=decisions(),P=waiting(L),B=DB.projects.m
     if(c.ent<c.cnt)exc.push(["#F08A24",`${p.name}: ${n0(c.cnt-c.ent)} dòng giá vốn còn ước tính`,"Biên lãi chưa chắc chắn"])});
   slow.forEach(p=>exc.push(["#E1141B",`${p.name}: chậm ${p.plan-p.actual}% (mẫu)`,"Kế hoạch "+p.plan+"% · thực tế "+p.actual+"%"]));
   const day=["Chủ nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"][now.getDay()];
-  return `<div class="vh"><div><h1>Bản tin sáng</h1><p>${day}, ${fd(now)} · ${DB.projects.length?DB.projects.length+" dự án từ BOQ":PJ.length+" công trình mẫu"} · khi có agent, bản tin tự tạo lúc 6:30 mỗi sáng</p></div><button class="back" data-go="duyet" style="margin:0">Mở hộp quyết định (${P.length})</button></div>
+  return `<div class="vh"><div><h1>Bản tin sáng</h1><p>${day}, ${fd(now)} · ${DB.projects.length} dự án từ BOQ · khi có agent, bản tin tự tạo lúc 6:30 mỗi sáng</p></div><button class="back" data-go="duyet" style="margin:0">Mở hộp quyết định (${P.length})</button></div>
   <div class="vgrid">${kc("cost","Việc chờ anh quyết",P.length,"việc",mit.length?"3 việc quan trọng nhất ở bên dưới":"Không có việc tồn")}${kc(peak>0?"mat":"rev","Vốn cần ứng tối đa",ty(peak),"tỷ",peak>0?"Cộng các dự án":"Dòng tiền chưa âm")}${kc("prog","Vật tư phải đặt trong 14 ngày",ord14,"loại",ord14?"Xem trong hộp quyết định":"Chưa có hạn gần")}
   ${card("3 việc quan trọng nhất hôm nay","Chỉ làm 3 việc này cho xong · việc vặt để agent lo",mit.length?mit.map((x,i)=>`<div class="ms mit"><i style="background:${COL[TYP[x.t][0]][0]}"></i><div><b>${i+1}. ${esc(x.title)}</b><span>${esc(x.p.name)} · ${esc(x.why)}</span></div>${dueTxt(x.due)}</div>`).join(""):`<div class="sub">Hôm nay không có việc gấp.</div>`,"span2")}
   ${card("Đang đỏ","Tin xấu đưa lên trước",exc.length?ms(exc.slice(0,7)):`<div class="sub">Không có cảnh báo.</div>`)}
@@ -1541,10 +1541,12 @@ function brief(){const now=new Date(),L=decisions(),P=waiting(L),B=DB.projects.m
 /* ---------- Thẻ chào: tình hình dự án thay bản đồ ---------- */
 function ring(v,c){const r=17,L=2*Math.PI*r,p=Math.max(0,Math.min(100,v||0));return `<svg class="rg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="${r}" fill="none" stroke="#E4E5EA" stroke-width="5"/><circle cx="22" cy="22" r="${r}" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${L*p/100} ${L}" transform="rotate(-90 22 22)"/><text x="22" y="26" text-anchor="middle" font-size="11" font-weight="600" fill="#16171C">${Math.round(p)}%</text></svg>`}
 /* Tổng quan: có dự án thật thì mọi thẻ tính từ dự án thật (BOQ, giá vốn, tiến độ); chưa có thì giữ số mẫu */
-let HOME0=null;
-function homeSample(){if(!HOME0)return;const K=document.getElementById("kpis"),pie=document.querySelector(".pie");K.innerHTML=HOME0.k;pie.querySelector("h3").textContent=HOME0.h;pie.querySelector(".sub").textContent=HOME0.s;pie.querySelector(".total").innerHTML=HOME0.t;drawPie(CG);PCUR=PER;const y=document.querySelector('.seg [data-p="y"]');if(y)y.textContent="Năm";rev(curP);HOME0=null}
 function homeReal(){const K=document.getElementById("kpis"),pie=document.querySelector(".pie");if(!K||!pie)return;
-  if(!HOME0)HOME0={k:K.innerHTML,h:pie.querySelector("h3").textContent,s:pie.querySelector(".sub").textContent,t:pie.querySelector(".total").innerHTML};
+  const set=(id,h,sm,led,foot,go)=>{const c=document.getElementById(id);if(!c)return;c.querySelector("h3").textContent=h;c.querySelector(".gt small").textContent=sm;c.querySelector(".led").innerHTML=led;c.querySelector(".gfoot").innerHTML=foot;c.dataset.go=go};
+  const yb=document.querySelector('.seg [data-p="y"]');if(yb)yb.textContent="Toàn bộ";const sp=document.getElementById("spark");if(sp)sp.style.display="none";
+  if(!DB.projects.length){const E={lab:[],rev:0,revD:null,cost:[],costT:0,costD:null,vs:"chưa có dự án",f:v=>v.toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2})};PCUR={w:{...E,unit:"tuần này"},m:{...E,unit:"tháng này"},y:{...E,unit:"toàn bộ kế hoạch"}};rev(curP);
+    const ft=t=>`<div><p style="margin:0">${t}</p></div>`;set("t-rev","Giá trị hợp đồng","Chưa có dự án",`0<small>tỷ</small>`,ft("Tải BOQ ở trang Dự án để bắt đầu"),"du-an");set("t-pay","Vốn cần ứng tối đa","Chưa có dự án",`0<small>tỷ</small>`,ft("Tính khi đã có tiến độ"),"du-an");set("t-prog","Tiến độ thực tế","Chưa có dự án",`0<small>%</small>`,ft("Tính khi đã có tiến độ"),"du-an");
+    pie.querySelector("h3").textContent="Giá vốn theo nhóm";pie.querySelector(".sub").textContent="Chưa có số liệu";drawPie([]);pie.querySelector(".total").innerHTML=`<b class="num">0 tỷ</b><span class="sub">tổng giá vốn</span>`;return}
   const R=DB.projects.map(p=>{const c=calc(p),tl=timeline(p),cf=cash(p,tl),g=gStat(p,tl);return{p,c,tl,cf,g}}),S=k=>R.reduce((a,x)=>a+x.c[k],0),n=R.length,revT=S("rev"),costT=S("cost"),peak=R.reduce((a,x)=>a+x.cf.peak,0);
   const day={},dk=d=>fd(d);R.forEach(({p,tl})=>tl.T.forEach(x=>{const q=p.sched.t[x.key];if(!q||!(q.d>0))return;for(let o=q.s;o<q.s+q.d;o++){const k=dk(addD(tl.st,o)),e=day[k]||(day[k]={r:0,c:0});e.r+=x.rev/q.d;e.c+=x.cost/q.d}}));
   const today=new Date(),t0=new Date(today.getFullYear(),today.getMonth(),today.getDate()),start=new Date(Math.min(...R.map(x=>+x.tl.st))),end=new Date(Math.max(...R.map(x=>+addD(x.tl.st,Math.max(x.tl.end-1,0))))),at=t0<start?start:t0>end?end:t0;
@@ -1555,11 +1557,10 @@ function homeReal(){const K=document.getElementById("kpis"),pie=document.querySe
   PCUR={w:{lab:["T2","T3","T4","T5","T6","T7","CN"],rev:b(WK.r),revD:null,cost:wk.map(x=>b(x.c)),costT:b(WK.c),costD:null,unit:"tuần "+fd(mon).slice(0,5),vs,f:f2},
     m:{lab:md.map((_,i)=>String(i+1)),rev:b(MD.r),revD:null,cost:md.map(x=>b(x.c)),costT:b(MD.c),costD:null,unit:"tháng "+mm+"/"+yy,vs,f:f2,tip:i=>"ngày "+(i+1)+"/"+mm},
     y:{lab:ms.map(x=>lb(x.d)),rev:b(revT),revD:null,cost:ms.map(x=>b(x.v.c)),costT:b(costT),costD:null,unit:"toàn bộ kế hoạch",vs,f:f2}};
-  const yb=document.querySelector('.seg [data-p="y"]');if(yb)yb.textContent="Toàn bộ";rev(curP);
-  const set=(id,h,sm,led,foot,go)=>{const c=document.getElementById(id);if(!c)return;c.querySelector("h3").textContent=h;c.querySelector(".gt small").textContent=sm;c.querySelector(".led").innerHTML=led;c.querySelector(".gfoot").innerHTML=foot;c.dataset.go=go};
+  rev(curP);
   const mg=pct(revT-costT,revT),thisM=sum(new Date(t0.getFullYear(),t0.getMonth(),1),new Date(t0.getFullYear(),t0.getMonth()+1,0).getDate());
   set("t-rev","Giá trị hợp đồng",n+" dự án · chưa VAT",`${ty(revT)}<small>tỷ</small>`,`<div><p style="margin:0"><b style="font-size:16px;color:#fff">Lãi gộp dự kiến ${fm(mg)}%</b></p><p>Kế hoạch tháng ${t0.getMonth()+1}: ${f2(thisM.r/1e9)} tỷ</p></div>`,"du-an");
-  const pr=R.filter(x=>x.cf.peak>0).sort((a,b)=>b.cf.peak-a.cf.peak)[0],sp=document.getElementById("spark");if(sp)sp.style.display="none";
+  const pr=R.filter(x=>x.cf.peak>0).sort((a,b)=>b.cf.peak-a.cf.peak)[0];
   set("t-pay","Vốn cần ứng tối đa","theo tiến độ, điều khoản giả định",`${ty(peak)}<small>tỷ</small>`,`<div><p style="margin:0"><b style="font-size:16px;color:#fff">${pr?"Cao nhất vào "+esc(pr.cf.pm):"Dòng tiền chưa âm"}</b></p><p>Chưa có số nghiệm thu, công nợ</p></div>`,"ban-tin");
   const wR=revT||1,act=R.reduce((a,x)=>a+x.g.act*x.c.rev,0)/wR,pl=R.reduce((a,x)=>a+x.g.plan*x.c.rev,0)/wR,A=Math.min(act,100)/100*2*Math.PI,big=A>Math.PI?1:0,ex=22+18*Math.sin(A),ey=22-18*Math.cos(A);
   set("t-prog","Tiến độ thực tế","theo % cập nhật trên tiến độ",`${fm(act,0)}<small>%</small>`,`<svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="rgba(255,255,255,.12)"/>${act>=100?'<circle cx="22" cy="22" r="18" fill="rgba(255,255,255,.85)"/>':act>0?`<path d="M22 22 L22 4 A18 18 0 ${big} 1 ${ex} ${ey} Z" fill="rgba(255,255,255,.85)"/>`:""}</svg><div style="text-align:right"><span class="up">Kế hoạch ${fm(pl,0)}%</span><p>${t0<start?"Khởi công "+fd(start):"Đến hôm nay"}</p></div>`,"du-an");
@@ -1567,12 +1568,13 @@ function homeReal(){const K=document.getElementById("kpis"),pie=document.querySe
   pie.querySelector("h3").textContent="Giá vốn theo nhóm";pie.querySelector(".sub").textContent=`Dự toán ${n} dự án`+(est>0?` · còn ${fm(est,0)}% dòng ước tính`:"");
   drawPie([["Vật tư",S("cv")/1e9,"#2D3CE6","#7FA2FF"],["Nhân công",S("cn")/1e9,"#C21FC9","#F08AF0"],["Máy, thiết bị",S("cm")/1e9,"#12A150","#6BE59B"]]);
   pie.querySelector(".total").innerHTML=`<b class="num">${ty(costT)} tỷ</b><span class="sub">tổng giá vốn · ${fm(pct(costT,revT),0)}% giá trị hợp đồng</span>`}
-window.renderHello=function(){if(DB.projects.length)homeReal();else homeSample();const box=document.getElementById("hp");if(!box)return;const now=new Date(),np=waiting(decisions()).length;
+window.renderHello=function(){homeReal();const box=document.getElementById("hp");if(!box)return;const now=new Date(),np=waiting(decisions()).length;
   const rows=[...DB.projects.map(p=>{const tl=timeline(p),c=calc(p),el=Math.round((now-tl.st)/864e5);const pr=el<=0?0:Math.min(100,el/tl.end*100);
       return{id:p.id,name:p.name,v:pr,c:"#2D3CE6",sub:el<0?`Khởi công sau ${-el} ngày · lãi gộp ${fm(pct(c.gp,c.rev),0)}%`:`Theo lịch ${fm(pr,0)}% · lãi gộp ${fm(pct(c.gp,c.rev),0)}%`,val:c.rev/1e9,tag:st("ok",el<0?"Chuẩn bị":"Đang thi công")}}),
     ...SAMPLES().map(p=>{const [l,lt]=lv(p);return{id:p.id,name:p.name,v:p.actual,c:l==="ok"?"#12A150":l==="warn"?"#F08A24":"#E1141B",sub:`Kế hoạch ${p.plan}% · ${p.loc}`,val:p.value,tag:st(l,lt),demo:1}})].slice(0,4);
   const sub=document.querySelector(".hello .sub");if(sub)sub.textContent=`${DB.projects.length+SAMPLES().length} công trình · ${np} việc chờ anh duyệt`;
-  box.innerHTML=rows.map(r=>`<button class="hpr" data-go="da-${r.id}">${ring(r.v,r.c)}<div class="hn"><b>${esc(r.name)}${r.demo?' <small class="mau">Mẫu</small>':""}</b><span>${esc(r.sub)}</span></div><div class="hv"><b class="num">${fm(r.val)} tỷ</b>${r.tag}</div></button>`).join("")+
+  const wait=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().length:0,emp=rows.length?"":`<div class="sub" style="padding:14px 4px">${wait?`Trình duyệt này còn ${wait} dự án chưa đưa lên hệ thống.`:"Chưa có dự án nào."}</div>${wait?`<button class="pill" data-go="du-an" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Đưa ${wait} dự án lên hệ thống</button>`:`<button class="pill" data-go="du-an" style="${sv("boq")}"><span class="dot">${ic("up",2)}</span>Tải BOQ tạo dự án</button>`}`;
+  box.innerHTML=emp+rows.map(r=>`<button class="hpr" data-go="da-${r.id}">${ring(r.v,r.c)}<div class="hn"><b>${esc(r.name)}${r.demo?' <small class="mau">Mẫu</small>':""}</b><span>${esc(r.sub)}</span></div><div class="hv"><b class="num">${fm(r.val)} tỷ</b>${r.tag}</div></button>`).join("")+
     `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div>`};
 /* ---------- Điều hướng ---------- */
 const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["rep","Báo cáo","bao-cao"],["hr","Quản trị","quan-tri"]];
@@ -1601,7 +1603,7 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){top="du-an";const L=p.boq?sheetsFor(DB.projects.find(x=>x.id===id)):SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:L[0][0],sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
-  const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=!isHome||DB.projects.length>0;document.body.classList.toggle("scroll",!isHome);
+  const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
   if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri")adminLoad();if(document.getElementById("fls"))filesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
