@@ -2,7 +2,7 @@
 
 Hệ thống quản trị nội bộ của **Công ty Cổ phần Đầu tư và Xây lắp Nam Giang** (tổng thầu xây dựng).
 
-> Đăng nhập và số liệu dự án dùng Supabase; lược đồ và phân quyền ở `supabase/schema.sql`. Khoá công khai trong `index.html` được phép lộ, quyền do máy chủ quyết định. Tài khoản do quản trị viên tạo ở Supabase rồi phân quyền ở màn Quản trị. Các công trình "Mẫu" là số liệu minh hoạ.
+> Đăng nhập và số liệu dự án dùng Supabase; lược đồ và phân quyền ở `supabase/schema.sql`. Khoá công khai trong `index.html` được phép lộ, quyền do máy chủ quyết định. Tài khoản do quản trị viên tạo ở Supabase rồi phân quyền ở màn Quản trị.
 
 > File hồ sơ (tab Hồ sơ) lưu ở Google Drive của công ty qua `functions/api/drive.js`. Biến bí mật trên Cloudflare: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` (phạm vi `drive.file`). Chưa đặt thì tab Hồ sơ báo chưa kết nối.
 
