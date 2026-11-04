@@ -835,7 +835,9 @@ window.NGB=(function(){
       async remove(id){await this.call({action:"delete",id},{method:"DELETE"})},
       async classify(body){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
         const r=await fetch("api/classify",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+session.access_token},body:JSON.stringify(body)});
-        if(!r.ok)throw new Error("classify_"+r.status);return r.json()}
+        if(!r.ok)throw new Error("classify_"+r.status);return r.json()},
+      async geocode(q){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
+        const r=await fetch("api/geocode?q="+encodeURIComponent(q),{headers:{authorization:"Bearer "+session.access_token}});if(!r.ok)throw new Error("geocode_"+r.status);return r.json()}
     },
     queue(db,cb){lastDb=db;onState=cb;dirty=true;clearTimeout(timer);timer=setTimeout(run,300)},
     async saveNow(db){lastDb=db;clearTimeout(timer);while(running)await new Promise(r=>setTimeout(r,100));try{await flush(db);dirty=false;toast("");return true}catch(e){toast("Chưa lưu được lên máy chủ, dữ liệu trên trình duyệt vẫn còn nguyên.");return false}}
@@ -1329,17 +1331,20 @@ const OSMT={industrial:"khu công nghiệp",suburb:"phường/xã",quarter:"phư
 async function osmFind(q){const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=vn&limit=1&accept-language=vi&q="+encodeURIComponent(q));if(!r.ok)return null;const x=(await r.json())[0];if(!x)return null;
   return{lat:+(+x.lat).toFixed(4),lon:+(+x.lon).toFixed(4),name:x.name||q,acc:OSMT[x.addresstype]||OSMT[x.type]||"địa chỉ"}}
 const wxLot=x=>{x=x.trim();if(/^(lô|ô|thửa|số|nhà)\s/i.test(x)){const m=x.match(/\s(kcn|khu|cụm|ccn|đường|phố|thôn|xóm|ấp)\s/i);x=m?x.slice(m.index+1):""}return x};
+/* Google Maps hiểu địa chỉ Việt Nam tốt nhất (cần khoá GOOGLE_MAPS_KEY trên Cloudflare); không có thì dùng OpenStreetMap */
+async function gmFind(q){if(!window.NGApp||NGApp.guest||!q)return null;try{const g=await NGB.drive.geocode(q);return g&&g.lat!=null?{...g,src:"Google Maps"}:null}catch(e){return null}}
 async function wxLocate(loc){const raw=String(loc||"").split(/[,;]/).map(wxLot).filter(Boolean);
+  const gm=await gmFind(String(loc||"").trim());if(gm&&!(gm.partial&&gm.acc==="khu vực gần đúng"))return gm;
   for(let i=0;i<raw.length;i++){const q=raw.slice(i).join(", ");for(const v of [...new Set([q,q.replace(/^kcn\s/i,"Khu công nghiệp ")])]){const g=await osmFind(v).catch(()=>null);if(g&&(g.acc!=="tỉnh"||i===raw.length-1))return g}}
   const parts=raw.map(wxClean).filter(x=>x&&!/\d/.test(x)),prov=parts[parts.length-1];
   for(let i=parts.length-2;i>=0;i--){const g=await wxFind(parts[i],prov).catch(()=>null);if(g)return{...g,acc:"phường/xã"}}
-  const g=prov?await wxFind(prov).catch(()=>null):null;return g&&{...g,acc:"tỉnh"}}
+  if(gm)return gm;const g=prov?await wxFind(prov).catch(()=>null):null;return g&&{...g,acc:"tỉnh"}}
 function wxTips(d){const t=[];if(d.rain>=10||d.pp>=80)t.push(["bad","Mưa lớn: không đổ bê tông, che chắn vật tư"]);else if(d.rain>=3||d.pp>=60)t.push(["warn","Có thể mưa: chuẩn bị bạt che khi đổ bê tông"]);
   if(d.wind>=40||d.gust>=60)t.push(["bad","Gió mạnh: dừng cẩu, làm việc trên cao"]);else if(d.wind>=30||d.gust>=45)t.push(["warn","Gió khá mạnh: chú ý khi cẩu lắp"]);
   if(d.tmax>=37)t.push(["warn","Nắng nóng: bảo dưỡng bê tông, nghỉ trưa dài hơn"]);return t}
 async function wxLoad(){const box=document.getElementById("wx"),p=cur;if(!box||!p)return;const set=h=>{const b=document.getElementById("wx");if(b&&cur===p)b.innerHTML=h};
-  const head=g=>`<div class="bh" style="align-items:flex-start"><div><h3>Thời tiết công trường · 10 ngày</h3><span class="sub">${g?"📍 "+esc(g.name)+` · chính xác tới ${esc(g.acc||"vị trí")} · ${g.lat}, ${g.lon}`:"Chưa xác định vị trí"} · mô hình ECMWF (châu Âu), đối chiếu GFS (Mỹ)</span></div><button class="back sm" style="margin:0" id="wxp">Đổi địa điểm</button></div>`;
-  try{let g=wxGet(p.id);if(!g||g.v!==2&&!g.manual||(!g.manual&&g.loc!==p.loc)){g=await wxLocate(p.loc);if(g){g.loc=p.loc;g.v=2;wxSet(p.id,g)}}
+  const head=g=>`<div class="bh" style="align-items:flex-start"><div><h3>Thời tiết công trường · 10 ngày</h3><span class="sub">${g?"📍 "+esc(g.name)+` · chính xác tới ${esc(g.acc||"vị trí")}${g.src?" theo "+g.src:""} · <a href="https://www.google.com/maps?q=${g.lat},${g.lon}" target="_blank" rel="noopener">${g.lat}, ${g.lon}</a>`:"Chưa xác định vị trí"} · mô hình ECMWF (châu Âu), đối chiếu GFS (Mỹ)</span></div><button class="back sm" style="margin:0" id="wxp">Đổi địa điểm</button></div>`;
+  try{let g=wxGet(p.id);if(!g||g.v!==3&&!g.manual||(!g.manual&&g.loc!==p.loc)){g=await wxLocate(p.loc);if(g){g.loc=p.loc;g.v=3;wxSet(p.id,g)}}
     if(!g){set(head(null)+`<div class="sub" style="margin-top:10px">Không tìm được vị trí từ địa chỉ dự án. Anh bấm Đổi địa điểm, gõ tên khu công nghiệp/phường hoặc dán toạ độ từ Google Maps.</div>`);return}
     const V="weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max";
     const u=`https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}&timezone=Asia%2FBangkok&forecast_days=10&models=ecmwf_ifs025,gfs_seamless,best_match&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=${V}`;
@@ -1362,7 +1367,7 @@ document.addEventListener("click",e=>{if(!e.target.closest("#wxp")||!cur)return;
   box.querySelector(".bh").insertAdjacentHTML("afterend",`<form class="wxf" style="display:flex;gap:8px;margin-top:10px"><input class="fi" style="flex:1;min-width:0" placeholder="Tên KCN/phường, tỉnh · hoặc dán toạ độ Google Maps, ví dụ 20.6201, 105.9407" required><button class="back sm" style="margin:0">Tìm</button></form>`);
   const f=box.querySelector(".wxf"),inp=f.querySelector("input");inp.focus();
   f.onsubmit=async ev=>{ev.preventDefault();const v=inp.value.trim(),m=v.match(/^\s*(-?\d{1,2}(?:\.\d+)?)\s*[,; ]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/),q=v.split(",").map(wxClean).filter(Boolean);
-    const g=m?{lat:+(+m[1]).toFixed(4),lon:+(+m[2]).toFixed(4),name:"Toạ độ anh chọn",acc:"toạ độ"}:await osmFind(v).catch(()=>null)||await wxFind(q[0],q[1]).catch(()=>null)||(q[1]?await wxFind(q[1]).catch(()=>null):null);
+    const g=m?{lat:+(+m[1]).toFixed(4),lon:+(+m[2]).toFixed(4),name:"Toạ độ anh chọn",acc:"toạ độ"}:await gmFind(v)||await osmFind(v).catch(()=>null)||await wxFind(q[0],q[1]).catch(()=>null)||(q[1]?await wxFind(q[1]).catch(()=>null):null);
     if(!g){inp.value="";inp.placeholder="Không tìm thấy, anh thử tên khác";return}g.manual=1;g.loc=p.loc;wxSet(p.id,g);wxLoad()}});
 const filesView=()=>`<div class="sub" id="flmsg" style="min-height:18px;margin-bottom:8px"></div><div class="vgrid" id="fls"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`;
 let flSel=null;

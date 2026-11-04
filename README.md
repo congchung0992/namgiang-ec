@@ -38,3 +38,7 @@ manifest.webmanifest    Cho phép "Thêm vào màn hình chính" trên điện t
 ## Trợ lý AI (khung chat)
 - Nút tin nhắn ở góc phải dưới mở khung chat. Chưa kết nối Claude thì trợ lý trả lời từ số liệu trên web.
 - Kết nối Claude: vào Cloudflare → Workers & Pages → namgiang-ec → Settings → Variables and Secrets, thêm biến bí mật `ANTHROPIC_API_KEY` (khoá lấy ở console.anthropic.com), rồi triển khai lại. Mã xử lý nằm ở `functions/api/chat.js`; khoá không nằm trong mã nguồn.
+
+## Thời tiết công trường
+- Dự báo lấy từ Open-Meteo (mô hình ECMWF, đối chiếu GFS), không cần khoá.
+- Vị trí công trường tra bằng Google Maps qua `functions/api/geocode.js`, biến bí mật `GOOGLE_MAPS_KEY` trên Cloudflare (Google Cloud → bật **Geocoding API** → tạo API key, giới hạn chỉ dùng Geocoding API). Chưa đặt khoá thì web tìm bằng OpenStreetMap.
