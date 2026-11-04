@@ -910,7 +910,9 @@ document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.clo
 /* ===== Bộ đọc BOQ (tự nhận diện sheet/cột) ===== */
 var BOQ=(function(){
 function nz(s){return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim();}
-function num(v){if(typeof v==='number')return isFinite(v)?v:null;var s=String(v==null?'':v).trim();if(!s)return null;s=s.replace(/\s/g,'');if(/^-?[\d.]+,\d+$/.test(s))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'');var n=Number(s);return isFinite(n)?n:null;}
+function num(v){if(typeof v==='number')return isFinite(v)?v:null;var s=String(v==null?'':v).trim();if(!s)return null;s=s.replace(/\s/g,'');/* kiểu Việt Nam: dấu chấm phân cách nghìn, dấu phẩy thập phân (1.234.567 · 1.234 · 1.234,5 · 1,5) */if(/^-?[1-9]\d{0,2}(\.\d{3})+(,\d+)?$/.test(s)||/^-?[\d.]+,\d+$/.test(s))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'');var n=Number(s);return isFinite(n)?n:null;}
+var TOL=1;/* lệch dưới 1 đồng coi là khớp (chừa sai số phép tính số thực) */
+function okSum(a,b){return Math.abs(a-b)<TOL;}
 var ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x|xi|xii|xiii|xiv|xv|xvi|xvii|xviii|xix|xx)$/i;
 function kind(stt){var s=String(stt==null?'':stt).trim();if(!s)return'';if(ROMAN.test(s))return'R';if(/^[A-Za-z]$/.test(s))return'L';if(/^\d+([.,]\d+)*$/.test(s))return'N';return'S';}
 function findHeader(a){
@@ -945,7 +947,9 @@ function mapCols(a,h){
   if(c.stt==null)c.stt=0;if(c.name==null)c.name=1;
   return {c:c,start:(sr>h?sr:h)+1,sr:sr};}
 function words(s){return nz(s).replace(/[^a-z0-9 ]/g,' ').split(' ').filter(function(w){return w&&!/^(lot|nha|xuong|tram|day|update|hang|muc|thi|cong)$/.test(w);});}
-function sim(a,b){var A=words(a),B=words(b);if(!A.length||!B.length)return 0;var s=0;A.forEach(function(w){if(B.indexOf(w)>=0)s++;});return s/Math.max(A.length,B.length);}
+function sim(a,b){var A=words(a),B=words(b);
+  /* tên chỉ gồm từ chung (vd "Nhà xưởng"): ghép khi hai tên trùng nhau hoàn toàn */
+  if(!A.length||!B.length){var f=function(x){return nz(x).replace(/[^a-z0-9 ]/g,' ').split(' ').filter(Boolean).sort().join(' ');},fa=f(a);return fa&&fa===f(b)?1:0;}var s=0;A.forEach(function(w){if(B.indexOf(w)>=0)s++;});return s/Math.max(A.length,B.length);}
 
 function parseSheet(ws,X,sname,ov){
   var a=X.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
@@ -1027,7 +1031,7 @@ function parse(wb,X,opt){opt=opt||{};var OC=opt.cols||{},OM=opt.match||{};
   if(!th.length)sheets.forEach(function(s,si){th.push({part:'',grp:'',stt:String(si+1),name:s.title||s.sheet,total:s.sheetTotal||s.lines.reduce(function(a,l){return a+l.total;},0),rem:''});used[si]=si;});
   var hms=th.map(function(t,ti){var s=used[ti]!=null&&used[ti]>=0?sheets[used[ti]]:null,lines=s?s.lines.slice():[];
     var sum=lines.reduce(function(a,l){return a+l.total;},0),diff=t.total-sum;
-    if(Math.abs(diff)>1000&&t.total){var o=(s?s.others:[]).filter(function(x){return Math.abs(x.total-diff)<=Math.max(1000,Math.abs(diff)*0.01);})[0];
+    if(!okSum(diff,0)&&t.total){var o=(s?s.others:[]).filter(function(x){return Math.abs(x.total-diff)<=Math.max(1000,Math.abs(diff)*0.01);})[0];
       lines.push({g1:lines.length?'Trọn gói / chưa tách':'',g2:'',stt:'',name:o?o.name:(lines.length?'Phần chênh lệch so với bảng tổng hợp (chưa tách chi tiết)':t.name),spec:'',unit:'Lot',qty:1,uVL:null,uNC:null,vl:null,nc:null,u:diff,total:diff,rem:o?'Trọn gói':'Tự cân với bảng tổng hợp',lump:1});}
     return {name:t.name.replace(/\s*\/\s*NHÀ XƯỞNG.*$/i,''),part:t.part,grp:t.grp,sheet:s?s.sheet:'',total:t.total,rem:t.rem,lines:lines};});
   /* mã WBS */
@@ -1036,7 +1040,7 @@ function parse(wb,X,opt){opt=opt||{};var OC=opt.cols||{},OM=opt.match||{};
   if(info.value==null)info.value=hms.reduce(function(a,h){return a+h.total;},0);
   var leaf=hms.reduce(function(a,h){return a+h.lines.length;},0);
   return {info:info,hms:hms,count:leaf,sheets:sheets.map(function(s){return {sheet:s.sheet,title:s.title,cols:s.cols,hdr:s.hdr,hrow:s.hrow,start:s.start,n:s.lines.length};}),check:hms.reduce(function(a,h){return a+h.lines.reduce(function(b,l){return b+l.total;},0);},0)};}
-return {parse:parse,nz:nz,num:num};})();
+return {parse:parse,nz:nz,num:num,okSum:okSum};})();
 /* ===== Dự án & sheet chi tiết ===== */
 (()=>{
 const fm=(v,d=1)=>(+v||0).toLocaleString("vi-VN",{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -1100,10 +1104,14 @@ const ms=a=>a.map(x=>`<div class="ms"><i style="background:${x[0]}"></i><div><b>
 /* ---------- Dự án tạo từ BOQ: tính toán ---------- */
 const parseVN=s=>{s=String(s==null?"":s).trim().replace(/\s|đ/g,"");if(!s)return null;if(/,/.test(s))s=s.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");const n=Number(s);return isFinite(n)?n:null};
 const has=c=>c&&(c.v!=null||c.n!=null||c.m!=null);
-const lineCost=(p,l)=>{const c=p.cost[l.code],q=l.qty||0;if(has(c)){const v=(c.v||0)*q,n=(c.n||0)*q,mm=(c.m||0)*q;return{v,n,m:mm,t:v+n+mm,est:0}}const r=p.ratio/100,v=(l.vl!=null?l.vl:(l.nc==null?(l.total||0):0))*r,n=(l.nc||0)*r;return{v,n,m:0,t:v+n,est:1}};
+const lineCost=(p,l)=>{const c=p.cost[l.code],q=l.qty||0;if(has(c)){const v=(c.v||0)*q,n=(c.n||0)*q,mm=(c.m||0)*q;return{v,n,m:mm,t:v+n+mm,est:0}}/* chưa nhập giá vốn: ước tính = ratio% × thành tiền; có cột VL/NC thì tách theo tỷ lệ VL, NC trong thành tiền, phần còn lại tính vào vật tư */
+  const T=(l.total||0)*p.ratio/100;if(l.vl==null&&l.nc==null)return{v:T,n:0,m:0,t:T,est:1};
+  const a=Math.max(0,l.vl||0),b=Math.max(0,l.nc||0),k=a+b+Math.max(0,(l.total||0)-a-b),n=k>0?T*b/k:0;return{v:T-n,n,m:0,t:T,est:1}};
+/* hạng mục không có dòng chi tiết: chi phí ngoài BOQ (giá gốc) nếu có, không thì ratio% × giá trị */
+const xc_=(p,h)=>{const x=p.xcost&&p.xcost[h.code];if(x){const v=x.v||0,n=x.n||0;return{v,n,t:v+n}}const t=h.total*p.ratio/100;return{v:t,n:0,t}};
 function calc(p){let rev=0,ent=0,cnt=0,vl=0,nc=0,eq=0,cv=0,cn=0,cm=0;const hs=p.hms.map(h=>{let hc=0,he=0,hv=0,hn=0,hq=0,xv=0,xn=0,xm=0;h.lines.forEach(l=>{const c=lineCost(p,l);hc+=c.t;xv+=c.v;xn+=c.n;xm+=c.m;if(!c.est)he++;
       if(l.vl!=null||l.nc!=null){hv+=l.vl||0;hn+=l.nc||0}else hq+=l.total||0});
-    if(!h.lines.length){const x=p.xcost&&p.xcost[h.code];if(x){xv=x.v||0;xn=x.n||0;hc=xv+xn}else{hc=h.total*p.ratio/100;xv=hc}}
+    if(!h.lines.length){const x=xc_(p,h);xv=x.v;xn=x.n;hc=x.t}
     rev+=h.total;ent+=he;cnt+=h.lines.length;vl+=hv;nc+=hn;eq+=hq;cv+=xv;cn+=xn;cm+=xm;return{h,rev:h.total,cost:hc,cv:xv,cn:xn,cm:xm,ent:he,cnt:h.lines.length,vl:hv,nc:hn,eq:hq}});
   const cost=hs.reduce((a,x)=>a+x.cost,0);return{rev,cost,gp:rev-cost,ent,cnt,vl,nc,eq,cv,cn,cm,hs}}
 function groups(p,h){const G=[],ix={};h.lines.forEach(l=>{const k=l.g1||h.name;if(!(k in ix)){ix[k]=G.length;G.push({k,rev:0,v:0,n:0,m:0,t:0})}const g=G[ix[k]],c=lineCost(p,l);g.rev+=l.total||0;g.v+=c.v;g.n+=c.n;g.m+=c.m;g.t+=c.t});return G}
@@ -1125,11 +1133,13 @@ const fd=d=>("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2)+"/"
 const addD=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const tkey=(h,l)=>h.code+"|"+(l.g1||"");
 const HC=[["#2D3CE6","#7FA2FF"],["#12A150","#4FD889"],["#C21FC9","#EE7CEE"],["#F08A24","#FFBE7A"],["#8B5CF6","#C2A6FF"],["#0E9F9A","#59D6CE"],["#0A2486","#3D5BFF"]];
-function tasks(p){const out=[];p.hms.forEach((h,hi)=>{if(!(h.total>0))return;const seen={};h.lines.forEach(l=>{const k=tkey(h,l);if(!seen[k]){seen[k]={key:k,h,hi,name:l.g1||h.name,rev:0,cost:0};out.push(seen[k])}seen[k].rev+=l.total||0;seen[k].cost+=lineCost(p,l).t});
-  if(!h.lines.length){const k=h.code+"|";out.push({key:k,h,hi,name:h.name,rev:h.total,cost:h.total*p.ratio/100})}});return out}
+/* mỗi nhóm công việc là một công việc tiến độ; hạng mục không có doanh thu nhưng có chi phí (vd công tác tạm) vẫn có công việc để dòng tiền khớp calc */
+function tasks(p){const out=[];p.hms.forEach((h,hi)=>{const seen={},o=[];h.lines.forEach(l=>{const k=tkey(h,l);if(!seen[k]){seen[k]={key:k,h,hi,name:l.g1||h.name,rev:0,cost:0};o.push(seen[k])}seen[k].rev+=l.total||0;seen[k].cost+=lineCost(p,l).t});
+  if(!h.lines.length)o.push({key:h.code+"|",h,hi,name:h.name,rev:h.total,cost:xc_(p,h).t});
+  if(h.total>0||o.some(x=>x.cost>0))out.push(...o)});return out}
 /* đề xuất theo trình tự thi công: tỷ lệ [bắt đầu, thời lượng] trên tổng thời gian */
 const PH=[[/coc|\bcu\b/,0,.10],[/\bdat\b/,.06,.08],[/xay dung|mong|be tong|ha tang|\bnen\b/,.12,.20],[/ket cau thep|khung thep/,.26,.16],[/bao che|\bton\b|\bmai\b/,.36,.14],[/xay trat|\bxay\b|\btrat\b/,.42,.18],[/tran|\bsan\b/,.52,.18],[/\bcua\b/,.62,.16]];
-function propose(p){const T=tasks(p),D=p.sched.D,t={};let bi=0;const bOff={};
+function propose(p){const T=tasks(p),D=p.sched.D,t={},A={},gen=[];
   T.forEach(x=>{const hn=BOQ.nz(x.h.name),gn=BOQ.nz(x.name),grp=T.filter(y=>y.h===x.h),i=grp.indexOf(x),n=grp.length;let a=.3,b=.3;
     if(/gian tiep|quan ly|an toan/.test(hn)||x.h.code[0]==="B"){a=0;b=1}
     else if(/tba|tram bien/.test(hn)){a=.55;b=.25}
@@ -1137,22 +1147,33 @@ function propose(p){const T=tasks(p),D=p.sched.D,t={};let bi=0;const bOff={};
     else if(/pccc/.test(hn)&&!/be nuoc/.test(hn)){a=.45+i*.3/n;b=.35}
     else if(/^dien|^nuoc|co dien/.test(hn)){a=.35+i*.4/n;b=.3}
     else if(/phu tro/.test(hn)){a=/hang rao/.test(gn)?.15:/duong|canh quan/.test(gn)?.72:/thoat nuoc/.test(gn)?.6:.6;b=/hang rao/.test(gn)?.3:.18}
-    else{if(!(x.h.code in bOff))bOff[x.h.code]=(bi++)*.025;const r=PH.find(q=>q[0].test(gn));if(r){a=r[1];b=r[2]}a+=bOff[x.h.code]}
-    const s=Math.max(0,Math.round(a*D)),d=Math.max(5,Math.round(b*D));t[x.key]={s,d:Math.min(d,D+30-s)}});
+    else{if(!gen.includes(x.h.code))gen.push(x.h.code);const r=PH.find(q=>q[0].test(gn));if(r){a=r[1];b=r[2]}}
+    A[x.key]=[a,b]});
+  /* các hạng mục xây dựng lệch nhau 2,5% thời gian, tổng độ lệch không quá 20% để không vượt tổng thời gian */
+  const st=gen.length>1?Math.min(.025,.2/(gen.length-1)):0;
+  T.forEach(x=>{let [a,b]=A[x.key];const g=gen.indexOf(x.h.code);if(g>=0)a+=g*st;
+    const s=Math.max(0,Math.min(Math.round(a*D),D-5)),d=Math.max(5,Math.min(Math.round(b*D),D+30-s));t[x.key]={s,d}});
   const o=p.sched.t||{};Object.keys(t).forEach(k=>{if(o[k]){if(o[k].pc!=null)t[k].pc=o[k].pc;if(o[k].n)t[k].n=o[k].n}});p.sched.t=t;p.sched.auto=1}
 function ensureSched(p){if(!p.sched){p.sched={start:"01/12/2026",D:240,t:{}};propose(p)}
-  tasks(p).forEach(x=>{if(!p.sched.t[x.key])p.sched.t[x.key]={s:0,d:30}});if(!p.terms)p.terms={adv:15,ret:5,pay:30,cost:15};return p.sched}
+  const T=tasks(p),bad=T.some(x=>{const q=p.sched.t[x.key];return q&&!(q.d>=1&&q.s>=0)});
+  /* tiến độ lưu từ bản cũ có thể có thời lượng âm: chưa sửa tay thì đề xuất lại, đã sửa tay thì chỉ chỉnh công việc lỗi */
+  if(bad&&p.sched.auto)propose(p);else if(bad)T.forEach(x=>{const q=p.sched.t[x.key];if(q&&!(q.d>=1&&q.s>=0)){q.s=Math.max(0,Math.min(Math.round(q.s)||0,p.sched.D-5));q.d=5}});
+  T.forEach(x=>{if(!p.sched.t[x.key])p.sched.t[x.key]={s:0,d:30}});if(!p.terms)p.terms={adv:15,ret:5,pay:30,cost:15};return p.sched}
 const M_=d=>d.getFullYear()*12+d.getMonth();
 function timeline(p){const S=ensureSched(p),st=pd(S.start)||new Date(2026,11,1),T=tasks(p);let end=0;T.forEach(x=>{const q=S.t[x.key];end=Math.max(end,q.s+q.d)});
   const m0=M_(st),nm=M_(addD(st,Math.max(end-1,0)))-m0+1,mi=o=>M_(addD(st,o))-m0;
   const rev=Array(nm).fill(0),cost=Array(nm).fill(0),share={};
-  T.forEach(x=>{const q=S.t[x.key],w=Array(nm).fill(0);for(let o=q.s;o<q.s+q.d;o++)w[mi(o)]+=1/q.d;share[x.key]=w;w.forEach((f,i)=>{rev[i]+=x.rev*f;cost[i]+=x.cost*f})});
+  /* chia giá trị theo ngày thi công: bỏ Chủ nhật; công việc chỉ nằm trong Chủ nhật thì chia theo ngày lịch */
+  T.forEach(x=>{const q=S.t[x.key],w=Array(nm).fill(0),wd=[];for(let o=q.s;o<q.s+q.d;o++)if(addD(st,o).getDay()!==0)wd.push(o);
+    const ds=wd.length?wd:[...Array(Math.max(q.d,0))].map((_,i)=>q.s+i);ds.forEach(o=>w[mi(o)]+=1/ds.length);
+    const li=w.findLastIndex(f=>f>0);if(li>=0)w[li]=1-w.reduce((a,f,i)=>i===li?a:a+f,0);share[x.key]=w;w.forEach((f,i)=>{rev[i]+=x.rev*f;cost[i]+=x.cost*f})});
   const lab=[...Array(nm)].map((_,i)=>{const d=new Date(st.getFullYear(),st.getMonth()+i,1);return"T"+(d.getMonth()+1)+"/"+String(d.getFullYear()).slice(2)});
   return{st,end,nm,lab,rev,cost,share,T,mi}}
 /* dòng tiền theo điều khoản hợp đồng (giả định, sửa được) */
-function cash(p,tl){const t=p.terms,V=p.value,sh=Math.round(t.pay/30),sc=Math.round(t.cost/30),n=tl.nm+Math.max(sh,sc)+1;
-  const inn=Array(n).fill(0),out=Array(n).fill(0);inn[0]+=V*t.adv/100;
-  tl.rev.forEach((r,i)=>{inn[i+sh]+=r*(1-t.adv/100-t.ret/100)});tl.cost.forEach((c,i)=>{out[i+sc]+=c});
+/* số ngày trả chậm đổi ra tháng (30 ngày = 1 tháng); phần lẻ tháng chia tỷ lệ cho tháng sau, vd 15 ngày: nửa trong tháng, nửa tháng sau */
+function cash(p,tl){const t=p.terms,V=p.value,sh=Math.max(0,t.pay||0)/30,sc=Math.max(0,t.cost||0)/30,n=tl.nm+Math.ceil(Math.max(sh,sc))+1;
+  const inn=Array(n).fill(0),out=Array(n).fill(0),put=(a,i,v,f)=>{const k=Math.floor(f),r=f-k;a[i+k]+=v*(1-r);if(r)a[i+k+1]+=v*r};inn[0]+=V*t.adv/100;
+  tl.rev.forEach((r,i)=>put(inn,i,r*(1-t.adv/100-t.ret/100),sh));tl.cost.forEach((c,i)=>put(out,i,c,sc));
   let cum=0;const cu=inn.map((v,i)=>cum+=v-out[i]);const lab=[...Array(n)].map((_,i)=>{const d=new Date(tl.st.getFullYear(),tl.st.getMonth()+i,1);return"T"+(d.getMonth()+1)+"/"+String(d.getFullYear()).slice(2)});
   const peak=Math.min(0,...cu),pi=cu.indexOf(peak);return{inn,out,cu,lab,peak:-peak,pm:pi>=0&&peak<0?lab[pi]:"",ret:V*t.ret/100}}
 function cfc(lab,a,b,cu){const W=1080,H=280,L=40,B=24,mx=Math.max(...a,...b,...cu.map(Math.abs),1),y0=8+(H-8-B)/2,k=(H-8-B)/2/mx,cw=(W-L)/lab.length,bw=Math.min(18,cw*.32);let g="";
@@ -1164,11 +1185,13 @@ function cfc(lab,a,b,cu){const W=1080,H=280,L=40,B=24,mx=Math.max(...a,...b,...c
 const bty=(lab,a,b,W,H)=>bars(lab,a.map(v=>+(v/1e9).toFixed(2)),b&&b.map(v=>+(v/1e9).toFixed(2)),"#12A150","#C21FC9",W,H);
 /* vẽ Gantt */
 const GZ={d:12,w:6,m:3};let gZoom="m";const gCol=new Set();
+/* tiến độ gốc lưu offset theo ngày khởi công lúc chốt; đổi sang ngày khởi công hiện tại. Bản chốt cũ chưa lưu ngày khởi công thì giữ như cũ */
+const bShift=(S,st)=>{const b=S.base&&pd(S.base.start);return b?Math.round((b-st)/864e5):0};
 function gStat(p,tl){const S=p.sched,now=new Date(),od=Math.round((new Date(now.getFullYear(),now.getMonth(),now.getDate())-tl.st)/864e5);let V=0,A=0,P=0;
   const per={};tl.T.forEach(x=>{const q=S.t[x.key],w=x.rev||1,pl=Math.max(0,Math.min(1,(od-q.s+1)/q.d))*100,pc=q.pc||0;per[x.key]={pl,pc};V+=w;A+=w*pc;P+=w*pl});
-  const B=S.base&&S.base.t;let be=null,var_=null;if(B){be=0;tl.T.forEach(x=>{const b=B[x.key];if(b)be=Math.max(be,b.s+b.d)});var_=tl.end-be}
+  const B=S.base&&S.base.t,sf=bShift(S,tl.st);let be=null,var_=null;if(B){be=0;tl.T.forEach(x=>{const b=B[x.key];if(b)be=Math.max(be,sf+b.s+b.d)});var_=tl.end-be}
   return{od,act:V?A/V:0,plan:V?P/V:0,per,be,var:var_}}
-function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom],4):GZ[gZoom],days=Math.max(tl.end+20,S.D),endD=addD(tl.st,days),G=gStat(p,tl),B=S.base&&S.base.t;let hd="",vl="";
+function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom],4):GZ[gZoom],days=Math.max(tl.end+20,S.D),endD=addD(tl.st,days),G=gStat(p,tl),B=S.base&&S.base.t,sf=bShift(S,tl.st);let hd="",vl="";
   for(let d=new Date(tl.st.getFullYear(),tl.st.getMonth(),1);d<endD;d=new Date(d.getFullYear(),d.getMonth()+1,1)){const o=Math.max(0,Math.round((d-tl.st)/864e5)),o2=Math.min(days,Math.round((new Date(d.getFullYear(),d.getMonth()+1,1)-tl.st)/864e5));
     hd+=`<span style="left:${o*W}px;width:${(o2-o)*W}px">T${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}</span>`;vl+=`<i style="left:${o*W}px"></i>`;
     if(gZoom!=="m")for(let k=o+((8-addD(tl.st,o).getDay())%7);k<o2;k+=7)vl+=`<i class="wk" style="left:${k*W}px"></i>`}
@@ -1177,10 +1200,10 @@ function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom]
   const cell=(k,e,v,cls)=>`<input class="ge ${cls||""}" data-k="${esc(k)}" data-e="${e}" value="${esc(v)}" data-v="${esc(v)}" aria-label="${e}">`;
   let rows="";p.hms.forEach((h,hi)=>{const ts=tl.T.filter(x=>x.h===h);if(!ts.length)return;const c=HC[hi%HC.length],one=ts.length===1&&ts[0].name===h.name;
     const s0=Math.min(...ts.map(x=>S.t[x.key].s)),e0=Math.max(...ts.map(x=>S.t[x.key].s+S.t[x.key].d)),wv=ts.reduce((a,x)=>a+(x.rev||1),0),pc0=ts.reduce((a,x)=>a+(x.rev||1)*(S.t[x.key].pc||0),0)/wv;
-    let bv=null;if(B){const bb=ts.map(x=>B[x.key]).filter(Boolean);if(bb.length)bv=e0-Math.max(...bb.map(b=>b.s+b.d))}
+    let bv=null;if(B){const bb=ts.map(x=>B[x.key]).filter(Boolean);if(bb.length)bv=e0-sf-Math.max(...bb.map(b=>b.s+b.d))}
     const tr=(x,i)=>{const q=S.t[x.key],b=B&&B[x.key],g=G.per[x.key],late=g.pl-g.pc>10,code=h.code+"."+("0"+(i+1)).slice(-2);
-      return `<div class="grw ${one?"gs1":""}" style="--t:${c[0]}"><div class="gl gg"><span class="gc c1 num">${one?h.code:code}</span><span class="gc c2">${cell(x.key,"n",q.n||x.name,"gn")}</span><span class="gc c3">${cell(x.key,"d",q.d,"r")}</span><span class="gc c4">${cell(x.key,"s",fd(addD(tl.st,q.s)),"r")}</span><span class="gc c5">${cell(x.key,"f",fd(addD(tl.st,q.s+q.d-1)),"r")}</span><span class="gc c6">${cell(x.key,"p",q.pc?fm(q.pc,0):"-","r"+(late?" late":""))}</span><span class="gc c7 r" title="Ngày kết thúc lệch so với tiến độ gốc">${vr(b?q.s+q.d-(b.s+b.d):null)}</span></div>
-        <div class="gt">${b?`<div class="gbl" style="left:${b.s*W}px;width:${b.d*W}px" title="Gốc ${fd(addD(tl.st,b.s))} – ${fd(addD(tl.st,b.s+b.d-1))}"></div>`:""}<div class="gb" data-k="${esc(x.key)}" style="left:${q.s*W}px;width:${q.d*W}px;--c:${c[0]};--c2:${c[1]}" title="${esc(q.n||x.name)} · ${fd(addD(tl.st,q.s))} – ${fd(addD(tl.st,q.s+q.d-1))} · ${fm(q.pc||0,0)}% (kế hoạch ${fm(g.pl,0)}%)"><i class="gp" style="width:${q.pc||0}%"></i><i class="gh l"></i><span>${q.d}</span><i class="gh r"></i></div></div></div>`};
+      return `<div class="grw ${one?"gs1":""}" style="--t:${c[0]}"><div class="gl gg"><span class="gc c1 num">${one?h.code:code}</span><span class="gc c2">${cell(x.key,"n",q.n||x.name,"gn")}</span><span class="gc c3">${cell(x.key,"d",q.d,"r")}</span><span class="gc c4">${cell(x.key,"s",fd(addD(tl.st,q.s)),"r")}</span><span class="gc c5">${cell(x.key,"f",fd(addD(tl.st,q.s+q.d-1)),"r")}</span><span class="gc c6">${cell(x.key,"p",q.pc?fm(q.pc,0):"-","r"+(late?" late":""))}</span><span class="gc c7 r" title="Ngày kết thúc lệch so với tiến độ gốc">${vr(b?q.s+q.d-(sf+b.s+b.d):null)}</span></div>
+        <div class="gt">${b&&sf+b.s+b.d>0?`<div class="gbl" style="left:${Math.max(0,sf+b.s)*W}px;width:${(sf+b.s+b.d-Math.max(0,sf+b.s))*W}px" title="Gốc ${fd(addD(tl.st,sf+b.s))} – ${fd(addD(tl.st,sf+b.s+b.d-1))}"></div>`:""}<div class="gb" data-k="${esc(x.key)}" style="left:${q.s*W}px;width:${q.d*W}px;--c:${c[0]};--c2:${c[1]}" title="${esc(q.n||x.name)} · ${fd(addD(tl.st,q.s))} – ${fd(addD(tl.st,q.s+q.d-1))} · ${fm(q.pc||0,0)}% (kế hoạch ${fm(g.pl,0)}%)"><i class="gp" style="width:${q.pc||0}%"></i><i class="gh l"></i><span>${q.d}</span><i class="gh r"></i></div></div></div>`};
     if(one){rows+=tr(ts[0],0);return}
     const cl=gCol.has(h.code);
     rows+=`<div class="grw gs" style="--t:${c[0]}"><div class="gl gg"><span class="gc c1 num">${h.code}</span><span class="gc c2"><button class="gtg" data-gc="${h.code}" aria-label="${cl?"Mở":"Thu"} ${esc(h.name)}">${cl?"▸":"▾"}</button><b>${esc(h.name)}</b></span><span class="gc c3 r">${e0-s0}</span><span class="gc c4 r">${fd(addD(tl.st,s0))}</span><span class="gc c5 r">${fd(addD(tl.st,e0-1))}</span><span class="gc c6 r">${pc0?fm(pc0,0):"-"}</span><span class="gc c7 r">${vr(bv)}</span></div><div class="gt"><div class="gsb" style="left:${s0*W}px;width:${(e0-s0)*W}px;--c:${c[0]}"><i style="width:${pc0}%"></i></div></div></div>`;
@@ -1339,7 +1362,7 @@ function projList(){const B=DB.projects,SP=canOv()?PJ:[];return `<div class="vh"
 const keepUp=w=>/^[IVX]+$/.test(w)||(w.length<=4&&!/[AEIOUYĂÂÊÔƠƯÁÀẢÃẠẮẰẲẴẶẤẦẨẪẬÉÈẺẼẸẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌỐỒỔỖỘỚỜỞỠỢÚÙỦŨỤỨỪỬỮỰÝỲỶỸỴ]/.test(w))||/\d/.test(w);
 const isUp=s=>s===s.toUpperCase()&&/[A-ZĐ]/.test(s);
 const tc=s=>!isUp(s)?s:s.split(/(\s+|,|\/)/).map(w=>!w.trim()||keepUp(w)?w:w.charAt(0)+w.slice(1).toLowerCase()).join("").replace(/\bCông Ty\b/g,"Công ty");
-const sc=(s,brand)=>{if(!isUp(s))return s;const b=(brand||"").split(/\s+/).filter(w=>w.length>3&&!keepUp(w));let t=s.toLowerCase();t=t.charAt(0).toUpperCase()+t.slice(1);b.forEach(w=>{t=t.replace(new RegExp("(^|\\s)"+w.toLowerCase()+"(?=\\s|$)","g"),(m,a)=>a+w.charAt(0)+w.slice(1).toLowerCase())});return t};
+const sc=(s,brand)=>{if(!isUp(s))return s;const b=(brand||"").split(/\s+/).map(w=>w.replace(/[^\p{L}\p{N}]/gu,"")).filter(w=>w.length>3&&!keepUp(w));let t=s.toLowerCase();t=t.charAt(0).toUpperCase()+t.slice(1);b.forEach(w=>{t=t.replace(new RegExp("(^|\\s)"+w.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?=\\s|$)","g"),(m,a)=>a+w.charAt(0)+w.slice(1).toLowerCase())});return t};
 let pending=null;
 function needX(){return window.XLSX?Promise.resolve():new Promise((ok,er)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=ok;s.onerror=()=>er(new Error("Không tải được bộ đọc Excel, kiểm tra kết nối mạng"));document.head.appendChild(s)})}
 async function readBOQ(f){const m=document.getElementById("upmsg");if(m)m.textContent="Đang đọc "+f.name+"…";
@@ -1361,18 +1384,18 @@ function boqMerge(old,hms){const N=BOQ.nz,hm={},left={},lm={};hms.forEach(h=>{co
   if(old.weeks){weeks=JSON.parse(JSON.stringify(old.weeks));Object.values(weeks).forEach(w=>(w.tasks||[]).forEach(t=>{if(t.key)t.key=rk(t.key)}))}
   if(old.xcost){xcost={};Object.keys(old.xcost).forEach(c=>{if(hm[c])xcost[hm[c].code]=old.xcost[c]})}
   return{cost,sched,weeks,xcost,kept:Object.keys(cost).length,lost:lostN.length,lostN}}
-function preview(){const {r,form,file}=pending,ok=Math.abs(r.check-r.info.value)<1000,old=pvOld(),mg=old?boqMerge(old,r.hms):null,warn=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
+function preview(){const {r,form,file}=pending,ok=BOQ.okSum(r.check,r.info.value),old=pvOld(),mg=old?boqMerge(old,r.hms):null,warn=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
   const f=(k,t,ph)=>`<label class="fl"><span>${t}</span><input class="fi" data-pf="${k}" value="${esc(form[k])}" placeholder="${ph||""}"></label>`;
   return `${backBtn("du-an","Huỷ, quay lại danh sách")}
   <div class="vh"><div><h1>Kiểm tra BOQ trước khi tạo dự án</h1><p>${esc(file)}</p></div></div>
   <div class="vgrid">
-  ${kc(ok?"rev":"cost","Giá trị dự thầu",ty(r.info.value),"tỷ",ok?"Khớp bảng tổng hợp đến từng đồng":"Lệch "+n0(r.check-r.info.value)+" đ so với bảng tổng hợp")}
+  ${kc(ok?"rev":"cost","Giá trị dự thầu",ty(r.info.value),"tỷ",ok?"Khớp bảng tổng hợp (lệch dưới 1 đồng)":"Lệch "+n0(r.check-r.info.value)+" đ so với bảng tổng hợp")}
   ${kc("proj","Hạng mục",r.hms.filter(h=>h.total>0).length,"hạng mục",r.hms.filter(h=>h.sheet).length+" sheet chi tiết đã đọc")}
   ${kc("boq","Dòng công việc",n0(r.count),"dòng",warn||lump?`${warn} dòng thiếu thành tiền · ${lump} khoản trọn gói`:"Không có dòng bất thường")}
   ${card("Thông tin dự án","Lấy tự động từ trang bìa, anh sửa lại nếu cần",`<div class="fg">${f("name","Tên dự án")}${f("code","Mã dự án","Ví dụ NG-26-01")}${f("cdt","Chủ đầu tư")}${f("loc","Địa điểm")}${f("qcode","Số hồ sơ báo giá")}${f("date","Ngày hồ sơ","dd/mm/yyyy")}</div>
     <div class="bh" style="margin-top:16px"><span class="sub"${ok?"":' style="color:#C0141B"'}>${ok?"Khi kết nối Google Drive, hệ thống tự tạo thư mục dự án và lưu file BOQ gốc vào mục 01 Hồ sơ thầu.":"Chưa lưu được: tổng các hạng mục lệch "+n0(r.check-r.info.value)+" đ so với Tổng cộng trước thuế. Anh chọn lại sheet, cột ở bảng dưới hoặc sửa file rồi tải lại."}</span><button class="pill" id="mk" ${ok?"":"disabled"} style="${sv(ok?"rev":"cost")}${ok?"":";opacity:.5;cursor:not-allowed"}"><span class="dot">${ic("proj",2)}</span>${old?"Xác nhận và cập nhật dự án":"Xác nhận và lưu dự án"}</button></div>`,"span2")}
   ${card("Kết quả đọc file","",ms([[ok?"#12A150":"#E1141B",ok?"Tổng tiền khớp":"Tổng tiền chưa khớp",n0(r.check)+" đ / "+n0(r.info.value)+" đ"],...(old?[[mg.lost?"#E1141B":"#F08A24","Sẽ cập nhật dự án "+old.code+" đã có","Giữ tiến độ, điều khoản, kế hoạch tuần, giá gốc · ghép được "+n0(mg.kept)+" dòng giá vốn"+(mg.lost?" · "+n0(mg.lost)+" dòng không còn trong file mới, sẽ bỏ giá vốn: "+mg.lostN.slice(0,3).join(", ")+(mg.lost>3?"…":""):"")]]:[]),...(warn?[["#E1141B",warn+" dòng có ô thành tiền trống","Đang tính 0 đúng như bảng tổng hợp"]]:[]),...(lump?[["#2D3CE6",lump+" khoản trọn gói","Giữ nguyên một dòng, chưa tách chi tiết"]]:[]),["#8C8E97","Đã bỏ qua các sheet ẩn","Chỉ đọc sheet đang hiện trong file"]]))}
-  ${card("Hạng mục đọc được","Bấm vào một hạng mục để xem từng dòng hệ thống đã đọc ở bảng bên dưới",`<div class="tw"><table class="t"><thead><tr><th>Mã</th><th>Hạng mục</th><th>Sheet</th><th class="r">Dòng</th><th class="r">Giá trị (đ)</th><th>Kiểm tra</th></tr></thead><tbody>${r.hms.map((h,hi)=>{const s=h.lines.reduce((a,l)=>a+l.total,0),lp=h.lines.some(l=>l.lump);return`<tr data-pv="${hi}" class="${hi===pvSel()?"on":""}" style="cursor:pointer"><td class="num" style="color:var(--muted)">${h.code}</td><td><b>${esc(h.name)}</b></td><td style="color:var(--muted)">${esc(h.sheet||"Chỉ bảng tổng hợp")}</td><td class="r">${n0(h.lines.length)}</td><td class="r">${n0(h.total)}</td><td>${!h.total?st("warn","Không tính tiền"):Math.abs(s-h.total)<1000?(lp&&h.sheet?st("warn","Khớp · có trọn gói"):st("ok","Khớp")):st("bad","Lệch")}</td></tr>`}).join("")}</tbody><tfoot><tr><td></td><td><b>Tổng cộng trước thuế</b></td><td></td><td class="r">${n0(r.count)}</td><td class="r"><b>${n0(r.info.value)}</b></td><td></td></tr></tfoot></table></div>`,"span3")}
+  ${card("Hạng mục đọc được","Bấm vào một hạng mục để xem từng dòng hệ thống đã đọc ở bảng bên dưới",`<div class="tw"><table class="t"><thead><tr><th>Mã</th><th>Hạng mục</th><th>Sheet</th><th class="r">Dòng</th><th class="r">Giá trị (đ)</th><th>Kiểm tra</th></tr></thead><tbody>${r.hms.map((h,hi)=>{const s=h.lines.reduce((a,l)=>a+l.total,0),lp=h.lines.some(l=>l.lump);return`<tr data-pv="${hi}" class="${hi===pvSel()?"on":""}" style="cursor:pointer"><td class="num" style="color:var(--muted)">${h.code}</td><td><b>${esc(h.name)}</b></td><td style="color:var(--muted)">${esc(h.sheet||"Chỉ bảng tổng hợp")}</td><td class="r">${n0(h.lines.length)}</td><td class="r">${n0(h.total)}</td><td>${!h.total?st("warn","Không tính tiền"):BOQ.okSum(s,h.total)?(lp&&h.sheet?st("warn","Khớp · có trọn gói"):st("ok","Khớp")):st("bad","Lệch")}</td></tr>`}).join("")}</tbody><tfoot><tr><td></td><td><b>Tổng cộng trước thuế</b></td><td></td><td class="r">${n0(r.count)}</td><td class="r"><b>${n0(r.info.value)}</b></td><td></td></tr></tfoot></table></div>`,"span3")}
   ${pvDetail()}
   </div>`}
 const PVF=[["stt","Số thứ tự"],["name","Tên công việc"],["spec","Quy cách"],["unit","Đơn vị"],["qty","Khối lượng"],["mU","Đơn giá vật tư"],["lU","Đơn giá nhân công"],["tU","Đơn giá tổng"],["mT","Thành tiền vật tư"],["lT","Thành tiền nhân công"],["tT","Thành tiền"]];
@@ -1386,11 +1409,11 @@ function pvDetail(){const r=pending.r,hi=pvSel(),h=r.hms[hi];if(!h)return"";cons
   let g=null;const rows=h.lines.map(l=>{let hd="";const k=l.g1||"";if(k!==g){g=k;if(k)hd=`<tr class="gr"><td colspan="9">${esc(k)}${l.g2?" · "+esc(l.g2):""}</td></tr>`}
     const ck=l.warn?st("bad","Thiếu thành tiền"):l.rem==="Tự cân với bảng tổng hợp"?st("bad","Tự cân, chưa có chi tiết"):l.lump?st("warn","Trọn gói"):!l.unit?st("warn","Thiếu đơn vị"):st("ok","Đọc được");
     return hd+`<tr><td class="num" style="color:var(--muted);white-space:nowrap">${l.code}</td><td class="num" style="color:var(--muted)">${esc(l.stt||"")}</td><td style="min-width:240px">${esc(l.name)}${l.spec?`<small class="spec">${esc(l.spec)}</small>`:""}</td><td>${esc(l.unit||"")}</td><td class="r">${nq(l.qty)}</td><td class="r">${l.uVL!=null?n0(l.uVL):"-"}</td><td class="r">${l.uNC!=null?n0(l.uNC):"-"}</td><td class="r"><b>${n0(l.total)}</b></td><td>${ck}</td></tr>`}).join("");
-  const sum=h.lines.reduce((a,l)=>a+l.total,0),ok=Math.abs(sum-h.total)<1000;
+  const sum=h.lines.reduce((a,l)=>a+l.total,0),ok=BOQ.okSum(sum,h.total);
   return card(`${h.code} · ${esc(h.name)}`,"Số liệu hệ thống đã đọc từ file, anh kiểm tra trước khi lưu",`<div class="pvh"><span class="sub">Sheet chi tiết</span>${shSel}${!ok?st("bad","Lệch "+n0(sum-h.total)+" đ"):h.sheet&&h.lines.some(l=>l.rem==="Tự cân với bảng tổng hợp")?st("warn","Khớp nhờ dòng chênh lệch tự cân"):st("ok","Khớp bảng tổng hợp")}</div>${map}
     <div class="tw bsw" style="margin-top:14px"><table class="t pvt"><thead><tr><th>Mã</th><th>STT trong file</th><th>Công việc</th><th>ĐVT</th><th>Khối lượng</th><th>Đơn giá vật tư (đ)</th><th>Đơn giá nhân công (đ)</th><th>Thành tiền (đ)</th><th>Kiểm tra</th></tr></thead><tbody>${rows||`<tr><td colspan="9" class="sub">Không có dòng chi tiết.</td></tr>`}</tbody><tfoot><tr><td></td><td></td><td>Cộng ${n0(h.lines.length)} dòng · bảng tổng hợp ${n0(h.total)}</td><td></td><td></td><td></td><td></td><td class="r">${n0(sum)}</td><td></td></tr></tfoot></table></div>`,"span3")}
 function pvRe(){const y=scrollY;pending.r=BOQ.parse(pending.wb,XLSX,pending.opt);view.innerHTML=preview();dashZeros(view);scrollTo({top:y})}
-function createFromPending(){const {r,form}=pending;if(!(Math.abs(r.check-r.info.value)<1000))return;const id="p"+Date.now().toString(36);
+function createFromPending(){const {r,form}=pending;if(!BOQ.okSum(r.check,r.info.value))return;const id="p"+Date.now().toString(36);
   const yr=String(new Date().getFullYear()).slice(2),code=form.code.trim()||("NG-"+yr+"-"+String(DB.projects.length+1).padStart(2,"0"));
   const oldP=pvOld(),old=oldP?DB.projects.indexOf(oldP):-1;
   const p={id,code,name:form.name.trim()||"Dự án mới",cdt:form.cdt.trim(),loc:form.loc.trim(),qcode:form.qcode.trim(),date:form.date.trim(),file:pending.file,value:r.info.value,rounded:r.info.rounded||null,ratio:85,cost:{},created:new Date().toISOString(),hms:r.hms};
@@ -1562,7 +1585,7 @@ function ggMatch(p,r){const N=BOQ.nz,used=new Set(),G=r.hms,hmN=p.hms.map(h=>N(h
   const rows=[];p.hms.forEach((h,hi)=>{const g=pair[hi];let ptr=0;
     h.lines.forEach(l=>{let hit=null,how="none";
       if(g){const L=g.lines,lo=Math.max(0,ptr-3),hiI=Math.min(L.length,ptr+12),ok=i=>!used.has(id(g,i));
-        for(let i=lo;i<hiI&&!hit;i++)if(ok(i)&&N(L[i].name)===N(l.name)&&N(L[i].unit)===N(l.unit)){hit=i;how="ok"}
+        for(let i=lo;i<hiI&&hit==null;i++)if(ok(i)&&N(L[i].name)===N(l.name)&&N(L[i].unit)===N(l.unit)){hit=i;how="ok"}
         for(let i=0;i<L.length&&hit==null;i++)if(ok(i)&&N(L[i].name)===N(l.name)&&N(L[i].unit)===N(l.unit)){hit=i;how="ok"}
         for(let i=lo;i<hiI&&hit==null;i++)if(ok(i)&&N(L[i].unit)===N(l.unit)&&Math.abs((L[i].qty||0)-(l.qty||0))<1e-6&&simW(L[i].name,l.name)>=.5){hit=i;how="ten"}
         if(hit!=null){used.add(id(g,hit));ptr=hit+1;hit=L[hit]}}
@@ -1633,7 +1656,7 @@ view.addEventListener("click",e=>{if(!cur)return;const t=e.target;let b;
   if(b=t.closest("[data-gc]")){const c=b.dataset.gc;gCol.has(c)?gCol.delete(c):gCol.add(c);keep(route);return}
   if(b=t.closest("[data-gcol]")){if(gCol.size)gCol.clear();else cur.hms.forEach(h=>gCol.add(h.code));keep(route);return}
   if(b=t.closest("#gbase")){if(cur.sched.base&&!b.dataset.ok){b.dataset.ok=1;b.textContent="Bấm lần nữa để thay tiến độ gốc cũ";b.style.color="#C0141B";return}
-    gSave();const t2={};Object.entries(cur.sched.t).forEach(([k,q])=>t2[k]={s:q.s,d:q.d});cur.sched.base={t:t2,date:fd(new Date())};persist();keep(route)}});
+    gSave();const t2={};Object.entries(cur.sched.t).forEach(([k,q])=>t2[k]={s:q.s,d:q.d});cur.sched.base={t:t2,date:fd(new Date()),start:cur.sched.start};persist();keep(route)}});
 /* kéo thả thanh tiến độ */
 let drag=null;
 view.addEventListener("pointerdown",e=>{const b=e.target.closest(".gb[data-k]");if(!b||!cur)return;e.preventDefault();const k=b.dataset.k,q=cur.sched.t[k],W=+b.closest(".gantt").dataset.w;
@@ -1777,6 +1800,8 @@ const box=document.getElementById("chat"),fab=document.getElementById("chatfab")
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const md=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/^[-•] (.*)$/gm,"<span class=\"li\">$1</span>").replace(/<\/span>\n/g,"</span>").replace(/\n/g,"<br>");
 const hist=[];let api=null;
+/* gửi tối đa 12 tin gần nhất, luôn bắt đầu bằng tin người dùng (API Claude yêu cầu) */
+const chatMsgs=(h,n=12)=>{const m=h.slice(-n);while(m.length&&m[0].role!=="user")m.shift();return m};
 function open(v){box.hidden=!v;fab.setAttribute("aria-expanded",v);document.body.classList.toggle("chat-open",v);if(v){if(!hist.length)hello();setTimeout(()=>inp.focus(),50)}}
 fab.addEventListener("click",()=>open(box.hidden));
 document.getElementById("cx").addEventListener("click",()=>open(false));
@@ -1784,12 +1809,12 @@ addEventListener("keydown",e=>{if(e.key==="Escape"&&!box.hidden)open(false)});
 function add(role,html){const d=document.createElement("div");d.className="msg "+role;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
 function hello(){add("bot",md("Chào anh. Em trả lời từ số liệu đang có trên web: giá trị hợp đồng, giá vốn, lãi gộp, tiến độ, vật tư cần đặt, dòng tiền.\nAnh hỏi tự nhiên, hoặc chọn một câu gợi ý bên dưới."))}
 async function ask(q){q=q.trim();if(!q)return;open(true);add("me",esc(q));hist.push({role:"user",content:q});
-  const w=add("bot wait","<i></i><i></i><i></i>");let a=null;
+  const w=add("bot wait","<i></i><i></i><i></i>");let a=null,err=false;
   if(api!==false){try{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),45000);
-      const r=await fetch("api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({messages:hist.slice(-12),context:window.NG?NG.context():{}}),signal:ctl.signal});clearTimeout(t);
-      if(r.ok){const j=await r.json();if(j.text){a=j.text;api=true}}else if(r.status===404||r.status===405||r.status===503)api=false}catch(e){if(api===null)api=false}}
+      const r=await fetch("api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({messages:chatMsgs(hist),context:window.NG?NG.context():{}}),signal:ctl.signal});clearTimeout(t);
+      if(r.ok){const j=await r.json();if(j.text){a=j.text;api=true}else err=true}else if(r.status===404||r.status===405||r.status===503)api=false;else err=true}catch(e){if(api===null)api=false;else err=true}}
   if(!a)a=window.NG?NG.answer(q):"Em chưa đọc được số liệu.";
-  stt.textContent=api?"Đã kết nối Claude":"Trả lời từ số liệu trên web · chưa kết nối Claude";
+  stt.textContent=a&&!err&&api?"Đã kết nối Claude":api===false?"Trả lời từ số liệu trên web · chưa kết nối Claude":"Lỗi gọi Claude · câu này trả lời từ số liệu trên web";
   w.className="msg bot";w.innerHTML=md(a);hist.push({role:"assistant",content:a});log.scrollTop=log.scrollHeight}
 document.getElementById("cform").addEventListener("submit",e=>{e.preventDefault();const v=inp.value;inp.value="";ask(v)});
 document.getElementById("cchips").addEventListener("click",e=>{const b=e.target.closest("button");if(b)ask(b.textContent)});

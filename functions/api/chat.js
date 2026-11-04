@@ -17,6 +17,8 @@ export async function onRequestPost({ request, env }) {
   const messages = (Array.isArray(body.messages) ? body.messages : [])
     .filter(m => (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
     .slice(-12).map(m => ({ role: m.role, content: m.content.slice(0, 4000) }));
+  // Claude yêu cầu tin đầu tiên là của người dùng: bỏ các tin trợ lý đứng đầu sau khi cắt lịch sử
+  while (messages.length && messages[0].role !== "user") messages.shift();
   if (!messages.length || messages[0].role !== "user") return json({ error: "no_message" }, 400);
   const context = JSON.stringify(body.context || {}).slice(0, 150000);
   const r = await fetch("https://api.anthropic.com/v1/messages", {
