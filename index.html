@@ -24,6 +24,13 @@
 #fview iframe{flex:1;border:0;width:100%;height:100%;background:#fff}#fview img{max-width:100%;max-height:100%;margin:auto;object-fit:contain}
 #fview pre{margin:0;padding:16px;font-size:13px;white-space:pre-wrap;width:100%}#fview .fvm{margin:auto;padding:24px;text-align:center;font-size:14px;color:var(--ink2)}
 #fview .fvx{padding:12px;width:100%;min-width:0}
+.wxn{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--ink2);flex-wrap:wrap}.wxn b{font-size:26px;color:var(--ink)}.wxi{font-size:26px;line-height:1}
+.wxg{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px;margin-top:12px}
+.wxd{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:0}
+.wxd small{font-size:11px;color:var(--muted);line-height:1.3}.wxd b{font-size:14px}.wxd b i{font-style:normal;font-weight:500;color:var(--muted)}
+.wxd.warn{border-color:#F5C27A;background:#FFF8EE}.wxd.bad{border-color:#F2A3A6;background:#FFF2F2}
+.wxt{margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+@media (max-width:760px){.wxg{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:96px;overflow-x:auto;padding-bottom:4px}}
 #fview .fsl{padding:14px 16px;width:100%;display:flex;flex-direction:column;gap:10px}
 #fview .fsr{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:8px 14px;align-items:center}
 #fview .fsr .on{font-size:13px;font-weight:600;overflow-wrap:anywhere}#fview .fsr .why{grid-column:1/-1;font-size:12.5px;color:var(--ink2)}#fview .fsr .why.dif{color:#B25E00}
@@ -1307,6 +1314,39 @@ function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(
         fs.textContent=`Đang lưu ${i+1}/${files.length}: ${nm}`;if(await FS.upload(p.id,folder,new File([f],nm,{type:f.type}))==="wait")w++;n++;last=folder;r.remove();rows[i]=null}
       close();if(last)flSel=last;flMsg(w?`Đã nhận ${n} file · ${w} file đang giữ trên trình duyệt, chờ Google Drive hoạt động lại sẽ tự đưa lên`:`Đã lưu ${n} file`,!!w);await filesLoad()}
     catch(er){fs.textContent=er.message;fs.style.color="#C0141B";okBtn.disabled=false;if(n)filesLoad()}}}
+/* ---------- Thời tiết công trường: Open-Meteo (miễn phí, không cần khoá), vị trí tìm theo địa chỉ dự án ---------- */
+const WXBOX=`<section class="card span3" id="wx"><h3>Thời tiết công trường · 10 ngày</h3><span class="sub">Đang tải dự báo…</span></section>`;
+const WXC={0:["☀️","Nắng"],1:["🌤️","Ít mây"],2:["⛅","Có mây"],3:["☁️","Nhiều mây"],45:["🌫️","Sương mù"],48:["🌫️","Sương mù"],51:["🌦️","Mưa phùn"],53:["🌦️","Mưa phùn"],55:["🌦️","Mưa phùn"],56:["🌧️","Mưa phùn lạnh"],57:["🌧️","Mưa phùn lạnh"],61:["🌧️","Mưa nhỏ"],63:["🌧️","Mưa vừa"],65:["🌧️","Mưa to"],66:["🌧️","Mưa lạnh"],67:["🌧️","Mưa lạnh"],71:["🌨️","Tuyết"],73:["🌨️","Tuyết"],75:["🌨️","Tuyết"],77:["🌨️","Tuyết"],80:["🌦️","Mưa rào"],81:["🌧️","Mưa rào"],82:["⛈️","Mưa rào rất to"],85:["🌨️","Tuyết"],86:["🌨️","Tuyết"],95:["⛈️","Dông"],96:["⛈️","Dông, mưa đá"],99:["⛈️","Dông, mưa đá"]};
+const wxKey=pid=>"ngic.wx."+pid,wxGet=pid=>{try{return JSON.parse(localStorage.getItem(wxKey(pid))||"null")}catch(e){return null}},wxSet=(pid,v)=>{try{localStorage.setItem(wxKey(pid),JSON.stringify(v))}catch(e){}};
+const wxClean=x=>x.trim().replace(/^(tỉnh|thành phố|tp\.?|phường|xã|thị trấn|thị xã|quận|huyện|kcn|khu công nghiệp|cụm công nghiệp)\s+/i,"").trim();
+async function wxFind(q,prov){if(!q)return null;const r=await fetch("https://geocoding-api.open-meteo.com/v1/search?count=10&language=vi&countryCode=VN&name="+encodeURIComponent(q));if(!r.ok)return null;
+  const L=(await r.json()).results||[];if(!L.length)return null;const pv=prov&&noAcc(prov).toLowerCase(),m=pv&&L.find(x=>noAcc(x.admin1||"").toLowerCase().includes(pv));if(pv&&!m)return null;const x=m||L[0];
+  return{lat:x.latitude,lon:x.longitude,name:[x.name,x.admin1].filter((v,i,a)=>v&&a.indexOf(v)===i).join(", ")}}
+/* Thử từ cụ thể đến chung: phường/xã trong đúng tỉnh, rồi tới tỉnh */
+async function wxLocate(loc){const parts=String(loc||"").split(/[,;]/).map(wxClean).filter(x=>x&&!/\d/.test(x)),prov=parts[parts.length-1];
+  for(let i=parts.length-2;i>=0;i--){const g=await wxFind(parts[i],prov).catch(()=>null);if(g)return g}
+  return prov?await wxFind(prov).catch(()=>null):null}
+function wxTips(d){const t=[];if(d.rain>=10||d.pp>=80)t.push(["bad","Mưa lớn: không đổ bê tông, che chắn vật tư"]);else if(d.rain>=3||d.pp>=60)t.push(["warn","Có thể mưa: chuẩn bị bạt che khi đổ bê tông"]);
+  if(d.wind>=40)t.push(["bad","Gió mạnh: dừng cẩu, làm việc trên cao"]);else if(d.wind>=30)t.push(["warn","Gió khá mạnh: chú ý khi cẩu lắp"]);
+  if(d.tmax>=37)t.push(["warn","Nắng nóng: bảo dưỡng bê tông, nghỉ trưa dài hơn"]);return t}
+async function wxLoad(){const box=document.getElementById("wx"),p=cur;if(!box||!p)return;const set=h=>{const b=document.getElementById("wx");if(b&&cur===p)b.innerHTML=h};
+  const head=g=>`<div class="bh" style="align-items:flex-start"><div><h3>Thời tiết công trường · 10 ngày</h3><span class="sub">${g?"📍 "+esc(g.name):"Chưa xác định vị trí"} · nguồn Open-Meteo</span></div><button class="back sm" style="margin:0" id="wxp">Đổi địa điểm</button></div>`;
+  try{let g=wxGet(p.id);if(!g||(!g.manual&&g.loc!==p.loc)){g=await wxLocate(p.loc);if(g){g.loc=p.loc;wxSet(p.id,g)}}
+    if(!g){set(head(null)+`<div class="sub" style="margin-top:10px">Không tìm được vị trí từ địa chỉ dự án. Anh bấm Đổi địa điểm và gõ tên xã/phường hoặc tỉnh.</div>`);return}
+    const u=`https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}&timezone=Asia%2FBangkok&forecast_days=10&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max`;
+    const r=await fetch(u);if(!r.ok)throw new Error("wx "+r.status);const j=await r.json(),D=j.daily,c=j.current;
+    const days=D.time.map((t,i)=>({t,code:D.weather_code[i],tmax:D.temperature_2m_max[i],tmin:D.temperature_2m_min[i],rain:D.precipitation_sum[i]||0,pp:D.precipitation_probability_max[i]||0,wind:D.wind_speed_10m_max[i]||0}));
+    const dn=["CN","T2","T3","T4","T5","T6","T7"],cc=WXC[c.weather_code]||["🌡️",""],dm=t=>t.slice(8)+"/"+t.slice(5,7);
+    const bad=days.map(d=>({d,t:wxTips(d)})).filter(x=>x.t.length);
+    set(head(g)+`<div class="wxn"><span class="wxi">${cc[0]}</span><b class="num">${Math.round(c.temperature_2m)}°C</b><span>Bây giờ: ${cc[1]} · độ ẩm ${c.relative_humidity_2m}% · gió ${Math.round(c.wind_speed_10m)} km/h</span></div>
+      <div class="wxg">${days.map((d,i)=>{const w=WXC[d.code]||["🌡️",""],dt=new Date(d.t+"T00:00"),tp=wxTips(d);return`<div class="wxd${tp.some(x=>x[0]==="bad")?" bad":tp.length?" warn":""}" title="${esc(tp.map(x=>x[1]).join(" · "))}"><small>${i?dn[dt.getDay()]:"Hôm nay"} ${dm(d.t)}</small><span class="wxi">${w[0]}</span><b>${Math.round(d.tmax)}° <i>${Math.round(d.tmin)}°</i></b><small>${w[1]}</small><small>💧 ${d.pp}% · ${fm(d.rain)} mm</small><small>💨 ${Math.round(d.wind)} km/h</small></div>`}).join("")}</div>
+      ${bad.length?`<div class="wxt">${bad.slice(0,6).map(x=>`<div>${st(x.t[0][0],dm(x.d.t))} ${esc(x.t.map(y=>y[1]).join(" · "))}</div>`).join("")}</div>`:`<div class="sub" style="margin-top:10px">10 ngày tới thời tiết thuận lợi cho thi công.</div>`}`)}
+  catch(e){set(head(wxGet(p.id))+`<div class="sub" style="margin-top:10px">Chưa tải được dự báo, anh kiểm tra kết nối mạng.</div>`)}}
+document.addEventListener("click",e=>{if(!e.target.closest("#wxp")||!cur)return;const p=cur,box=document.getElementById("wx");if(box.querySelector(".wxf"))return;
+  box.querySelector(".bh").insertAdjacentHTML("afterend",`<form class="wxf" style="display:flex;gap:8px;margin-top:10px"><input class="fi" style="flex:1;min-width:0" placeholder="Xã/phường, tỉnh · ví dụ Đồng Văn, Ninh Bình" required><button class="back sm" style="margin:0">Tìm</button></form>`);
+  const f=box.querySelector(".wxf"),inp=f.querySelector("input");inp.focus();
+  f.onsubmit=async ev=>{ev.preventDefault();const q=inp.value.split(",").map(wxClean).filter(Boolean),g=await wxFind(q[0],q[1]).catch(()=>null)||(q[1]?await wxFind(q[1]).catch(()=>null):null);
+    if(!g){inp.value="";inp.placeholder="Không tìm thấy, anh thử tên khác";return}g.manual=1;g.loc=p.loc;wxSet(p.id,g);wxLoad()}});
 const filesView=()=>`<div class="sub" id="flmsg" style="min-height:18px;margin-bottom:8px"></div><div class="vgrid" id="fls"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`;
 let flSel=null;
 async function filesLoad(){const box=document.getElementById("fls"),p=cur;if(!box||!p)return;
@@ -1336,7 +1376,7 @@ const later=(t,items)=>card(t,"Phần này sẽ làm ở bước tiếp theo",ms
 function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="week")return weekView(p);const c=calc(p),mg=pct(c.gp,c.rev);
   const k3=kc("proj","Giá trị hợp đồng",ty(c.rev),"tỷ",`Chưa VAT · hồ sơ ${esc(p.qcode||"")} ngày ${esc(p.date||"")}`)+kc("cost","Giá vốn dự thầu",ty(c.cost),"tỷ",`Vật tư ${ty(c.cv)} · nhân công ${ty(c.cn)} · máy ${ty(c.cm)} tỷ`,"gv")+kc(mg>=10?"rev":"mat","Lãi gộp dự kiến",ty(c.gp),"tỷ",`Biên lãi ${fm(mg)}% doanh thu`,"lg");
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
-    return `<div class="vgrid">${k3}
+    return `<div class="vgrid">${k3}${WXBOX}
     ${card("Doanh thu và giá vốn theo hạng mục","Thanh màu: giá vốn so với doanh thu · vạch đen: mức 100%",c.hs.filter(x=>x.rev>0).map(x=>{const r=pct(x.cost,x.rev);return`<div class="hm" data-go="da-${p.id}-boq-${x.h.code.toLowerCase()}" style="cursor:pointer"><div>${esc(x.h.name)}<small>Doanh thu ${ty(x.rev)} tỷ · giá vốn ${ty(x.cost)} tỷ</small></div><div class="mbar" style="--c:${r>92?"#E1141B":"#0E9F9A"}"><i style="width:${Math.min(r,100)}%"></i><em style="left:calc(100% - 2px)"></em></div><b class="num">${fm(100-r)}%</b></div>`}).join(""),"span2")}
     ${card("Việc cần chú ý","",ms([[c.ent<c.cnt?"#F08A24":"#12A150",c.ent<c.cnt?`${n0(c.cnt-c.ent)} dòng chưa nhập giá vốn`:"Đã nhập giá vốn đủ các dòng",`Đang ước tính ${fm(p.ratio,0)}% giá thầu cho các dòng còn thiếu`],...(warn?[["#E1141B",`${warn} dòng có ô thành tiền trống trong file`,"Bảng tổng hợp đang tính các dòng này bằng 0"]]:[]),...(lump?[["#2D3CE6",`${lump} khoản trọn gói chưa tách chi tiết`,"Ví dụ máy phát điện, chi phí quản lý"]]:[]),...(cf0.peak>0?[["#C21FC9","Cần ứng vốn tối đa "+ty(cf0.peak)+" tỷ","Vào "+cf0.pm+" · theo tiến độ và điều khoản giả định"]]:[]),["#8B5CF6",window.NGApp&&NGApp.drive?"Google Drive: đã kết nối":"Google Drive: chờ kết nối",window.NGApp&&NGApp.drive?"Hồ sơ lưu ở tab Thư mục dự án, thư mục tự tạo khi tải file đầu tiên":"Sẽ dùng được khi quản trị viên đặt khoá Google"],...(saveOK?[]:[["#E1141B","Chưa lưu được lên máy chủ","Phần vừa sửa sẽ mất nếu tải lại trang, anh kiểm tra mạng"]])]))}
     </div>`}
@@ -1561,7 +1601,7 @@ function weekView(p){const k=curWeek||wk(new Date());curWeek=k;const w=W(p,k),r=
   const W8=900,H8=230,L=34,B=24,cw=(W8-L)/Math.max(hist.length,1),y=v=>8+(H8-8-B)*(1-v/100);
   let g=[0,50,70,100].map(v=>`<line x1="${L}" x2="${W8}" y1="${y(v)}" y2="${y(v)}" stroke="${v===70?"#12A150":"#E4E5EA"}" ${v===70?'stroke-dasharray="5 4"':""}/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#8C8E97">${v}%</text>`).join("");
   hist.forEach((h,i)=>{const v=h.ppc!=null?h.ppc:(h.part||0),x=L+i*cw+cw/2,bw=Math.min(36,cw*.5),c=COL[ppcCol(h.ppc)][0];g+=`<rect x="${x-bw/2}" y="${y(v)}" width="${bw}" height="${y(0)-y(v)}" rx="4" fill="${c}" ${h.ppc==null?'fill-opacity=".35"':""}><title>Tuần ${fd(wkDate(h.k))}: ${fm(v,0)}%</title></rect><text x="${x}" y="${H8-6}" text-anchor="middle" font-size="11" fill="#8C8E97">${fd(wkDate(h.k)).slice(0,5)}</text>`});
-  return `<div class="vgrid">${kc(ppcCol(r.ppc),"PPC tuần này",r.ppc!=null?fm(r.ppc,0):r.part!=null?fm(r.part,0):"–",r.ppc!=null||r.part!=null?"%":"",r.commit?`${r.done}/${r.commit} việc cam kết đã xong${r.marked<r.commit?" · còn "+(r.commit-r.marked)+" việc chưa đánh giá":""}`:"Chưa có việc cam kết")}${kc("prog","Việc trong kế hoạch",w.tasks.length,"việc",`${r.commit} sẵn sàng · ${w.tasks.length-r.commit} còn vướng`)}${kc(ppcCol(avg),"PPC trung bình 4 tuần",avg!=null?fm(avg,0):"–",avg!=null?"%":"","Mục tiêu từ 70% trở lên")}
+  return `<div class="vgrid">${WXBOX}${kc(ppcCol(r.ppc),"PPC tuần này",r.ppc!=null?fm(r.ppc,0):r.part!=null?fm(r.part,0):"–",r.ppc!=null||r.part!=null?"%":"",r.commit?`${r.done}/${r.commit} việc cam kết đã xong${r.marked<r.commit?" · còn "+(r.commit-r.marked)+" việc chưa đánh giá":""}`:"Chưa có việc cam kết")}${kc("prog","Việc trong kế hoạch",w.tasks.length,"việc",`${r.commit} sẵn sàng · ${w.tasks.length-r.commit} còn vướng`)}${kc(ppcCol(avg),"PPC trung bình 4 tuần",avg!=null?fm(avg,0):"–",avg!=null?"%":"","Mục tiêu từ 70% trở lên")}
   <section class="card span3"><div class="bh"><div><h3>Kế hoạch tuần ${fd(d0)} – ${fd(addD(d0,6))}</h3><span class="sub">Chỉ đưa vào việc đã sẵn sàng · việc còn vướng không tính PPC · cuối tuần đánh dấu Xong hoặc Không xong, không tính xong một phần</span></div>
     <div class="bh" style="gap:6px"><button class="back" data-wn="-1" style="margin:0">‹ Tuần trước</button><button class="back" data-wn="0" style="margin:0">Tuần này</button><button class="back" data-wn="1" style="margin:0">Tuần sau ›</button></div></div>
     <div class="tw" style="margin-top:12px"><table class="t wt"><thead><tr><th>Công việc</th><th>Tổ đội</th><th>Sẵn sàng</th><th>Kết quả</th><th>Lý do không xong</th><th></th></tr></thead><tbody>${w.tasks.map(row).join("")||`<tr><td colspan="6" class="sub">Chưa có việc nào. Thêm việc ở ô bên dưới hoặc chọn từ gợi ý theo tiến độ.</td></tr>`}</tbody></table></div>
@@ -1682,7 +1722,7 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri")adminLoad();if(document.getElementById("fls"))filesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
+  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad()}else{try{drawMap()}catch(e){console.error(e)}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
