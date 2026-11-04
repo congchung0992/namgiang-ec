@@ -924,10 +924,14 @@ function parse(wb,X,opt){opt=opt||{};var OC=opt.cols||{},OM=opt.match||{};
   if(thName){var a=X.utils.sheet_to_json(wb.Sheets[thName],{header:1,defval:''}),hh=-1,c={};
     for(var i=0;i<a.length;i++){var t=a[i].map(nz);if(t.some(function(x){return /noi dung|hang muc/.test(x);})&&t.some(function(x){return /thanh tien/.test(x);})){hh=i;
       t.forEach(function(x,j){if(/^stt|^tt/.test(x))c.stt=j;else if(/noi dung|hang muc/.test(x))c.name=j;else if(/thanh tien/.test(x))c.t=j;else if(/ghi chu/.test(x))c.rem=j;});break;}}
-    var part='',grp='';
+    var part='',grp='',vDone=false,TOT=/tong cong|^cong\b.*(thue|vat)|^tong\b.*(truoc|sau|chua).*(thue|vat)/,PRE=/truoc (thue|vat)|(chua|khong) (gom |bao gom |co |tinh )?(thue|vat)/,POST=/sau (thue|vat)|(gom|co|tinh|da) (thue|vat)/,TAX=/^(tien )?thue ?(suat)? ?(vat|gtgt|gia tri gia tang|\d)|^vat\b|^bang chu/;
     for(i=hh+1;hh>=0&&i<a.length;i++){var r=a[i],stt=String(r[c.stt]).trim(),nm=String(r[c.name]).replace(/\s+/g,' ').trim(),v=num(r[c.t]),k=kind(stt),z=nz(nm);
       if(!nm)continue;
-      if(/tong cong/.test(z)){if(/lam tron/.test(z))info.rounded=v;else info.value=v;continue;}
+      /* Chỉ lấy tổng trước thuế làm giá trị; thuế VAT, tổng sau thuế, làm tròn, bằng chữ không phải hạng mục */
+      if(/lam tron/.test(z)&&(TOT.test(z)||/^(gia tri )?(sau )?lam tron/.test(z))){if(PRE.test(z)||!POST.test(z))info.rounded=v;continue;}
+      if(TOT.test(z)){if(PRE.test(z)){info.value=v;vDone=true;}else if(POST.test(z))vDone=true;else if(!vDone)info.value=v;continue;}
+      if(TAX.test(z)){if(info.value!=null)vDone=true;continue;}
+      if(vDone)continue;
       if(k==='L'){part=nm;continue;}
       if(k==='R'){grp=nm;continue;}
       th.push({part:part,grp:grp,stt:stt,name:nm,total:v||0,rem:c.rem!=null?String(r[c.rem]).trim():''});}
@@ -1004,13 +1008,13 @@ function bars(labels,a,b,ca,cb,W=520,H=210){const L=34,B=24,mx=Math.ceil(Math.ma
   return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`}
 function donut(gs){gs=gs.filter(g=>g.v>0);const T=gs.reduce((s,g)=>s+g.v,0)||1,cx=100,cy=100,R=90,r=44;let a=-Math.PI/2,o="";
   gs.forEach(g=>{const sw=g.v/T*Math.PI*2,a0=a+.02,a1=a+Math.max(sw-.02,.03),P=(t,q)=>[cx+Math.cos(t)*q,cy+Math.sin(t)*q],big=a1-a0>Math.PI?1:0,[x0,y0]=P(a0,R),[x1,y1]=P(a1,R),[x2,y2]=P(a1,r),[x3,y3]=P(a0,r);
-    o+=`<path d="M${x0} ${y0}A${R} ${R} 0 ${big} 1 ${x1} ${y1}L${x2} ${y2}A${r} ${r} 0 ${big} 0 ${x3} ${y3}Z" fill="${g.c}" stroke="#fff" stroke-width="1.5"><title>${g.n}: ${fm(g.v)} tỷ</title></path>`;a+=sw});
+    o+=`<path d="M${x0} ${y0}A${R} ${R} 0 ${big} 1 ${x1} ${y1}L${x2} ${y2}A${r} ${r} 0 ${big} 0 ${x3} ${y3}Z" fill="${g.c}" stroke="#fff" stroke-width="1.5"><title>${esc(g.n)}: ${fm(g.v)} tỷ</title></path>`;a+=sw});
   return `<svg viewBox="0 0 200 200" style="max-width:220px;margin:auto">${o}<text x="100" y="98" text-anchor="middle" font-size="22" font-weight="300" fill="#16171C">${fm(T)}</text><text x="100" y="116" text-anchor="middle" font-size="10.5" fill="#8C8E97">tỷ đồng</text></svg>`}
-const dl=gs=>`<div style="display:grid;gap:8px;margin-top:14px">${gs.filter(g=>g.v>0).map(g=>`<div style="display:flex;justify-content:space-between;gap:10px;font-size:12.5px"><span style="display:inline-flex;align-items:center;gap:8px"><i style="width:10px;height:10px;border-radius:3px;background:${g.c}"></i>${g.n}</span><b class="num">${fm(g.v,2)} tỷ</b></div>`).join("")}</div>`;
+const dl=gs=>`<div style="display:grid;gap:8px;margin-top:14px">${gs.filter(g=>g.v>0).map(g=>`<div style="display:flex;justify-content:space-between;gap:10px;font-size:12.5px"><span style="display:inline-flex;align-items:center;gap:8px"><i style="width:10px;height:10px;border-radius:3px;background:${g.c}"></i>${esc(g.n)}</span><b class="num">${fm(g.v,2)} tỷ</b></div>`).join("")}</div>`;
 const kc=(k,t,v,u,s,id)=>`<div class="kc" style="${sv(k)}"><h4>${t}</h4><div class="v"${id?` data-k="${id}"`:""}>${v}<small>${u}</small></div><p${id?` data-k="${id}-s"`:""}>${s}</p></div>`;
 const card=(h,sub,body,cls="")=>`<section class="card ${cls}"><h3>${h}</h3>${sub?`<span class="sub">${sub}</span>`:""}<div style="margin-top:14px">${body}</div></section>`;
 const lg=(a)=>`<div style="display:flex;gap:14px;font-size:12px;color:var(--ink2);margin-bottom:8px">${a.map(x=>`<span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:${x[1]}"></i>${x[0]}</span>`).join("")}</div>`;
-const ms=a=>a.map(x=>`<div class="ms"><i style="background:${x[0]}"></i><div><b>${x[1]}</b><span>${x[2]}</span></div></div>`).join("");
+const ms=a=>a.map(x=>`<div class="ms"><i style="background:${x[0]}"></i><div><b>${esc(x[1])}</b><span>${esc(x[2])}</span></div></div>`).join("");
 
 /* ---------- Dự án tạo từ BOQ: tính toán ---------- */
 const parseVN=s=>{s=String(s==null?"":s).trim().replace(/\s|đ/g,"");if(!s)return null;if(/,/.test(s))s=s.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");const n=Number(s);return isFinite(n)?n:null};
@@ -1117,7 +1121,7 @@ function bsheet(p,s,sub){if(s==="week")return weekView(p);const c=calc(p),mg=pct
     </div>`}
   if(s==="boq"){const sel=p.hms.find(h=>h.code.toLowerCase()===sub&&h.lines.length)||p.hms.find(h=>h.lines.length);const sc=c.hs.find(x=>x.h===sel),G=groups(p,sel);
     const gr=(g,i)=>`<tr class="gr gs" data-gi="${i}"><td colspan="4">${esc(g.k)}</td><td class="r">${n0(g.rev)}</td><td colspan="3"></td><td class="r" data-c="gv">${n0(g.v)}</td><td class="r" data-c="gn">${n0(g.n)}</td><td class="r" data-c="gm">${n0(g.m)}</td><td class="r" data-c="gt">${n0(g.t)}</td><td class="r" data-c="gg">${n0(g.rev-g.t)}</td><td></td></tr>`;
-    let g1=null,gi=-1;const rows=sel.lines.map(l=>{let hd="";const k=l.g1||sel.name;if(k!==g1){g1=k;gi++;hd=gr(G[gi],gi)}
+    const gOrd={};G.forEach((g,i)=>gOrd[g.k]=i);let g1=null,gi=-1;const rows=sel.lines.slice().sort((a,b)=>gOrd[a.g1||sel.name]-gOrd[b.g1||sel.name]).map(l=>{let hd="";const k=l.g1||sel.name;if(k!==g1){g1=k;gi++;hd=gr(G[gi],gi)}
       const cc=p.cost[l.code]||{},lc=lineCost(p,l),bu=l.qty?l.total/l.qty:l.total,gp=(l.total||0)-lc.t;
       return hd+`<tr data-line="${l.code}" data-gi="${gi}"><td class="num" style="color:var(--muted);white-space:nowrap">${l.code}</td><td style="min-width:220px">${esc(l.name)}${l.spec?`<small class="spec">${esc(l.spec)}</small>`:""}${l.warn?`<small class="spec" style="color:#C0141B">${esc(l.warn)}</small>`:""}</td><td>${esc(l.unit)}</td><td class="r">${nq(l.qty)}</td><td class="r">${Math.round(l.total)?n0(l.total):"-"}<small class="spec">${Math.round(bu)?n0(bu)+"/"+esc(l.unit||"đvt"):"-"}</small></td>
         <td class="r"><input class="ci" inputmode="decimal" data-f="v" value="${cc.v!=null?n0(cc.v):""}" placeholder="${(x=>x?n0(x):"-")(l.uVL!=null?l.uVL*p.ratio/100:l.nc==null?bu*p.ratio/100:0)}" aria-label="Đơn giá vốn vật tư"></td><td class="r"><input class="ci" inputmode="decimal" data-f="n" value="${cc.n!=null?n0(cc.n):""}" placeholder="${(x=>x?n0(x):"-")(l.uNC!=null?l.uNC*p.ratio/100:0)}" aria-label="Đơn giá vốn nhân công"></td><td class="r"><input class="ci" inputmode="decimal" data-f="m" value="${cc.m!=null?n0(cc.m):""}" placeholder="-" aria-label="Đơn giá vốn máy, thiết bị thi công"></td>
@@ -1161,7 +1165,7 @@ function bsheet(p,s,sub){if(s==="week")return weekView(p);const c=calc(p),mg=pct
       <div class="bh gtool"><label class="rt">Khởi công <input class="ci" id="sdate" value="${esc(S.start)}" style="width:104px;text-align:center" aria-label="Ngày khởi công"></label>
         <div class="seg2" role="group" aria-label="Thu phóng">${[["d","Ngày"],["w","Tuần"],["m","Tháng"]].map(([k,t])=>`<button data-gz="${k}" aria-pressed="${gZoom===k}">${t}</button>`).join("")}</div>
         <button class="back sm" data-gu="u" ${GU.u.length?"":"disabled"}>↶ Hoàn tác</button><button class="back sm" data-gu="r" ${GU.r.length?"":"disabled"}>↷ Làm lại</button>
-        <button class="back sm" data-gx="1">${gCol.size?"Mở tất cả":"Thu tất cả"}</button>
+        <button class="back sm" data-gcol="1">${gCol.size?"Mở tất cả":"Thu tất cả"}</button>
         <button class="back sm" id="gbase">${S.base?"Chốt lại tiến độ gốc":"Chốt tiến độ gốc"}</button><button class="back sm" id="repro">Đề xuất lại</button></div></div>
       <div class="gleg"><span><i class="lg1"></i>Kế hoạch hiện tại</span><span><i class="lg2"></i>Phần đã hoàn thành</span><span><i class="lg3"></i>Tiến độ gốc${S.base?" (chốt "+esc(S.base.date)+")":" (chưa chốt)"}</span><span><i class="lg4"></i>Ngày cập nhật ${fd(new Date())}</span><span><b class="late">%</b> chậm hơn kế hoạch trên 10 điểm</span></div>
       <div style="margin-top:10px">${gantt(p,tl)}</div></section>
@@ -1249,7 +1253,19 @@ async function readBOQ(f){const m=document.getElementById("upmsg");if(m)m.textCo
     pending={file:f.name,wb,opt:{cols:{},match:{}},sel:null,r,form:{name:sc(i.name||f.name.replace(/\.\w+$/,""),brand),code:"",cdt:tc(i.client||""),loc:tc(i.loc||""),qcode:i.code||"",date:i.date||""}};
     view.innerHTML=preview();dashZeros(view);scrollTo({top:0})}
   catch(e){if(m){m.textContent=e.message||"Không đọc được file";m.style.color="#C0141B"}}}
-function preview(){const {r,form,file}=pending,ok=Math.abs(r.check-r.info.value)<1000,warn=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
+function pvOld(){const {form}=pending,q=form.qcode.trim(),n=form.name.trim();return DB.projects.find(p=>p.qcode&&p.qcode===q&&p.name===n)||null}
+/* Tải lại BOQ: mã dòng đánh theo vị trí nên phải ghép lại theo tên, không dùng lại mã cũ */
+function boqMerge(old,hms){const N=BOQ.nz,hm={},left={},lm={};hms.forEach(h=>{const k=N(h.name);(left[k]=left[k]||[]).push(h)});old.hms.forEach(h=>{const a=left[N(h.name)];if(a&&a.length)hm[h.code]=a.shift()});
+  old.hms.forEach(h=>{const nh=hm[h.code];if(!nh)return;const pool=nh.lines.slice(),O=h.lines.slice(),sA=l=>[l.g1,l.name,l.spec,l.unit].map(N).join("|"),sB=l=>[l.name,l.unit].map(N).join("|");
+    O.slice().forEach(l=>{const i=pool.findIndex(x=>sA(x)===sA(l));if(i>=0){lm[l.code]=pool[i].code;pool.splice(i,1);O.splice(O.indexOf(l),1)}});
+    O.forEach(l=>{const a=pool.filter(x=>sB(x)===sB(l));if(a.length===1&&O.filter(x=>sB(x)===sB(l)).length===1){lm[l.code]=a[0].code;pool.splice(pool.indexOf(a[0]),1)}})});
+  const cost={},lostN=[];Object.keys(old.cost||{}).forEach(c=>{if(lm[c])cost[lm[c]]=old.cost[c];else{let nm=c;old.hms.forEach(h=>h.lines.forEach(l=>{if(l.code===c)nm=l.name}));lostN.push(nm)}});
+  const rk=k=>{const i=k.indexOf("|"),h=hm[k.slice(0,i)];return h?h.code+k.slice(i):null},rt=t=>{const o={};Object.keys(t||{}).forEach(k=>{const n=rk(k);if(n)o[n]=t[k]});return o};
+  let sched,weeks,xcost;if(old.sched){sched=JSON.parse(JSON.stringify(old.sched));sched.t=rt(sched.t);if(sched.base)sched.base.t=rt(sched.base.t)}
+  if(old.weeks){weeks=JSON.parse(JSON.stringify(old.weeks));Object.values(weeks).forEach(w=>(w.tasks||[]).forEach(t=>{if(t.key)t.key=rk(t.key)}))}
+  if(old.xcost){xcost={};Object.keys(old.xcost).forEach(c=>{if(hm[c])xcost[hm[c].code]=old.xcost[c]})}
+  return{cost,sched,weeks,xcost,kept:Object.keys(cost).length,lost:lostN.length,lostN}}
+function preview(){const {r,form,file}=pending,ok=Math.abs(r.check-r.info.value)<1000,old=pvOld(),mg=old?boqMerge(old,r.hms):null,warn=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
   const f=(k,t,ph)=>`<label class="fl"><span>${t}</span><input class="fi" data-pf="${k}" value="${esc(form[k])}" placeholder="${ph||""}"></label>`;
   return `${backBtn("du-an","Huỷ, quay lại danh sách")}
   <div class="vh"><div><h1>Kiểm tra BOQ trước khi tạo dự án</h1><p>${esc(file)}</p></div></div>
@@ -1258,8 +1274,8 @@ function preview(){const {r,form,file}=pending,ok=Math.abs(r.check-r.info.value)
   ${kc("proj","Hạng mục",r.hms.filter(h=>h.total>0).length,"hạng mục",r.hms.filter(h=>h.sheet).length+" sheet chi tiết đã đọc")}
   ${kc("boq","Dòng công việc",n0(r.count),"dòng",warn||lump?`${warn} dòng thiếu thành tiền · ${lump} khoản trọn gói`:"Không có dòng bất thường")}
   ${card("Thông tin dự án","Lấy tự động từ trang bìa, anh sửa lại nếu cần",`<div class="fg">${f("name","Tên dự án")}${f("code","Mã dự án","Ví dụ NG-26-01")}${f("cdt","Chủ đầu tư")}${f("loc","Địa điểm")}${f("qcode","Số hồ sơ báo giá")}${f("date","Ngày hồ sơ","dd/mm/yyyy")}</div>
-    <div class="bh" style="margin-top:16px"><span class="sub">Khi kết nối Google Drive, hệ thống tự tạo thư mục dự án và lưu file BOQ gốc vào mục 01 Hồ sơ thầu.</span><button class="pill" id="mk" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Xác nhận và lưu dự án</button></div>`,"span2")}
-  ${card("Kết quả đọc file","",ms([[ok?"#12A150":"#E1141B",ok?"Tổng tiền khớp":"Tổng tiền chưa khớp",n0(r.check)+" đ / "+n0(r.info.value)+" đ"],...(warn?[["#E1141B",warn+" dòng có ô thành tiền trống","Đang tính 0 đúng như bảng tổng hợp"]]:[]),...(lump?[["#2D3CE6",lump+" khoản trọn gói","Giữ nguyên một dòng, chưa tách chi tiết"]]:[]),["#8C8E97","Đã bỏ qua các sheet ẩn","Chỉ đọc sheet đang hiện trong file"]]))}
+    <div class="bh" style="margin-top:16px"><span class="sub"${ok?"":' style="color:#C0141B"'}>${ok?"Khi kết nối Google Drive, hệ thống tự tạo thư mục dự án và lưu file BOQ gốc vào mục 01 Hồ sơ thầu.":"Chưa lưu được: tổng các hạng mục lệch "+n0(r.check-r.info.value)+" đ so với Tổng cộng trước thuế. Anh chọn lại sheet, cột ở bảng dưới hoặc sửa file rồi tải lại."}</span><button class="pill" id="mk" ${ok?"":"disabled"} style="${sv(ok?"rev":"cost")}${ok?"":";opacity:.5;cursor:not-allowed"}"><span class="dot">${ic("proj",2)}</span>${old?"Xác nhận và cập nhật dự án":"Xác nhận và lưu dự án"}</button></div>`,"span2")}
+  ${card("Kết quả đọc file","",ms([[ok?"#12A150":"#E1141B",ok?"Tổng tiền khớp":"Tổng tiền chưa khớp",n0(r.check)+" đ / "+n0(r.info.value)+" đ"],...(old?[[mg.lost?"#E1141B":"#F08A24","Sẽ cập nhật dự án "+old.code+" đã có","Giữ tiến độ, điều khoản, kế hoạch tuần, giá gốc · ghép được "+n0(mg.kept)+" dòng giá vốn"+(mg.lost?" · "+n0(mg.lost)+" dòng không còn trong file mới, sẽ bỏ giá vốn: "+mg.lostN.slice(0,3).join(", ")+(mg.lost>3?"…":""):"")]]:[]),...(warn?[["#E1141B",warn+" dòng có ô thành tiền trống","Đang tính 0 đúng như bảng tổng hợp"]]:[]),...(lump?[["#2D3CE6",lump+" khoản trọn gói","Giữ nguyên một dòng, chưa tách chi tiết"]]:[]),["#8C8E97","Đã bỏ qua các sheet ẩn","Chỉ đọc sheet đang hiện trong file"]]))}
   ${card("Hạng mục đọc được","Bấm vào một hạng mục để xem từng dòng hệ thống đã đọc ở bảng bên dưới",`<div class="tw"><table class="t"><thead><tr><th>Mã</th><th>Hạng mục</th><th>Sheet</th><th class="r">Dòng</th><th class="r">Giá trị (đ)</th><th>Kiểm tra</th></tr></thead><tbody>${r.hms.map((h,hi)=>{const s=h.lines.reduce((a,l)=>a+l.total,0),lp=h.lines.some(l=>l.lump);return`<tr data-pv="${hi}" class="${hi===pvSel()?"on":""}" style="cursor:pointer"><td class="num" style="color:var(--muted)">${h.code}</td><td><b>${esc(h.name)}</b></td><td style="color:var(--muted)">${esc(h.sheet||"Chỉ bảng tổng hợp")}</td><td class="r">${n0(h.lines.length)}</td><td class="r">${n0(h.total)}</td><td>${!h.total?st("warn","Không tính tiền"):Math.abs(s-h.total)<1000?(lp&&h.sheet?st("warn","Khớp · có trọn gói"):st("ok","Khớp")):st("bad","Lệch")}</td></tr>`}).join("")}</tbody><tfoot><tr><td></td><td><b>Tổng cộng trước thuế</b></td><td></td><td class="r">${n0(r.count)}</td><td class="r"><b>${n0(r.info.value)}</b></td><td></td></tr></tfoot></table></div>`,"span3")}
   ${pvDetail()}
   </div>`}
@@ -1278,11 +1294,11 @@ function pvDetail(){const r=pending.r,hi=pvSel(),h=r.hms[hi];if(!h)return"";cons
   return card(`${h.code} · ${esc(h.name)}`,"Số liệu hệ thống đã đọc từ file, anh kiểm tra trước khi lưu",`<div class="pvh"><span class="sub">Sheet chi tiết</span>${shSel}${!ok?st("bad","Lệch "+n0(sum-h.total)+" đ"):h.sheet&&h.lines.some(l=>l.rem==="Tự cân với bảng tổng hợp")?st("warn","Khớp nhờ dòng chênh lệch tự cân"):st("ok","Khớp bảng tổng hợp")}</div>${map}
     <div class="tw bsw" style="margin-top:14px"><table class="t pvt"><thead><tr><th>Mã</th><th>STT trong file</th><th>Công việc</th><th>ĐVT</th><th>Khối lượng</th><th>Đơn giá vật tư (đ)</th><th>Đơn giá nhân công (đ)</th><th>Thành tiền (đ)</th><th>Kiểm tra</th></tr></thead><tbody>${rows||`<tr><td colspan="9" class="sub">Không có dòng chi tiết.</td></tr>`}</tbody><tfoot><tr><td></td><td></td><td>Cộng ${n0(h.lines.length)} dòng · bảng tổng hợp ${n0(h.total)}</td><td></td><td></td><td></td><td></td><td class="r">${n0(sum)}</td><td></td></tr></tfoot></table></div>`,"span3")}
 function pvRe(){const y=scrollY;pending.r=BOQ.parse(pending.wb,XLSX,pending.opt);view.innerHTML=preview();dashZeros(view);scrollTo({top:y})}
-function createFromPending(){const {r,form}=pending;const id="p"+Date.now().toString(36);
+function createFromPending(){const {r,form}=pending;if(!(Math.abs(r.check-r.info.value)<1000))return;const id="p"+Date.now().toString(36);
   const yr=String(new Date().getFullYear()).slice(2),code=form.code.trim()||("NG-"+yr+"-"+String(DB.projects.length+1).padStart(2,"0"));
-  const old=DB.projects.findIndex(p=>p.qcode&&p.qcode===form.qcode&&p.name===form.name);
+  const oldP=pvOld(),old=oldP?DB.projects.indexOf(oldP):-1;
   const p={id,code,name:form.name.trim()||"Dự án mới",cdt:form.cdt.trim(),loc:form.loc.trim(),qcode:form.qcode.trim(),date:form.date.trim(),file:pending.file,value:r.info.value,rounded:r.info.rounded||null,ratio:85,cost:{},created:new Date().toISOString(),hms:r.hms};
-  if(old>=0){p.id=DB.projects[old].id;p.cost=DB.projects[old].cost||{};DB.projects[old]=p}else DB.projects.unshift(p);
+  if(old>=0){const m=boqMerge(oldP,r.hms),n={...oldP,...p,id:oldP.id,code:form.code.trim()||oldP.code,ratio:oldP.ratio,created:oldP.created,updated:new Date().toISOString(),cost:m.cost};["sched","weeks","xcost"].forEach(k=>{if(m[k])n[k]=m[k];else delete n[k]});GU.u=[];GU.r=[];GU.pid=null;DB.projects[old]=n;p.id=n.id}else DB.projects.unshift(p);
   persist();pending=null;location.hash="da-"+p.id;}
 
 function projView(p,s,sub){const L=p.boq?BSHEETS:SHEETS,b=p.boq?DB.projects.find(x=>x.id===p.id):null;
@@ -1502,7 +1518,7 @@ view.addEventListener("click",e=>{if(!cur)return;const t=e.target;let b;
   if(b=t.closest("[data-gu]")){gUndo(b.dataset.gu==="r");return}
   if(b=t.closest("[data-gz]")){gZoom=b.dataset.gz;keep(route);return}
   if(b=t.closest("[data-gc]")){const c=b.dataset.gc;gCol.has(c)?gCol.delete(c):gCol.add(c);keep(route);return}
-  if(b=t.closest("[data-gx]")){if(gCol.size)gCol.clear();else cur.hms.forEach(h=>gCol.add(h.code));keep(route);return}
+  if(b=t.closest("[data-gcol]")){if(gCol.size)gCol.clear();else cur.hms.forEach(h=>gCol.add(h.code));keep(route);return}
   if(b=t.closest("#gbase")){if(cur.sched.base&&!b.dataset.ok){b.dataset.ok=1;b.textContent="Bấm lần nữa để thay tiến độ gốc cũ";b.style.color="#C0141B";return}
     gSave();const t2={};Object.entries(cur.sched.t).forEach(([k,q])=>t2[k]={s:q.s,d:q.d});cur.sched.base={t:t2,date:fd(new Date())};persist();keep(route)}});
 /* kéo thả thanh tiến độ */
