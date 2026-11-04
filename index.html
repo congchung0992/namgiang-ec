@@ -648,7 +648,7 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
     <div class="lg" id="lg">
       <button class="lab" id="start" type="button">Đăng nhập <span aria-hidden="true">→</span></button>
       <form id="lgf" autocomplete="off" novalidate>
-        <input id="lgi" type="text" placeholder="Email công ty" aria-label="Email công ty">
+        <input id="lgi" type="text" placeholder="Tên đăng nhập" aria-label="Tên đăng nhập hoặc email">
         <button class="send" aria-label="Tiếp tục"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       </form>
     </div>
@@ -796,7 +796,7 @@ window.NGB=(function(){
   addEventListener("beforeunload",e=>{if(dirty||running){e.preventDefault();e.returnValue=""}});
   return{
     session:async()=>sb?(await sb.auth.getSession()).data.session:null,
-    async signIn(email,pw){const {error}=await need().auth.signInWithPassword({email,password:pw});if(error)throw new Error(/invalid login/i.test(error.message)?"Sai email hoặc mật khẩu":"Không đăng nhập được, anh kiểm tra mạng rồi thử lại")},
+    async signIn(email,pw){const {error}=await need().auth.signInWithPassword({email,password:pw});if(error)throw new Error(/invalid login/i.test(error.message)?"Sai tên đăng nhập hoặc mật khẩu":"Không đăng nhập được, anh kiểm tra mạng rồi thử lại")},
     signOut:async()=>{if(sb)await sb.auth.signOut()},
     loadAll,
     admin:{
@@ -898,14 +898,14 @@ document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.clo
       if(i<full.length)later(tick,full[i-1]==="\n"?260:42);else later(()=>intro.classList.add("ready"),250)};
     if(reduce){typed.innerHTML=L1+"<br>"+L2;intro.classList.add("ready");return}tick()}
   function start(){{const L=document.getElementById("lmlogo");if(L)L.replaceWith(L.cloneNode(true))}intro.className="s1";shell.classList.add("pre");typed.innerHTML="";step=1;inp.value="";inp.type="text";
-    inp.placeholder="Email công ty";st1.className="on";st2.className="";hint.textContent="Đăng nhập bằng tài khoản được cấp";
+    inp.placeholder="Tên đăng nhập";st1.className="on";st2.className="";hint.textContent="Đăng nhập bằng tài khoản được cấp";
     later(()=>{intro.className="s2";later(type,500)},2300)}
   const lg=document.getElementById("lg"),inp=document.getElementById("lgi"),hint=document.getElementById("hint"),st1=document.getElementById("st1"),st2=document.getElementById("st2");let step=1;
   document.getElementById("start").addEventListener("click",()=>{intro.classList.remove("s2");intro.classList.add("s3");later(()=>inp.focus(),700)});
   document.getElementById("lgf").addEventListener("submit",e=>{e.preventDefault();
-    if(!inp.value.trim()){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent=step===1?"Anh nhập email trước nhé":"Anh nhập mật khẩu để vào hệ thống";return}
-    if(step===1&&!/.+@.+/.test(inp.value)){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent="Email chưa đúng, anh kiểm tra lại";return}
-    if(step===1){loginEmail=inp.value.trim();step=2;inp.value="";inp.type="password";inp.placeholder="Mật khẩu";st2.className="on";hint.textContent="Bước 2/2 · nhấn Enter để vào";inp.focus();return}
+    if(!inp.value.trim()){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent=step===1?"Anh nhập tên đăng nhập trước nhé":"Anh nhập mật khẩu để vào hệ thống";return}
+    if(step===1&&!/^[^\s@]+(@[^\s@]+)?$/.test(inp.value.trim())){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent="Tên đăng nhập chưa đúng, anh kiểm tra lại";return}
+    if(step===1){{const v=inp.value.trim().toLowerCase();loginEmail=v.includes("@")?v:v+"@namgiang-ec.pages.dev"}step=2;inp.value="";inp.type="password";inp.placeholder="Mật khẩu";st2.className="on";hint.textContent="Bước 2/2 · nhấn Enter để vào";inp.focus();return}
     doLogin(inp.value)});
   let loginEmail="",busy=false;
   async function doLogin(pw){if(busy)return;busy=true;hint.textContent="Đang đăng nhập…";
