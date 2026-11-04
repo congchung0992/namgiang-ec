@@ -5,6 +5,12 @@ Hệ thống quản trị nội bộ của **Công ty Cổ phần Đầu tư và
 > Đăng nhập và số liệu dự án dùng Supabase; lược đồ và phân quyền ở `supabase/schema.sql`. Khoá công khai trong `index.html` được phép lộ, quyền do máy chủ quyết định. Tài khoản do quản trị viên tạo ở Supabase rồi phân quyền ở màn Quản trị.
 
 > File hồ sơ (tab Hồ sơ) lưu ở Google Drive của công ty qua `functions/api/drive.js`. Biến bí mật trên Cloudflare: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` (phạm vi `drive.file`). Chưa đặt thì tab Hồ sơ báo chưa kết nối.
+>
+> **Khi web báo "Khoá Google Drive đã hết hạn"** (lỗi `invalid_grant`), tạo lại `GOOGLE_REFRESH_TOKEN`:
+> 1. Google Cloud Console → APIs & Services → OAuth consent screen (Google Auth Platform → Audience): nếu đang ở **Testing** thì bấm **Publish app** sang **In production**. Ở chế độ Testing, khoá tự hết hạn sau 7 ngày.
+> 2. Mở https://developers.google.com/oauthplayground → bánh răng → tick *Use your own OAuth credentials* → dán Client ID, Client secret. Ứng dụng OAuth phải có `https://developers.google.com/oauthplayground` trong *Authorized redirect URIs*.
+> 3. Ô *Input your own scopes* nhập `https://www.googleapis.com/auth/drive.file` → Authorize APIs → đăng nhập tài khoản Google của công ty → *Exchange authorization code for tokens* → chép **Refresh token**.
+> 4. Cloudflare → Workers & Pages → namgiang-ec → Settings → Variables and Secrets → sửa `GOOGLE_REFRESH_TOKEN` → triển khai lại. File đang chờ trên trình duyệt sẽ tự đưa lên ở lần vào web tiếp theo.
 
 ## Tính năng giao diện
 - Màn giới thiệu và đăng nhập 2 bước (email/mã nhân viên → mật khẩu), có hiệu ứng thẻ số liệu bay vào.
