@@ -105,6 +105,7 @@ main{padding-block:16px 32px;min-width:0}
 .hpr .hn{min-width:0}.hpr .hn b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hpr .hn span{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hpr .mau{font-size:10.5px;font-weight:500;color:var(--muted)}
+.ftb .mau{font-size:11px;font-weight:600;color:#B25E00;background:#FFF1DF;padding:2px 8px;border-radius:99px;white-space:nowrap}
 .hpr .hv{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:13px}
 .hpf{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.hpf .back.sm{margin:0}
 .legend-sites{display:flex;gap:14px;font-size:12px;color:var(--ink2);position:relative;z-index:1}
@@ -1225,17 +1226,38 @@ const LOCALF={open(){return new Promise((ok,er)=>{const q=indexedDB.open("ngic-f
   async get(id){return (await this.tx("readonly",o=>o.get(id)))},
   async del(id){await this.tx("readwrite",o=>o.delete(id))},
   async delProject(pid){for(const x of await this.all())if(x.project_id===pid)await this.del(x.id)}};
-const FS={list:pid=>NGApp.guest?LOCALF.list(pid):NGB.drive.list(pid),
-  upload:(pid,folder,f)=>{if(f.size>95*1048576)return Promise.reject(new Error("File quá lớn, tối đa 95 MB"));return NGApp.guest?LOCALF.put(pid,folder,f):NGB.drive.upload(pid,folder,f)},
-  blob:async id=>NGApp.guest?(await LOCALF.get(id)).blob:NGB.drive.blob(id),
-  remove:id=>NGApp.guest?LOCALF.del(id):NGB.drive.remove(id)};
+/* Tên file chuẩn cho mọi file đưa lên: NămThángNgày_Mã dự án_tên không dấu, ví dụ 20261104_NG-26-01_BOQ_NAG_DT_R1.xlsx.
+   Tên đã có sẵn ngày dạng 20261003 ở đầu thì giữ ngày đó; chạy lại nhiều lần vẫn ra cùng một tên. */
+const noAcc=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D");
+const slug=s=>noAcc(s).replace(/[^A-Za-z0-9-]+/g,"_").replace(/_+/g,"_").replace(/^[_-]+|[_-]+$/g,"");
+const ymd=d=>d.getFullYear()+("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2);
+function stdName(pid,name){const p=DB.projects.find(x=>x.id===pid),m=String(name||"").match(/^(.*?)(\.[A-Za-z0-9]{1,8})?$/),code=slug(p&&p.code);
+  let b=slug(m[1]).slice(0,120),dt=ymd(new Date());const dm=b.match(/^((?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01]))(?:_|$)/);if(dm){dt=dm[1];b=b.slice(dm[0].length)}
+  if(code&&b.toUpperCase().startsWith(code.toUpperCase())&&/^(_|$)/.test(b.slice(code.length)))b=b.slice(code.length+1);
+  return [dt,code,b||"file"].filter(Boolean).join("_")+(m[2]||"").toLowerCase()}
+const named=(pid,f)=>new File([f],stdName(pid,f.name),{type:f.type||"application/octet-stream"});
+/* File chưa lên được Drive (mất mạng, chưa kết nối) thì giữ trên trình duyệt, lần sau vào web tự đưa lên */
+async function flushLocal(){if(NGApp.guest||!NGApp.drive)return{done:0,left:0};let done=0,left=0;
+  for(const f of await LOCALF.all().catch(()=>[])){if(!DB.projects.some(p=>p.id===f.project_id))continue;
+    try{await NGB.drive.upload(f.project_id,f.folder,named(f.project_id,new File([f.blob],f.name,{type:f.blob.type})));await LOCALF.del(f.id);done++}catch(e){left++}}
+  return{done,left}}
+const LQ="loc:";
+const FS={list:async pid=>{if(NGApp.guest)return LOCALF.list(pid);const [D,L]=await Promise.all([NGB.drive.list(pid),LOCALF.list(pid).catch(()=>[])]);return [...L.map(x=>({...x,id:LQ+x.id,wait:1})),...D]},
+  upload:(pid,folder,f)=>{if(f.size>95*1048576)return Promise.reject(new Error("File quá lớn, tối đa 95 MB"));f=named(pid,f);return NGApp.guest?LOCALF.put(pid,folder,f):NGB.drive.upload(pid,folder,f)},
+  blob:async id=>NGApp.guest||id.startsWith(LQ)?(await LOCALF.get(id.replace(LQ,""))).blob:NGB.drive.blob(id),
+  remove:id=>NGApp.guest||id.startsWith(LQ)?LOCALF.del(id.replace(LQ,"")):NGB.drive.remove(id)};
+/* Lưu file kèm dự án (BOQ gốc...): đặt tên chuẩn, lên Drive được thì lên, không thì giữ lại để tự đưa lên sau */
+async function keepFile(pid,folder,file,label){const f=named(pid,file);if(NGApp.guest)return LOCALF.put(pid,folder,f);
+  try{if(!NGApp.drive||!await NGB.saveNow(DB))throw 0;await NGB.drive.upload(pid,folder,f)}
+  catch(e){await LOCALF.put(pid,folder,f).catch(()=>{});NGB.warn(label+" chưa lên được Google Drive, đang giữ trên trình duyệt này và sẽ tự đưa lên khi kết nối lại.")}
+  if(cur&&cur.id===pid&&document.getElementById("fls"))filesLoad()}
 const filesView=()=>`<div class="sub" id="flmsg" style="min-height:18px;margin-bottom:8px"></div><div class="vgrid" id="fls"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`;
 let flSel=null;
 async function filesLoad(){const box=document.getElementById("fls"),p=cur;if(!box||!p)return;
   try{const L=await FS.list(p.id);if(!document.getElementById("fls")||cur!==p)return;const G=NGApp.guest,on=G||NGApp.drive,canDel=G||NGApp.board||p._role==="gd",F=DF.filter(f=>NGApp.board||f[3].includes(p._role));
     if(!F.some(f=>f[0]===flSel))flSel=F.length?F[0][0]:null;const C=F.find(f=>f[0]===flSel),R=L.filter(x=>x.folder===flSel);
     box.innerHTML=card("Thư mục dự án",G?"Chế độ thử · file tạm lưu trên trình duyệt này, đăng nhập rồi sẽ đưa lên Google Drive của công ty":on?"Bộ hồ sơ của dự án, lưu trên Google Drive của công ty · bấm vào thư mục để xem hoặc tải về":"Chưa kết nối Google Drive nên chưa tải file lên được",`<div class="fdg">${F.map(f=>{const n=L.filter(x=>x.folder===f[0]).length;return`<button class="fd" data-fsel="${f[0]}" aria-current="${f[0]===flSel}">${ic("files",1.8)}<span><b>${f[0]} ${f[1]}</b><small>${n?n+" file":"Chưa có file"}</small></span></button>`}).join("")}</div>`,"span3")+
-    (C?card(`${C[0]} ${C[1]}`,C[2],`${R.length?`<div class="tw"><table class="t ftb"><thead><tr><th>Tên file</th><th class="r">Dung lượng</th><th>Ngày tải lên</th><th></th></tr></thead><tbody>${R.map(x=>`<tr><td class="fn">${esc(x.name)}</td><td class="r">${fmtSize(x.size)}</td><td class="num">${fd(new Date(x.at))}</td><td><div class="fla"><button class="back sm" style="margin:0" data-fv="${esc(x.id)}" data-n="${esc(x.name)}">Xem</button><button class="back sm" style="margin:0" data-fd="${esc(x.id)}" data-n="${esc(x.name)}">Tải về</button>${canDel?`<button class="back sm" style="margin:0" data-fx="${esc(x.id)}">Xoá</button>`:""}</div></td></tr>`).join("")}</tbody></table></div>`:`<span class="sub">Thư mục này chưa có file.</span>`}${on?`<div style="margin-top:12px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="${C[0]}" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file lên</label></div>`:""}`,"span3"):"")}
+    (C?card(`${C[0]} ${C[1]}`,C[2],`${R.length?`<div class="tw"><table class="t ftb"><thead><tr><th>Tên file</th><th class="r">Dung lượng</th><th>Ngày tải lên</th><th></th></tr></thead><tbody>${R.map(x=>`<tr><td class="fn">${esc(x.name)}${x.wait?' <small class="mau">Chờ đưa lên Drive</small>':""}</td><td class="r">${fmtSize(x.size)}</td><td class="num">${fd(new Date(x.at))}</td><td><div class="fla"><button class="back sm" style="margin:0" data-fv="${esc(x.id)}" data-n="${esc(x.name)}">Xem</button><button class="back sm" style="margin:0" data-fd="${esc(x.id)}" data-n="${esc(x.name)}">Tải về</button>${canDel?`<button class="back sm" style="margin:0" data-fx="${esc(x.id)}">Xoá</button>`:""}</div></td></tr>`).join("")}</tbody></table></div>`:`<span class="sub">${C[0]==="01"&&p.file?`Chưa có file BOQ gốc (${esc(p.file)}). Dự án tạo trước khi nối Google Drive nên file chưa được lưu, anh tải file đó lên đây.`:"Thư mục này chưa có file."}</span>`}${on?`<div style="margin-top:12px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="${C[0]}" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file lên</label><div class="sub" style="margin-top:8px">Tên file tự đặt theo dạng NămThángNgày_Mã dự án_tên không dấu, ví dụ ${esc(stdName(p.id,"Biên bản nghiệm thu.pdf"))}</div></div>`:""}`,"span3"):"")}
   catch(e){const b=document.getElementById("fls");if(b)b.innerHTML=`<section class="card span3" style="color:#C0141B;font-size:13px">Không tải được danh sách hồ sơ: ${esc(e.message)}</section>`}}
 const flMsg=(m,bad)=>{const x=document.getElementById("flmsg");if(x){x.textContent=m||"";x.style.color=bad?"#C0141B":""}};
 const saveBlob=(b,name)=>{const u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000)};
@@ -1422,7 +1444,7 @@ function preview(){const {r,form,file}=pending,ok=Math.abs(r.check-r.info.value)
   ${kc("proj","Hạng mục",r.hms.filter(h=>h.total>0).length,"hạng mục",r.hms.filter(h=>h.sheet).length+" sheet chi tiết đã đọc")}
   ${kc("boq","Dòng công việc",n0(r.count),"dòng",warn||lump?`${warn} dòng thiếu thành tiền · ${lump} khoản trọn gói`:"Không có dòng bất thường")}
   ${card("Thông tin dự án","Lấy tự động từ trang bìa, anh sửa lại nếu cần",`<div class="fg">${f("name","Tên dự án")}${f("code","Mã dự án","Ví dụ NG-26-01")}${f("cdt","Chủ đầu tư")}${f("loc","Địa điểm")}${f("qcode","Số hồ sơ báo giá")}${f("date","Ngày hồ sơ","dd/mm/yyyy")}</div>
-    <div class="bh" style="margin-top:16px"><span class="sub"${ok?"":' style="color:#C0141B"'}>${ok?"Khi kết nối Google Drive, hệ thống tự tạo thư mục dự án và lưu file BOQ gốc vào mục 01 Hồ sơ thầu.":"Chưa lưu được: tổng các hạng mục lệch "+n0(r.check-r.info.value)+" đ so với Tổng cộng trước thuế. Anh chọn lại sheet, cột ở bảng dưới hoặc sửa file rồi tải lại."}</span><button class="pill" id="mk" ${ok?"":"disabled"} style="${sv(ok?"rev":"cost")}${ok?"":";opacity:.5;cursor:not-allowed"}"><span class="dot">${ic("proj",2)}</span>${old?"Xác nhận và cập nhật dự án":"Xác nhận và lưu dự án"}</button></div>`,"span2")}
+    <div class="bh" style="margin-top:16px"><span class="sub"${ok?"":' style="color:#C0141B"'}>${ok?"Khi lưu, hệ thống tự lưu file BOQ gốc vào mục 01 Hồ sơ thầu của Thư mục dự án, tên dạng NămThángNgày_Mã dự án_BOQ_mã hồ sơ.":"Chưa lưu được: tổng các hạng mục lệch "+n0(r.check-r.info.value)+" đ so với Tổng cộng trước thuế. Anh chọn lại sheet, cột ở bảng dưới hoặc sửa file rồi tải lại."}</span><button class="pill" id="mk" ${ok?"":"disabled"} style="${sv(ok?"rev":"cost")}${ok?"":";opacity:.5;cursor:not-allowed"}"><span class="dot">${ic("proj",2)}</span>${old?"Xác nhận và cập nhật dự án":"Xác nhận và lưu dự án"}</button></div>`,"span2")}
   ${card("Kết quả đọc file","",ms([[ok?"#12A150":"#E1141B",ok?"Tổng tiền khớp":"Tổng tiền chưa khớp",n0(r.check)+" đ / "+n0(r.info.value)+" đ"],...(old?[[mg.lost?"#E1141B":"#F08A24","Sẽ cập nhật dự án "+old.code+" đã có","Giữ tiến độ, điều khoản, kế hoạch tuần, giá gốc · ghép được "+n0(mg.kept)+" dòng giá vốn"+(mg.lost?" · "+n0(mg.lost)+" dòng không còn trong file mới, sẽ bỏ giá vốn: "+mg.lostN.slice(0,3).join(", ")+(mg.lost>3?"…":""):"")]]:[]),...(warn?[["#E1141B",warn+" dòng có ô thành tiền trống","Đang tính 0 đúng như bảng tổng hợp"]]:[]),...(lump?[["#2D3CE6",lump+" khoản trọn gói","Giữ nguyên một dòng, chưa tách chi tiết"]]:[]),["#8C8E97","Đã bỏ qua các sheet ẩn","Chỉ đọc sheet đang hiện trong file"]]))}
   ${card("Hạng mục đọc được","Bấm vào một hạng mục để xem từng dòng hệ thống đã đọc ở bảng bên dưới",`<div class="tw"><table class="t"><thead><tr><th>Mã</th><th>Hạng mục</th><th>Sheet</th><th class="r">Dòng</th><th class="r">Giá trị (đ)</th><th>Kiểm tra</th></tr></thead><tbody>${r.hms.map((h,hi)=>{const s=h.lines.reduce((a,l)=>a+l.total,0),lp=h.lines.some(l=>l.lump);return`<tr data-pv="${hi}" class="${hi===pvSel()?"on":""}" style="cursor:pointer"><td class="num" style="color:var(--muted)">${h.code}</td><td><b>${esc(h.name)}</b></td><td style="color:var(--muted)">${esc(h.sheet||"Chỉ bảng tổng hợp")}</td><td class="r">${n0(h.lines.length)}</td><td class="r">${n0(h.total)}</td><td>${!h.total?st("warn","Không tính tiền"):Math.abs(s-h.total)<1000?(lp&&h.sheet?st("warn","Khớp · có trọn gói"):st("ok","Khớp")):st("bad","Lệch")}</td></tr>`}).join("")}</tbody><tfoot><tr><td></td><td><b>Tổng cộng trước thuế</b></td><td></td><td class="r">${n0(r.count)}</td><td class="r"><b>${n0(r.info.value)}</b></td><td></td></tr></tfoot></table></div>`,"span3")}
   ${pvDetail()}
@@ -1448,7 +1470,7 @@ function createFromPending(){const {r,form}=pending;if(!(Math.abs(r.check-r.info
   const p={id,code,name:form.name.trim()||"Dự án mới",cdt:form.cdt.trim(),loc:form.loc.trim(),qcode:form.qcode.trim(),date:form.date.trim(),file:pending.file,value:r.info.value,rounded:r.info.rounded||null,ratio:85,cost:{},created:new Date().toISOString(),hms:r.hms};
   if(old>=0){const m=boqMerge(oldP,r.hms),n={...oldP,...p,id:oldP.id,code:form.code.trim()||oldP.code,ratio:oldP.ratio,created:oldP.created,updated:new Date().toISOString(),cost:m.cost};["sched","weeks","xcost"].forEach(k=>{if(m[k])n[k]=m[k];else delete n[k]});GU.u=[];GU.r=[];GU.pid=null;DB.projects[old]=n;p.id=n.id}else DB.projects.unshift(p);
   const blob=pending.blob;persist();pending=null;location.hash="da-"+p.id;
-  if(NGApp.guest&&blob)LOCALF.put(p.id,"01",blob).catch(()=>{});else if(NGApp.drive&&blob)NGB.saveNow(DB).then(k=>{if(k)return NGB.drive.upload(p.id,"01",blob)}).catch(()=>NGB.warn("Đã lưu dự án nhưng chưa lưu được file BOQ gốc lên Drive, anh tải lại ở tab Thư mục dự án."))}
+  if(blob){const ext=(blob.name.match(/\.\w+$/)||[".xlsx"])[0];keepFile(p.id,"01",new File([blob],"BOQ "+(p.qcode||blob.name.replace(/\.\w+$/,""))+ext,{type:blob.type}),"File BOQ gốc").catch(()=>{})}}
 
 function projView(p,s,sub){const b=p.boq?DB.projects.find(x=>x.id===p.id):null,L=p.boq?sheetsFor(b):SHEETS;
   return `${backBtn("du-an","Danh sách dự án")}
@@ -1814,7 +1836,8 @@ window.NGApp={board:false,uid:null,drive:false,guest:false,
   guestEnter(){const d=STORE.load();DB.projects=Array.isArray(d.projects)?d.projects:[];DB.dec=d.dec||{};DB.projects.forEach(p=>{if(!p.cost)p.cost={};if(p.ratio==null)p.ratio=85});NGApp.guest=true;NGApp.board=true;NGApp.uid=null;NGApp.drive=false;
     const b=document.createElement("div");b.textContent="Chế độ thử · số liệu chỉ lưu trên trình duyệt này";b.style.cssText="position:fixed;left:50%;bottom:10px;transform:translateX(-50%);max-width:70vw;padding:5px 12px;border-radius:99px;background:rgba(10,36,134,.88);color:#fff;font-size:12px;text-align:center;z-index:50;pointer-events:none";document.body.appendChild(b);
     route();if(window.renderHello)window.renderHello()},
-  async sync(){const d=await NGB.loadAll();DB.projects=d.projects;DB.dec=d.dec;NGApp.board=d.isBoard;NGApp.uid=d.uid;NGApp.drive=await NGB.drive.status();route();if(window.renderHello)window.renderHello()}};
+  async sync(){const d=await NGB.loadAll();DB.projects=d.projects;DB.dec=d.dec;NGApp.board=d.isBoard;NGApp.uid=d.uid;NGApp.drive=await NGB.drive.status();route();if(window.renderHello)window.renderHello();
+    flushLocal().then(r=>{if(r.done&&document.getElementById("fls"))filesLoad()}).catch(()=>{})}};
 addEventListener("hashchange",()=>{pending=null;route()});route();
 view.addEventListener("click",e=>{const A=NGB.admin,t=e.target;
   const bd=t.closest("[data-bd]");if(bd){if(!bd.dataset.ok){bd.dataset.ok=1;bd.textContent="Bấm lần nữa để xác nhận";return}admDo(()=>A.setBoard(bd.dataset.bd,bd.dataset.v==="1"));return}
@@ -1824,7 +1847,7 @@ view.addEventListener("change",e=>{const t=e.target;if(t.id==="admp"){admPid=t.v
   if(t.dataset.mr!==undefined){admDo(()=>NGB.admin.setRole(admPid,t.closest("tr[data-mu]").dataset.mu,t.value))}});
 view.addEventListener("click",async e=>{const b=e.target.closest("#mig");if(!b||b.disabled)return;b.disabled=true;const old=STORE.load(),add=localOld();DB.projects=[...add,...DB.projects];DB.dec={...(old.dec||{}),...DB.dec};
   if(await NGB.saveNow(DB)){localStorage.setItem("ngic.v1.bak",JSON.stringify(old));localStorage.removeItem("ngic.v1");
-    if(NGApp.drive){let left=0;for(const f of await LOCALF.all().catch(()=>[])){if(!DB.projects.some(p=>p.id===f.project_id))continue;try{await NGB.drive.upload(f.project_id,f.folder,new File([f.blob],f.name,{type:f.blob.type}));await LOCALF.del(f.id)}catch(er){left++}}if(left)NGB.warn(left+" file chưa đưa lên được Google Drive, vẫn còn trên trình duyệt này.")}
+    if(NGApp.drive){const {left}=await flushLocal();if(left)NGB.warn(left+" file chưa đưa lên được Google Drive, vẫn còn trên trình duyệt này.")}
   }else{DB.projects=DB.projects.filter(p=>!add.includes(p))}route()});
 NGBoot();
 })();
