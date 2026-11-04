@@ -1777,7 +1777,7 @@ function pinfo(p){const c=calc(p),tl=timeline(p),cf=cash(p,tl),m=mats(p);
   return{p,c,tl,cf,ord}}
 const nz=s=>BOQ.nz(s);
 window.NG={
- context(){return{today:fd(new Date()),note:"Số liệu dự án tạo từ BOQ; giá vốn dòng chưa nhập là ước tính theo tỷ lệ; điều khoản thanh toán và thời gian chờ vật tư là giả định nếu chưa sửa. Các công trình 'Mẫu' là số liệu minh hoạ.",
+ context(){return{today:fd(new Date()),note:"Số liệu dự án tạo từ BOQ; giá vốn dòng chưa nhập là ước tính theo tỷ lệ; điều khoản thanh toán và thời gian chờ vật tư là giả định nếu chưa sửa.",
   projects:DB.projects.map(p=>{const {c,tl,cf,ord}=pinfo(p);return{ten:p.name,ma:p.code,chu_dau_tu:p.cdt,dia_diem:p.loc,ho_so:p.qcode+" "+p.date,gia_tri_hop_dong:Math.round(c.rev),gia_von:Math.round(c.cost),lai_gop:Math.round(c.gp),bien_lai_pct:+pct(c.gp,c.rev).toFixed(1),dong_da_nhap_gia_von:c.ent,tong_dong:c.cnt,ty_le_uoc_tinh_pct:p.ratio,
     khoi_cong:fd(tl.st),hoan_thanh:fd(addD(tl.st,tl.end-1)),so_ngay:tl.end,dieu_khoan:p.terms,von_can_ung_max:Math.round(cf.peak),thang_can_ung:cf.pm,
     thang:tl.lab.map((l,i)=>({thang:l,doanh_thu:Math.round(tl.rev[i]),gia_von:Math.round(tl.cost[i])})),
