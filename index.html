@@ -386,7 +386,7 @@ table.bt{min-width:1560px}table.hmt{min-width:1000px}
 .t tr.gs td{font-variant-numeric:tabular-nums}.t tr.gs td.r{font-weight:600;color:var(--ink)}
 @media (max-width:760px){.bks{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* Bảng: viền ngang, viền dọc, tiêu đề có màu */
-table.t{border:1px solid #D9DDE8;border-radius:14px;overflow:hidden;background:rgba(255,255,255,.55)}
+table.t{border:1px solid #D9DDE8;border-radius:14px;overflow:clip;background:rgba(255,255,255,.55)}
 .t th,.t td{border-bottom:1px solid #E1E4EC;border-right:1px solid #E1E4EC}
 .t th:last-child,.t td:last-child{border-right:0}
 .t thead th{background:#E3E8FB;color:#0A2486;font-weight:600;font-size:13.5px;text-align:center!important;vertical-align:middle;padding:10px;border-bottom:1px solid #C9D2F2;border-right-color:#D3DAF5;white-space:nowrap}
@@ -396,9 +396,11 @@ table.t{border:1px solid #D9DDE8;border-radius:14px;overflow:hidden;background:r
 .t tr.on td{background:#D7F3F1}
 .t thead tr.h2 th{border-right:1px solid #D3DAF5!important;padding:7px 10px}
 .t thead th.hg-a{background:#FCE9CF;color:#8A4B00;border-bottom-color:#F3D3A6}.t thead th.hs-a{background:#FEF3E3;color:#8A4B00;border-bottom-color:#F3D3A6}
-.t thead th.hg-b{background:#D3F0EC;color:#065F5A;border-bottom-color:#A9DDD6}.t thead th.hs-b{background:#E6F7F4;color:#065F5A;border-bottom-color:#A9DDD6}
+.t thead th.hg-b{background:#E6D9FB;color:#5B21B6;border-bottom-color:#CDB8F3}.t thead th.hs-b{background:#F1EAFD;color:#5B21B6;border-bottom-color:#CDB8F3}
 .t thead th.hg-c{background:#DBF2E2;color:#0B6B33;border-bottom-color:#B3E0C1}.t thead th.hs-c{background:#EAF8EE;color:#0B6B33;border-bottom-color:#B3E0C1}
-.t col.cg-a{background:rgba(252,233,207,.22)}.t col.cg-b{background:rgba(211,240,236,.22)}.t col.cg-c{background:rgba(219,242,226,.25)}
+.t col.cg-a{background:rgba(252,233,207,.22)}.t col.cg-b{background:rgba(230,217,251,.2)}.t col.cg-c{background:rgba(219,242,226,.25)}
+.bsr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}.bsr .fi{flex:0 1 420px;min-width:0}.bsr .sub{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tw.bsw{max-height:calc(100vh - 110px);overflow:auto}.bt thead th{position:sticky;top:0;z-index:2}.bt thead tr.h2 th{top:var(--h1,42px)}.t tr[hidden]{display:none}
 /* ==end-m1-css== */
 @media (max-width:1180px){.vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.span2{grid-column:1 / -1}}
 @media (max-width:760px){
@@ -1082,7 +1084,7 @@ function bsheet(p,s,sub){if(s==="week")return weekView(p);const c=calc(p),mg=pct
     <section class="card span3"><div class="bh"><div><h3>${sel.code} · ${esc(sel.name)}</h3><span class="sub">Diễn giải chi tiết ${n0(sel.lines.length)} dòng theo nhóm công việc · nhập đơn giá vốn vật tư, nhân công, máy và thiết bị thi công · dòng để trống tính ước tính theo tỷ lệ bên cạnh (chia vật tư/nhân công theo BOQ, máy tính 0)</span></div>
       <label class="rt">Ước tính giá vốn <input class="ci" id="ratio" inputmode="decimal" value="${fm(p.ratio,0)}" aria-label="Tỷ lệ giá vốn ước tính"> % giá thầu</label></div>
       <div class="bks">${bar("Vật tư",sc.cv,"#2D3CE6","dv")}${bar("Nhân công",sc.cn,"#C21FC9","dn")}${bar("Máy, thiết bị thi công",sc.cm,"#F08A24","dm")}<div class="bk"><span><i style="background:#12A150"></i>Lãi gộp hạng mục</span><b class="num" data-k="dg">${n0(sc.rev-sc.cost)}</b><em data-k="dgp">${fm(pct(sc.rev-sc.cost,sc.rev))}% doanh thu</em></div></div>
-      <div class="tw" style="margin-top:14px"><table class="t bt"><colgroup><col span="5"><col span="3" class="cg-a"><col span="4" class="cg-b"><col class="cg-c"><col></colgroup><thead><tr><th rowspan="2">Mã</th><th rowspan="2">Công việc</th><th rowspan="2">ĐVT</th><th rowspan="2">Khối lượng</th><th rowspan="2">Thành tiền<br>giá thầu (đ)</th><th colspan="3" class="hg-a">Đơn giá vốn nhập (đ/đvt)</th><th colspan="4" class="hg-b">Thành tiền giá vốn (đ)</th><th rowspan="2" class="hg-c">Lãi gộp<br>(đ)</th><th rowspan="2">Trạng thái</th></tr><tr class="h2"><th class="hs-a">Vật tư</th><th class="hs-a">Nhân công</th><th class="hs-a">Máy, TB</th><th class="hs-b">Vật tư</th><th class="hs-b">Nhân công</th><th class="hs-b">Máy, TB</th><th class="hs-b">Tổng vốn</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="bsr"><input class="fi" id="bsq" type="search" value="${esc(bq)}" placeholder="Tìm công tác theo tên hoặc mã (vd: bê tông, cốp pha, A01.02)…" aria-label="Tìm công tác"><span class="sub" id="bqn"></span></div><div class="tw bsw" style="margin-top:10px"><table class="t bt"><colgroup><col span="5"><col span="3" class="cg-a"><col span="4" class="cg-b"><col class="cg-c"><col></colgroup><thead><tr><th rowspan="2">Mã</th><th rowspan="2">Công việc</th><th rowspan="2">ĐVT</th><th rowspan="2">Khối lượng</th><th rowspan="2">Thành tiền<br>giá thầu (đ)</th><th colspan="3" class="hg-a">Đơn giá vốn nhập (đ/đvt)</th><th colspan="4" class="hg-b">Thành tiền giá vốn (đ)</th><th rowspan="2" class="hg-c">Lãi gộp<br>(đ)</th><th rowspan="2">Trạng thái</th></tr><tr class="h2"><th class="hs-a">Vật tư</th><th class="hs-a">Nhân công</th><th class="hs-a">Máy, TB</th><th class="hs-b">Vật tư</th><th class="hs-b">Nhân công</th><th class="hs-b">Máy, TB</th><th class="hs-b">Tổng vốn</th></tr></thead><tbody>${rows}</tbody></table></div>
       <div class="bh" style="margin-top:16px"><span class="sub">Dữ liệu đang lưu trên trình duyệt này · sẽ chuyển sang Google Sheets trong thư mục dự án khi kết nối Drive</span><button class="back" id="delp" style="margin:0">Xoá dự án</button></div></section>
     </div>`}
   if(s==="rev"){const PC=["#12A150","#2D3CE6","#C21FC9","#F08A24","#8C8E97"],parts={};p.hms.forEach(h=>{const k=h.code[0]==="B"?"Chi phí gián tiếp":(h.grp||"Khác");parts[k]=(parts[k]||0)+h.total});
@@ -1327,7 +1329,7 @@ function route(){const h=(location.hash||"#tong-quan").slice(1);let top="tong-qu
   else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){top="du-an";const L=p.boq?BSHEETS:SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:"home",sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
   {const np=waiting(decisions()).length;document.getElementById("pills").innerHTML=TOP.map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=!isHome;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;dashZeros(view)}else{requestAnimationFrame(()=>{try{drawMap()}catch(e){}})}
+  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply()}else{requestAnimationFrame(()=>{try{drawMap()}catch(e){}})}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -1356,7 +1358,7 @@ view.addEventListener("pointermove",e=>{if(!drag)return;const dd=Math.round((e.c
   const lb=view.querySelector(`[data-gd="${CSS.escape(drag.k)}"]`);if(lb)lb.textContent=fd(addD(pd(cur.sched.start),s))+" · "+d+" ngày"});
 const endDrag=()=>{if(!drag)return;const g=drag;drag=null;g.b.classList.remove("drag");if(g.ns===g.s&&g.nd===g.d)return;cur.sched.t[g.k]={s:g.ns,d:g.nd};cur.sched.auto=0;persist();keep(route)};
 view.addEventListener("pointerup",endDrag);view.addEventListener("pointercancel",endDrag);
-view.addEventListener("input",e=>{const t=e.target;if(t.dataset.pf&&pending)pending.form[t.dataset.pf]=t.value});
+view.addEventListener("input",e=>{const t=e.target;if(t.id==="bsq"){bq=t.value;bqApply();return}if(t.dataset.pf&&pending)pending.form[t.dataset.pf]=t.value});
 view.addEventListener("dragover",e=>{const d=e.target.closest("#drop");if(d){e.preventDefault();d.classList.add("over")}});
 view.addEventListener("dragleave",e=>{const d=e.target.closest("#drop");if(d)d.classList.remove("over")});
 view.addEventListener("drop",e=>{const d=e.target.closest("#drop");if(!d)return;e.preventDefault();d.classList.remove("over");const f=e.dataTransfer.files[0];if(f)readBOQ(f)});
@@ -1380,6 +1382,18 @@ view.addEventListener("change",e=>{const t=e.target;if(!cur||t.dataset.wa!=="rea
 view.addEventListener("keydown",e=>{if(e.key==="Enter"&&["wn","wc","wq","wv"].includes(e.target.id)){e.preventDefault();document.getElementById("wadd").click()}});
 view.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList.contains("ci")){e.preventDefault();const all=[...view.querySelectorAll("input.ci[data-f]")],i=all.indexOf(e.target);(all[i+3]||all[i+1]||e.target).focus()}});
 /* cập nhật số khi nhập giá vốn, không vẽ lại cả trang */
+
+/* ---------- Tìm công tác trong bảng diễn giải ---------- */
+let bq="";const fold=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[đĐ]/g,"d").toLowerCase();
+function bqApply(){const tb=view.querySelector("table.bt");if(!tb)return;
+  const h1=tb.tHead.rows[0].getBoundingClientRect().height;if(h1)tb.style.setProperty("--h1",h1+"px");
+  const q=fold(bq).trim(),vis=new Set();let n=0;
+  tb.querySelectorAll("tr[data-line]").forEach(r=>{const ok=!q||fold(r.cells[0].textContent+" "+r.cells[1].textContent).includes(q);r.hidden=!ok;if(ok){vis.add(r.dataset.gi);n++}});
+  tb.querySelectorAll("tr.gs").forEach(r=>r.hidden=!vis.has(r.dataset.gi));
+  const o=view.querySelector("#bqn");if(!o)return;if(!q){o.innerHTML="";return}
+  const here=tb.querySelector("tr[data-line]")?.dataset.line||"",oth=[];
+  (cur&&cur.hms||[]).forEach(h=>{const k=h.lines.filter(l=>fold(l.code+" "+l.name).includes(q)).length;if(k&&!h.lines.some(l=>l.code===here))oth.push(`<button class="back sm" data-go="da-${cur.id}-boq-${h.code.toLowerCase()}">${h.code} · ${esc(h.name)} (${k})</button>`)});
+  o.innerHTML=`${n?`<b>${n}</b> dòng khớp trong hạng mục này`:"Không có dòng khớp trong hạng mục này"}${oth.length?` · có ở: ${oth.join("")}`:""}`}
 function refresh(code){setTimeout(()=>dashZeros(view));const p=cur,c=calc(p),mg=pct(c.gp,c.rev),set=(el,sel,v)=>{const x=el&&el.querySelector(sel);if(x)x.innerHTML=v};
   const tr=view.querySelector(`tr[data-line="${code}"]`);if(tr){const h=p.hms.find(h=>h.lines.some(x=>x.code===code)),l=h.lines.find(x=>x.code===code),lc=lineCost(p,l),gp=(l.total||0)-lc.t;
     set(tr,'[data-c="tv"]',n0(lc.v));set(tr,'[data-c="tn"]',n0(lc.n));set(tr,'[data-c="tm"]',n0(lc.m));set(tr,'[data-c="t"]',`<b>${n0(lc.t)}</b>`);const g=tr.querySelector('[data-c="g"]');g.textContent=n0(gp);g.style.color=gp<0?"#C0141B":"inherit";set(tr,'[data-c="s"]',lc.est?st("warn","Ước tính"):st("ok","Đã nhập"));
