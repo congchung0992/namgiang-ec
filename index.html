@@ -401,6 +401,9 @@ table.t{border:1px solid #D9DDE8;border-radius:14px;overflow:clip;background:rgb
 .t col.cg-a{background:rgba(252,233,207,.22)}.t col.cg-b{background:rgba(230,217,251,.2)}.t col.cg-c{background:rgba(219,242,226,.25)}
 .bsr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}.bsr .fi{flex:0 1 420px;min-width:0}.bsr .sub{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .tw.bsw{max-height:calc(100vh - 110px);overflow:auto}.bt thead th{position:sticky;top:0;z-index:2}.bt thead tr.h2 th{top:var(--h1,42px)}.t tr[hidden]{display:none}
+.pvh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.pvh .fi.sel{min-width:0;flex:0 1 380px}
+.pmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,42vw),1fr));gap:10px;margin-top:14px}.pmap .fi.sel{min-width:0;width:100%}
+table.pvt{min-width:1100px}.pvt thead th{position:sticky;top:0;z-index:2}
 /* ==end-m1-css== */
 @media (max-width:1180px){.vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.span2{grid-column:1 / -1}}
 @media (max-width:760px){
@@ -837,14 +840,17 @@ function mapCols(a,h){
     if(/thanh tien/.test(tp)&&c.tT==null){c.tT=j;continue;}
   }
   if(c.stt==null)c.stt=0;if(c.name==null)c.name=1;
-  return {c:c,start:(sr>h?sr:h)+1};}
+  return {c:c,start:(sr>h?sr:h)+1,sr:sr};}
 function words(s){return nz(s).replace(/[^a-z0-9 ]/g,' ').split(' ').filter(function(w){return w&&!/^(lot|nha|xuong|tram|day|update|hang|muc|thi|cong)$/.test(w);});}
 function sim(a,b){var A=words(a),B=words(b);if(!A.length||!B.length)return 0;var s=0;A.forEach(function(w){if(B.indexOf(w)>=0)s++;});return s/Math.max(A.length,B.length);}
 
-function parseSheet(ws,X,sname){
+function parseSheet(ws,X,sname,ov){
   var a=X.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
   var h=findHeader(a);if(h<0)return null;
   var m=mapCols(a,h),c=m.c;
+  if(ov)Object.keys(ov).forEach(function(k){if(ov[k]<0)delete c[k];else c[k]=ov[k];});
+  var T=a[h]||[],S=m.sr>h?a[m.sr]:[],nn=Math.max(T.length,S.length),hdr=[],cr='';
+  for(var j=0;j<nn;j++){var tp=String(T[j]==null?'':T[j]).replace(/\s+/g,' ').trim(),sb=String(S[j]==null?'':S[j]).replace(/\s+/g,' ').trim();if(tp)cr=tp;else if(sb)tp=cr;hdr.push((tp&&sb?tp+' / '+sb:tp||sb).slice(0,48));}
   var title='',sheetTotal=null,lines=[],others=[],g1='',g2='',lastL='',seenGroup=false,rank1='',prev=null;
   function g(r,k){return c[k]==null?'':r[c[k]];}
   function tot(r){var t=num(g(r,'tT'));if(t==null&&c.tT!=null&&(num(g(r,'mT'))||num(g(r,'lT'))))return 0;if(t==null){var v=num(g(r,'mT')),l=num(g(r,'lT'));if(v!=null||l!=null)t=(v||0)+(l||0);}
@@ -874,9 +880,9 @@ function parseSheet(ws,X,sname){
       g1=name;g2='';if(k==='L')lastL=stt.toUpperCase();continue;}
     g2=name; if(t&&!lines.some(function(x){return x.g1===g1;}))others.push({name:name,total:t,stt:stt,g1:g1});
   }
-  return {sheet:sname,title:title,sheetTotal:sheetTotal,lines:lines,others:others,cols:c};}
+  return {sheet:sname,title:title,sheetTotal:sheetTotal,lines:lines,others:others,cols:c,hdr:hdr,hrow:h+1,start:m.start+1};}
 
-function parse(wb,X){
+function parse(wb,X,opt){opt=opt||{};var OC=opt.cols||{},OM=opt.match||{};
   var vis=wb.SheetNames.filter(function(n,i){var w=(wb.Workbook&&wb.Workbook.Sheets&&wb.Workbook.Sheets[i])||{};return !w.Hidden;});
   var info={code:'',date:'',client:'',name:'',scope:'',loc:'',value:null};
   /* Tổng hợp (TH) */
@@ -904,14 +910,15 @@ function parse(wb,X){
       th.push({part:part,grp:grp,stt:stt,name:nm,total:v||0,rem:c.rem!=null?String(r[c.rem]).trim():''});}
   }
   /* các sheet chi tiết */
-  var sheets=[];vis.forEach(function(n){if(n===thName)return;var s=parseSheet(wb.Sheets[n],X,n);if(s&&s.lines.length)sheets.push(s);});
+  var sheets=[];vis.forEach(function(n){if(n===thName)return;var s=parseSheet(wb.Sheets[n],X,n,OC[n]);if(s&&(s.lines.length||OC[n]))sheets.push(s);});
   /* ghép sheet ↔ dòng TH */
   var pairs=[];th.forEach(function(t,ti){sheets.forEach(function(s,si){pairs.push([Math.max(sim(t.name,s.sheet),sim(t.name,s.title)),ti,si]);});});
   pairs.sort(function(x,y){return y[0]-x[0];});var used={},usedS={};
-  pairs.forEach(function(p){if(p[0]<=0||used[p[1]]||usedS[p[2]])return;used[p[1]]=p[2];usedS[p[2]]=1;});
+  Object.keys(OM).forEach(function(ti){var si=-1;sheets.forEach(function(s,k){if(s.sheet===OM[ti])si=k;});used[ti]=si;if(si>=0)usedS[si]=1;});
+  pairs.forEach(function(p){if(p[0]<=0||used[p[1]]!=null||usedS[p[2]])return;used[p[1]]=p[2];usedS[p[2]]=1;});
   /* nếu không có TH: mỗi sheet là 1 hạng mục */
   if(!th.length)sheets.forEach(function(s,si){th.push({part:'',grp:'',stt:String(si+1),name:s.title||s.sheet,total:s.sheetTotal||s.lines.reduce(function(a,l){return a+l.total;},0),rem:''});used[si]=si;});
-  var hms=th.map(function(t,ti){var s=used[ti]!=null?sheets[used[ti]]:null,lines=s?s.lines.slice():[];
+  var hms=th.map(function(t,ti){var s=used[ti]!=null&&used[ti]>=0?sheets[used[ti]]:null,lines=s?s.lines.slice():[];
     var sum=lines.reduce(function(a,l){return a+l.total;},0),diff=t.total-sum;
     if(Math.abs(diff)>1000&&t.total){var o=(s?s.others:[]).filter(function(x){return Math.abs(x.total-diff)<=Math.max(1000,Math.abs(diff)*0.01);})[0];
       lines.push({g1:lines.length?'Trọn gói / chưa tách':'',g2:'',stt:'',name:o?o.name:(lines.length?'Phần chênh lệch so với bảng tổng hợp (chưa tách chi tiết)':t.name),spec:'',unit:'Lot',qty:1,uVL:null,uNC:null,vl:null,nc:null,u:diff,total:diff,rem:o?'Trọn gói':'Tự cân với bảng tổng hợp',lump:1});}
@@ -921,7 +928,7 @@ function parse(wb,X){
     h.lines.forEach(function(l){var key=l.g1||'-';if(!(key in gs)){gs[key]=++gn;}l.code=h.code+'.'+('0'+gs[key]).slice(-2)+'.'+('00'+(++ln)).slice(-3);});});
   if(info.value==null)info.value=hms.reduce(function(a,h){return a+h.total;},0);
   var leaf=hms.reduce(function(a,h){return a+h.lines.length;},0);
-  return {info:info,hms:hms,count:leaf,check:hms.reduce(function(a,h){return a+h.lines.reduce(function(b,l){return b+l.total;},0);},0)};}
+  return {info:info,hms:hms,count:leaf,sheets:sheets.map(function(s){return {sheet:s.sheet,title:s.title,cols:s.cols,hdr:s.hdr,hrow:s.hrow,start:s.start,n:s.lines.length};}),check:hms.reduce(function(a,h){return a+h.lines.reduce(function(b,l){return b+l.total;},0);},0)};}
 return {parse:parse,nz:nz,num:num};})();
 /* ===== Dự án & sheet chi tiết ===== */
 (()=>{
@@ -1197,8 +1204,8 @@ async function readBOQ(f){const m=document.getElementById("upmsg");if(m)m.textCo
   try{await needX();const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const r=BOQ.parse(wb,XLSX);
     if(!r.hms.length||!r.count)throw new Error("Không tìm thấy bảng khối lượng trong file này");
     const i=r.info,brand=(i.client||"").replace(/^.*?(TNHH|CỔ PHẦN|CP|JSC)\s*/i,"");
-    pending={file:f.name,r,form:{name:sc(i.name||f.name.replace(/\.\w+$/,""),brand),code:"",cdt:tc(i.client||""),loc:tc(i.loc||""),qcode:i.code||"",date:i.date||""}};
-    view.innerHTML=preview();scrollTo({top:0})}
+    pending={file:f.name,wb,opt:{cols:{},match:{}},sel:null,r,form:{name:sc(i.name||f.name.replace(/\.\w+$/,""),brand),code:"",cdt:tc(i.client||""),loc:tc(i.loc||""),qcode:i.code||"",date:i.date||""}};
+    view.innerHTML=preview();dashZeros(view);scrollTo({top:0})}
   catch(e){if(m){m.textContent=e.message||"Không đọc được file";m.style.color="#C0141B"}}}
 function preview(){const {r,form,file}=pending,ok=Math.abs(r.check-r.info.value)<1000,warn=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=r.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
   const f=(k,t,ph)=>`<label class="fl"><span>${t}</span><input class="fi" data-pf="${k}" value="${esc(form[k])}" placeholder="${ph||""}"></label>`;
@@ -1209,10 +1216,26 @@ function preview(){const {r,form,file}=pending,ok=Math.abs(r.check-r.info.value)
   ${kc("proj","Hạng mục",r.hms.filter(h=>h.total>0).length,"hạng mục",r.hms.filter(h=>h.sheet).length+" sheet chi tiết đã đọc")}
   ${kc("boq","Dòng công việc",n0(r.count),"dòng",warn||lump?`${warn} dòng thiếu thành tiền · ${lump} khoản trọn gói`:"Không có dòng bất thường")}
   ${card("Thông tin dự án","Lấy tự động từ trang bìa, anh sửa lại nếu cần",`<div class="fg">${f("name","Tên dự án")}${f("code","Mã dự án","Ví dụ NG-26-01")}${f("cdt","Chủ đầu tư")}${f("loc","Địa điểm")}${f("qcode","Số hồ sơ báo giá")}${f("date","Ngày hồ sơ","dd/mm/yyyy")}</div>
-    <div class="bh" style="margin-top:16px"><span class="sub">Khi kết nối Google Drive, hệ thống tự tạo thư mục dự án và lưu file BOQ gốc vào mục 01 Hồ sơ thầu.</span><button class="pill" id="mk" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Tạo dự án</button></div>`,"span2")}
+    <div class="bh" style="margin-top:16px"><span class="sub">Khi kết nối Google Drive, hệ thống tự tạo thư mục dự án và lưu file BOQ gốc vào mục 01 Hồ sơ thầu.</span><button class="pill" id="mk" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Xác nhận và lưu dự án</button></div>`,"span2")}
   ${card("Kết quả đọc file","",ms([[ok?"#12A150":"#E1141B",ok?"Tổng tiền khớp":"Tổng tiền chưa khớp",n0(r.check)+" đ / "+n0(r.info.value)+" đ"],...(warn?[["#E1141B",warn+" dòng có ô thành tiền trống","Đang tính 0 đúng như bảng tổng hợp"]]:[]),...(lump?[["#2D3CE6",lump+" khoản trọn gói","Giữ nguyên một dòng, chưa tách chi tiết"]]:[]),["#8C8E97","Đã bỏ qua các sheet ẩn","Chỉ đọc sheet đang hiện trong file"]]))}
-  ${card("Hạng mục đọc được","",`<div class="tw"><table class="t"><thead><tr><th>Mã</th><th>Hạng mục</th><th>Sheet</th><th class="r">Dòng</th><th class="r">Giá trị (đ)</th><th>Kiểm tra</th></tr></thead><tbody>${r.hms.map(h=>{const s=h.lines.reduce((a,l)=>a+l.total,0),lp=h.lines.some(l=>l.lump);return`<tr><td class="num" style="color:var(--muted)">${h.code}</td><td><b>${esc(h.name)}</b></td><td style="color:var(--muted)">${esc(h.sheet||"Bảng tổng hợp")}</td><td class="r">${n0(h.lines.length)}</td><td class="r">${n0(h.total)}</td><td>${!h.total?st("warn","Không tính tiền"):Math.abs(s-h.total)<1000?(lp&&h.sheet?st("warn","Khớp · có trọn gói"):st("ok","Khớp")):st("bad","Lệch")}</td></tr>`}).join("")}</tbody><tfoot><tr><td></td><td><b>Tổng cộng trước thuế</b></td><td></td><td class="r">${n0(r.count)}</td><td class="r"><b>${n0(r.info.value)}</b></td><td></td></tr></tfoot></table></div>`,"span3")}
+  ${card("Hạng mục đọc được","Bấm vào một hạng mục để xem từng dòng hệ thống đã đọc ở bảng bên dưới",`<div class="tw"><table class="t"><thead><tr><th>Mã</th><th>Hạng mục</th><th>Sheet</th><th class="r">Dòng</th><th class="r">Giá trị (đ)</th><th>Kiểm tra</th></tr></thead><tbody>${r.hms.map((h,hi)=>{const s=h.lines.reduce((a,l)=>a+l.total,0),lp=h.lines.some(l=>l.lump);return`<tr data-pv="${hi}" class="${hi===pvSel()?"on":""}" style="cursor:pointer"><td class="num" style="color:var(--muted)">${h.code}</td><td><b>${esc(h.name)}</b></td><td style="color:var(--muted)">${esc(h.sheet||"Chỉ bảng tổng hợp")}</td><td class="r">${n0(h.lines.length)}</td><td class="r">${n0(h.total)}</td><td>${!h.total?st("warn","Không tính tiền"):Math.abs(s-h.total)<1000?(lp&&h.sheet?st("warn","Khớp · có trọn gói"):st("ok","Khớp")):st("bad","Lệch")}</td></tr>`}).join("")}</tbody><tfoot><tr><td></td><td><b>Tổng cộng trước thuế</b></td><td></td><td class="r">${n0(r.count)}</td><td class="r"><b>${n0(r.info.value)}</b></td><td></td></tr></tfoot></table></div>`,"span3")}
+  ${pvDetail()}
   </div>`}
+const PVF=[["stt","Số thứ tự"],["name","Tên công việc"],["spec","Quy cách"],["unit","Đơn vị"],["qty","Khối lượng"],["mU","Đơn giá vật tư"],["lU","Đơn giá nhân công"],["tU","Đơn giá tổng"],["mT","Thành tiền vật tư"],["lT","Thành tiền nhân công"],["tT","Thành tiền"]];
+const colL=j=>{let s="";j++;while(j>0){const m=(j-1)%26;s=String.fromCharCode(65+m)+s;j=Math.floor((j-1)/26)}return s};
+function pvSel(){const r=pending.r;if(pending.sel==null||!r.hms[pending.sel])pending.sel=Math.max(0,r.hms.findIndex(h=>h.sheet));return pending.sel}
+function pvDetail(){const r=pending.r,hi=pvSel(),h=r.hms[hi];if(!h)return"";const sm=r.sheets.find(s=>s.sheet===h.sheet);
+  const owner=n=>{const k=r.hms.findIndex((x,i)=>i!==hi&&x.sheet===n);return k>=0?" (đang gán cho "+r.hms[k].code+")":""};
+  const shSel=`<select class="fi sel" data-ps="${hi}" aria-label="Sheet chi tiết"><option value="">Không có sheet chi tiết, lấy giá trị bảng tổng hợp</option>${r.sheets.map(s=>`<option value="${esc(s.sheet)}"${s.sheet===h.sheet?" selected":""}>${esc(s.sheet)}${esc(owner(s.sheet))}</option>`).join("")}</select>`;
+  const map=sm?`<div class="pmap">${PVF.map(([k,lab])=>`<label class="fl"><span>${lab}</span><select class="fi sel" data-pc="${k}" data-sh="${esc(sm.sheet)}"><option value="-1">Không có</option>${sm.hdr.map((t,j)=>`<option value="${j}"${sm.cols[k]===j?" selected":""}>Cột ${colL(j)}${t?" · "+esc(t):""}</option>`).join("")}</select></label>`).join("")}</div>
+    <div class="sub" style="margin-top:8px">Dòng tiêu đề bảng ở dòng ${sm.hrow} của sheet, dữ liệu đọc từ dòng ${sm.start}. Chọn lại cột nếu hệ thống nhận sai, bảng bên dưới đọc lại ngay.</div>`:"";
+  let g=null;const rows=h.lines.map(l=>{let hd="";const k=l.g1||"";if(k!==g){g=k;if(k)hd=`<tr class="gr"><td colspan="9">${esc(k)}${l.g2?" · "+esc(l.g2):""}</td></tr>`}
+    const ck=l.warn?st("bad","Thiếu thành tiền"):l.rem==="Tự cân với bảng tổng hợp"?st("bad","Tự cân, chưa có chi tiết"):l.lump?st("warn","Trọn gói"):!l.unit?st("warn","Thiếu đơn vị"):st("ok","Đọc được");
+    return hd+`<tr><td class="num" style="color:var(--muted);white-space:nowrap">${l.code}</td><td class="num" style="color:var(--muted)">${esc(l.stt||"")}</td><td style="min-width:240px">${esc(l.name)}${l.spec?`<small class="spec">${esc(l.spec)}</small>`:""}</td><td>${esc(l.unit||"")}</td><td class="r">${nq(l.qty)}</td><td class="r">${l.uVL!=null?n0(l.uVL):"-"}</td><td class="r">${l.uNC!=null?n0(l.uNC):"-"}</td><td class="r"><b>${n0(l.total)}</b></td><td>${ck}</td></tr>`}).join("");
+  const sum=h.lines.reduce((a,l)=>a+l.total,0),ok=Math.abs(sum-h.total)<1000;
+  return card(`${h.code} · ${esc(h.name)}`,"Số liệu hệ thống đã đọc từ file, anh kiểm tra trước khi lưu",`<div class="pvh"><span class="sub">Sheet chi tiết</span>${shSel}${!ok?st("bad","Lệch "+n0(sum-h.total)+" đ"):h.sheet&&h.lines.some(l=>l.rem==="Tự cân với bảng tổng hợp")?st("warn","Khớp nhờ dòng chênh lệch tự cân"):st("ok","Khớp bảng tổng hợp")}</div>${map}
+    <div class="tw bsw" style="margin-top:14px"><table class="t pvt"><thead><tr><th>Mã</th><th>STT trong file</th><th>Công việc</th><th>ĐVT</th><th>Khối lượng</th><th>Đơn giá vật tư (đ)</th><th>Đơn giá nhân công (đ)</th><th>Thành tiền (đ)</th><th>Kiểm tra</th></tr></thead><tbody>${rows||`<tr><td colspan="9" class="sub">Không có dòng chi tiết.</td></tr>`}</tbody><tfoot><tr><td></td><td></td><td>Cộng ${n0(h.lines.length)} dòng · bảng tổng hợp ${n0(h.total)}</td><td></td><td></td><td></td><td></td><td class="r">${n0(sum)}</td><td></td></tr></tfoot></table></div>`,"span3")}
+function pvRe(){const y=scrollY;pending.r=BOQ.parse(pending.wb,XLSX,pending.opt);view.innerHTML=preview();dashZeros(view);scrollTo({top:y})}
 function createFromPending(){const {r,form}=pending;const id="p"+Date.now().toString(36);
   const yr=String(new Date().getFullYear()).slice(2),code=form.code.trim()||("NG-"+yr+"-"+String(DB.projects.length+1).padStart(2,"0"));
   const old=DB.projects.findIndex(p=>p.qcode&&p.qcode===form.qcode&&p.name===form.name);
@@ -1340,6 +1363,8 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!
 view.addEventListener("change",e=>{const t=e.target;
   if(t.id==="boqf"&&t.files[0])readBOQ(t.files[0]);
   if(t.dataset.pf&&pending)pending.form[t.dataset.pf]=t.value;
+  if(pending&&t.dataset.pc){const o=pending.opt.cols[t.dataset.sh]||(pending.opt.cols[t.dataset.sh]={});o[t.dataset.pc]=+t.value;pvRe();return}
+  if(pending&&t.dataset.ps!=null){pending.opt.match[t.dataset.ps]=t.value;pvRe();return}
   if(t.id==="ratio"&&cur){const v=parseVN(t.value);if(v!=null&&v>=0&&v<=200){cur.ratio=v;persist();const y=scrollY;route();scrollTo(0,y)}else t.value=fm(cur.ratio,0)}
   const tr=t.closest("tr[data-line]");if(tr&&cur&&t.dataset.f){const code=tr.dataset.line,v=parseVN(t.value);const c=cur.cost[code]||(cur.cost[code]={});c[t.dataset.f]=v;
     if(c.v==null&&c.n==null&&c.m==null)delete cur.cost[code];t.value=v==null?"":n0(v);persist();refresh(code)}});
@@ -1363,6 +1388,7 @@ view.addEventListener("dragover",e=>{const d=e.target.closest("#drop");if(d){e.p
 view.addEventListener("dragleave",e=>{const d=e.target.closest("#drop");if(d)d.classList.remove("over")});
 view.addEventListener("drop",e=>{const d=e.target.closest("#drop");if(!d)return;e.preventDefault();d.classList.remove("over");const f=e.dataTransfer.files[0];if(f)readBOQ(f)});
 view.addEventListener("click",e=>{if(e.target.closest("#mk")&&pending){createFromPending()}
+  {const pv=pending&&e.target.closest("tr[data-pv]");if(pv){pending.sel=+pv.dataset.pv;pvRe();const d=view.querySelector("table.pvt");if(d)d.closest(".card").scrollIntoView({behavior:"smooth",block:"start"});return}}
   const del=e.target.closest("#delp");if(del&&cur){if(del.dataset.ok){DB.projects=DB.projects.filter(p=>p!==cur);persist();location.hash="du-an"}else{del.dataset.ok=1;del.textContent="Bấm lần nữa để xoá hẳn";del.style.color="#C0141B"}}});
 view.addEventListener("click",e=>{const b=e.target.closest("[data-dec]");if(!b)return;const row=b.closest(".dc"),id=row.dataset.id,s=b.dataset.dec;
   if(s==="undo")delete DB.dec[id];else DB.dec[id]={s,at:new Date().toISOString()};
