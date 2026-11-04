@@ -24,6 +24,12 @@
 #fview iframe{flex:1;border:0;width:100%;height:100%;background:#fff}#fview img{max-width:100%;max-height:100%;margin:auto;object-fit:contain}
 #fview pre{margin:0;padding:16px;font-size:13px;white-space:pre-wrap;width:100%}#fview .fvm{margin:auto;padding:24px;text-align:center;font-size:14px;color:var(--ink2)}
 #fview .fvx{padding:12px;width:100%;min-width:0}
+#fview .fsl{padding:14px 16px;width:100%;display:flex;flex-direction:column;gap:10px}
+#fview .fsr{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:8px 14px;align-items:center}
+#fview .fsr .on{font-size:13px;font-weight:600;overflow-wrap:anywhere}#fview .fsr .why{grid-column:1/-1;font-size:12.5px;color:var(--ink2)}#fview .fsr .why.dif{color:#B25E00}
+#fview .fsr select,#fview .fsr input{font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;width:100%;min-width:0}
+#fview .fsr .nm{grid-column:1/-1}#fview .fsf{display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line)}
+@media (max-width:760px){#fview .fsr{grid-template-columns:1fr}}
 .ftb .fn{min-width:200px;word-break:break-word}
 @media (max-width:760px){.ftb{min-width:0!important;width:100%}.ftb th:nth-child(2),.ftb th:nth-child(3),.ftb td:nth-child(2),.ftb td:nth-child(3){display:none}.ftb .fn{min-width:0}.ftb .fla{flex-direction:column;align-items:stretch}}
 @media (max-width:760px){.fdg{grid-template-columns:repeat(2,minmax(0,1fr))}#fview{padding:0}#fview .fvb{height:100%;border-radius:0}}
@@ -818,7 +824,10 @@ window.NGB=(function(){
         throw new Error({too_large:"File quá lớn, tối đa 95 MB",forbidden:"Tài khoản này không có quyền với thư mục này",not_found:"Không tìm thấy file hoặc không có quyền",chua_ket_noi:"Chưa kết nối Google Drive",auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",empty:"File trống"}[c]||"Google Drive đang lỗi, anh thử lại sau")},
       async upload(pid,folder,file){await this.call({action:"upload",project:pid,folder,name:file.name},{method:"POST",headers:{"content-type":file.type||"application/octet-stream"},body:file})},
       async blob(id){return (await this.call({action:"download",id},{method:"GET"})).blob()},
-      async remove(id){await this.call({action:"delete",id},{method:"DELETE"})}
+      async remove(id){await this.call({action:"delete",id},{method:"DELETE"})},
+      async classify(body){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
+        const r=await fetch("api/classify",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+session.access_token},body:JSON.stringify(body)});
+        if(!r.ok)throw new Error("classify_"+r.status);return r.json()}
     },
     queue(db,cb){lastDb=db;onState=cb;dirty=true;clearTimeout(timer);timer=setTimeout(run,300)},
     async saveNow(db){lastDb=db;clearTimeout(timer);while(running)await new Promise(r=>setTimeout(r,100));try{await flush(db);dirty=false;toast("");return true}catch(e){toast("Chưa lưu được lên máy chủ, dữ liệu trên trình duyệt vẫn còn nguyên.");return false}}
@@ -1251,12 +1260,50 @@ async function keepFile(pid,folder,file,label){const f=named(pid,file);if(NGApp.
   try{if(!NGApp.drive||!await NGB.saveNow(DB))throw 0;await NGB.drive.upload(pid,folder,f)}
   catch(e){await LOCALF.put(pid,folder,f).catch(()=>{});NGB.warn(label+" chưa lên được Google Drive, đang giữ trên trình duyệt này và sẽ tự đưa lên khi kết nối lại.")}
   if(cur&&cur.id===pid&&document.getElementById("fls"))filesLoad()}
+/* Rà nội dung file trước khi lưu: đọc file, gợi ý thư mục (Claude trên máy chủ, không được thì đoán theo tên và chữ trong file), anh xác nhận rồi mới lưu */
+const FRULE=[["07",10,/thau phu|to doi|giao khoan|hop dong khoan|nhan khoan/],["02",6,/hop dong|phu luc|contract|\bhd\b|hdtc|hdkt/],["05",6,/thanh toan|cong no|hoa don|invoice|bao lanh|tam ung|uy nhiem chi|de nghi tt|\bdntt\b|quyet toan/],
+  ["04",6,/nghiem thu|bien ban|\bbbnt\b|khoi luong hoan thanh|\bntkl\b/],["03",5,/tien do|schedule|ke hoach thi cong|\bmpp\b|gantt/],["06",5,/vat tu|vat lieu|phieu nhap|phieu xuat|giao nhan|don dat hang|nha cung cap|\bncc\b|xi mang|thep|be tong|cat da/],
+  ["01",5,/\bboq\b|du toan|bao gia|ho so thau|du thau|moi thau|chao gia|ban ve|tien luong/],["08",4,/nhat ky|hien truong|\banh\b|photo|hinh anh/]];
+function guessFolder(name,text,img){const t=noAcc(name+" "+(text||"").slice(0,3000)).toLowerCase(),sc={};FRULE.forEach(([k,w,re])=>{const n=(t.match(new RegExp(re.source,"g"))||[]).length;if(n)sc[k]=(sc[k]||0)+w*Math.min(n,3)+(re.test(noAcc(name).toLowerCase())?4:0)});
+  if(img)sc["08"]=(sc["08"]||0)+6;const best=Object.keys(sc).sort((a,b)=>sc[b]-sc[a])[0];return best?{folder:best,reason:"Hệ thống đoán theo tên và chữ trong file, chưa đọc bằng Claude"}:null}
+const GENERIC=/^(img|dsc|dcim|pxl|scan|scanned|document|doc|untitled|new|file|photo|image|screenshot|zalo|cam|anh|tai lieu|z)?[\s_\-\d().]*$/i;
+const b64=buf=>{const u=new Uint8Array(buf);let s="";for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)};
+async function imgB64(f){try{const bm=await createImageBitmap(f),k=Math.min(1,1568/Math.max(bm.width,bm.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(bm.width*k));c.height=Math.max(1,Math.round(bm.height*k));c.getContext("2d").drawImage(bm,0,0,c.width,c.height);const u=c.toDataURL("image/jpeg",.8);return u.slice(u.indexOf(",")+1)}catch(e){return null}}
+const xmlText=x=>x.replace(/<\/w:p>|<\/a:p>/g,"\n").replace(/<[^>]+>/g,"").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&amp;/g,"&");
+async function peek(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),o={name:f.name};
+  try{if(ext==="pdf"&&f.size<=15*1048576)o.doc={media_type:"application/pdf",data:b64(await f.arrayBuffer())};
+    else if(/^image\//.test(f.type)||/^(jpe?g|png|webp|gif|heic)$/.test(ext)){const d=await imgB64(f);o.isImg=1;if(d)o.img={media_type:"image/jpeg",data:d}}
+    else if(/^(xlsx|xlsm|xls)$/.test(ext)){await needX();const wb=XLSX.read(await f.arrayBuffer(),{type:"array",sheetRows:60});o.text=wb.SheetNames.slice(0,6).map(n=>"[Sheet "+n+"]\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false})).join("\n").slice(0,15000)}
+    else if(/^(docx|pptx)$/.test(ext)){await needX();const z=XLSX.CFB.read(new Uint8Array(await f.arrayBuffer()),{type:"array"});o.text=z.FullPaths.filter(n=>/word\/document\.xml$|ppt\/slides\/slide\d+\.xml$/.test(n)).map(n=>xmlText(new TextDecoder().decode(new Uint8Array(XLSX.CFB.find(z,n).content)))).join("\n").slice(0,15000)}
+    else if(/^(txt|csv)$/.test(ext))o.text=(await f.text()).slice(0,15000)}catch(e){}
+  return o}
+async function suggest(p,f){const o=await peek(f);let v=null;
+  if(!NGApp.guest)try{v=await NGB.drive.classify({name:o.name,text:o.text,doc:o.doc,img:o.img,project:{code:p.code,name:p.name}});v.ai=1}catch(e){v=null}
+  return v||guessFolder(o.name,o.text,o.isImg)||{folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}}
+function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(wrap)wrap.remove();const base=n=>n.replace(/\.[^.]+$/,""),ext=n=>(n.match(/\.[^.]+$/)||[""])[0];
+  wrap=document.createElement("div");wrap.id="fview";wrap.setAttribute("role","dialog");wrap.setAttribute("aria-label","Xếp file vào thư mục");
+  wrap.innerHTML=`<div class="fvb"><div class="fvh"><b>Rà nội dung ${files.length} file trước khi lưu</b><button class="back sm" style="margin:0" id="fvc">Huỷ</button></div><div class="fvc"><div class="fsl">${files.map((f,i)=>`<div class="fsr" data-i="${i}"><div class="on">${esc(f.name)} <span class="sub">· ${fmtSize(f.size)}</span></div><select aria-label="Thư mục" disabled>${F.map(x=>`<option value="${x[0]}">${x[0]} ${esc(x[1])}</option>`).join("")}</select><input class="nm" aria-label="Tên file khi lưu" value="${esc(stdName(p.id,f.name))}"><div class="why">Đang đọc nội dung…</div></div>`).join("")}</div></div><div class="fsf"><span class="sub" id="fsm" style="flex:1;align-self:center"></span><button class="back" style="margin:0" id="fsok" disabled>Lưu vào thư mục đã chọn</button></div></div>`;
+  document.body.appendChild(wrap);const rows=[...wrap.querySelectorAll(".fsr")],close=()=>wrap.remove();wrap.querySelector("#fvc").onclick=close;
+  let left=files.length;const okBtn=wrap.querySelector("#fsok");
+  files.forEach((f,i)=>suggest(p,f).then(v=>{const r=rows[i],sel=r.querySelector("select"),why=r.querySelector(".why"),nm=r.querySelector(".nm");
+    const ok=v.folder&&F.some(x=>x[0]===v.folder);sel.value=ok?v.folder:(F.some(x=>x[0]===here)?here:F[0][0]);sel.disabled=false;
+    if(v.title&&GENERIC.test(noAcc(base(f.name)))&&nm.value===stdName(p.id,f.name))nm.value=stdName(p.id,v.title+ext(f.name));
+    const fn=k=>{const x=F.find(y=>y[0]===k);return x?x[0]+" "+x[1]:k};
+    why.textContent=(v.folder?(ok?"Gợi ý: "+fn(v.folder):"Gợi ý "+v.folder+" nhưng tài khoản này không có quyền thư mục đó")+" · ":"")+v.reason;
+    const dif=()=>{why.classList.toggle("dif",ok&&sel.value!==v.folder)};sel.onchange=dif;
+    if(ok&&here&&v.folder!==here){why.textContent+=` · Anh đang mở mục ${fn(here)}`;why.classList.add("dif")}
+    if(--left===0){okBtn.disabled=false;wrap.querySelector("#fsm").textContent="Anh kiểm tra thư mục và tên file rồi bấm Lưu"}}));
+  okBtn.onclick=async()=>{okBtn.disabled=true;const fs=wrap.querySelector("#fsm");let n=0,last=null;
+    try{for(const [i,f] of files.entries()){const r=rows[i];if(!r)continue;const folder=r.querySelector("select").value;let nm=r.querySelector(".nm").value.trim()||f.name;if(!/\.[A-Za-z0-9]{1,8}$/.test(nm))nm+=ext(f.name);
+        fs.textContent=`Đang lưu ${i+1}/${files.length}: ${nm}`;await FS.upload(p.id,folder,new File([f],nm,{type:f.type}));n++;last=folder;r.remove();rows[i]=null}
+      close();if(last)flSel=last;flMsg(`Đã lưu ${n} file`);await filesLoad()}
+    catch(er){fs.textContent=er.message;fs.style.color="#C0141B";okBtn.disabled=false;if(n)filesLoad()}}}
 const filesView=()=>`<div class="sub" id="flmsg" style="min-height:18px;margin-bottom:8px"></div><div class="vgrid" id="fls"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`;
 let flSel=null;
 async function filesLoad(){const box=document.getElementById("fls"),p=cur;if(!box||!p)return;
   try{const L=await FS.list(p.id);if(!document.getElementById("fls")||cur!==p)return;const G=NGApp.guest,on=G||NGApp.drive,canDel=G||NGApp.board||p._role==="gd",F=DF.filter(f=>NGApp.board||f[3].includes(p._role));
     if(!F.some(f=>f[0]===flSel))flSel=F.length?F[0][0]:null;const C=F.find(f=>f[0]===flSel),R=L.filter(x=>x.folder===flSel);
-    box.innerHTML=card("Thư mục dự án",G?"Chế độ thử · file tạm lưu trên trình duyệt này, đăng nhập rồi sẽ đưa lên Google Drive của công ty":on?"Bộ hồ sơ của dự án, lưu trên Google Drive của công ty · bấm vào thư mục để xem hoặc tải về":"Chưa kết nối Google Drive nên chưa tải file lên được",`<div class="fdg">${F.map(f=>{const n=L.filter(x=>x.folder===f[0]).length;return`<button class="fd" data-fsel="${f[0]}" aria-current="${f[0]===flSel}">${ic("files",1.8)}<span><b>${f[0]} ${f[1]}</b><small>${n?n+" file":"Chưa có file"}</small></span></button>`}).join("")}</div>`,"span3")+
+    box.innerHTML=card("Thư mục dự án",G?"Chế độ thử · file tạm lưu trên trình duyệt này, đăng nhập rồi sẽ đưa lên Google Drive của công ty":on?"Bộ hồ sơ của dự án, lưu trên Google Drive của công ty · bấm vào thư mục để xem hoặc tải về":"Chưa kết nối Google Drive nên chưa tải file lên được",`<div class="fdg">${F.map(f=>{const n=L.filter(x=>x.folder===f[0]).length;return`<button class="fd" data-fsel="${f[0]}" aria-current="${f[0]===flSel}">${ic("files",1.8)}<span><b>${f[0]} ${f[1]}</b><small>${n?n+" file":"Chưa có file"}</small></span></button>`}).join("")}</div>${on&&F.length?`<div style="margin-top:14px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file lên · hệ thống đọc và gợi ý thư mục</label></div>`:""}`,"span3")+
     (C?card(`${C[0]} ${C[1]}`,C[2],`${R.length?`<div class="tw"><table class="t ftb"><thead><tr><th>Tên file</th><th class="r">Dung lượng</th><th>Ngày tải lên</th><th></th></tr></thead><tbody>${R.map(x=>`<tr><td class="fn">${esc(x.name)}${x.wait?' <small class="mau">Chờ đưa lên Drive</small>':""}</td><td class="r">${fmtSize(x.size)}</td><td class="num">${fd(new Date(x.at))}</td><td><div class="fla"><button class="back sm" style="margin:0" data-fv="${esc(x.id)}" data-n="${esc(x.name)}">Xem</button><button class="back sm" style="margin:0" data-fd="${esc(x.id)}" data-n="${esc(x.name)}">Tải về</button>${canDel?`<button class="back sm" style="margin:0" data-fx="${esc(x.id)}">Xoá</button>`:""}</div></td></tr>`).join("")}</tbody></table></div>`:`<span class="sub">${C[0]==="01"&&p.file?`Chưa có file BOQ gốc (${esc(p.file)}). Dự án tạo trước khi nối Google Drive nên file chưa được lưu, anh tải file đó lên đây.`:"Thư mục này chưa có file."}</span>`}${on?`<div style="margin-top:12px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="${C[0]}" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file lên</label><div class="sub" style="margin-top:8px">Tên file tự đặt theo dạng NămThángNgày_Mã dự án_tên không dấu, ví dụ ${esc(stdName(p.id,"Biên bản nghiệm thu.pdf"))}</div></div>`:""}`,"span3"):"")}
   catch(e){const b=document.getElementById("fls");if(b)b.innerHTML=`<section class="card span3" style="color:#C0141B;font-size:13px">Không tải được danh sách hồ sơ: ${esc(e.message)}</section>`}}
 const flMsg=(m,bad)=>{const x=document.getElementById("flmsg");if(x){x.textContent=m||"";x.style.color=bad?"#C0141B":""}};
@@ -1824,8 +1871,9 @@ window.NG={
   if(/lai|loi nhuan|bien|lo\b|gia von|chi phi/.test(t))return`${N}:\n- Doanh thu hợp đồng **${ty(c.rev)} tỷ**\n- Giá vốn dự thầu **${ty(c.cost)} tỷ** (${n0(c.ent)}/${n0(c.cnt)} dòng đã nhập, còn lại ước tính ${fm(p.ratio,0)}% giá thầu)\n- Lãi gộp dự kiến **${ty(c.gp)} tỷ**, biên ${fm(pct(c.gp,c.rev))}%`;
   if(/gia tri|hop dong|doanh thu|bao nhieu tien|tong/.test(t))return`${N} có giá trị hợp đồng **${n0(c.rev)} đ** (chưa VAT), gồm ${c.hs.filter(x=>x.rev>0).length} hạng mục và ${n0(c.cnt)} dòng công việc.`;
   return"Câu này em chưa trả lời được bằng số liệu sẵn có. Khi web được kết nối Claude, em sẽ hiểu và trả lời câu hỏi tự do.\nAnh có thể hỏi về: **giá trị hợp đồng, lãi gộp, hạng mục, tiến độ, vật tư cần đặt, dòng tiền**."}};
-view.addEventListener("change",async e=>{const t=e.target;if(t.dataset.fu===undefined||!cur)return;const files=[...t.files],pid=cur.id,folder=t.dataset.fu;t.value="";
-  try{for(let i=0;i<files.length;i++){flMsg(`Đang tải ${i+1}/${files.length}: ${files[i].name}`);await FS.upload(pid,folder,files[i])}flMsg(`Đã lưu ${files.length} file vào thư mục`);await filesLoad()}catch(er){flMsg(er.message,true);await filesLoad()}});
+view.addEventListener("change",e=>{const t=e.target;if(t.dataset.fu===undefined||!cur)return;const files=[...t.files],p=cur;t.value="";if(!files.length)return;
+  const big=files.find(f=>f.size>95*1048576);if(big){flMsg(big.name+": file quá lớn, tối đa 95 MB",true);return}
+  sortFiles(p,files,t.dataset.fu,DF.filter(f=>NGApp.board||f[3].includes(p._role)))});
 view.addEventListener("click",async e=>{const sel=e.target.closest("[data-fsel]"),v=e.target.closest("[data-fv]"),d=e.target.closest("[data-fd]"),x=e.target.closest("[data-fx]");
   if(sel){flSel=sel.dataset.fsel;flMsg("");await filesLoad();return}
   if(v){flMsg("");fileView(v.dataset.fv,v.dataset.n);return}
