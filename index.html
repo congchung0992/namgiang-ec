@@ -835,8 +835,8 @@ function drawMap(){if(window.renderHello)window.renderHello()}
 
 /* ===== Biểu đồ tròn mờ ===== */
 const CG=[["Vật liệu",178.6,"#2D3CE6","#7FA2FF"],["Nhân công",84.2,"#C21FC9","#F08AF0"],["Thầu phụ",61.5,"#F08A24","#FFC38A"],["Máy thi công",24.8,"#12A150","#6BE59B"],["Chi phí chung",15.3,"#8C8E97","#D5D6DB"]];
-document.getElementById("mini").innerHTML=CG.slice(0,4).map(c=>`<div class="mc"><span class="s"><i style="background:${c[2]}"></i>${c[0]}</span><b class="num">${c[1].toLocaleString("vi-VN",{minimumFractionDigits:1})} tỷ</b></div>`).join("");
-(()=>{const T=CG.reduce((s,c)=>s+c[1],0),cx=110,cy=110,R=100,r=38;let a=-Math.PI/2,defs="",paths="";
+function drawPie(G){const CG=G.filter(c=>c[1]>0);document.getElementById("mini").innerHTML=CG.slice(0,4).map(c=>`<div class="mc"><span class="s"><i style="background:${c[2]}"></i>${c[0]}</span><b class="num">${c[1].toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:2})} tỷ</b></div>`).join("");
+if(!CG.length){document.getElementById("donut").innerHTML="";return}const T=CG.reduce((s,c)=>s+c[1],0),cx=110,cy=110,R=100,r=38;let a=-Math.PI/2,defs="",paths="";
  CG.forEach((c,i)=>{const sw=c[1]/T*Math.PI*2,gap=.035,a0=a+gap,a1=a+sw-gap;const p=(ang,rad)=>[cx+Math.cos(ang)*rad,cy+Math.sin(ang)*rad];
   const big=(a1-a0)>Math.PI?1:0;const [x0,y0]=p(a0,R),[x1,y1]=p(a1,R),[x2,y2]=p(a1,r),[x3,y3]=p(a0,r);const mid=(a0+a1)/2,[gx,gy]=p(mid,R*.68);
   defs+=`<radialGradient id="pg${i}" cx="${gx}" cy="${gy}" r="${R*.75}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${c[2]}"/><stop offset="1" stop-color="${c[3]}"/></radialGradient>`;
@@ -844,7 +844,8 @@ document.getElementById("mini").innerHTML=CG.slice(0,4).map(c=>`<div class="mc">
   paths+=`<path transform="translate(${dx} ${dy})" d="M${x0} ${y0}A${R} ${R} 0 ${big} 1 ${x1} ${y1}L${x2} ${y2}A${r} ${r} 0 ${big} 0 ${x3} ${y3}Z" fill="url(#pg${i})" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"><title>${c[0]}: ${c[1]} tỷ</title></path>`;a+=sw});
  const [tx,ty]=[cx+Math.cos(-Math.PI/2+CG[0][1]/T*Math.PI)*(R+8),cy+Math.sin(-Math.PI/2+CG[0][1]/T*Math.PI)*(R+8)];
  document.getElementById("donut").innerHTML=`<svg viewBox="-10 -10 240 240" role="img" aria-label="Cơ cấu chi phí"><defs>${defs}<filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.4"/></filter></defs>${paths}
- <g transform="translate(150 -2)"><rect x="-30" y="0" width="60" height="24" rx="9" fill="#16171C"/><text x="0" y="16" text-anchor="middle" font-size="11.5" font-weight="600" fill="#fff">49%</text></g></svg>`})();
+ <g transform="translate(150 -2)"><rect x="-30" y="0" width="60" height="24" rx="9" fill="#16171C"/><text x="0" y="16" text-anchor="middle" font-size="11.5" font-weight="600" fill="#fff">${Math.round(CG[0][1]/T*100)}%</text></g></svg>`}
+drawPie(CG);
 
 /* ===== Doanh thu & chi phí ===== */
 const PER={
@@ -852,15 +853,16 @@ const PER={
  m:{lab:Array.from({length:31},(_,i)=>i+1+""),rev:50.2,revD:14,cost:[1.1,1.6,1.3,0.4,1.8,1.5,1.2,1.7,1.9,1.4,0.5,1.6,1.8,1.3,1.5,1.1,0.9,0.4,1.7,2.1,1.6,1.4,1.2,1.8,0.5,1.9,1.6,1.5,1.3,1.7,1.2],costT:43.1,costD:8,unit:"tháng 10/2026",vs:"so với tháng 9"},
  y:{lab:["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12"],rev:391.2,revD:14,cost:[24.9,20.3,31.2,33,36.8,35.1,38.6,42.4,39.8,43.1,0,0],costT:345.2,costD:11,unit:"10 tháng 2026",vs:"so với cùng kỳ 2025"}};
 const fm=v=>v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1});
-function rev(p){const d=PER[p],mx=Math.max(...d.cost),n=d.cost.length,top=d.cost.indexOf(mx);
+let PCUR=PER,curP="m";
+function rev(p){curP=p;const d=PCUR[p],mx=Math.max(...d.cost,0)||1,n=d.cost.length,top=d.cost.indexOf(Math.max(...d.cost)),fm=d.f||(v=>v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1}));
  const bw=100/n;const bars=d.cost.map((v,i)=>`<rect x="${i*bw+bw*.14}" y="${100-v/mx*92}" width="${bw*.72}" height="${v/mx*92}" fill="${i===top?"#7C4DFF":"#C9A8FF"}" rx="0.6"><title>${d.lab[i]}: ${fm(v)} tỷ</title></rect>`).join("");
- const ch=(v)=>`<span class="ch${v<0?" dn":""}">${v<0?"▼":"▲"} ${Math.abs(v)}%</span>`;
+ const ch=(v)=>v==null?"":`<span class="ch${v<0?" dn":""}">${v<0?"▼":"▲"} ${Math.abs(v)}%</span>`;
  document.getElementById("rev").innerHTML=`
   <div class="col"><div>${ch(d.revD)}<span class="vs">${d.vs}</span></div><b class="num">${fm(d.rev)} tỷ</b><span class="lab">doanh thu ${d.unit}</span>
    <div class="area"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6D5BFF"/><stop offset="1" stop-color="#8B7BFF" stop-opacity=".85"/></linearGradient></defs><rect x="0" y="${100-Math.min(d.rev/(d.rev+d.costT)*130,92)}" width="100" height="100" fill="url(#rg)"/></svg></div></div>
   <div class="col"><div>${ch(d.costD)}<span class="vs">${d.vs}</span></div><b class="num">${fm(d.costT)} tỷ</b><span class="lab">chi phí ${d.unit}</span>
    <div class="area" id="carea"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${bars}</svg>
-   <span class="tip" style="left:${(top+.5)*bw}%;top:${100-92}%">${fm(mx)} tỷ<small>${p==="m"?"ngày "+d.lab[top]+"/10":d.lab[top]}</small></span></div></div>`;
+   <span class="tip" style="left:${(top+.5)*bw}%;top:${100-92}%">${fm(mx)} tỷ<small>${d.tip?d.tip(top):p==="m"?"ngày "+d.lab[top]+"/10":d.lab[top]}</small></span></div></div>`;
  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.p===p))}
 document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.closest("button");if(b)rev(b.dataset.p)});rev("m");
 
@@ -1111,7 +1113,8 @@ function calc(p){let rev=0,ent=0,cnt=0,vl=0,nc=0,eq=0,cv=0,cn=0,cm=0;const hs=p.
 function groups(p,h){const G=[],ix={};h.lines.forEach(l=>{const k=l.g1||h.name;if(!(k in ix)){ix[k]=G.length;G.push({k,rev:0,v:0,n:0,m:0,t:0})}const g=G[ix[k]],c=lineCost(p,l);g.rev+=l.total||0;g.v+=c.v;g.n+=c.n;g.m+=c.m;g.t+=c.t});return G}
 const pct=(a,b)=>b?a/b*100:0;
 function asPJ(p){return{id:p.id,code:p.code,name:p.name,loc:p.loc,cdt:p.cdt,value:p.value/1e9,billed:0,collected:0,cost:0,plan:0,actual:0,boq:1}}
-const allPJ=()=>[...DB.projects.map(asPJ),...PJ];
+const SAMPLES=()=>DB.projects.length?[]:PJ;
+const allPJ=()=>[...DB.projects.map(asPJ),...SAMPLES()];
 
 /* tổng hợp vật liệu chính từ BOQ */
 const MR=[["Kết cấu thép gia công",/ket cau thep|gia cong lap dung|khung thep|thep hinh|thep tam|thep hop/,/^(tan|kg)$/],["Thép cốt bê tông",/thep/,/^(tan|kg)$/],["Cọc tre",/coc tre/,/^(m|md)$/],["Cọc bê tông",/coc/,/^(m|md)$/],["Bê tông",/be tong/,/^m3$/],["Tôn lợp, bao che",/\bton\b/,/^m2$/],["Gạch xây",/gach/,/.*/],["Sơn",/\bson\b/,/^m2$/],["Trần, vách thạch cao",/thach cao|tran /,/^m2$/],["Cửa",/\bcua\b/,/.*/],["Cáp điện",/\bcap\b|\bday (dien|cu|dong)/,/^(m|met|md)$/],["Ống",/\bong\b/,/^(m|met|md)$/],["Đèn chiếu sáng",/\bden (led|chieu|pha|exit|su co|tuyp|op|downlight|ap tran|cao ap|chong no|chi dan)|\bbong den|\bmang den/,/^(cai|bo|chiec)$/],["Thiết bị (bơm, tủ, máy)",/\bbom\b|\btu dien|\bmay (bien|bom|phat|thoi|nen)|\bmba\b/,/^(cai|bo|may|tu|tram|cum|lot|chiec|he thong|ht)$/]];
@@ -1320,7 +1323,7 @@ function migCard(){const n=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().le
 /* Quyền trên giao diện: chỉ để gọn màn hình, máy chủ mới là nơi chặn thật (supabase/schema.sql) */
 const canOv=()=>!window.NGApp||NGApp.board||DB.projects.some(p=>p._role==="gd");
 const FIELD=["prog","week","mat","hr","files"],sheetsFor=b=>b&&b._noCost?BSHEETS.filter(x=>FIELD.includes(x[0])):BSHEETS;
-function projList(){const B=DB.projects,SP=canOv()?PJ:[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
+function projList(){const B=DB.projects,SP=canOv()?SAMPLES():[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
   <div class="plist">
   ${!window.NGApp||NGApp.board?`<label class="card pc upl" id="drop"><input type="file" id="boqf" accept=".xlsx,.xls,.xlsm" hidden>
     <div class="row"><div><h3>Thêm dự án từ BOQ</h3><div class="loc">Kéo thả file Excel vào đây hoặc bấm để chọn file</div></div><span class="pill" style="${sv("boq")};pointer-events:none"><span class="dot">${ic("up",2)}</span>Tải BOQ lên</span></div>
@@ -1407,8 +1410,8 @@ function projView(p,s,sub){const b=p.boq?DB.projects.find(x=>x.id===p.id):null,L
     <div class="meta"><span>📍 ${esc(p.loc)}</span><span>Chủ đầu tư: <b>${esc(p.cdt)}</b></span>${b?`<span>Hồ sơ: <b>${esc(b.qcode||"–")}</b> · ${esc(b.date||"")}</span><span>Thư mục Drive: <b>${window.NGApp&&NGApp.drive?"đã kết nối":"chờ kết nối"}</b></span>`:`<span>Chỉ huy trưởng: <b>${p.pm}</b></span>`}</div></div>${b?st("ok","Chuẩn bị thi công"):st(...lv(p))}</div>
   <div class="sheets" role="tablist">${L.map(x=>pill(x[0],x[1],"da-"+p.id+(x[0]==="home"?"":"-"+x[0]),x[0]===s)).join("")}</div>
   ${b?bsheet(b,s,sub):sheet(p,s)}`}
-function report(){const A=allPJ(),T=k=>A.reduce((a,p)=>a+p[k],0);return `<div class="vh"><div><h1>Báo cáo tổng hợp</h1><p>Toàn công ty · ${DB.projects.length?DB.projects.length+" dự án từ BOQ và ":""}${PJ.length} công trình mẫu</p></div></div>
-  <div class="vgrid">${kc("proj","Tổng giá trị hợp đồng",fm(T("value")),"tỷ",A.length+" công trình")}${kc("rev","Tổng nghiệm thu",fm(T("billed")),"tỷ","Đã thu "+fm(T("collected"))+" tỷ")}${kc("cost","Tổng chi phí",fm(T("cost")),"tỷ",Math.round(T("cost")/T("billed")*100)+"% giá trị nghiệm thu")}
+function report(){const A=allPJ(),T=k=>A.reduce((a,p)=>a+p[k],0);return `<div class="vh"><div><h1>Báo cáo tổng hợp</h1><p>Toàn công ty · ${DB.projects.length?DB.projects.length+" dự án từ BOQ":PJ.length+" công trình mẫu"}</p></div></div>
+  <div class="vgrid">${kc("proj","Tổng giá trị hợp đồng",fm(T("value")),"tỷ",A.length+" công trình")}${kc("rev","Tổng nghiệm thu",fm(T("billed")),"tỷ","Đã thu "+fm(T("collected"))+" tỷ")}${kc("cost","Tổng chi phí",fm(T("cost")),"tỷ",(T("billed")?Math.round(T("cost")/T("billed")*100)+"% giá trị nghiệm thu":"Chưa có phiếu chi thực tế"))}
   ${card("So sánh các dự án","Bấm vào tên để mở dự án",`<div class="tw"><table class="t"><thead><tr><th>Công trình</th><th class="r">Giá trị HĐ</th><th class="r">Nghiệm thu</th><th class="r">Chi phí</th><th class="r">Công nợ</th><th style="min-width:130px">Tiến độ</th></tr></thead><tbody>${A.map(p=>`<tr data-go="da-${p.id}" style="cursor:pointer"><td><b>${esc(p.name)}</b><div style="font-size:12px;color:var(--muted)">${esc(p.code)}${p.demo?" · Mẫu":""}</div></td><td class="r">${fm(p.value)}</td><td class="r">${fm(p.billed)}</td><td class="r">${fm(p.cost)}</td><td class="r">${fm(p.billed-p.collected)}</td><td>${p.boq?`<span class="sub">Chưa lập tiến độ</span>`:`<div class="mbar" style="--c:${lv(p)[0]==="bad"?"#E1141B":"#2D3CE6"}"><i style="width:${p.actual}%"></i><em style="left:${p.plan}%"></em></div>`}</td></tr>`).join("")}</tbody></table></div>`,"span3")}</div>`}
 
 /* ---------- Kế hoạch tuần + PPC (Last Planner) ---------- */
@@ -1457,7 +1460,7 @@ function decisions(){const out=[],now=new Date(),d0=new Date(now.getFullYear(),n
     if(cf.peak>0)out.push({id:p.id+"|von|"+cf.pm,t:"von",p,title:`Chuẩn bị vốn ${ty(cf.peak)} tỷ`,val:cf.peak,due:null,why:`Dòng tiền âm sâu nhất vào ${cf.pm}`,go:`da-${p.id}-rev`});
     {const lk=wk(addD(new Date(),-7)),lw=(p.weeks||{})[lk];if(lw){const r=ppcOf(lw);if(r.commit&&r.marked<r.commit)out.push({id:p.id+"|wk|"+lk,t:"td",p,title:"Đánh giá kết quả kế hoạch tuần trước",due:addD(wkDate(lk),7),why:`${r.commit-r.marked}/${r.commit} việc cam kết chưa đánh dấu Xong hoặc Không xong`,go:`da-${p.id}-week`})}}
     c.hs.filter(x=>x.cnt&&x.ent<x.cnt).sort((a,b)=>b.rev-a.rev).slice(0,3).forEach(x=>out.push({id:p.id+"|gv|"+x.h.code,t:"gv",p,title:`Chốt giá vốn ${x.h.name}`,val:x.rev,due:addD(tl.st,-7),why:`${n0(x.cnt-x.ent)}/${n0(x.cnt)} dòng đang ước tính ${fm(p.ratio,0)}% giá thầu`,go:`da-${p.id}-boq-${x.h.code.toLowerCase()}`}))});
-  PJ.filter(p=>p.billed>p.collected).slice(0,2).forEach((p,i)=>out.push({id:"demo|tt|"+p.id,t:"tt",p,demo:1,title:`Duyệt thanh toán thầu phụ đợt ${3+i}`,val:(p.billed-p.collected)*1e9*.18,due:addD(d0,2+i*3),why:"Hồ sơ đã đủ biên bản nghiệm thu (số liệu mẫu)",go:`da-${p.id}-cost`}));
+  SAMPLES().filter(p=>p.billed>p.collected).slice(0,2).forEach((p,i)=>out.push({id:"demo|tt|"+p.id,t:"tt",p,demo:1,title:`Duyệt thanh toán thầu phụ đợt ${3+i}`,val:(p.billed-p.collected)*1e9*.18,due:addD(d0,2+i*3),why:"Hồ sơ đã đủ biên bản nghiệm thu (số liệu mẫu)",go:`da-${p.id}-cost`}));
   const rank=x=>x.due?+x.due:9e15;
   return out.map(x=>({...x,st:(DB.dec[x.id]||{}).s||""})).sort((a,b)=>rank(a)-rank(b))}
 const waiting=L=>L.filter(x=>!x.st||x.st==="later");
@@ -1473,7 +1476,7 @@ function inbox(){const L=decisions(),P=waiting(L),D=L.filter(x=>x.st==="ok"||x.s
   ${card("Đang chờ duyệt","Duyệt: ghi nhận quyết định · Để sau: giữ lại trong hộp · Từ chối: bỏ khỏi danh sách",P.length?P.map(x=>dcRow(x)).join(""):`<div class="sub">Không còn việc nào chờ duyệt.</div>`,"span3")}
   ${D.length?card("Đã xử lý","Bấm Hoàn tác nếu quyết định nhầm",D.map(x=>dcRow(x,false)).join(""),"span3"):""}</div>`}
 function brief(){const now=new Date(),L=decisions(),P=waiting(L),B=DB.projects.map(p=>({p,...pinfo(p)}));
-  const peak=B.reduce((a,x)=>a+x.cf.peak,0),ord14=B.reduce((a,x)=>a+x.ord.filter(o=>o.od<addD(now,15)).length,0),slow=PJ.filter(p=>p.actual<p.plan-5);
+  const peak=B.reduce((a,x)=>a+x.cf.peak,0),ord14=B.reduce((a,x)=>a+x.ord.filter(o=>o.od<addD(now,15)).length,0),slow=SAMPLES().filter(p=>p.actual<p.plan-5);
   const mit=P.slice(0,3);
   const exc=[];B.forEach(({p,c,ord,cf})=>{const late=ord.filter(o=>o.od<now);if(late.length)exc.push(["#E1141B",`${p.name}: ${late.length} vật tư đã quá hạn đặt`,late.slice(0,3).map(o=>o.n).join(", ")]);
     if(cf.peak>0)exc.push(["#C21FC9",`${p.name}: cần ứng ${ty(cf.peak)} tỷ`,"Vào "+cf.pm]);
@@ -1482,7 +1485,7 @@ function brief(){const now=new Date(),L=decisions(),P=waiting(L),B=DB.projects.m
     if(c.ent<c.cnt)exc.push(["#F08A24",`${p.name}: ${n0(c.cnt-c.ent)} dòng giá vốn còn ước tính`,"Biên lãi chưa chắc chắn"])});
   slow.forEach(p=>exc.push(["#E1141B",`${p.name}: chậm ${p.plan-p.actual}% (mẫu)`,"Kế hoạch "+p.plan+"% · thực tế "+p.actual+"%"]));
   const day=["Chủ nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"][now.getDay()];
-  return `<div class="vh"><div><h1>Bản tin sáng</h1><p>${day}, ${fd(now)} · ${DB.projects.length} dự án từ BOQ và ${PJ.length} công trình mẫu · khi có agent, bản tin tự tạo lúc 6:30 mỗi sáng</p></div><button class="back" data-go="duyet" style="margin:0">Mở hộp quyết định (${P.length})</button></div>
+  return `<div class="vh"><div><h1>Bản tin sáng</h1><p>${day}, ${fd(now)} · ${DB.projects.length?DB.projects.length+" dự án từ BOQ":PJ.length+" công trình mẫu"} · khi có agent, bản tin tự tạo lúc 6:30 mỗi sáng</p></div><button class="back" data-go="duyet" style="margin:0">Mở hộp quyết định (${P.length})</button></div>
   <div class="vgrid">${kc("cost","Việc chờ anh quyết",P.length,"việc",mit.length?"3 việc quan trọng nhất ở bên dưới":"Không có việc tồn")}${kc(peak>0?"mat":"rev","Vốn cần ứng tối đa",ty(peak),"tỷ",peak>0?"Cộng các dự án":"Dòng tiền chưa âm")}${kc("prog","Vật tư phải đặt trong 14 ngày",ord14,"loại",ord14?"Xem trong hộp quyết định":"Chưa có hạn gần")}
   ${card("3 việc quan trọng nhất hôm nay","Chỉ làm 3 việc này cho xong · việc vặt để agent lo",mit.length?mit.map((x,i)=>`<div class="ms mit"><i style="background:${COL[TYP[x.t][0]][0]}"></i><div><b>${i+1}. ${esc(x.title)}</b><span>${esc(x.p.name)} · ${esc(x.why)}</span></div>${dueTxt(x.due)}</div>`).join(""):`<div class="sub">Hôm nay không có việc gấp.</div>`,"span2")}
   ${card("Đang đỏ","Tin xấu đưa lên trước",exc.length?ms(exc.slice(0,7)):`<div class="sub">Không có cảnh báo.</div>`)}
@@ -1491,11 +1494,38 @@ function brief(){const now=new Date(),L=decisions(),P=waiting(L),B=DB.projects.m
 
 /* ---------- Thẻ chào: tình hình dự án thay bản đồ ---------- */
 function ring(v,c){const r=17,L=2*Math.PI*r,p=Math.max(0,Math.min(100,v||0));return `<svg class="rg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="${r}" fill="none" stroke="#E4E5EA" stroke-width="5"/><circle cx="22" cy="22" r="${r}" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${L*p/100} ${L}" transform="rotate(-90 22 22)"/><text x="22" y="26" text-anchor="middle" font-size="11" font-weight="600" fill="#16171C">${Math.round(p)}%</text></svg>`}
-window.renderHello=function(){const box=document.getElementById("hp");if(!box)return;const now=new Date(),np=waiting(decisions()).length;
+/* Tổng quan: có dự án thật thì mọi thẻ tính từ dự án thật (BOQ, giá vốn, tiến độ); chưa có thì giữ số mẫu */
+let HOME0=null;
+function homeSample(){if(!HOME0)return;const K=document.getElementById("kpis"),pie=document.querySelector(".pie");K.innerHTML=HOME0.k;pie.querySelector("h3").textContent=HOME0.h;pie.querySelector(".sub").textContent=HOME0.s;pie.querySelector(".total").innerHTML=HOME0.t;drawPie(CG);PCUR=PER;const y=document.querySelector('.seg [data-p="y"]');if(y)y.textContent="Năm";rev(curP);HOME0=null}
+function homeReal(){const K=document.getElementById("kpis"),pie=document.querySelector(".pie");if(!K||!pie)return;
+  if(!HOME0)HOME0={k:K.innerHTML,h:pie.querySelector("h3").textContent,s:pie.querySelector(".sub").textContent,t:pie.querySelector(".total").innerHTML};
+  const R=DB.projects.map(p=>{const c=calc(p),tl=timeline(p),cf=cash(p,tl),g=gStat(p,tl);return{p,c,tl,cf,g}}),S=k=>R.reduce((a,x)=>a+x.c[k],0),n=R.length,revT=S("rev"),costT=S("cost"),peak=R.reduce((a,x)=>a+x.cf.peak,0);
+  const day={},dk=d=>fd(d);R.forEach(({p,tl})=>tl.T.forEach(x=>{const q=p.sched.t[x.key];if(!q||!(q.d>0))return;for(let o=q.s;o<q.s+q.d;o++){const k=dk(addD(tl.st,o)),e=day[k]||(day[k]={r:0,c:0});e.r+=x.rev/q.d;e.c+=x.cost/q.d}}));
+  const today=new Date(),t0=new Date(today.getFullYear(),today.getMonth(),today.getDate()),start=new Date(Math.min(...R.map(x=>+x.tl.st))),end=new Date(Math.max(...R.map(x=>+addD(x.tl.st,Math.max(x.tl.end-1,0))))),at=t0<start?start:t0>end?end:t0;
+  const sum=(from,cnt)=>{let r=0,c=0;for(let i=0;i<cnt;i++){const e=day[dk(addD(from,i))];if(e){r+=e.r;c+=e.c}}return{r,c}},f2=v=>v.toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2}),b=v=>+(v/1e9).toFixed(4);
+  const mon=addD(at,-((at.getDay()+6)%7)),m0=new Date(at.getFullYear(),at.getMonth(),1),mN=new Date(at.getFullYear(),at.getMonth()+1,0).getDate(),mm=at.getMonth()+1,yy=at.getFullYear();
+  const wk=[...Array(7)].map((_,i)=>sum(addD(mon,i),1)),md=[...Array(mN)].map((_,i)=>sum(addD(m0,i),1)),ms=[];for(let d=new Date(start.getFullYear(),start.getMonth(),1);d<=end;d=new Date(d.getFullYear(),d.getMonth()+1,1))ms.push({d,v:sum(d,new Date(d.getFullYear(),d.getMonth()+1,0).getDate())});
+  const lb=d=>"T"+(d.getMonth()+1)+"/"+String(d.getFullYear()).slice(2),vs=t0<start?"khởi công "+fd(start):"theo tiến độ kế hoạch",tot=a=>a.reduce((x,y)=>({r:x.r+y.r,c:x.c+y.c}),{r:0,c:0}),WK=tot(wk),MD=tot(md);
+  PCUR={w:{lab:["T2","T3","T4","T5","T6","T7","CN"],rev:b(WK.r),revD:null,cost:wk.map(x=>b(x.c)),costT:b(WK.c),costD:null,unit:"tuần "+fd(mon).slice(0,5),vs,f:f2},
+    m:{lab:md.map((_,i)=>String(i+1)),rev:b(MD.r),revD:null,cost:md.map(x=>b(x.c)),costT:b(MD.c),costD:null,unit:"tháng "+mm+"/"+yy,vs,f:f2,tip:i=>"ngày "+(i+1)+"/"+mm},
+    y:{lab:ms.map(x=>lb(x.d)),rev:b(revT),revD:null,cost:ms.map(x=>b(x.v.c)),costT:b(costT),costD:null,unit:"toàn bộ kế hoạch",vs,f:f2}};
+  const yb=document.querySelector('.seg [data-p="y"]');if(yb)yb.textContent="Toàn bộ";rev(curP);
+  const set=(id,h,sm,led,foot,go)=>{const c=document.getElementById(id);if(!c)return;c.querySelector("h3").textContent=h;c.querySelector(".gt small").textContent=sm;c.querySelector(".led").innerHTML=led;c.querySelector(".gfoot").innerHTML=foot;c.dataset.go=go};
+  const mg=pct(revT-costT,revT),thisM=sum(new Date(t0.getFullYear(),t0.getMonth(),1),new Date(t0.getFullYear(),t0.getMonth()+1,0).getDate());
+  set("t-rev","Giá trị hợp đồng",n+" dự án · chưa VAT",`${ty(revT)}<small>tỷ</small>`,`<div><p style="margin:0"><b style="font-size:16px;color:#fff">Lãi gộp dự kiến ${fm(mg)}%</b></p><p>Kế hoạch tháng ${t0.getMonth()+1}: ${f2(thisM.r/1e9)} tỷ</p></div>`,"du-an");
+  const pr=R.filter(x=>x.cf.peak>0).sort((a,b)=>b.cf.peak-a.cf.peak)[0],sp=document.getElementById("spark");if(sp)sp.style.display="none";
+  set("t-pay","Vốn cần ứng tối đa","theo tiến độ, điều khoản giả định",`${ty(peak)}<small>tỷ</small>`,`<div><p style="margin:0"><b style="font-size:16px;color:#fff">${pr?"Cao nhất vào "+esc(pr.cf.pm):"Dòng tiền chưa âm"}</b></p><p>Chưa có số nghiệm thu, công nợ</p></div>`,"ban-tin");
+  const wR=revT||1,act=R.reduce((a,x)=>a+x.g.act*x.c.rev,0)/wR,pl=R.reduce((a,x)=>a+x.g.plan*x.c.rev,0)/wR,A=Math.min(act,100)/100*2*Math.PI,big=A>Math.PI?1:0,ex=22+18*Math.sin(A),ey=22-18*Math.cos(A);
+  set("t-prog","Tiến độ thực tế","theo % cập nhật trên tiến độ",`${fm(act,0)}<small>%</small>`,`<svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="rgba(255,255,255,.12)"/>${act>=100?'<circle cx="22" cy="22" r="18" fill="rgba(255,255,255,.85)"/>':act>0?`<path d="M22 22 L22 4 A18 18 0 ${big} 1 ${ex} ${ey} Z" fill="rgba(255,255,255,.85)"/>`:""}</svg><div style="text-align:right"><span class="up">Kế hoạch ${fm(pl,0)}%</span><p>${t0<start?"Khởi công "+fd(start):"Đến hôm nay"}</p></div>`,"du-an");
+  const cnt=S("cnt"),ent=S("ent"),est=cnt?100-pct(ent,cnt):0;
+  pie.querySelector("h3").textContent="Giá vốn theo nhóm";pie.querySelector(".sub").textContent=`Dự toán ${n} dự án`+(est>0?` · còn ${fm(est,0)}% dòng ước tính`:"");
+  drawPie([["Vật tư",S("cv")/1e9,"#2D3CE6","#7FA2FF"],["Nhân công",S("cn")/1e9,"#C21FC9","#F08AF0"],["Máy, thiết bị",S("cm")/1e9,"#12A150","#6BE59B"]]);
+  pie.querySelector(".total").innerHTML=`<b class="num">${ty(costT)} tỷ</b><span class="sub">tổng giá vốn · ${fm(pct(costT,revT),0)}% giá trị hợp đồng</span>`}
+window.renderHello=function(){if(DB.projects.length)homeReal();else homeSample();const box=document.getElementById("hp");if(!box)return;const now=new Date(),np=waiting(decisions()).length;
   const rows=[...DB.projects.map(p=>{const tl=timeline(p),c=calc(p),el=Math.round((now-tl.st)/864e5);const pr=el<=0?0:Math.min(100,el/tl.end*100);
       return{id:p.id,name:p.name,v:pr,c:"#2D3CE6",sub:el<0?`Khởi công sau ${-el} ngày · lãi gộp ${fm(pct(c.gp,c.rev),0)}%`:`Theo lịch ${fm(pr,0)}% · lãi gộp ${fm(pct(c.gp,c.rev),0)}%`,val:c.rev/1e9,tag:st("ok",el<0?"Chuẩn bị":"Đang thi công")}}),
-    ...PJ.map(p=>{const [l,lt]=lv(p);return{id:p.id,name:p.name,v:p.actual,c:l==="ok"?"#12A150":l==="warn"?"#F08A24":"#E1141B",sub:`Kế hoạch ${p.plan}% · ${p.loc}`,val:p.value,tag:st(l,lt),demo:1}})].slice(0,4);
-  const sub=document.querySelector(".hello .sub");if(sub)sub.textContent=`${DB.projects.length+PJ.length} công trình · ${np} việc chờ anh duyệt`;
+    ...SAMPLES().map(p=>{const [l,lt]=lv(p);return{id:p.id,name:p.name,v:p.actual,c:l==="ok"?"#12A150":l==="warn"?"#F08A24":"#E1141B",sub:`Kế hoạch ${p.plan}% · ${p.loc}`,val:p.value,tag:st(l,lt),demo:1}})].slice(0,4);
+  const sub=document.querySelector(".hello .sub");if(sub)sub.textContent=`${DB.projects.length+SAMPLES().length} công trình · ${np} việc chờ anh duyệt`;
   box.innerHTML=rows.map(r=>`<button class="hpr" data-go="da-${r.id}">${ring(r.v,r.c)}<div class="hn"><b>${esc(r.name)}${r.demo?' <small class="mau">Mẫu</small>':""}</b><span>${esc(r.sub)}</span></div><div class="hv"><b class="num">${fm(r.val)} tỷ</b>${r.tag}</div></button>`).join("")+
     `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div>`};
 /* ---------- Điều hướng ---------- */
@@ -1525,8 +1555,8 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){top="du-an";const L=p.boq?sheetsFor(DB.projects.find(x=>x.id===id)):SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:L[0][0],sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
-  const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=!isHome;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri")adminLoad();if(document.getElementById("fls"))filesLoad()}else{requestAnimationFrame(()=>{try{drawMap()}catch(e){}})}
+  const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=!isHome||DB.projects.length>0;document.body.classList.toggle("scroll",!isHome);
+  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri")adminLoad();if(document.getElementById("fls"))filesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -1705,16 +1735,16 @@ window.NG={
     thang:tl.lab.map((l,i)=>({thang:l,doanh_thu:Math.round(tl.rev[i]),gia_von:Math.round(tl.cost[i])})),
     hang_muc:c.hs.filter(x=>x.rev>0).map(x=>{const ts=tl.T.filter(t=>t.h===x.h).map(t=>p.sched.t[t.key]);const s=Math.min(...ts.map(t=>t.s)),e=Math.max(...ts.map(t=>t.s+t.d));return{ma:x.h.code,ten:x.h.name,doanh_thu:Math.round(x.rev),gia_von:Math.round(x.cost),bat_dau:fd(addD(tl.st,s)),ket_thuc:fd(addD(tl.st,e-1))}}),
     vat_tu:ord.map(o=>({ten:o.n,dvt:o.u,khoi_luong:o.q,can_tu:o.need,dat_hang_truoc:o.order}))}}),
-  cong_trinh_mau:PJ.map(p=>({ten:p.name,ma:p.code,gia_tri_ty:p.value,nghiem_thu_ty:p.billed,da_thu_ty:p.collected,chi_phi_ty:p.cost,tien_do_ke_hoach_pct:p.plan,tien_do_thuc_te_pct:p.actual}))}},
+  cong_trinh_mau:SAMPLES().map(p=>({ten:p.name,ma:p.code,gia_tri_ty:p.value,nghiem_thu_ty:p.billed,da_thu_ty:p.collected,chi_phi_ty:p.cost,tien_do_ke_hoach_pct:p.plan,tien_do_thuc_te_pct:p.actual}))}},
  answer(q){const t=nz(q),B=DB.projects;
   let p=B.find(x=>nz(x.name).split(" ").filter(w=>w.length>3&&!/(nha|may|san|xuat|cong|trinh)/.test(w)).some(w=>t.includes(w)))||B[0];
-  const demo=PJ.find(x=>nz(x.name).split(" ").filter(w=>w.length>3).some(w=>t.includes(w)&&!/(nha|xuong|truong|chung|khach)/.test(w)));
-  if(/cham|tre/.test(t)&&/tien do|cong trinh|du an/.test(t)){const s=PJ.filter(x=>x.actual<x.plan);return s.length?"Công trình đang chậm (số liệu mẫu):\n"+s.map(x=>`- **${x.name}**: thực tế ${x.actual}% / kế hoạch ${x.plan}%`).join("\n")+(B.length?"\n\nDự án từ BOQ chưa có số liệu thi công thực tế nên chưa đánh giá chậm hay đúng.":""):"Không có công trình nào chậm."}
+  const demo=SAMPLES().find(x=>nz(x.name).split(" ").filter(w=>w.length>3).some(w=>t.includes(w)&&!/(nha|xuong|truong|chung|khach)/.test(w)));
+  if(/cham|tre/.test(t)&&/tien do|cong trinh|du an/.test(t)){const s=SAMPLES().filter(x=>x.actual<x.plan);return s.length?"Công trình đang chậm (số liệu mẫu):\n"+s.map(x=>`- **${x.name}**: thực tế ${x.actual}% / kế hoạch ${x.plan}%`).join("\n")+(B.length?"\n\nDự án từ BOQ chưa có số liệu thi công thực tế nên chưa đánh giá chậm hay đúng.":""):"Không có công trình nào chậm."}
   if(/thep d25|ton kho|ton thep/.test(t))return"Kho CT3 Long Biên còn **11,2 tấn** thép D25, dưới mức tối thiểu 25 tấn (số liệu mẫu).";
   if(demo&&!p)p=null;
   if(!B.length)return"Chưa có dự án nào tạo từ BOQ. Anh vào **Dự án → Thêm dự án từ BOQ** để tải file lên, sau đó hỏi em về giá trị, giá vốn, tiến độ, vật tư hay dòng tiền.";
   const {c,tl,cf,ord}=pinfo(p),N=`**${p.name}**`;
-  if(/(danh sach|bao nhieu|nhung|cac) (du an|cong trinh)|^du an$/.test(t))return"Dự án từ BOQ:\n"+B.map(x=>{const k=calc(x);return`- **${x.name}** (${x.code}): ${ty(k.rev)} tỷ, lãi gộp dự kiến ${fm(pct(k.gp,k.rev))}%`}).join("\n")+`\n\nNgoài ra có ${PJ.length} công trình mẫu.`;
+  if(/(danh sach|bao nhieu|nhung|cac) (du an|cong trinh)|^du an$/.test(t))return"Dự án từ BOQ:\n"+B.map(x=>{const k=calc(x);return`- **${x.name}** (${x.code}): ${ty(k.rev)} tỷ, lãi gộp dự kiến ${fm(pct(k.gp,k.rev))}%`}).join("\n")+(SAMPLES().length?`\n\nNgoài ra có ${SAMPLES().length} công trình mẫu.`:"");
   if(/dat hang|vat tu|vat lieu|thep|be tong|coc|ton\b|cap|ong\b/.test(t)){const now=new Date(),up=ord.filter(o=>o.od>=addD(now,-1)).slice(0,6),late=ord.filter(o=>o.od<addD(now,-1));
     return`Vật tư cần đặt của ${N} theo tiến độ hiện tại:\n`+(late.length?late.map(o=>`- **${o.n}**: đã quá hạn đặt (${o.order})`).join("\n")+"\n":"")+up.map(o=>`- **${o.n}** ${nq(o.q)} ${o.u}: cần từ ${o.need}, đặt trước **${o.order}**`).join("\n")+"\n\nThời gian chờ nhà cung cấp đang là số mặc định."}
   if(/dong tien|von|ung|thieu tien|thanh toan/.test(t))return`Dòng tiền ${N} (tạm ứng ${p.terms.adv}%, giữ lại ${p.terms.ret}%, chủ đầu tư trả sau ${p.terms.pay} ngày, trả nhà cung cấp sau ${p.terms.cost} ngày):\n`+(cf.peak>0?`- Cần ứng vốn tối đa **${ty(cf.peak)} tỷ** vào ${cf.pm}`:"- Dòng tiền lũy kế không âm, chưa cần ứng vốn")+`\n- Cuối kỳ lũy kế ${ty(cf.cu[cf.cu.length-1])} tỷ, chưa gồm ${ty(cf.ret)} tỷ giữ lại bảo hành\n\nĐiều khoản đang là giả định nếu anh chưa sửa theo hợp đồng.`;
