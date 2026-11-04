@@ -885,7 +885,7 @@ document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.clo
     intro.classList.add("s3","s4");
     later(()=>{shell.classList.remove("pre");intro.classList.add("gone");later(()=>{drawMap&&drawMap()},50)},reduce?0:650);
     later(()=>{intro.hidden=true},reduce?0:1500)}
-  document.getElementById("skip").addEventListener("click",()=>{timers.forEach(clearTimeout);timers=[];intro.classList.remove("s1","s2");intro.classList.add("s3");later(()=>inp.focus(),300)});
+  document.getElementById("skip").addEventListener("click",()=>{timers.forEach(clearTimeout);timers=[];intro.classList.remove("s1","s2");intro.classList.add("ready","s3");later(()=>inp.focus(),300)});
   window.showIntro=async()=>{await NGB.signOut();location.hash="";location.reload()};
   window.NGBoot=async()=>{shell.classList.add("pre");let s=null;try{s=await NGB.session()}catch(e){}
     if(s){try{await NGApp.sync();intro.classList.add("s3");enter();return}catch(e){}}
