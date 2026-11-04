@@ -51,20 +51,19 @@ export async function onRequestPost({ request, env }) {
     content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: b.doc.data } });
   else if (b.img && IMG.includes(b.img.media_type) && typeof b.img.data === "string")
     content.push({ type: "image", source: { type: "base64", media_type: b.img.media_type, data: b.img.data } });
-  const text = typeof b.text === "string" ? b.text.slice(0, 20000) : "";
+  const text = typeof b.text === "string" ? b.text.slice(0, 8000) : "";
   const proj = b.project && typeof b.project === "object" ? `${String(b.project.code || "").slice(0, 40)} ${String(b.project.name || "").slice(0, 200)}` : "";
   content.push({ type: "text", text: `Dự án: ${proj}\nTên file: ${name}` + (text ? `\nNội dung trích từ file:\n${text}` : "") });
 
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
-      "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01",
-      "anthropic-beta": "server-side-fallback-2026-07-01"
+      "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01"
     },
     body: JSON.stringify({
-      model: env.CLAUDE_MODEL || "claude-opus-5-5",
+      // Haiku là mẫu rẻ nhất, đủ cho việc chọn thư mục; muốn đổi thì đặt biến CLASSIFY_MODEL trên Cloudflare
+      model: env.CLASSIFY_MODEL || "claude-haiku-5-5",
       max_tokens: 2000,
-      fallbacks: "default",
       output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
       system: SYSTEM,
       messages: [{ role: "user", content }]

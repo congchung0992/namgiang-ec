@@ -1265,19 +1265,25 @@ const FRULE=[["07",10,/thau phu|to doi|giao khoan|hop dong khoan|nhan khoan/],["
   ["04",6,/nghiem thu|bien ban|\bbbnt\b|khoi luong hoan thanh|\bntkl\b/],["03",5,/tien do|schedule|ke hoach thi cong|\bmpp\b|gantt/],["06",5,/vat tu|vat lieu|phieu nhap|phieu xuat|giao nhan|don dat hang|nha cung cap|\bncc\b|xi mang|thep|be tong|cat da/],
   ["01",5,/\bboq\b|du toan|bao gia|ho so thau|du thau|moi thau|chao gia|ban ve|tien luong/],["08",4,/nhat ky|hien truong|\banh\b|photo|hinh anh/]];
 function guessFolder(name,text,img){const t=noAcc(name+" "+(text||"").slice(0,3000)).toLowerCase(),sc={};FRULE.forEach(([k,w,re])=>{const n=(t.match(new RegExp(re.source,"g"))||[]).length;if(n)sc[k]=(sc[k]||0)+w*Math.min(n,3)+(re.test(noAcc(name).toLowerCase())?4:0)});
-  if(img)sc["08"]=(sc["08"]||0)+6;const best=Object.keys(sc).sort((a,b)=>sc[b]-sc[a])[0];return best?{folder:best,reason:"Hệ thống đoán theo tên và chữ trong file, chưa đọc bằng Claude"}:null}
+  if(img)sc["08"]=(sc["08"]||0)+6;const K=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]),best=K[0];if(!best)return null;
+  const nm=noAcc(name).toLowerCase(),hit=FRULE.find(r=>r[0]===best)[2].test(nm);
+  return{folder:best,strong:hit&&sc[best]>=12&&sc[best]-(sc[K[1]]||0)>=6,reason:text||img?"Hệ thống đoán theo tên và chữ trong file, chưa đọc bằng Claude":"Tên file đã rõ loại hồ sơ"}}
 const GENERIC=/^(img|dsc|dcim|pxl|scan|scanned|document|doc|untitled|new|file|photo|image|screenshot|zalo|cam|anh|tai lieu|z)?[\s_\-\d().]*$/i;
 const b64=buf=>{const u=new Uint8Array(buf);let s="";for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)};
-async function imgB64(f){try{const bm=await createImageBitmap(f),k=Math.min(1,1568/Math.max(bm.width,bm.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(bm.width*k));c.height=Math.max(1,Math.round(bm.height*k));c.getContext("2d").drawImage(bm,0,0,c.width,c.height);const u=c.toDataURL("image/jpeg",.8);return u.slice(u.indexOf(",")+1)}catch(e){return null}}
+/* Chỉ gửi phần đủ để nhận ra loại hồ sơ, cho rẻ: 3 trang đầu PDF, ảnh thu nhỏ, tối đa 6.000 chữ */
+function needPL(){return window.PDFLib?Promise.resolve():new Promise((ok,er)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";s.onload=ok;s.onerror=er;document.head.appendChild(s)})}
+async function pdfHead(f){const buf=await f.arrayBuffer();await needPL();const src=await PDFLib.PDFDocument.load(buf,{ignoreEncryption:true}),n=src.getPageCount();
+  if(n<=3&&buf.byteLength<=3*1048576)return b64(buf);const d=await PDFLib.PDFDocument.create();(await d.copyPages(src,[...Array(Math.min(3,n)).keys()])).forEach(x=>d.addPage(x));const out=await d.save();return out.byteLength<=4*1048576?b64(out):null}
+async function imgB64(f){try{const bm=await createImageBitmap(f),k=Math.min(1,1000/Math.max(bm.width,bm.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(bm.width*k));c.height=Math.max(1,Math.round(bm.height*k));c.getContext("2d").drawImage(bm,0,0,c.width,c.height);const u=c.toDataURL("image/jpeg",.8);return u.slice(u.indexOf(",")+1)}catch(e){return null}}
 const xmlText=x=>x.replace(/<\/w:p>|<\/a:p>/g,"\n").replace(/<[^>]+>/g,"").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&amp;/g,"&");
 async function peek(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),o={name:f.name};
-  try{if(ext==="pdf"&&f.size<=15*1048576)o.doc={media_type:"application/pdf",data:b64(await f.arrayBuffer())};
+  try{if(ext==="pdf"&&f.size<=60*1048576){const d=await pdfHead(f);if(d)o.doc={media_type:"application/pdf",data:d}}
     else if(/^image\//.test(f.type)||/^(jpe?g|png|webp|gif|heic)$/.test(ext)){const d=await imgB64(f);o.isImg=1;if(d)o.img={media_type:"image/jpeg",data:d}}
-    else if(/^(xlsx|xlsm|xls)$/.test(ext)){await needX();const wb=XLSX.read(await f.arrayBuffer(),{type:"array",sheetRows:60});o.text=wb.SheetNames.slice(0,6).map(n=>"[Sheet "+n+"]\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false})).join("\n").slice(0,15000)}
-    else if(/^(docx|pptx)$/.test(ext)){await needX();const z=XLSX.CFB.read(new Uint8Array(await f.arrayBuffer()),{type:"array"});o.text=z.FullPaths.filter(n=>/word\/document\.xml$|ppt\/slides\/slide\d+\.xml$/.test(n)).map(n=>xmlText(new TextDecoder().decode(new Uint8Array(XLSX.CFB.find(z,n).content)))).join("\n").slice(0,15000)}
-    else if(/^(txt|csv)$/.test(ext))o.text=(await f.text()).slice(0,15000)}catch(e){}
+    else if(/^(xlsx|xlsm|xls)$/.test(ext)){await needX();const wb=XLSX.read(await f.arrayBuffer(),{type:"array",sheetRows:60});o.text=wb.SheetNames.slice(0,6).map(n=>"[Sheet "+n+"]\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false})).join("\n").slice(0,6000)}
+    else if(/^(docx|pptx)$/.test(ext)){await needX();const z=XLSX.CFB.read(new Uint8Array(await f.arrayBuffer()),{type:"array"});o.text=z.FullPaths.filter(n=>/word\/document\.xml$|ppt\/slides\/slide\d+\.xml$/.test(n)).map(n=>xmlText(new TextDecoder().decode(new Uint8Array(XLSX.CFB.find(z,n).content)))).join("\n").slice(0,6000)}
+    else if(/^(txt|csv)$/.test(ext))o.text=(await f.text()).slice(0,6000)}catch(e){}
   return o}
-async function suggest(p,f){const o=await peek(f);let v=null;
+async function suggest(p,f){const g=guessFolder(f.name);if(g&&g.strong)return g;const o=await peek(f);let v=null;
   if(!NGApp.guest)try{v=await NGB.drive.classify({name:o.name,text:o.text,doc:o.doc,img:o.img,project:{code:p.code,name:p.name}});v.ai=1}catch(e){v=null}
   return v||guessFolder(o.name,o.text,o.isImg)||{folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}}
 function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(wrap)wrap.remove();const base=n=>n.replace(/\.[^.]+$/,""),ext=n=>(n.match(/\.[^.]+$/)||[""])[0];
