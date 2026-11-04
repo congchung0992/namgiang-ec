@@ -588,6 +588,7 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
 @media (prefers-reduced-motion:reduce){#intro *,.shell{transition:none!important;animation:none!important}}
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 </head>
 <body>
 <div id="intro" class="s1" role="dialog" aria-label="Đăng nhập hệ thống Nam Giang">
@@ -629,12 +630,12 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
     <div class="lg" id="lg">
       <button class="lab" id="start" type="button">Đăng nhập <span aria-hidden="true">→</span></button>
       <form id="lgf" autocomplete="off" novalidate>
-        <input id="lgi" type="text" placeholder="Email công ty hoặc mã nhân viên" aria-label="Email công ty hoặc mã nhân viên">
+        <input id="lgi" type="text" placeholder="Email công ty" aria-label="Email công ty">
         <button class="send" aria-label="Tiếp tục"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       </form>
     </div>
     <div class="steps"><i class="on" id="st1"></i><i id="st2"></i></div>
-    <div class="hint" id="hint">Bản phác thảo: nhập bất kỳ để vào hệ thống</div>
+    <div class="hint" id="hint">Đăng nhập bằng tài khoản được cấp</div>
   </div>
   <button class="skip" id="skip" type="button">Bỏ qua giới thiệu</button>
 </div>
@@ -732,6 +733,65 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
 </div>
 
 <script>
+/* ===== Máy chủ Supabase: đăng nhập và lưu số liệu =====
+   Khoá công khai được phép nằm trong mã web; quyền xem, sửa do phân quyền trên máy chủ quyết định (supabase/schema.sql). */
+window.NGB=(function(){
+  const SB_URL="https://omzyspsszmitcnejsmxq.supabase.co",SB_KEY="sb_publishable_L9ww2j1N61HVF3MfpqnQcw_Vo14XjI0";
+  const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
+  const need=()=>{if(!sb)throw new Error("Không tải được bộ đăng nhập, anh kiểm tra kết nối mạng");return sb};
+  const CK=["cost","xcost","ratio","gg","terms","termsOk"],SK=["sched","weeks"];
+  const pick=(p,K)=>{const o={};K.forEach(k=>{if(p[k]!==undefined)o[k]=p[k]});return o};
+  const boqOf=p=>{const o={};Object.keys(p).forEach(k=>{if(!CK.includes(k)&&!SK.includes(k)&&k[0]!=="_")o[k]=p[k]});return o};
+  const J=JSON.stringify;
+  let saved={},savedDec={},timer=null,running=false,again=false,dirty=false,lastDb=null,onState=null,box=null;
+  const ok=r=>{if(r.error){const e=new Error(r.error.message);e.code=r.error.code;throw e}return r.data};
+  const conflict=()=>{const e=new Error("x");e.conflict=1;return e};
+  const toast=m=>{if(!box){box=document.createElement("div");box.setAttribute("role","alert");box.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:90vw;padding:10px 18px;border-radius:999px;background:#C0141B;color:#fff;font-size:13px;text-align:center;z-index:9999;box-shadow:0 8px 24px rgba(192,20,27,.3)";document.body.appendChild(box)}box.textContent=m||"";box.hidden=!m};
+  async function loadAll(){const c=need(),{data:{session}}=await c.auth.getSession();if(!session)throw new Error("Chưa đăng nhập");
+    const [me,P,S,C,D]=await Promise.all([c.from("profiles").select("is_board").eq("id",session.user.id).maybeSingle(),c.from("projects").select("id,boq,version"),c.from("project_schedule").select("project_id,data,version"),c.from("project_cost").select("project_id,data,version"),c.from("decisions").select("item_id,status,at")]);
+    const sm={},cm={};ok(S).forEach(x=>sm[x.project_id]=x);ok(C).forEach(x=>cm[x.project_id]=x);saved={};
+    const projects=ok(P).map(x=>{const s=sm[x.id],k=cm[x.id],p={...x.boq,id:x.id,...(s?s.data:{}),...(k?k.data:{})};if(!p.cost)p.cost={};if(p.ratio==null)p.ratio=85;if(!k)p._noCost=1;
+      saved[x.id]={b:J(boqOf(p)),vb:x.version,s:s?J(pick(p,SK)):null,vs:s?s.version:0,c:k?J(pick(p,CK)):null,vc:k?k.version:0};return p});
+    const dec={};ok(D).forEach(x=>dec[x.item_id]={s:x.status,at:x.at});savedDec=JSON.parse(J(dec));
+    const mine=ok(await c.from("project_members").select("project_id,role").eq("user_id",session.user.id));projects.forEach(p=>{const r=mine.find(x=>x.project_id===p.id);if(r)p._role=r.role});
+    return{projects,dec,uid:session.user.id,isBoard:!!(ok(me)||{}).is_board}}
+  async function part(c,t,idc,id,row,st,vk,key,str){if(st[key]==null){ok(await c.from(t).insert({[idc]:id,...row}));st[vk]=1;st[key]=str;return}
+    const d=ok(await c.from(t).update(row).eq(idc,id).eq("version",st[vk]).select("version"));if(!d.length)throw conflict();st[vk]=d[0].version;st[key]=str}
+  async function flush(db){const c=need(),ids=new Set(db.projects.map(p=>p.id));
+    for(const id of Object.keys(saved))if(!ids.has(id)){ok(await c.from("projects").delete().eq("id",id));delete saved[id]}
+    for(const p of db.projects){const b=boqOf(p),sb2=pick(p,SK),ck=pick(p,CK),bs=J(b),ss=J(sb2),cs=J(ck);
+      if(!saved[p.id]){ok(await c.from("projects").insert({id:p.id,boq:b}));saved[p.id]={b:bs,vb:1,s:null,vs:0,c:null,vc:0}}
+      const st=saved[p.id];
+      if(bs!==st.b)await part(c,"projects","id",p.id,{boq:b},st,"vb","b",bs);
+      if(ss!==st.s)await part(c,"project_schedule","project_id",p.id,{data:sb2},st,"vs","s",ss);
+      if(!p._noCost&&cs!==st.c)await part(c,"project_cost","project_id",p.id,{data:ck},st,"vc","c",cs)}
+    const cur=db.dec||{},owner=id=>db.projects.find(p=>id.startsWith(p.id+"|"));
+    for(const id of Object.keys(savedDec))if(!cur[id]&&owner(id)){ok(await c.from("decisions").delete().eq("item_id",id));delete savedDec[id]}
+    for(const id of Object.keys(cur)){const o=owner(id);if(o&&J(cur[id])!==J(savedDec[id])){ok(await c.from("decisions").upsert({item_id:id,project_id:o.id,status:cur[id].s,at:cur[id].at}));savedDec[id]=cur[id]}}}
+  async function run(){if(running){again=true;return}running=true;dirty=false;
+    try{await flush(lastDb);toast("");if(onState)onState(true)}
+    catch(e){dirty=!(e.conflict||e.code==="42501");if(onState)onState(false);
+      if(e.conflict)toast("Chưa lưu được: dự án vừa được người khác sửa hoặc tài khoản không có quyền sửa phần này. Anh tải lại trang để lấy số mới.");
+      else if(e.code==="42501")toast("Tài khoản này không có quyền lưu phần này.");
+      else{toast("Chưa lưu được lên máy chủ, hệ thống đang thử lại. Anh đừng đóng trang.");clearTimeout(timer);timer=setTimeout(run,8000)}}
+    finally{running=false;if(again){again=false;run()}}}
+  addEventListener("beforeunload",e=>{if(dirty||running){e.preventDefault();e.returnValue=""}});
+  return{
+    session:async()=>sb?(await sb.auth.getSession()).data.session:null,
+    async signIn(email,pw){const {error}=await need().auth.signInWithPassword({email,password:pw});if(error)throw new Error(/invalid login/i.test(error.message)?"Sai email hoặc mật khẩu":"Không đăng nhập được, anh kiểm tra mạng rồi thử lại")},
+    signOut:async()=>{if(sb)await sb.auth.signOut()},
+    loadAll,
+    admin:{
+      async people(){return ok(await need().from("profiles").select("id,email,full_name,is_board").order("email"))},
+      async setBoard(uid,val){ok(await need().rpc("set_board",{uid,val}))},
+      async members(pid){return ok(await need().from("project_members").select("user_id,role").eq("project_id",pid))},
+      async addMember(pid,uid,role){ok(await need().from("project_members").insert({project_id:pid,user_id:uid,role}))},
+      async setRole(pid,uid,role){ok(await need().from("project_members").update({role}).eq("project_id",pid).eq("user_id",uid))},
+      async removeMember(pid,uid){ok(await need().from("project_members").delete().eq("project_id",pid).eq("user_id",uid))}
+    },
+    queue(db,cb){lastDb=db;onState=cb;dirty=true;clearTimeout(timer);timer=setTimeout(run,300)},
+    async saveNow(db){lastDb=db;clearTimeout(timer);while(running)await new Promise(r=>setTimeout(r,100));try{await flush(db);dirty=false;toast("");return true}catch(e){toast("Chưa lưu được lên máy chủ, dữ liệu trên trình duyệt vẫn còn nguyên.");return false}}
+  }})();
 /* ===== Biểu tượng ===== */
 const I={
  home:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',
@@ -806,22 +866,30 @@ document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.clo
       if(i<full.length)later(tick,full[i-1]==="\n"?260:42);else later(()=>intro.classList.add("ready"),250)};
     if(reduce){typed.innerHTML=L1+"<br>"+L2;intro.classList.add("ready");return}tick()}
   function start(){{const L=document.getElementById("lmlogo");if(L)L.replaceWith(L.cloneNode(true))}intro.className="s1";shell.classList.add("pre");typed.innerHTML="";step=1;inp.value="";inp.type="text";
-    inp.placeholder="Email công ty hoặc mã nhân viên";st1.className="on";st2.className="";hint.textContent="Bản phác thảo: nhập bất kỳ để vào hệ thống";
+    inp.placeholder="Email công ty";st1.className="on";st2.className="";hint.textContent="Đăng nhập bằng tài khoản được cấp";
     later(()=>{intro.className="s2";later(type,500)},2300)}
   const lg=document.getElementById("lg"),inp=document.getElementById("lgi"),hint=document.getElementById("hint"),st1=document.getElementById("st1"),st2=document.getElementById("st2");let step=1;
   document.getElementById("start").addEventListener("click",()=>{intro.classList.remove("s2");intro.classList.add("s3");later(()=>inp.focus(),700)});
   document.getElementById("lgf").addEventListener("submit",e=>{e.preventDefault();
-    if(!inp.value.trim()){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent=step===1?"Anh nhập email hoặc mã nhân viên trước nhé":"Anh nhập mật khẩu để vào hệ thống";return}
-    if(step===1){step=2;inp.value="";inp.type="password";inp.placeholder="Mật khẩu";st2.className="on";hint.textContent="Bước 2/2 · nhấn Enter để vào";inp.focus();return}
-    enter()});
+    if(!inp.value.trim()){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent=step===1?"Anh nhập email trước nhé":"Anh nhập mật khẩu để vào hệ thống";return}
+    if(step===1&&!/.+@.+/.test(inp.value)){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent="Email chưa đúng, anh kiểm tra lại";return}
+    if(step===1){loginEmail=inp.value.trim();step=2;inp.value="";inp.type="password";inp.placeholder="Mật khẩu";st2.className="on";hint.textContent="Bước 2/2 · nhấn Enter để vào";inp.focus();return}
+    doLogin(inp.value)});
+  let loginEmail="",busy=false;
+  async function doLogin(pw){if(busy)return;busy=true;hint.textContent="Đang đăng nhập…";
+    try{await NGB.signIn(loginEmail,pw);await NGApp.sync();enter()}
+    catch(er){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");inp.value="";hint.textContent=er.message||"Không đăng nhập được"}
+    finally{busy=false}}
   function enter(){timers.forEach(clearTimeout);timers=[];
     const W=innerWidth/2,H=innerHeight/2;intro.querySelectorAll(".wg").forEach(w=>{const r=w.getBoundingClientRect();w.style.setProperty("--cx",(W-r.left-r.width/2)+"px");w.style.setProperty("--cy",(H-r.top-r.height/2)+"px")});
     intro.classList.add("s3","s4");
     later(()=>{shell.classList.remove("pre");intro.classList.add("gone");later(()=>{drawMap&&drawMap()},50)},reduce?0:650);
     later(()=>{intro.hidden=true},reduce?0:1500)}
-  document.getElementById("skip").addEventListener("click",()=>{intro.classList.add("s3");enter()});
-  window.showIntro=()=>{intro.hidden=false;start()};
-  start();
+  document.getElementById("skip").addEventListener("click",()=>{timers.forEach(clearTimeout);timers=[];intro.classList.remove("s1","s2");intro.classList.add("s3");later(()=>inp.focus(),300)});
+  window.showIntro=async()=>{await NGB.signOut();location.hash="";location.reload()};
+  window.NGBoot=async()=>{shell.classList.add("pre");let s=null;try{s=await NGB.session()}catch(e){}
+    if(s){try{await NGApp.sync();intro.classList.add("s3");enter();return}catch(e){}}
+    start()};
 })();
 /* ===== Chấm chỉ vị trí dải thẻ trên điện thoại ===== */
 (()=>{const k=document.getElementById("kpis"),d=document.getElementById("kdots");if(!k||!d)return;
@@ -979,8 +1047,8 @@ const st=(lv,t)=>`<span class="st ${lv}">${t}</span>`;
 const STORE={key:"ngic.v1",
   load(){try{return JSON.parse(localStorage.getItem(this.key)||"null")||{projects:[]}}catch(e){return{projects:[]}}},
   save(d){try{localStorage.setItem(this.key,JSON.stringify(d));return true}catch(e){return false}}};
-const DB=STORE.load();if(!Array.isArray(DB.projects))DB.projects=[];
-let saveOK=true;const persist=()=>{saveOK=STORE.save(DB)};
+const DB={projects:[],dec:{}};
+let saveOK=true;const persist=()=>{NGB.queue(DB,v=>{saveOK=v})};
 
 const PJ=[
  {id:"ct3",code:"NG-24-11",name:"Chung cư CT3 Long Biên",loc:"Long Biên, Hà Nội",cdt:"Cty CP Đầu tư Long Biên",pm:"Lê Minh Quân",start:"15/03/2025",end:"30/09/2027",value:412.0,billed:198.5,collected:176.0,cost:171.2,plan:52,actual:49,staff:118,today:104},
@@ -1117,7 +1185,7 @@ function bsheet(p,s,sub){if(s==="week")return weekView(p);const c=calc(p),mg=pct
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
     return `<div class="vgrid">${k3}
     ${card("Doanh thu và giá vốn theo hạng mục","Thanh màu: giá vốn so với doanh thu · vạch đen: mức 100%",c.hs.filter(x=>x.rev>0).map(x=>{const r=pct(x.cost,x.rev);return`<div class="hm" data-go="da-${p.id}-boq-${x.h.code.toLowerCase()}" style="cursor:pointer"><div>${esc(x.h.name)}<small>Doanh thu ${ty(x.rev)} tỷ · giá vốn ${ty(x.cost)} tỷ</small></div><div class="mbar" style="--c:${r>92?"#E1141B":"#0E9F9A"}"><i style="width:${Math.min(r,100)}%"></i><em style="left:calc(100% - 2px)"></em></div><b class="num">${fm(100-r)}%</b></div>`}).join(""),"span2")}
-    ${card("Việc cần chú ý","",ms([[c.ent<c.cnt?"#F08A24":"#12A150",c.ent<c.cnt?`${n0(c.cnt-c.ent)} dòng chưa nhập giá vốn`:"Đã nhập giá vốn đủ các dòng",`Đang ước tính ${fm(p.ratio,0)}% giá thầu cho các dòng còn thiếu`],...(warn?[["#E1141B",`${warn} dòng có ô thành tiền trống trong file`,"Bảng tổng hợp đang tính các dòng này bằng 0"]]:[]),...(lump?[["#2D3CE6",`${lump} khoản trọn gói chưa tách chi tiết`,"Ví dụ máy phát điện, chi phí quản lý"]]:[]),...(cf0.peak>0?[["#C21FC9","Cần ứng vốn tối đa "+ty(cf0.peak)+" tỷ","Vào "+cf0.pm+" · theo tiến độ và điều khoản giả định"]]:[]),["#8B5CF6","Thư mục Google Drive: chờ kết nối","Sẽ tự tạo khi anh cấp tài khoản Google"],...(saveOK?[]:[["#E1141B","Trình duyệt không cho lưu dữ liệu","Số liệu sẽ mất khi tải lại trang"]])]))}
+    ${card("Việc cần chú ý","",ms([[c.ent<c.cnt?"#F08A24":"#12A150",c.ent<c.cnt?`${n0(c.cnt-c.ent)} dòng chưa nhập giá vốn`:"Đã nhập giá vốn đủ các dòng",`Đang ước tính ${fm(p.ratio,0)}% giá thầu cho các dòng còn thiếu`],...(warn?[["#E1141B",`${warn} dòng có ô thành tiền trống trong file`,"Bảng tổng hợp đang tính các dòng này bằng 0"]]:[]),...(lump?[["#2D3CE6",`${lump} khoản trọn gói chưa tách chi tiết`,"Ví dụ máy phát điện, chi phí quản lý"]]:[]),...(cf0.peak>0?[["#C21FC9","Cần ứng vốn tối đa "+ty(cf0.peak)+" tỷ","Vào "+cf0.pm+" · theo tiến độ và điều khoản giả định"]]:[]),["#8B5CF6","Thư mục Google Drive: chờ kết nối","Sẽ tự tạo khi anh cấp tài khoản Google"],...(saveOK?[]:[["#E1141B","Chưa lưu được lên máy chủ","Phần vừa sửa sẽ mất nếu tải lại trang, anh kiểm tra mạng"]])]))}
     </div>`}
   if(s==="boq"){const sel=p.hms.find(h=>h.code.toLowerCase()===sub&&h.lines.length)||p.hms.find(h=>h.lines.length);const sc=c.hs.find(x=>x.h===sel),G=groups(p,sel);
     const gr=(g,i)=>`<tr class="gr gs" data-gi="${i}"><td colspan="4">${esc(g.k)}</td><td class="r">${n0(g.rev)}</td><td colspan="3"></td><td class="r" data-c="gv">${n0(g.v)}</td><td class="r" data-c="gn">${n0(g.n)}</td><td class="r" data-c="gm">${n0(g.m)}</td><td class="r" data-c="gt">${n0(g.t)}</td><td class="r" data-c="gg">${n0(g.rev-g.t)}</td><td></td></tr>`;
@@ -1133,7 +1201,7 @@ function bsheet(p,s,sub){if(s==="week")return weekView(p);const c=calc(p),mg=pct
       <label class="rt">Ước tính giá vốn <input class="ci" id="ratio" inputmode="decimal" value="${fm(p.ratio,0)}" aria-label="Tỷ lệ giá vốn ước tính"> % giá thầu</label></div>
       <div class="bks">${bar("Vật tư",sc.cv,"#2D3CE6","dv")}${bar("Nhân công",sc.cn,"#C21FC9","dn")}${bar("Máy, thiết bị thi công",sc.cm,"#F08A24","dm")}<div class="bk"><span><i style="background:#12A150"></i>Lãi gộp hạng mục</span><b class="num" data-k="dg">${n0(sc.rev-sc.cost)}</b><em data-k="dgp">${fm(pct(sc.rev-sc.cost,sc.rev))}% doanh thu</em></div></div>
       <div class="bsr"><input class="fi" id="bsq" type="search" value="${esc(bq)}" placeholder="Tìm công tác theo tên hoặc mã (vd: bê tông, cốp pha, A01.02)…" aria-label="Tìm công tác"><span class="sub" id="bqn"></span></div><div class="tw bsw" style="margin-top:10px"><table class="t bt"><colgroup><col span="5"><col span="3" class="cg-a"><col span="4" class="cg-b"><col class="cg-c"><col></colgroup><thead><tr><th rowspan="2">Mã</th><th rowspan="2">Công việc</th><th rowspan="2">ĐVT</th><th rowspan="2">Khối lượng</th><th rowspan="2">Thành tiền<br>giá thầu (đ)</th><th colspan="3" class="hg-a">Đơn giá vốn nhập (đ/đvt)</th><th colspan="4" class="hg-b">Thành tiền giá vốn (đ)</th><th rowspan="2" class="hg-c">Lãi gộp<br>(đ)</th><th rowspan="2">Trạng thái</th></tr><tr class="h2"><th class="hs-a">Vật tư</th><th class="hs-a">Nhân công</th><th class="hs-a">Máy, TB</th><th class="hs-b">Vật tư</th><th class="hs-b">Nhân công</th><th class="hs-b">Máy, TB</th><th class="hs-b">Tổng vốn</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="bh" style="margin-top:16px"><span class="sub">Dữ liệu đang lưu trên trình duyệt này · sẽ chuyển sang Google Sheets trong thư mục dự án khi kết nối Drive</span><button class="back" id="delp" style="margin:0">Xoá dự án</button></div></section>
+      <div class="bh" style="margin-top:16px"><span class="sub">Số liệu lưu trên máy chủ của công ty · file gốc sẽ lưu ở Google Drive khi kết nối</span>${window.NGApp&&NGApp.board?`<button class="back" id="delp" style="margin:0">Xoá dự án</button>`:""}</div></section>
     </div>`}
   if(s==="rev"){const PC=["#12A150","#2D3CE6","#C21FC9","#F08A24","#8C8E97"],parts={};p.hms.forEach(h=>{const k=h.code[0]==="B"?"Chi phí gián tiếp":(h.grp||"Khác");parts[k]=(parts[k]||0)+h.total});
     const gs=Object.entries(parts).map(([n,v],i)=>({n:n.charAt(0)+n.slice(1).toLowerCase(),v:v/1e9,c:PC[i%5]})).map(g=>({...g,n:g.n.replace(/pccc/,"PCCC")})),tl=timeline(p),cf=cash(p,tl),t=p.terms;
@@ -1169,7 +1237,7 @@ function bsheet(p,s,sub){if(s==="week")return weekView(p);const c=calc(p),mg=pct
         <button class="back sm" id="gbase">${S.base?"Chốt lại tiến độ gốc":"Chốt tiến độ gốc"}</button><button class="back sm" id="repro">Đề xuất lại</button></div></div>
       <div class="gleg"><span><i class="lg1"></i>Kế hoạch hiện tại</span><span><i class="lg2"></i>Phần đã hoàn thành</span><span><i class="lg3"></i>Tiến độ gốc${S.base?" (chốt "+esc(S.base.date)+")":" (chưa chốt)"}</span><span><i class="lg4"></i>Ngày cập nhật ${fd(new Date())}</span><span><b class="late">%</b> chậm hơn kế hoạch trên 10 điểm</span></div>
       <div style="margin-top:10px">${gantt(p,tl)}</div></section>
-    ${card("Giá trị thực hiện theo tháng","Doanh thu và giá vốn phân bổ theo tiến độ, tỷ đồng",lg([["Doanh thu","#12A150"],["Giá vốn","#C21FC9"]])+`<div class="chart">${bty(tl.lab,tl.rev,tl.cost,1080,230)}</div>`,"span3")}</div>`}
+    ${p._noCost?"":card("Giá trị thực hiện theo tháng","Doanh thu và giá vốn phân bổ theo tiến độ, tỷ đồng",lg([["Doanh thu","#12A150"],["Giá vốn","#C21FC9"]])+`<div class="chart">${bty(tl.lab,tl.rev,tl.cost,1080,230)}</div>`,"span3")}</div>`}
   if(s==="hr")return `<div class="vgrid">${kc("hr","Nhân công trong BOQ",ty(c.nc),"tỷ","Giá trị nhân công dự thầu")}${kc("rev","Tổ đội, thầu phụ","0","đơn vị","Chưa có hợp đồng")}${kc("mat","Quân số","–","","Chưa cập nhật")}
     ${later("Nhân sự và tổ đội",[["#8B5CF6","Ban chỉ huy công trường","Giám đốc dự án, chỉ huy trưởng, QS, kế toán"],["#C21FC9","Hợp đồng khoán tổ đội và thầu phụ","Agent tự đọc và lấy đơn giá, điều khoản"],["#12A150","Quân số hằng ngày","Chỉ huy trưởng cập nhật trên điện thoại"]])}</div>`;
 }
@@ -1221,18 +1289,23 @@ function sheet(p,s){const d=detail(p),[l,lt]=lv(p),debt=p.billed-p.collected,rat
 
 /* ---------- Danh sách dự án + tải BOQ ---------- */
 const backBtn=(go,t)=>`<button class="back" data-go="${go}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>${t}</button>`;
-function projList(){const B=DB.projects;return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ · ":""}${PJ.length} công trình mẫu · bấm vào công trình để xem chi tiết</p></div></div>
+function localOld(){try{const d=STORE.load();return(d.projects||[]).filter(p=>!DB.projects.some(x=>x.id===p.id))}catch(e){return[]}}
+function migCard(){const n=window.NGApp&&NGApp.board?localOld().length:0;return n?card("Dữ liệu còn trên trình duyệt này",`Có ${n} dự án chưa đưa lên hệ thống · sau khi đưa lên, bản trên trình duyệt được giữ lại làm dự phòng`,`<button class="pill" id="mig" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Đưa lên hệ thống</button>`):""}
+/* Quyền trên giao diện: chỉ để gọn màn hình, máy chủ mới là nơi chặn thật (supabase/schema.sql) */
+const canOv=()=>!window.NGApp||NGApp.board||DB.projects.some(p=>p._role==="gd");
+const FIELD=["prog","week","mat","hr"],sheetsFor=b=>b&&b._noCost?BSHEETS.filter(x=>FIELD.includes(x[0])):BSHEETS;
+function projList(){const B=DB.projects,SP=canOv()?PJ:[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
   <div class="plist">
-  <label class="card pc upl" id="drop"><input type="file" id="boqf" accept=".xlsx,.xls,.xlsm" hidden>
+  ${!window.NGApp||NGApp.board?`<label class="card pc upl" id="drop"><input type="file" id="boqf" accept=".xlsx,.xls,.xlsm" hidden>
     <div class="row"><div><h3>Thêm dự án từ BOQ</h3><div class="loc">Kéo thả file Excel vào đây hoặc bấm để chọn file</div></div><span class="pill" style="${sv("boq")};pointer-events:none"><span class="dot">${ic("up",2)}</span>Tải BOQ lên</span></div>
-    <div class="sub" id="upmsg">Hệ thống tự đọc bảng tổng hợp và các sheet hạng mục, bỏ qua sheet ẩn, kiểm tra tổng tiền trước khi tạo dự án.</div></label>
+    <div class="sub" id="upmsg">Hệ thống tự đọc bảng tổng hợp và các sheet hạng mục, bỏ qua sheet ẩn, kiểm tra tổng tiền trước khi tạo dự án.</div></label>`:""}
   ${B.map(p=>{const c=calc(p);return `<button class="card pc" data-go="da-${p.id}">
     <div class="row"><div><h3>${esc(p.name)}</h3><div class="loc">${esc(p.loc)} · ${esc(p.cdt)}</div></div><span class="code">${esc(p.code)}</span></div>
-    <div><div class="row" style="font-size:12.5px;margin-bottom:8px"><span>Giá vốn đã nhập <b>${fm(pct(c.ent,c.cnt),0)}%</b> <span style="color:var(--muted)">/ ${n0(c.cnt)} dòng</span></span>${st("ok","Chuẩn bị thi công")}</div>
-      <div class="pbar" style="${sv("boq")}"><i style="width:${pct(c.ent,c.cnt)}%"></i></div></div>
-    <div class="nums"><div><span>Giá trị HĐ</span><b>${fm(c.rev/1e9)} tỷ</b></div><div><span>Giá vốn</span><b>${fm(c.cost/1e9)} tỷ</b></div><div><span>Lãi gộp</span><b>${fm(pct(c.gp,c.rev))}%</b></div></div>
+    <div><div class="row" style="font-size:12.5px;margin-bottom:8px">${p._noCost?"<span></span>":`<span>Giá vốn đã nhập <b>${fm(pct(c.ent,c.cnt),0)}%</b> <span style="color:var(--muted)">/ ${n0(c.cnt)} dòng</span></span>`}${st("ok","Chuẩn bị thi công")}</div>
+      ${p._noCost?"":`<div class="pbar" style="${sv("boq")}"><i style="width:${pct(c.ent,c.cnt)}%"></i></div>`}</div>
+    <div class="nums"><div><span>Giá trị HĐ</span><b>${fm(c.rev/1e9)} tỷ</b></div>${p._noCost?"":`<div><span>Giá vốn</span><b>${fm(c.cost/1e9)} tỷ</b></div><div><span>Lãi gộp</span><b>${fm(pct(c.gp,c.rev))}%</b></div>`}</div>
   </button>`}).join("")}
-  ${PJ.map(p=>{const [l,lt]=lv(p);return `<button class="card pc" data-go="da-${p.id}">
+  ${SP.map(p=>{const [l,lt]=lv(p);return `<button class="card pc" data-go="da-${p.id}">
     <div class="row"><div><h3>${p.name}</h3><div class="loc">${p.loc} · ${p.cdt}</div></div><span class="code">${p.code} · Mẫu</span></div>
     <div><div class="row" style="font-size:12.5px;margin-bottom:8px"><span>Tiến độ <b>${p.actual}%</b> <span style="color:var(--muted)">/ KH ${p.plan}%</span></span>${st(l,lt)}</div>
       <div class="pbar" style="${l==="bad"?"--c:#E1141B;--c2:#F37A7E":""}"><i style="width:${p.actual}%"></i><em style="left:${p.plan}%"></em></div></div>
@@ -1301,7 +1374,7 @@ function createFromPending(){const {r,form}=pending;if(!(Math.abs(r.check-r.info
   if(old>=0){const m=boqMerge(oldP,r.hms),n={...oldP,...p,id:oldP.id,code:form.code.trim()||oldP.code,ratio:oldP.ratio,created:oldP.created,updated:new Date().toISOString(),cost:m.cost};["sched","weeks","xcost"].forEach(k=>{if(m[k])n[k]=m[k];else delete n[k]});GU.u=[];GU.r=[];GU.pid=null;DB.projects[old]=n;p.id=n.id}else DB.projects.unshift(p);
   persist();pending=null;location.hash="da-"+p.id;}
 
-function projView(p,s,sub){const L=p.boq?BSHEETS:SHEETS,b=p.boq?DB.projects.find(x=>x.id===p.id):null;
+function projView(p,s,sub){const b=p.boq?DB.projects.find(x=>x.id===p.id):null,L=p.boq?sheetsFor(b):SHEETS;
   return `${backBtn("du-an","Danh sách dự án")}
   <div class="phead"><div><span class="code">${esc(p.code)}${p.demo?" · Mẫu":""}</span><h1 style="margin:10px 0 0;font-size:clamp(22px,2.4vw,32px);font-weight:600;letter-spacing:-.02em;line-height:1.2">${esc(p.name)}</h1>
     <div class="meta"><span>📍 ${esc(p.loc)}</span><span>Chủ đầu tư: <b>${esc(p.cdt)}</b></span>${b?`<span>Hồ sơ: <b>${esc(b.qcode||"–")}</b> · ${esc(b.date||"")}</span><span>Thư mục Drive: <b>chờ kết nối</b></span>`:`<span>Chỉ huy trưởng: <b>${p.pm}</b></span>`}</div></div>${b?st("ok","Chuẩn bị thi công"):st(...lv(p))}</div>
@@ -1399,18 +1472,34 @@ window.renderHello=function(){const box=document.getElementById("hp");if(!box)re
   box.innerHTML=rows.map(r=>`<button class="hpr" data-go="da-${r.id}">${ring(r.v,r.c)}<div class="hn"><b>${esc(r.name)}${r.demo?' <small class="mau">Mẫu</small>':""}</b><span>${esc(r.sub)}</span></div><div class="hv"><b class="num">${fm(r.val)} tỷ</b>${r.tag}</div></button>`).join("")+
     `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div>`};
 /* ---------- Điều hướng ---------- */
-const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["rep","Báo cáo","bao-cao"]];
+const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["rep","Báo cáo","bao-cao"],["hr","Quản trị","quan-tri"]];
+const topFor=()=>TOP.filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"?window.NGApp&&NGApp.board:canOv()));
+/* Màn quản trị: Ban giám đốc phân quyền; máy chủ tự từ chối nếu không đủ quyền */
+const ROLES=[["gd","Giám đốc dự án"],["qs","QS"],["kt","Kế toán"],["cht","Chỉ huy trưởng"]];let admPid="";
+const roleSel=(v,attr)=>`<select class="fi sel" ${attr} aria-label="Vai trò">${ROLES.map(r=>`<option value="${r[0]}"${r[0]===v?" selected":""}>${r[1]}</option>`).join("")}</select>`;
+const adminView=()=>`<div class="vh"><div><h1>Quản trị</h1><p>Tài khoản và phân công theo dự án · tài khoản mới chưa có quyền gì cho tới khi được phân công</p></div></div><div class="vgrid" id="adm"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`;
+async function adminLoad(msg){const box=document.getElementById("adm");if(!box)return;
+  try{const A=NGB.admin,P=await A.people();if(!DB.projects.some(p=>p.id===admPid))admPid=DB.projects[0]?DB.projects[0].id:"";const M=admPid?await A.members(admPid):[],nm=id=>{const x=P.find(y=>y.id===id);return x?x.email||x.full_name||id:id},free=P.filter(x=>!M.some(m=>m.user_id===x.id));
+    if(!document.getElementById("adm"))return;
+    box.innerHTML=(msg?`<section class="card span3" style="color:#C0141B;font-size:13px">${esc(msg)}</section>`:"")+card("Tài khoản","Tạo tài khoản mới trong Supabase: Authentication → Users → Add user, rồi quay lại đây phân quyền",`<div class="tw"><table class="t"><thead><tr><th>Email</th><th>Quyền chung</th><th></th></tr></thead><tbody>${P.map(x=>`<tr><td>${esc(x.email||x.id)}</td><td>${x.is_board?st("ok","Ban giám đốc"):`<span class="sub">Theo dự án</span>`}</td><td class="r">${x.id===NGApp.uid&&x.is_board?`<span class="sub">Tài khoản của anh</span>`:`<button class="back sm" style="margin:0" data-bd="${esc(x.id)}" data-v="${x.is_board?0:1}">${x.is_board?"Bỏ quyền Ban giám đốc":"Cấp quyền Ban giám đốc"}</button>`}</td></tr>`).join("")}</tbody></table></div>`,"span3")+
+    card("Phân công theo dự án","Ban giám đốc đã xem được tất cả dự án, không cần phân công",DB.projects.length?`<label class="fl" style="max-width:420px"><span>Dự án</span><select class="fi" id="admp">${DB.projects.map(p=>`<option value="${esc(p.id)}"${p.id===admPid?" selected":""}>${esc(p.code)} · ${esc(p.name)}</option>`).join("")}</select></label>
+      <div class="tw" style="margin-top:14px"><table class="t"><thead><tr><th>Thành viên</th><th>Vai trò</th><th></th></tr></thead><tbody>${M.map(m=>`<tr data-mu="${esc(m.user_id)}"><td>${esc(nm(m.user_id))}</td><td>${roleSel(m.role,"data-mr")}</td><td class="r"><button class="back sm" style="margin:0" data-mx>Gỡ</button></td></tr>`).join("")||`<tr><td colspan="3" class="sub">Chưa có thành viên nào.</td></tr>`}</tbody></table></div>
+      ${free.length?`<div class="pvh" style="margin-top:14px"><select class="fi sel" id="admu" aria-label="Tài khoản">${free.map(x=>`<option value="${esc(x.id)}">${esc(x.email||x.id)}</option>`).join("")}</select>${roleSel("qs",'id="admr"')}<button class="pill" id="adma" style="${sv("hr")}"><span class="dot">${ic("hr",2)}</span>Thêm vào dự án</button></div>`:`<div class="sub" style="margin-top:14px">Mọi tài khoản đã có trong dự án này.</div>`}`:`<span class="sub">Chưa có dự án nào.</span>`,"span3")}
+  catch(e){const b=document.getElementById("adm");if(b)b.innerHTML=`<section class="card span3" style="color:#C0141B;font-size:13px">Không tải được: ${esc(e.message)}</section>`}}
+async function admDo(fn){try{await fn();await adminLoad()}catch(e){await adminLoad("Chưa lưu được: "+(e.message||""))}}
 const home=document.querySelector(".grid"),view=document.getElementById("view"),note=document.querySelector(".note");
 let cur=null;
-function route(){const h=(location.hash||"#tong-quan").slice(1);let top="tong-quan",html="";cur=null;
+function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban-tin","duyet","bao-cao"].includes(h))h="du-an";let top="tong-quan",html="";cur=null;
   if(h==="du-an"){top="du-an";html=projList()}
   else if(h==="bao-cao"){top="bao-cao";html=report()}
   else if(h==="ban-tin"){top="ban-tin";html=brief()}
   else if(h==="duyet"){top="duyet";html=inbox()}
-  else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){top="du-an";const L=p.boq?BSHEETS:SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:"home",sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
-  {const np=waiting(decisions()).length;document.getElementById("pills").innerHTML=TOP.map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
+  else if(h==="quan-tri"&&window.NGApp&&NGApp.board){top="quan-tri";html=adminView()}
+  else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){top="du-an";const L=p.boq?sheetsFor(DB.projects.find(x=>x.id===id)):SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:L[0][0],sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
+  if(!html&&!canOv()){top="du-an";html=projList()}
+  {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=!isHome;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply()}else{requestAnimationFrame(()=>{try{drawMap()}catch(e){}})}
+  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri")adminLoad()}else{requestAnimationFrame(()=>{try{drawMap()}catch(e){}})}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -1608,7 +1697,17 @@ window.NG={
   if(/lai|loi nhuan|bien|lo\b|gia von|chi phi/.test(t))return`${N}:\n- Doanh thu hợp đồng **${ty(c.rev)} tỷ**\n- Giá vốn dự thầu **${ty(c.cost)} tỷ** (${n0(c.ent)}/${n0(c.cnt)} dòng đã nhập, còn lại ước tính ${fm(p.ratio,0)}% giá thầu)\n- Lãi gộp dự kiến **${ty(c.gp)} tỷ**, biên ${fm(pct(c.gp,c.rev))}%`;
   if(/gia tri|hop dong|doanh thu|bao nhieu tien|tong/.test(t))return`${N} có giá trị hợp đồng **${n0(c.rev)} đ** (chưa VAT), gồm ${c.hs.filter(x=>x.rev>0).length} hạng mục và ${n0(c.cnt)} dòng công việc.`;
   return"Câu này em chưa trả lời được bằng số liệu sẵn có. Khi web được kết nối Claude, em sẽ hiểu và trả lời câu hỏi tự do.\nAnh có thể hỏi về: **giá trị hợp đồng, lãi gộp, hạng mục, tiến độ, vật tư cần đặt, dòng tiền**."}};
+window.NGApp={board:false,uid:null,async sync(){const d=await NGB.loadAll();DB.projects=d.projects;DB.dec=d.dec;NGApp.board=d.isBoard;NGApp.uid=d.uid;route();if(window.renderHello)window.renderHello()}};
 addEventListener("hashchange",()=>{pending=null;route()});route();
+view.addEventListener("click",e=>{const A=NGB.admin,t=e.target;
+  const bd=t.closest("[data-bd]");if(bd){if(!bd.dataset.ok){bd.dataset.ok=1;bd.textContent="Bấm lần nữa để xác nhận";return}admDo(()=>A.setBoard(bd.dataset.bd,bd.dataset.v==="1"));return}
+  if(t.closest("[data-mx]")){admDo(()=>A.removeMember(admPid,t.closest("tr[data-mu]").dataset.mu));return}
+  if(t.closest("#adma")){const u=document.getElementById("admu").value,r=document.getElementById("admr").value;admDo(()=>A.addMember(admPid,u,r))}});
+view.addEventListener("change",e=>{const t=e.target;if(t.id==="admp"){admPid=t.value;adminLoad();return}
+  if(t.dataset.mr!==undefined){admDo(()=>NGB.admin.setRole(admPid,t.closest("tr[data-mu]").dataset.mu,t.value))}});
+view.addEventListener("click",async e=>{const b=e.target.closest("#mig");if(!b||b.disabled)return;b.disabled=true;const old=STORE.load(),add=localOld();DB.projects=[...add,...DB.projects];DB.dec={...(old.dec||{}),...DB.dec};
+  if(await NGB.saveNow(DB)){localStorage.setItem("ngic.v1.bak",JSON.stringify(old));localStorage.removeItem("ngic.v1")}else{DB.projects=DB.projects.filter(p=>!add.includes(p))}route()});
+NGBoot();
 })();
 /* ===== Toàn màn hình ===== */
 document.getElementById("fs").addEventListener("click",async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){document.getElementById("fs").title="Trình duyệt này chưa cho phép toàn màn hình, hãy nhấn F11"}});

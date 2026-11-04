@@ -2,7 +2,7 @@
 
 Hệ thống quản trị nội bộ của **Công ty Cổ phần Đầu tư và Xây lắp Nam Giang** (tổng thầu xây dựng).
 
-> Phiên bản hiện tại: **bản phác thảo giao diện (v0.1)**. Số liệu là số mẫu, đăng nhập chưa kiểm tra tài khoản thật.
+> Đăng nhập và số liệu dự án dùng Supabase; lược đồ và phân quyền ở `supabase/schema.sql`. Khoá công khai trong `index.html` được phép lộ, quyền do máy chủ quyết định. Tài khoản do quản trị viên tạo ở Supabase rồi phân quyền ở màn Quản trị. Các công trình "Mẫu" là số liệu minh hoạ.
 
 ## Tính năng giao diện
 - Màn giới thiệu và đăng nhập 2 bước (email/mã nhân viên → mật khẩu), có hiệu ứng thẻ số liệu bay vào.
