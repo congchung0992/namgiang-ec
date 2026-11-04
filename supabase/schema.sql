@@ -195,3 +195,69 @@ grant execute on function public.is_board(), public.project_role(text), public.h
 
 -- Quản trị viên đầu tiên: tạo tài khoản ở Authentication > Users rồi chạy một lần:
 --   update public.profiles set is_board = true where email = '<email>';
+
+-- Hồ sơ dự án: file nằm ở Google Drive, Supabase giữ danh sách và quyền theo thư mục 01-08
+create table public.project_drive (
+  project_id text primary key references public.projects on delete cascade,
+  root_id text not null,
+  folders jsonb not null,
+  created_at timestamptz not null default now()
+);
+create table public.project_files (
+  id uuid primary key default gen_random_uuid(),
+  project_id text not null references public.projects on delete cascade,
+  folder text not null check (folder in ('01','02','03','04','05','06','07','08')),
+  name text not null,
+  drive_id text not null,
+  mime text,
+  size bigint,
+  uploaded_by uuid default auth.uid() references auth.users on delete set null,
+  at timestamptz not null default now()
+);
+create index on public.project_files (project_id, folder, at desc);
+
+create function public.folder_roles(folder text) returns text[]
+language sql immutable set search_path = '' as $$
+  select case folder
+    when '01' then array['gd','qs']
+    when '02' then array['gd','qs','kt']
+    when '03' then array['gd','qs','cht']
+    when '04' then array['gd','qs','kt','cht']
+    when '05' then array['gd','qs','kt']
+    when '06' then array['gd','qs','kt']
+    when '07' then array['gd','qs','kt']
+    when '08' then array['gd','qs','kt','cht']
+    else array[]::text[] end
+$$;
+create function public.can_folder(pid text, folder text) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select public.has_role(pid, public.folder_roles(folder))
+$$;
+create function public.audit_file() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare rec_id text;
+begin
+  if tg_op = 'DELETE' then rec_id := old.project_id; else rec_id := new.project_id; end if;
+  insert into public.audit_log (user_id, table_name, project_id, action) values (auth.uid(), tg_table_name, rec_id, tg_op);
+  return null;
+end $$;
+create trigger audit after insert or delete on public.project_files for each row execute function public.audit_file();
+
+alter table public.project_drive enable row level security;
+alter table public.project_files enable row level security;
+create policy drive_read on public.project_drive for select to authenticated
+  using (public.has_role(project_id, array['gd','qs','kt','cht']));
+create policy drive_insert on public.project_drive for insert to authenticated
+  with check (public.has_role(project_id, array['gd','qs','kt','cht']));
+create policy files_read on public.project_files for select to authenticated
+  using (public.can_folder(project_id, folder));
+create policy files_insert on public.project_files for insert to authenticated
+  with check (public.can_folder(project_id, folder) and uploaded_by = auth.uid());
+create policy files_delete on public.project_files for delete to authenticated
+  using (public.has_role(project_id, array['gd']));
+
+revoke all on public.project_drive, public.project_files from anon, authenticated;
+grant select, insert on public.project_drive to authenticated;
+grant select, insert, delete on public.project_files to authenticated;
+revoke all on function public.folder_roles(text), public.can_folder(text, text), public.audit_file() from public, anon, authenticated;
+grant execute on function public.folder_roles(text), public.can_folder(text, text) to authenticated;
