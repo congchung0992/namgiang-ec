@@ -33,7 +33,10 @@ async function googleToken(env) {
       refresh_token: env.GOOGLE_REFRESH_TOKEN, grant_type: "refresh_token"
     })
   });
-  if (!r.ok) throw new Error("google_token_" + r.status);
+  if (!r.ok) {
+    let why = ""; try { why = (await r.json()).error || ""; } catch {}
+    const e = new Error("google_token_" + r.status + " " + why); e.code = "google_auth"; throw e;
+  }
   return (await r.json()).access_token;
 }
 
@@ -141,7 +144,11 @@ async function remove(api, tok, id) {
 export async function onRequest({ request, env }) {
   const url = new URL(request.url), action = url.searchParams.get("action") || "";
   const connected = !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN);
-  if (action === "status") return json({ connected });
+  if (action === "status") {
+    if (!connected) return json({ connected: false, reason: "chua_ket_noi" });
+    try { await googleToken(env); return json({ connected: true }); } // thử xin quyền thật, khoá hết hạn thì báo ngay
+    catch (e) { console.error("drive status", e && e.message); return json({ connected: false, reason: "google_auth" }); }
+  }
   const origin = request.headers.get("origin");
   if (origin && new URL(origin).host !== url.host) return json({ error: "origin" }, 403);
   if (!connected) return json({ error: "chua_ket_noi" }, 503);
@@ -157,6 +164,6 @@ export async function onRequest({ request, env }) {
     return json({ error: "bad_request" }, 400);
   } catch (e) {
     console.error("drive", e && e.message);
-    return json({ error: "drive_error" }, 502);
+    return json({ error: e && e.code === "google_auth" ? "google_auth" : "drive_error" }, 502);
   }
 }
