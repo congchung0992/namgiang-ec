@@ -140,8 +140,26 @@ async function trash(tok, id) {
   });
 }
 
+/* Thư mục ngày bên trong thư mục hồ sơ (ví dụ 06.2 > 2026-10-31): tìm trên Drive trước rồi mới tạo, nhớ id trong project_drive */
+async function dayFolder(api, tok, pid, folders, folder, sub) {
+  const key = folder + "/" + sub, parent = folders[folder];
+  if (folders._sub && folders._sub[key]) return folders._sub[key];
+  const q = `name='${qStr(sub)}' and '${qStr(parent)}' in parents and mimeType='${FOLDER_MIME}' and trashed=false`;
+  const r = await fetch(`${G}/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1&supportsAllDrives=true&includeItemsFromAllDrives=true`, { headers: { authorization: "Bearer " + tok } });
+  let id = r.ok ? ((await r.json()).files || [])[0]?.id : null;
+  if (!id) id = await makeFolder(tok, sub, parent);
+  const pidQ = encodeURIComponent(pid);
+  const now = (await (await api(`project_drive?project_id=eq.${pidQ}&select=folders`)).json())[0];
+  const F = { ...((now && now.folders) || folders) };
+  F._sub = { ...(F._sub || {}), [key]: id };
+  await api(`project_drive?project_id=eq.${pidQ}`, { method: "PATCH", body: JSON.stringify({ folders: F }) });
+  return id;
+}
+
 async function upload(request, api, tok, url) {
-  const pid = url.searchParams.get("project") || "", folder = OLD[url.searchParams.get("folder")] || url.searchParams.get("folder") || "", name = cleanName(url.searchParams.get("name"));
+  // folder có thể kèm thư mục ngày: "06.2/2026-10-31" (ảnh hiện trường xếp theo ngày chụp)
+  const [f0 = "", sub0 = ""] = (url.searchParams.get("folder") || "").split("/");
+  const pid = url.searchParams.get("project") || "", folder = OLD[f0] || f0, sub = /^\d{4}-\d{2}-\d{2}$/.test(sub0) ? sub0 : "", name = cleanName(url.searchParams.get("name"));
   if (!pid || !FOLDERS[folder] || !name) return json({ error: "bad_request" }, 400);
   const size = Number(request.headers.get("content-length") || 0);
   if (!size) return json({ error: "empty" }, 400);
@@ -155,7 +173,7 @@ async function upload(request, api, tok, url) {
   const init = await fetch(G + "/upload/drive/v3/files?uploadType=resumable&fields=id,mimeType,size", {
     method: "POST",
     headers: { authorization: "Bearer " + accessToken, "content-type": "application/json; charset=UTF-8", "x-upload-content-type": mime, "x-upload-content-length": String(size) },
-    body: JSON.stringify({ name, parents: [folders[folder]] })
+    body: JSON.stringify({ name, parents: [sub ? await dayFolder(api, accessToken, pid, folders, folder, sub) : folders[folder]] })
   });
   const loc = init.ok && init.headers.get("location");
   if (!loc) throw new Error("google_init_" + init.status);
@@ -164,11 +182,11 @@ async function upload(request, api, tok, url) {
   const file = await put.json();
   const ins = await api("project_files", {
     method: "POST", headers: { prefer: "return=representation" },
-    body: JSON.stringify({ project_id: pid, folder, name, drive_id: file.id, mime, size })
+    body: JSON.stringify({ project_id: pid, folder, name, drive_id: file.id, mime, size, ...(sub ? { sub } : {}) })
   });
   if (!ins.ok) { await trash(accessToken, file.id); throw new Error("record_" + ins.status); }
   const row = (await ins.json())[0];
-  return json({ id: row.id, name: row.name, folder: row.folder });
+  return json({ id: row.id, name: row.name, folder: row.folder, sub: row.sub || null });
 }
 
 /* Đường dẫn tạm cho trình xem Office Online của Microsoft: ký HMAC, hết hạn sau 15 phút.
