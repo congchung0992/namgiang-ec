@@ -66,6 +66,13 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - Chọn → gửi Hộp quyết định → duyệt thì ghi giá vốn (nguồn `q:<id>`), thời gian giao hàng (kế hoạch đặt vật tư) và số ngày trả nhà cung cấp (dòng tiền).
 - Gợi ý thư mục khi tải file cũng dùng Claude qua cùng Edge Function.
 
+## Nghiệm thu khối lượng, phát sinh, đối chiếu 4 lớp (tab Nghiệm thu, Đối chiếu 4 lớp)
+- **Nghiệm thu:** tải file Excel bảng khối lượng đợt của chủ đầu tư. Web tự nhận tiêu đề nhiều tầng, ô gộp, cột lũy kế đến kỳ này (hoặc kỳ trước + kỳ này, hoặc chỉ kỳ này), ghép từng dòng với mã BOQ theo sheet ↔ hạng mục, tên, mác/quy cách, khối lượng hợp đồng; dòng phân vân gửi Claude (`action: match`); anh soát, sửa ghép rồi lưu. Lần sửa ghép được ghi vào `ai_lessons` và áp ở lần sau. Có nút nhập tay đợt mới và sửa ô lũy kế trực tiếp.
+- Lưu trong `p.nt` (bảng `project_cost`, chỉ GĐ dự án/QS sửa được, chỉ huy trưởng không xem): mỗi đợt ghi khối lượng **lũy kế** theo mã; dòng không có trong đợt giữ lũy kế đợt trước. Giá trị = khối lượng × đơn giá hợp đồng, chưa VAT; so kế hoạch theo tiến độ đến ngày nghiệm thu.
+- **Xuất Excel** bảng xác định khối lượng hoàn thành đợt (ExcelJS 4.4.0 từ cdnjs), tải về và lưu vào thư mục 04.1.
+- **Phát sinh** (`p.ps`): tăng/giảm khối lượng dòng BOQ (đơn giá hợp đồng) hoặc công việc mới (mã PS001… theo `p.psSeq`), file căn cứ lưu 04.2. Gửi Hộp quyết định; chỉ phát sinh đã duyệt mới cộng vào giá trị hợp đồng và khối lượng được nghiệm thu. BOQ gốc không đổi. Có nút lập phát sinh từ các dòng ngoài BOQ khi soát file nghiệm thu.
+- **Đối chiếu 4 lớp** theo hạng mục và nhóm công việc: ① doanh thu dự thầu (+ phát sinh đã duyệt) · ② giá vốn dự thầu · ③ doanh thu nghiệm thu · ④ chi phí thực tế (chờ phiếu chi), kèm giá vốn dự thầu của phần đã làm và so kế hoạch.
+
 ## Bài học cho AI
 - Bảng `ai_lessons` (migration `20261105_ai_lessons.sql`): `kind = match` là cặp dòng báo giá ↔ dòng BOQ đúng/sai (web tự áp khi ghép); `kind = rule` là câu dặn (`q` = phạm vi `baogia | hopdong | thumuc | chat | all`, `l` = nội dung).
 - Web tự ghi bài học khi anh sửa ghép báo giá, đổi gói vật tư, sửa số đọc từ hợp đồng hoặc đợt thanh toán, xếp file khác thư mục gợi ý. Anh tự dặn thêm ở Quản trị → Bài học cho AI.
