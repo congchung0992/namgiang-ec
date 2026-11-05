@@ -886,23 +886,31 @@ window.NGB=(function(){
     const dec={};ok(D).forEach(x=>dec[x.item_id]={s:x.status,at:x.at});savedDec=JSON.parse(J(dec));
     const mine=ok(await c.from("project_members").select("project_id,role").eq("user_id",session.user.id));projects.forEach(p=>{const r=mine.find(x=>x.project_id===p.id);if(r)p._role=r.role});
     return{projects,dec,uid:session.user.id,isBoard:!!(ok(me)||{}).is_board}}
-  async function part(c,t,idc,id,row,st,vk,key,str){if(st[key]==null){ok(await c.from(t).insert({[idc]:id,...row}));st[vk]=1;st[key]=str;return}
-    const d=ok(await c.from(t).update(row).eq(idc,id).eq("version",st[vk]).select("version"));if(!d.length)throw conflict();st[vk]=d[0].version;st[key]=str}
+  /* Ghi có kiểm tra phiên bản. Nếu máy khác vừa lưu (phiên bản lệch): lấy bản trên máy chủ, giữ nguyên phần máy khác sửa,
+     ghi đè lại đúng các mục máy này vừa sửa rồi lưu tiếp; số mới của máy khác cũng được nạp vào dự án đang mở */
+  async function part(c,t,idc,id,row,st,vk,key,str,p){if(st[key]==null){ok(await c.from(t).insert({[idc]:id,...row}));st[vk]=1;st[key]=str;return}
+    const f=Object.keys(row)[0];let mine=row[f];
+    for(let k=0;k<4;k++){const d=ok(await c.from(t).update({[f]:mine}).eq(idc,id).eq("version",st[vk]).select("version"));if(d.length){st[vk]=d[0].version;st[key]=J(mine);return}
+      const sv=ok(await c.from(t).select(f+",version").eq(idc,id).maybeSingle());if(!sv)throw conflict();
+      const base=JSON.parse(st[key]||"{}"),srv=sv[f]||{},out={...srv};Object.keys({...base,...mine}).forEach(x=>{if(J(mine[x])!==J(base[x])){if(mine[x]===undefined)delete out[x];else out[x]=mine[x]}});
+      if(p)Object.keys(srv).forEach(x=>{if(J(mine[x])===J(base[x]))p[x]=srv[x]});
+      st[vk]=sv.version;st[key]=J(srv);mine=out}
+    throw conflict()}
   async function flush(db){const c=need(),ids=new Set(db.projects.map(p=>p.id));
     for(const id of Object.keys(saved))if(!ids.has(id)){ok(await c.from("projects").delete().eq("id",id));delete saved[id]}
     for(const p of db.projects){const b=boqOf(p),sb2=pick(p,SK),ck=pick(p,CK),bs=J(b),ss=J(sb2),cs=J(ck);
       if(!saved[p.id]){ok(await c.from("projects").insert({id:p.id,boq:b}));saved[p.id]={b:bs,vb:1,s:null,vs:0,c:null,vc:0}}
       const st=saved[p.id];
-      if(bs!==st.b)await part(c,"projects","id",p.id,{boq:b},st,"vb","b",bs);
-      if(ss!==st.s)await part(c,"project_schedule","project_id",p.id,{data:sb2},st,"vs","s",ss);
-      if(!p._noCost&&cs!==st.c)await part(c,"project_cost","project_id",p.id,{data:ck},st,"vc","c",cs)}
+      if(bs!==st.b)await part(c,"projects","id",p.id,{boq:b},st,"vb","b",bs,p);
+      if(ss!==st.s)await part(c,"project_schedule","project_id",p.id,{data:sb2},st,"vs","s",ss,p);
+      if(!p._noCost&&cs!==st.c)await part(c,"project_cost","project_id",p.id,{data:ck},st,"vc","c",cs,p)}
     const cur=db.dec||{},owner=id=>db.projects.find(p=>id.startsWith(p.id+"|"));
     for(const id of Object.keys(savedDec))if(!cur[id]&&owner(id)){ok(await c.from("decisions").delete().eq("item_id",id));delete savedDec[id]}
     for(const id of Object.keys(cur)){const o=owner(id);if(o&&J(cur[id])!==J(savedDec[id])){ok(await c.from("decisions").upsert({item_id:id,project_id:o.id,status:cur[id].s,at:cur[id].at}));savedDec[id]=cur[id]}}}
   async function run(){if(running){again=true;return}running=true;dirty=false;
     try{await flush(lastDb);toast("");if(onState)onState(true)}
     catch(e){dirty=!(e.conflict||e.code==="42501");if(onState)onState(false);
-      if(e.conflict)toast("Chưa lưu được: dự án vừa được người khác sửa hoặc tài khoản không có quyền sửa phần này. Anh tải lại trang để lấy số mới.");
+      if(e.conflict)toast("Chưa lưu được: tài khoản này không có quyền sửa phần này, hoặc dự án đã bị xoá. Anh tải lại trang.");
       else if(e.code==="42501")toast("Tài khoản này không có quyền lưu phần này.");
       else{toast("Chưa lưu được lên máy chủ, hệ thống đang thử lại. Anh đừng đóng trang.");clearTimeout(timer);timer=setTimeout(run,8000)}}
     finally{running=false;if(again){again=false;run()}}}
@@ -961,7 +969,10 @@ window.NGB=(function(){
         const r=await fetch("api/geocode?q="+encodeURIComponent(q),{headers:{authorization:"Bearer "+session.access_token}});if(!r.ok)throw new Error("geocode_"+r.status);return r.json()}
     },
     queue(db,cb){lastDb=db;onState=cb;dirty=true;clearTimeout(timer);timer=setTimeout(run,300)},
-    async saveNow(db){lastDb=db;clearTimeout(timer);while(running)await new Promise(r=>setTimeout(r,100));try{await flush(db);dirty=false;toast("");return true}catch(e){toast("Chưa lưu được lên máy chủ, dữ liệu trên trình duyệt vẫn còn nguyên.");return false}}
+    /* Lưu ngay (trước khi tải file lên Drive): chờ lượt lưu đang chạy xong, giữ cờ để hai lượt không ghi chồng nhau */
+    async saveNow(db){lastDb=db;clearTimeout(timer);while(running)await new Promise(r=>setTimeout(r,100));running=true;
+      try{await flush(db);dirty=false;toast("");return true}catch(e){toast("Chưa lưu được lên máy chủ, dữ liệu trên trình duyệt vẫn còn nguyên.");return false}
+      finally{running=false;if(again){again=false;run()}}}
   }})();
 /* Gọi Claude (Edge Function "ai"); hàm nằm trong NGB.drive, gọi tắt NGB.ai */
 NGB.ai=b=>NGB.drive.ai(b);
