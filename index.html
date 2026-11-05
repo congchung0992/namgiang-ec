@@ -32,6 +32,8 @@
 .wxd .rl{font-weight:600;color:var(--muted)}.wxd .rl.ok{color:#12A150}.wxd .rl.warn{color:#B25E00}.wxd.far{opacity:.78}
 .wxt{margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:13px}
 @media (max-width:760px){.wxg{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:96px;overflow-x:auto;padding-bottom:4px}}
+.admf{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:12px;align-items:end}.admf .fl{margin:0}
+@media (max-width:900px){.admf{grid-template-columns:1fr}}
 #fview .fsl{padding:14px 16px;width:100%;display:flex;flex-direction:column;gap:10px}
 #fview .fsr{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:8px 14px;align-items:center}
 #fview .fsr .on{font-size:13px;font-weight:600;overflow-wrap:anywhere}#fview .fsr .why{grid-column:1/-1;font-size:12.5px;color:var(--ink2)}#fview .fsr .why.dif{color:#B25E00}
@@ -670,7 +672,6 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
     <div class="steps"><i class="on" id="st1"></i><i id="st2"></i></div>
     <div class="hint" id="hint">Đăng nhập bằng tài khoản được cấp</div>
   </div>
-  <button class="skip" id="skip" type="button">Vào chế độ thử, chưa cần đăng nhập</button>
 </div>
 
 <div class="shell pre">
@@ -815,6 +816,11 @@ window.NGB=(function(){
     signOut:async()=>{if(sb)await sb.auth.signOut()},
     loadAll,
     admin:{
+      /* Tạo, khoá, đặt lại mật khẩu tài khoản: chạy ở Supabase Edge Function admin-users, máy chủ kiểm tra quyền Ban giám đốc */
+      async users(body){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");
+        let r;try{r=await fetch(SB_URL+"/functions/v1/admin-users",{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,authorization:"Bearer "+session.access_token},body:JSON.stringify(body)})}catch(e){throw new Error("Không kết nối được máy chủ, anh kiểm tra mạng")}
+        let j={};try{j=await r.json()}catch(e){}if(r.ok)return j;
+        throw new Error({auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",forbidden:"Chỉ Ban giám đốc được quản lý tài khoản",bad_username:"Tên đăng nhập 3–40 ký tự, chỉ chữ không dấu, số, dấu chấm, gạch ngang",bad_password:"Mật khẩu từ 8 ký tự",exists:"Tên đăng nhập này đã có",self:"Không khoá hoặc xoá tài khoản của chính mình"}[j.error]||"Máy chủ đang lỗi, anh thử lại sau")},
       async people(){return ok(await need().from("profiles").select("id,email,full_name,is_board").order("email"))},
       async setBoard(uid,val){ok(await need().rpc("set_board",{uid,val}))},
       async members(pid){return ok(await need().from("project_members").select("user_id,role").eq("project_id",pid))},
@@ -938,11 +944,10 @@ document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.clo
     later(()=>{shell.classList.remove("pre");intro.classList.add("gone");later(()=>{drawMap&&drawMap()},50)},reduce?0:650);
     later(()=>{intro.hidden=true},reduce?0:1500)}
   const guestFlag=v=>{try{if(v===undefined)return sessionStorage.getItem("ngic.guest")==="1";if(v)sessionStorage.setItem("ngic.guest","1");else sessionStorage.removeItem("ngic.guest")}catch(e){}return false};
-  document.getElementById("skip").addEventListener("click",()=>{timers.forEach(clearTimeout);timers=[];guestFlag(true);NGApp.guestEnter();intro.classList.remove("s1","s2");intro.classList.add("ready","s3");enter()});
+  guestFlag(false); /* Bắt buộc đăng nhập: không còn chế độ thử */
   window.showIntro=async()=>{guestFlag(false);await NGB.signOut();location.hash="";location.reload()};
   window.NGBoot=async()=>{shell.classList.add("pre");let s=null;try{s=await NGB.session()}catch(e){}
     if(s){guestFlag(false);try{await NGApp.sync();intro.classList.add("s3");enter();return}catch(e){}}
-    else if(guestFlag()){NGApp.guestEnter();intro.classList.add("s3");enter();return}
     start()};
 })();
 /* ===== Chấm chỉ vị trí dải thẻ trên điện thoại ===== */
@@ -1723,13 +1728,23 @@ const topFor=()=>TOP.filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"?window.NGApp&&
 const ROLES=[["gd","Giám đốc dự án"],["qs","QS"],["kt","Kế toán"],["cht","Chỉ huy trưởng"]];let admPid="";
 const roleSel=(v,attr)=>`<select class="fi sel" ${attr} aria-label="Vai trò">${ROLES.map(r=>`<option value="${r[0]}"${r[0]===v?" selected":""}>${r[1]}</option>`).join("")}</select>`;
 const adminView=()=>`<div class="vh"><div><h1>Quản trị</h1><p>Tài khoản và phân công theo dự án · tài khoản mới chưa có quyền gì cho tới khi được phân công</p></div></div><div class="vgrid" id="adm"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`;
+const LOGIN_DOMAIN="namgiang-ec.pages.dev";
+const genPw=()=>{const c="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=crypto.getRandomValues(new Uint32Array(10));return [...a].map(x=>c[x%c.length]).join("")};
 async function adminLoad(msg){const box=document.getElementById("adm");if(!box)return;
-  try{const A=NGB.admin,P=await A.people();if(!DB.projects.some(p=>p.id===admPid))admPid=DB.projects[0]?DB.projects[0].id:"";const M=admPid?await A.members(admPid):[],nm=id=>{const x=P.find(y=>y.id===id);return x?x.email||x.full_name||id:id},free=P.filter(x=>!M.some(m=>m.user_id===x.id));
+  try{const A=NGB.admin,P=await A.people();if(!DB.projects.some(p=>p.id===admPid))admPid=DB.projects[0]?DB.projects[0].id:"";const M=admPid?await A.members(admPid):[],nm=id=>{const x=P.find(y=>y.id===id);return x?(x.full_name?x.full_name+" · ":"")+String(x.email||"").replace("@namgiang-ec.pages.dev",""):id},free=P.filter(x=>!M.some(m=>m.user_id===x.id));
     if(!document.getElementById("adm"))return;
-    box.innerHTML=(msg?`<section class="card span3" style="color:#C0141B;font-size:13px">${esc(msg)}</section>`:"")+card("Tài khoản","Tạo tài khoản mới trong Supabase: Authentication → Users → Add user, rồi quay lại đây phân quyền",`<div class="tw"><table class="t"><thead><tr><th>Email</th><th>Quyền chung</th><th></th></tr></thead><tbody>${P.map(x=>`<tr><td>${esc(x.email||x.id)}</td><td>${x.is_board?st("ok","Ban giám đốc"):`<span class="sub">Theo dự án</span>`}</td><td class="r">${x.id===NGApp.uid&&x.is_board?`<span class="sub">Tài khoản của anh</span>`:`<button class="back sm" style="margin:0" data-bd="${esc(x.id)}" data-v="${x.is_board?0:1}">${x.is_board?"Bỏ quyền Ban giám đốc":"Cấp quyền Ban giám đốc"}</button>`}</td></tr>`).join("")}</tbody></table></div>`,"span3")+
+    let U=[];try{U=(await A.users({action:"list"})).users||[]}catch(e){U=null;msg=msg||e.message}
+    const ux=id=>U&&U.find(u=>u.id===id)||{},short=e=>String(e||"").replace("@"+LOGIN_DOMAIN,""),dt=v=>v?fd(new Date(v)):"Chưa đăng nhập";
+    box.innerHTML=(msg?`<section class="card span3" style="color:${/^Đã /.test(msg)?"#12A150":"#C0141B"};font-size:13px">${esc(msg)}</section>`:"")+card("Tạo tài khoản mới","Người dùng đăng nhập bằng tên đăng nhập và mật khẩu này · tài khoản mới chưa xem được dự án nào cho tới khi được phân công ở dưới",`<form id="admnew" class="admf" autocomplete="off">
+      <label class="fl"><span>Họ tên</span><input class="fi" name="full_name" placeholder="Nguyễn Văn An" required></label>
+      <label class="fl"><span>Tên đăng nhập</span><input class="fi" name="username" placeholder="an.nguyen" required pattern="[A-Za-z0-9._\-]{3,40}" title="3–40 ký tự: chữ không dấu, số, dấu chấm, gạch ngang"></label>
+      <label class="fl"><span>Mật khẩu</span><div style="display:flex;gap:6px"><input class="fi" name="password" required minlength="8" style="flex:1;min-width:0"><button type="button" class="back sm" style="margin:0" id="admgen">Tạo ngẫu nhiên</button></div></label>
+      <label class="fl"><span>Quyền chung</span><select class="fi" name="is_board"><option value="0">Theo dự án được phân công</option><option value="1">Ban giám đốc (xem tất cả)</option></select></label>
+      <div><button class="pill" style="${sv("hr")}"><span class="dot">${ic("hr",2)}</span>Tạo tài khoản</button></div></form>`,"span3")+
+    card("Tài khoản","Bấm vào nút để đặt lại mật khẩu, khoá hoặc cấp quyền",`<div class="tw"><table class="t"><thead><tr><th>Họ tên</th><th>Tên đăng nhập</th><th>Quyền chung</th><th>Lần đăng nhập cuối</th><th></th></tr></thead><tbody>${P.map(x=>{const u=ux(x.id),me=x.id===NGApp.uid;return`<tr data-au="${esc(x.id)}"><td>${esc(x.full_name||"–")}</td><td class="num">${esc(short(x.email)||x.id)}</td><td>${u.banned?st("bad","Đã khoá"):x.is_board?st("ok","Ban giám đốc"):`<span class="sub">Theo dự án</span>`}</td><td class="num">${U?dt(u.last):"–"}</td><td class="r"><div class="fla">${me?`<span class="sub">Tài khoản của anh</span>`:`${U?`<button class="back sm" style="margin:0" data-ap>Đặt lại mật khẩu</button><button class="back sm" style="margin:0" data-ab="${u.banned?"unban":"ban"}">${u.banned?"Mở khoá":"Khoá"}</button>`:""}<button class="back sm" style="margin:0" data-bd="${esc(x.id)}" data-v="${x.is_board?0:1}">${x.is_board?"Bỏ quyền BGĐ":"Cấp quyền BGĐ"}</button>${U?`<button class="back sm" style="margin:0" data-adel>Xoá</button>`:""}`}</div></td></tr>`}).join("")}</tbody></table></div>`,"span3")+
     card("Phân công theo dự án","Ban giám đốc đã xem được tất cả dự án, không cần phân công",DB.projects.length?`<label class="fl" style="max-width:420px"><span>Dự án</span><select class="fi" id="admp">${DB.projects.map(p=>`<option value="${esc(p.id)}"${p.id===admPid?" selected":""}>${esc(p.code)} · ${esc(p.name)}</option>`).join("")}</select></label>
       <div class="tw" style="margin-top:14px"><table class="t"><thead><tr><th>Thành viên</th><th>Vai trò</th><th></th></tr></thead><tbody>${M.map(m=>`<tr data-mu="${esc(m.user_id)}"><td>${esc(nm(m.user_id))}</td><td>${roleSel(m.role,"data-mr")}</td><td class="r"><button class="back sm" style="margin:0" data-mx>Gỡ</button></td></tr>`).join("")||`<tr><td colspan="3" class="sub">Chưa có thành viên nào.</td></tr>`}</tbody></table></div>
-      ${free.length?`<div class="pvh" style="margin-top:14px"><select class="fi sel" id="admu" aria-label="Tài khoản">${free.map(x=>`<option value="${esc(x.id)}">${esc(x.email||x.id)}</option>`).join("")}</select>${roleSel("qs",'id="admr"')}<button class="pill" id="adma" style="${sv("hr")}"><span class="dot">${ic("hr",2)}</span>Thêm vào dự án</button></div>`:`<div class="sub" style="margin-top:14px">Mọi tài khoản đã có trong dự án này.</div>`}`:`<span class="sub">Chưa có dự án nào.</span>`,"span3")}
+      ${free.length?`<div class="pvh" style="margin-top:14px"><select class="fi sel" id="admu" aria-label="Tài khoản">${free.map(x=>`<option value="${esc(x.id)}">${esc(nm(x.id))}</option>`).join("")}</select>${roleSel("qs",'id="admr"')}<button class="pill" id="adma" style="${sv("hr")}"><span class="dot">${ic("hr",2)}</span>Thêm vào dự án</button></div>`:`<div class="sub" style="margin-top:14px">Mọi tài khoản đã có trong dự án này.</div>`}`:`<span class="sub">Chưa có dự án nào.</span>`,"span3")}
   catch(e){const b=document.getElementById("adm");if(b)b.innerHTML=`<section class="card span3" style="color:#C0141B;font-size:13px">Không tải được: ${esc(e.message)}</section>`}}
 async function admDo(fn){try{await fn();await adminLoad()}catch(e){await adminLoad("Chưa lưu được: "+(e.message||""))}}
 const home=document.querySelector(".grid"),view=document.getElementById("view"),note=document.querySelector(".note");
@@ -1958,6 +1973,19 @@ window.NGApp={board:false,uid:null,drive:false,guest:false,
   async sync(){const d=await NGB.loadAll();DB.projects=d.projects;DB.dec=d.dec;NGApp.board=d.isBoard;NGApp.uid=d.uid;NGApp.drive=await NGB.drive.status();route();if(window.renderHello)window.renderHello();
     flushLocal().then(r=>{if(r.done&&document.getElementById("fls"))filesLoad()}).catch(()=>{})}};
 addEventListener("hashchange",()=>{pending=null;route()});route();
+view.addEventListener("submit",async e=>{const f=e.target;if(f.id!=="admnew")return;e.preventDefault();const d=Object.fromEntries(new FormData(f)),btn=f.querySelector(".pill");btn.disabled=true;
+  try{const r=await NGB.admin.users({action:"create",username:d.username,full_name:d.full_name,password:d.password,is_board:d.is_board==="1"});
+    await adminLoad(`Đã tạo tài khoản ${d.full_name}: tên đăng nhập ${r.email.replace("@"+LOGIN_DOMAIN,"")} · mật khẩu ${d.password} · anh gửi cho người dùng, rồi phân công dự án ở dưới`)}
+  catch(er){btn.disabled=false;const m=document.getElementById("admm")||f.insertAdjacentElement("afterend",Object.assign(document.createElement("div"),{id:"admm",className:"sub"}));m.style.cssText="color:#C0141B;margin-top:10px";m.textContent=er.message}});
+view.addEventListener("click",async e=>{const t=e.target,A=NGB.admin;
+  if(t.closest("#admgen")){const i=document.querySelector('#admnew [name="password"]');i.value=genPw();return}
+  const row=t.closest("tr[data-au]");if(!row)return;const uid=row.dataset.au,name=row.cells[0].textContent;
+  if(t.closest("[data-ap]")){const pw=genPw();if(!t.dataset.ok){t.dataset.ok=1;t.textContent="Bấm lần nữa để đặt lại";return}
+    try{await A.users({action:"password",uid,password:pw});await adminLoad(`Đã đặt lại mật khẩu cho ${name}: ${pw} · anh gửi cho người dùng`)}catch(er){await adminLoad(er.message)}return}
+  const bb=t.closest("[data-ab]");if(bb){if(!bb.dataset.ok){bb.dataset.ok=1;bb.textContent="Bấm lần nữa để xác nhận";return}
+    try{await A.users({action:bb.dataset.ab,uid});await adminLoad(`Đã ${bb.dataset.ab==="ban"?"khoá":"mở khoá"} tài khoản ${name}`)}catch(er){await adminLoad(er.message)}return}
+  const dx=t.closest("[data-adel]");if(dx){if(!dx.dataset.ok){dx.dataset.ok=1;dx.textContent="Bấm lần nữa để xoá hẳn";return}
+    try{await A.users({action:"delete",uid});await adminLoad(`Đã xoá tài khoản ${name}`)}catch(er){await adminLoad(er.message)}}});
 view.addEventListener("click",e=>{const A=NGB.admin,t=e.target;
   const bd=t.closest("[data-bd]");if(bd){if(!bd.dataset.ok){bd.dataset.ok=1;bd.textContent="Bấm lần nữa để xác nhận";return}admDo(()=>A.setBoard(bd.dataset.bd,bd.dataset.v==="1"));return}
   if(t.closest("[data-mx]")){admDo(()=>A.removeMember(admPid,t.closest("tr[data-mu]").dataset.mu));return}
