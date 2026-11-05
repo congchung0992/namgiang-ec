@@ -589,7 +589,7 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
 #intro.s3 h1,#intro.s4 h1{opacity:0;filter:blur(10px);transform:translateY(-24px)}
 .lg{position:relative;height:56px;width:170px;border-radius:99px;opacity:0;transform:scale(.6);transition:width .7s cubic-bezier(.2,.8,.2,1),background .5s,opacity .5s,transform .5s,box-shadow .5s;
   background:linear-gradient(90deg,#4E6BFF,#8B5CF6 55%,#F17AB5);box-shadow:0 16px 36px -14px rgba(78,107,255,.7);display:flex;align-items:center;overflow:hidden}
-#intro.ready .lg{opacity:1;transform:none}
+#intro.ready .lg,#intro.s3 .lg{opacity:1;transform:none}
 .lg .lab{position:absolute;inset:0;border:0;background:transparent;color:#fff;font:600 15px var(--f);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:opacity .3s}
 #intro.s3 .lg,#intro.s4 .lg{width:min(460px,88vw);background:#fff;box-shadow:0 20px 50px -20px rgba(40,40,120,.45),inset 0 0 0 1px rgba(255,255,255,.9)}
 #intro.s3 .lg .lab{opacity:0;pointer-events:none}
@@ -927,7 +927,11 @@ document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.clo
     inp.placeholder="Tên đăng nhập";st1.className="on";st2.className="";hint.textContent="Đăng nhập bằng tài khoản được cấp";
     later(()=>{intro.className="s2";later(type,500)},2300)}
   const lg=document.getElementById("lg"),inp=document.getElementById("lgi"),hint=document.getElementById("hint"),st1=document.getElementById("st1"),st2=document.getElementById("st2");let step=1;
-  document.getElementById("start").addEventListener("click",()=>{intro.classList.remove("s2");intro.classList.add("s3");later(()=>inp.focus(),700)});
+  /* Bấm Đăng nhập lúc nào cũng mở ô đăng nhập, kể cả khi hiệu ứng mở đầu chưa chạy xong */
+  const openLogin=()=>{timers.forEach(clearTimeout);timers=[];typed.innerHTML=L1+"<br>"+L2;intro.className="ready s3";later(()=>inp.focus(),700)};
+  document.getElementById("start").addEventListener("click",openLogin);
+  intro.addEventListener("click",e=>{if(!intro.classList.contains("s3")&&!e.target.closest("#start"))openLogin()});
+  intro.addEventListener("keydown",e=>{if(e.key==="Enter"&&!intro.classList.contains("s3")){e.preventDefault();openLogin()}});
   document.getElementById("lgf").addEventListener("submit",e=>{e.preventDefault();
     if(!inp.value.trim()){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent=step===1?"Anh nhập tên đăng nhập trước nhé":"Anh nhập mật khẩu để vào hệ thống";return}
     if(step===1&&!/^[^\s@]+(@[^\s@]+)?$/.test(inp.value.trim())){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent="Tên đăng nhập chưa đúng, anh kiểm tra lại";return}
