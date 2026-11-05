@@ -1362,7 +1362,7 @@ function cfc(lab,a,b,cu){const W=1080,H=280,L=40,B=24,mx=Math.max(...a,...b,...c
   return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`}
 const bty=(lab,a,b,W,H)=>bars(lab,a.map(v=>+(v/1e9).toFixed(2)),b&&b.map(v=>+(v/1e9).toFixed(2)),"#12A150","#C21FC9",W,H);
 /* vẽ Gantt */
-const GZ={d:12,w:6,m:3};let gZoom="m",gMode="cv";const gCol=new Set();
+const GZ={d:12,w:6,m:3};let gZoom="m",gMode="cv",gBase=(()=>{try{return localStorage.getItem("ngic.gbase")!=="0"}catch(e){return true}})();const gCol=new Set();
 function gStat(p,tl){const S=p.sched,now=new Date(),od=Math.round((new Date(now.getFullYear(),now.getMonth(),now.getDate())-tl.st)/864e5);let V=0,A=0,P=0;
   const per={};tl.T.forEach(x=>{const q=S.t[x.key],w=x.rev||1,pl=Math.max(0,Math.min(1,(od-q.s+1)/q.d))*100,pc=q.pc||0;per[x.key]={pl,pc};V+=w;A+=w*pc;P+=w*pl});
   const B=S.base&&S.base.t;let be=null,var_=null;if(B){be=0;tl.T.forEach(x=>{const b=B[x.key];if(b)be=Math.max(be,b.s+b.d)});var_=tl.end-be}
@@ -1377,7 +1377,7 @@ function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom]
   /* Một dòng công việc (thanh kéo được); lab: nhãn cố định thay cho ô sửa tên (khi xem theo đầu mục công việc) */
   const tr=(x,code,one,lab)=>{const q=S.t[x.key],b=B&&B[x.key],g=G.per[x.key],late=g.pl-g.pc>10,c=HC[x.hi%HC.length];
       return `<div class="grw ${one?"gs1":""}" style="--t:${c[0]}"><div class="gl gg"><span class="gc c1 num">${code}</span><span class="gc c2">${lab?`<span class="glb" title="${esc(lab)}"><i style="background:${c[0]}"></i>${esc(lab)}</span>`:cell(x.key,"n",q.n||x.name,"gn")}</span><span class="gc c3">${cell(x.key,"d",q.d,"r")}</span><span class="gc c4">${cell(x.key,"s",fd(addD(tl.st,q.s)),"r")}</span><span class="gc c5">${cell(x.key,"f",fd(addD(tl.st,q.s+q.d-1)),"r")}</span><span class="gc c6">${cell(x.key,"p",q.pc?fm(q.pc,0):"-","r"+(late?" late":""))}</span><span class="gc c7 r" title="Ngày kết thúc lệch so với tiến độ gốc">${vr(b?q.s+q.d-(b.s+b.d):null)}</span></div>
-        <div class="gt">${b?`<div class="gbl" style="left:${b.s*W}px;width:${b.d*W}px" title="Gốc ${fd(addD(tl.st,b.s))} – ${fd(addD(tl.st,b.s+b.d-1))}"></div>`:""}<div class="gb" data-k="${esc(x.key)}" style="left:${q.s*W}px;width:${q.d*W}px;--c:${c[0]};--c2:${c[1]}" title="${esc((lab?lab+" · ":"")+(q.n||x.name))} · ${fd(addD(tl.st,q.s))} – ${fd(addD(tl.st,q.s+q.d-1))} · ${fm(q.pc||0,0)}% (kế hoạch ${fm(g.pl,0)}%)"><i class="gp" style="width:${q.pc||0}%"></i><i class="gh l"></i><span>${q.d}</span><i class="gh r"></i></div></div></div>`};
+        <div class="gt">${b&&gBase?`<div class="gbl" style="left:${b.s*W}px;width:${b.d*W}px" title="Gốc ${fd(addD(tl.st,b.s))} – ${fd(addD(tl.st,b.s+b.d-1))}"></div>`:""}<div class="gb" data-k="${esc(x.key)}" style="left:${q.s*W}px;width:${q.d*W}px;--c:${c[0]};--c2:${c[1]}" title="${esc((lab?lab+" · ":"")+(q.n||x.name))} · ${fd(addD(tl.st,q.s))} – ${fd(addD(tl.st,q.s+q.d-1))} · ${fm(q.pc||0,0)}% (kế hoạch ${fm(g.pl,0)}%)"><i class="gp" style="width:${q.pc||0}%"></i><i class="gh l"></i><span>${q.d}</span><i class="gh r"></i></div></div></div>`};
   /* Dòng tổng của một nhóm (hạng mục hoặc đầu mục công việc) */
   const grp=(key,code,name,ts,color,sub)=>{const s0=Math.min(...ts.map(x=>S.t[x.key].s)),e0=Math.max(...ts.map(x=>S.t[x.key].s+S.t[x.key].d)),wv=ts.reduce((a,x)=>a+(x.rev||1),0),pc0=ts.reduce((a,x)=>a+(x.rev||1)*(S.t[x.key].pc||0),0)/wv;
     let bv=null;if(B){const bb=ts.map(x=>B[x.key]).filter(Boolean);if(bb.length)bv=e0-Math.max(...bb.map(b=>b.s+b.d))}const cl=gCol.has(key);
@@ -1928,9 +1928,10 @@ function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return qu
         <div class="seg2" role="group" aria-label="Thu phóng">${[["d","Ngày"],["w","Tuần"],["m","Tháng"]].map(([k,t])=>`<button data-gz="${k}" aria-pressed="${gZoom===k}">${t}</button>`).join("")}</div>
         <button class="back sm" data-gu="u" ${GU.u.length?"":"disabled"}>↶ Hoàn tác</button><button class="back sm" data-gu="r" ${GU.r.length?"":"disabled"}>↷ Làm lại</button>
         <div class="seg2" role="group" aria-label="Cách xếp">${[["cv","Theo đầu mục công việc"],["hm","Theo hạng mục"]].map(([k,t])=>`<button data-gm="${k}" aria-pressed="${gMode===k}">${t}</button>`).join("")}</div>
+        ${S.base?`<button class="back sm" data-gbase="1">${gBase?"Ẩn":"Hiện"} vạch tiến độ gốc</button>`:""}
         <button class="back sm" data-gcol="1">${gCol.size?"Mở tất cả":"Thu tất cả"}</button>
         <button class="back sm" id="gbase">${S.base?"Chốt lại tiến độ gốc":"Chốt tiến độ gốc"}</button><button class="back sm" id="repro">Đề xuất lại</button></div></div>
-      <div class="gleg"><span><i class="lg1"></i>Kế hoạch hiện tại</span><span><i class="lg2"></i>Phần đã hoàn thành</span><span><i class="lg3"></i>Tiến độ gốc${S.base?" (chốt "+esc(S.base.date)+")":" (chưa chốt)"}</span><span><i class="lg4"></i>Ngày cập nhật ${fd(new Date())}</span><span><b class="late">%</b> chậm hơn kế hoạch trên 10 điểm</span></div>
+      <div class="gleg"><span><i class="lg1"></i>Kế hoạch hiện tại</span><span><i class="lg2"></i>Phần đã hoàn thành</span><span title="Bản tiến độ đã chốt làm mốc. Thanh màu nằm bên phải vạch vàng là đang chậm hơn mốc, bên trái là sớm hơn; số ngày lệch ở cột Lệch gốc"><i class="lg3"></i>Vạch vàng = tiến độ gốc${S.base?" đã chốt ngày "+esc(S.base.date)+" (mốc để so sớm / chậm)":" (chưa chốt)"}</span><span><i class="lg4"></i>Ngày cập nhật ${fd(new Date())}</span><span><b class="late">%</b> chậm hơn kế hoạch trên 10 điểm</span></div>
       <div style="margin-top:10px">${gantt(p,tl)}</div></section>
     ${p._noCost?"":card("Giá trị thực hiện theo tháng","Doanh thu và giá vốn phân bổ theo tiến độ, tỷ đồng",lg([["Doanh thu","#12A150"],["Giá vốn","#C21FC9"]])+`<div class="chart">${bty(tl.lab,tl.rev,tl.cost,1080,230)}</div>`,"span3")}</div>`}
   if(s==="hr")return `<div class="vgrid">${kc("hr","Nhân công trong BOQ",ty(c.nc),"tỷ","Giá trị nhân công dự thầu")}${kc("rev","Tổ đội, thầu phụ","0","đơn vị","Chưa có hợp đồng")}${kc("mat","Quân số","–","","Chưa cập nhật")}
@@ -2383,6 +2384,7 @@ document.addEventListener("keydown",e=>{if(!cur||!(e.ctrlKey||e.metaKey)||!docum
 view.addEventListener("click",e=>{if(!cur)return;const t=e.target;let b;
   if(b=t.closest("[data-gu]")){gUndo(b.dataset.gu==="r");return}
   if(b=t.closest("[data-gz]")){gZoom=b.dataset.gz;keep(route);return}
+  if(b=t.closest("[data-gbase]")){gBase=!gBase;try{localStorage.setItem("ngic.gbase",gBase?"1":"0")}catch(e){}keep(route);return}
   if(b=t.closest("[data-gm]")){gMode=b.dataset.gm;gCol.clear();keep(route);return}
   if(b=t.closest("[data-gc]")){const c=b.dataset.gc;gCol.has(c)?gCol.delete(c):gCol.add(c);keep(route);return}
   if(b=t.closest("[data-gcol]")){if(gCol.size)gCol.clear();else view.querySelectorAll("[data-gc]").forEach(x=>gCol.add(x.dataset.gc));keep(route);return}
