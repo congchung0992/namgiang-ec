@@ -80,6 +80,10 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - Bảng `material_requests`; mọi thay đổi qua hàm `mr_save`, `mr_act`, `mr_cancel` (máy chủ kiểm tra người bấm có đúng vai trò của bước hiện tại). Duyệt xong tự lưu file Excel phiếu vào 05.1; nút Tải Excel ra file theo mẫu, chữ ký ghi tên và ngày duyệt từng bước.
 - **Thông báo** (bảng `notifications`): mỗi khi phiếu tới bước mới, người giữ vai trò bước đó nhận thông báo; người lập nhận khi qua bước, bị trả về hoặc duyệt xong. Chuông trên thanh trên hiện số chưa đọc, nhận ngay qua Supabase Realtime, có nút bật thông báo của trình duyệt (hiện cả khi đang ở tab khác, khi web đang mở). Migration `20261105_phieu_yeu_cau_vat_tu.sql`.
 
+## Hợp đồng NCC – TP gắn gói thầu (thư mục 05.2)
+- Khi lưu file vào 05.2, hộp rà file bắt buộc chọn **gói thầu** (theo sheet Gói thầu) và **hạng mục BOQ** hợp đồng áp dụng; chưa chọn thì không lưu. Web gợi ý gói (✨) theo tên file, nội dung file Word/Excel, mác/quy cách và nhà cung cấp đã chọn cho gói; hạng mục gợi ý theo tên hạng mục ghi trong file.
+- Liên kết lưu ở `p.hdl` (cùng phần tiến độ, chỉ huy trưởng cũng ghi được). Thư mục 05.2 hiện nhãn gói, hạng mục cho từng file; file chưa gắn có nút **Gắn gói thầu**. Sheet Gói thầu hiện hợp đồng đã có dưới tên từng gói.
+
 ## Bài học cho AI
 - Bảng `ai_lessons` (migration `20261105_ai_lessons.sql`): `kind = match` là cặp dòng báo giá ↔ dòng BOQ đúng/sai (web tự áp khi ghép); `kind = rule` là câu dặn (`q` = phạm vi `baogia | hopdong | thumuc | chat | all`, `l` = nội dung).
 - Web tự ghi bài học khi anh sửa ghép báo giá, đổi gói vật tư, sửa số đọc từ hợp đồng hoặc đợt thanh toán, xếp file khác thư mục gợi ý. Anh tự dặn thêm ở Quản trị → Bài học cho AI.
