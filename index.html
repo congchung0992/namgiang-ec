@@ -1272,9 +1272,9 @@ function centerCols(root){(root||document).querySelectorAll("table.t").forEach(t
 function subLay(v){const sh=[...v.children].find(x=>x.classList&&x.classList.contains("sheets"));if(!sh)return;const w=document.createElement("div");w.className="sublay";
   const c=document.createElement("div");c.className="subc";let n=sh.nextSibling;while(n){const nx=n.nextSibling;c.appendChild(n);n=nx}
   v.insertBefore(w,sh);sh.classList.add("vert");w.appendChild(sh);w.appendChild(c)}
-/* Chữ trong biểu đồ luôn hiện đúng cỡ (khoảng 10–11 điểm ảnh) dù biểu đồ co giãn theo màn hình */
+/* Chữ trong biểu đồ luôn hiện đúng cỡ (khoảng 12,5–13,5 điểm ảnh, to hơn cỡ gốc 2,5) dù biểu đồ co giãn theo màn hình */
 function fitCharts(root){(root||document).querySelectorAll(".chart svg,svg.fitc").forEach(sv=>{const vb=sv.viewBox&&sv.viewBox.baseVal;if(!vb||!vb.width)return;const sc=sv.getBoundingClientRect().width/vb.width;if(!(sc>0))return;
-  sv.querySelectorAll("text").forEach(t=>{if(!t.dataset.fs)t.dataset.fs=t.getAttribute("font-size")||"11";const f=+t.dataset.fs;t.setAttribute("font-size",(sc>1.08||sc<.85?f/Math.max(.75,Math.min(sc,1.8)):f).toFixed(1))})})}
+  sv.querySelectorAll("text").forEach(t=>{if(!t.dataset.fs)t.dataset.fs=t.getAttribute("font-size")||"11";const f=+t.dataset.fs;t.setAttribute("font-size",((f+2.5)/Math.max(.5,Math.min(sc,2.5))).toFixed(1))})})}
 addEventListener("resize",()=>{clearTimeout(fitCharts.t);fitCharts.t=setTimeout(()=>fitCharts(),150)});
 function dashZeros(root){centerCols(root);setTimeout(()=>fitCharts(root),0);(root||document).querySelectorAll("table.t td").forEach(td=>{if(td.querySelector("input,select,button,svg,.mbar,.st"))return;const t=td.textContent.replace(/\u2060/g,"").trim();if(Z0.test(t)||t==="–"){const b=td.querySelector("b");if(b)b.textContent="-";else td.textContent="-"}})}
 const ty=v=>fm((+v||0)/1e9,2);
