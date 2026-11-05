@@ -37,7 +37,7 @@ const upperSchema = (s: any): any => {
   }
   return o;
 };
-async function gemini(env: any, { system, parts, schema, kind = "flash" }: any) {
+async function gemini1(env: any, { system, parts, schema, kind = "flash" }: any) {
   const model = await pickModel(env, kind);
   const call = (gen: any) => fetch(`${GA}/models/${model}:generateContent`, {
     method: "POST",
@@ -45,14 +45,35 @@ async function gemini(env: any, { system, parts, schema, kind = "flash" }: any) 
     body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature: 0, responseMimeType: "application/json", ...gen } })
   });
   // Khuôn JSON: thử kiểu mới (responseJsonSchema), không được thì kiểu cũ (responseSchema), cuối cùng chỉ yêu cầu JSON
-  let r = await call({ responseJsonSchema: schema });
-  if (r.status === 400) r = await call({ responseSchema: upperSchema(schema) });
-  if (r.status === 400) r = await call({});
-  if (!r.ok) { console.error("gemini", r.status, (await r.text()).slice(0, 300)); throw new Error("gemini_" + r.status); }
+  const run = async () => {
+    let r = await call({ responseJsonSchema: schema });
+    if (r.status === 400) r = await call({ responseSchema: upperSchema(schema) });
+    if (r.status === 400) r = await call({});
+    return r;
+  };
+  let r = await run();
+  // Google bảo chờ (giới hạn số lần mỗi phút) thì chờ đúng thời gian đó rồi thử lại một lần, tối đa 30 giây
+  if (r.status === 429) {
+    const t = await r.text(), m = t.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/), wait = m ? parseFloat(m[1]) : 0;
+    console.error("gemini 429", model, t.replace(/\s+/g, " ").slice(0, 700));
+    if (wait > 0 && wait <= 30) { await new Promise(res => setTimeout(res, wait * 1000 + 500)); r = await run(); }
+    else throw new Error("gemini_429");
+  }
+  if (!r.ok) { console.error("gemini", model, r.status, (await r.text()).replace(/\s+/g, " ").slice(0, 700)); throw new Error("gemini_" + r.status); }
   const j = await r.json();
   const text = ((j.candidates || [])[0]?.content?.parts || []).map((p: any) => p.text || "").join("").trim();
   if (!text) throw new Error("gemini_empty_" + ((j.candidates || [])[0]?.finishReason || "none"));
   return { data: JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "")), model };
+}
+/* Bản pro bị từ chối vì hết lượt (khoá miễn phí thường không có lượt cho bản pro) thì tự dùng bản flash */
+async function gemini(env: any, opts: any) {
+  const order = opts.kind === "pro" ? ["pro", "flash"] : ["flash"];
+  let last: any;
+  for (const k of order) {
+    try { return await gemini1(env, { ...opts, kind: k }); }
+    catch (e) { last = e; if (!/gemini_(429|404|403)/.test(String((e as Error).message))) throw e; }
+  }
+  throw last;
 }
 
 /* ---------- Khuôn dữ liệu ---------- */
