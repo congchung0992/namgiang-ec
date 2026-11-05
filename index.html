@@ -950,6 +950,10 @@ window.NGB=(function(){
     async keyFromCF(){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");
       const r=await fetch("api/claude-key",{method:"POST",headers:{authorization:"Bearer "+session.access_token}});let j={};try{j=await r.json()}catch(e){}
       if(r.ok)return j;throw Object.assign(new Error({chua_co:"Trên Cloudflare chưa thấy biến chứa khoá Claude (tên nên là ANTHROPIC_API_KEY, giá trị bắt đầu bằng sk-ant-)",sai_dang:"Khoá đặt trên Cloudflare chưa đúng dạng sk-ant-…",khong_quyen:"Chỉ Ban giám đốc lấy được khoá",auth:"Phiên đăng nhập đã hết, anh đăng nhập lại"}[j.error]||"Chưa lấy được khoá từ Cloudflare (mã "+r.status+")"),{code:j.error||"cf"})},
+    /* Bài học ghép báo giá (bảng ai_lessons, dùng chung mọi dự án) */
+    async lessons(){const {data,error}=await need().from("ai_lessons").select("id,q,l,ok,at").order("at",{ascending:true}).limit(5000);if(error)throw new Error(error.message);return data||[]},
+    async addLessons(rows){if(!sb||!rows.length)return;const {data:{session}}=await sb.auth.getSession();if(!session)return;await sb.from("ai_lessons").insert(rows.map(r=>({...r,user_id:session.user.id})))},
+    async delLesson(id){const {error}=await need().from("ai_lessons").delete().eq("id",id);if(error)throw new Error(error.message)},
     async aiUsage(days){const since=new Date(Date.now()-days*864e5).toISOString();const {data,error}=await need().from("ai_usage").select("*").gte("at",since).order("at",{ascending:false}).limit(5000);if(error)throw new Error(error.message);return data||[]},
     /* Đổi mật khẩu của chính mình: kiểm tra mật khẩu cũ trước rồi mới đổi */
     async changePw(old,pw){const c=need(),{data:{session}}=await c.auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");
@@ -1724,6 +1728,20 @@ async function qReadFile(p,f,kindHint){const ext=(f.name.split(".").pop()||"").t
   throw new Error("Chỉ đọc được báo giá Excel, PDF hoặc ảnh chụp")}
 const qText=it=>(it.name||"")+" "+(it.spec||"");
 /* Bảng giá vật tư, nhân công: mỗi dòng BOQ tìm dòng giá phù hợp nhất (nhiều dòng BOQ dùng chung một dòng giá) */
+/* ---------- Bài học từ các lần anh sửa ghép: dòng báo giá ↔ dòng BOQ đúng hay sai, lần ghép sau tự áp dụng ---------- */
+let QLES=null;const lqT=it=>BOQ.nz(qText(it)+" "+(it.unit||"")).trim(),llT=l=>BOQ.nz((l.name||"")+" "+(l.spec||"")+" "+(l.unit||"")).trim();
+window.NGQ={les:()=>QLES,qv:()=>QV,db:()=>DB,apply:(p,q)=>qApplyLessons(p,q)};
+async function qLesLoad(){if(QLES)return QLES;try{QLES=await NGB.lessons()}catch(e){QLES=[]}return QLES}
+function qLearn(p,it,c,ok){if(!c||c.includes("|"))return;const x=qLine(p,c);if(!x)return;const r={q:lqT(it),l:llT(x.l),ok:!!ok,kind:"match"};if(!r.q||!r.l)return;
+  (QLES=QLES||[]).push(r);if(window.NGB&&NGB.addLessons)NGB.addLessons([r]).catch(()=>{})}
+/* phán quyết mới nhất cho cặp (dòng báo giá, dòng BOQ): true/false/undefined */
+function qVerdict(qt,lt){let v;(QLES||[]).forEach(r=>{if(r.l===lt&&r.q===qt)v=r.ok});return v}
+function qApplyLessons(p,q){if(!QLES||!QLES.length)return 0;const byL={};QLES.forEach(r=>{(byL[r.l]=byL[r.l]||[]).push(r)});const QT=q.items.map(lqT);let n=0;
+  q.items.forEach((it,i)=>{it.links=qL(it).filter(l=>{if(l.c.includes("|"))return true;const x=qLine(p,l.c);if(!x)return true;const v=qVerdict(QT[i],llT(x.l));if(v===false){n++;return false}return true})});
+  qLines(p).forEach(({l})=>{const R=byL[llT(l)];if(!R)return;const i=QT.findIndex(t=>qVerdict(t,llT(l))===true);if(i<0)return;
+    q.items.forEach((it,j)=>{if(j!==i)it.links=qL(it).filter(x=>x.c!==l.code)});const it=q.items[i],ex=qL(it).find(x=>x.c===l.code);
+    if(ex){ex.conf=1;ex.how="theo lần anh đã sửa trước"}else{it.links=[...qL(it),{c:l.code,f:qUnitF(it.unit,l.unit),conf:1,how:"theo lần anh đã sửa trước"}];n++}});
+  return n}
 async function qMatchLines(p,q,say){const comp=q.kind==="nhan_cong"?"n":"v",LL=qLines(p).filter(({l})=>comp==="n"?(l.nc>0||l.uNC>0||l.total>0):(l.vl>0||l.uVL>0||(l.vl==null&&l.nc==null)));
   const cand=[];LL.forEach(({h,l})=>{const sc=q.items.map((it,i)=>({i,s:qScore(qText(it),it.unit,l.name+" "+(l.spec||""),l.unit)})).sort((a,b)=>b.s-a.s);if(sc[0]&&sc[0].s>=.35)cand.push({h,l,top:sc.slice(0,4)})});
   q.items.forEach(it=>{it.links=[]});let ai=true;
@@ -1739,6 +1757,7 @@ async function qMatchLines(p,q,say){const comp=q.kind==="nhan_cong"?"n":"v",LL=q
   /* Không có Claude: lấy dòng giá giống nhất; trùng mác/quy cách thì nhận cả khi tên khác nhau nhiều */
   const keyHit=(a,b)=>{const A=qKey(a),B=qKey(b);let k=0;A.forEach(x=>{if(B.has(x))k++});return k>0};
   if(!ai)cand.forEach(({l,top})=>{const t=top[0],it=q.items[t.i],hit=keyHit(qText(it),l.name+" "+(l.spec||""));if(t.s>=.6||(hit&&t.s>=.45))it.links.push({c:l.code,f:qUnitF(it.unit,l.unit),conf:kh(qText(it),l.name+" "+(l.spec||""))===2?.7:Math.min(.75,t.s-.2),how:"đoán theo tên và mác"})});
+  await qLesLoad();Object.defineProperty(q,"_les",{value:qApplyLessons(p,q),configurable:true,writable:true,enumerable:false});
   return ai}
 /* Thầu phụ: mỗi dòng báo giá ghép với một dòng hoặc một nhóm BOQ */
 async function qMatchItems(p,q,say){const todo=[];
@@ -1760,7 +1779,7 @@ async function qRead1(p,f,save,say){const r=await qReadFile(p,f);
     say(`đã đọc ${q.items.length} dòng · đang ghép với BOQ…`);const ai=await qMatch(p,q,say);
     return{q,file:save?f:null,ai}}
 /* Đọc nhiều báo giá: lần lượt từng file (tránh vượt giới hạn số lượt mỗi phút), xong thì đưa anh kiểm tra lần lượt */
-async function qAnalyze(p,F,save){if(!Array.isArray(F))F=[F];qMsg="";const st={};const say=()=>{const x=document.getElementById("qmsg");if(x){x.style.color="";x.innerHTML=F.map((f,i)=>`<div>${i+1}. ${esc(f.name)} · ${esc(st[i]||"đang chờ")}</div>`).join("")}};
+async function qAnalyze(p,F,save){qLesLoad();if(!Array.isArray(F))F=[F];qMsg="";const st={};const say=()=>{const x=document.getElementById("qmsg");if(x){x.style.color="";x.innerHTML=F.map((f,i)=>`<div>${i+1}. ${esc(f.name)} · ${esc(st[i]||"đang chờ")}</div>`).join("")}};
   const out=[],bad=[];say();
   for(let i=0;i<F.length;i++){const f=F[i];st[i]="đang đọc (Claude đọc kỹ từng dòng, file dài có thể mất 1–2 phút)…";say();
     try{out[i]=await qRead1(p,f,save,t=>{st[i]=t;say()});st[i]="✓ "+out[i].q.items.length+" dòng";}catch(e){bad.push(f.name+": "+(e.message||"không đọc được"));st[i]="✗ "+(e.message||"không đọc được")}say()}
@@ -1794,6 +1813,11 @@ function qPackView(p){const P=qPack(p);if(!P.length)return"";const sel=p.qsel||{
   return card("Tổng hợp chọn thầu theo gói","Báo giá được tự nhận diện theo gói vật tư / công việc và hạng mục · so các nhà cung cấp trên cùng phạm vi dòng BOQ để chọn thầu",P.map(g=>`<div class="qpack"><div class="qpk2"><b>${esc(g.cat)}</b><span class="sub">${g.rows.length} báo giá${g.rows.length>1?` · phạm vi chung ${n0(g.common)} dòng BOQ`:""}</span></div>
     <div class="tw"><table class="t"><thead><tr><th>Nhà cung cấp / thầu phụ</th><th>Hạng mục áp dụng</th><th class="r">Số dòng BOQ</th><th class="r">Thành tiền báo giá (chưa VAT)</th><th class="r">Thành tiền giá gốc</th><th class="r">Lời/lỗ so gốc</th>${g.rows.length>1?`<th class="r">Trên phạm vi chung</th>`:""}<th>Thanh toán</th><th>Giao hàng</th><th></th></tr></thead><tbody>
     ${g.rows.map(r=>{const q=r.q,on=qCodes([q]).length&&qCodes([q]).every(c=>sel[c]===q.id),b=g.best===r;return`<tr${b?' class="qbest"':""}><td><b>${esc(q.vendor)}</b>${b?' <span class="st ok">Rẻ nhất</span>':""}<small class="spec">${esc(QKIND[q.kind][0])} · ${esc(q.date||"")}</small></td><td>${esc(qHmTxt(p,r.hm))}</td><td class="r">${n0(r.all.n)}</td><td class="r"><b>${n0(r.all.tn)}</b></td><td class="r">${n0(r.all.tg)}</td><td class="r"${neg(r.all.tg-r.all.tn)}>${n0(r.all.tg-r.all.tn)} · ${pc(r.all.tg-r.all.tn,r.all.tg)}</td>${g.rows.length>1?`<td class="r">${r.com.n?n0(r.com.tn):"-"}</td>`:""}<td>${q.payDays!=null?q.payDays+" ngày":"–"}</td><td>${q.deliDays!=null?q.deliDays+" ngày":"–"}</td><td class="r">${on?st("ok","Đang chọn"):`<button class="back sm" style="margin:0" data-qpick="${q.id}">Chọn cả gói</button>`}</td></tr>`}).join("")}</tbody></table></div></div>`).join(""),"span3")}
+/* Đầu mục chính của một dòng BOQ: nhóm vật liệu + mác/quy cách + đơn vị (ví dụ "Bê tông M300"), để gộp các dòng chi tiết */
+function qMain(b){const l=b.l,t=BOQ.nz((l.name||"")+" "+(l.spec||"")),r=MR.find(m=>m[1].test(t)),K=[...qKey((l.name||"")+" "+(l.spec||""))].filter(x=>/^(m\d|b\d|d\d|cb\d|sd\d|phi\d)/.test(x)).sort(),u=BOQ.nz(b.unit||"");
+  if(r&&K.length)return{k:"m|"+r[0]+"|"+K.join(",")+"|"+u,n:r[0]+" "+K.map(x=>x.toUpperCase()).join(" ")};
+  if(r)return{k:"m|"+r[0]+"|"+u,n:r[0]+(K.length?"":" (khác)")};
+  return{k:"n|"+t+"|"+u,n:l.name}}
 function quoteView(p){if(QV&&QV.pid===p.id)return qReview(p);const Q=p.quotes||[],sel=p.qsel||{};
   const hmOf=c=>c.split(/[.|]/)[0],codes=qCodes(Q),HM=[...new Set(codes.map(hmOf))].sort(),R=codes.filter(c=>!qHm||hmOf(c)===qHm).map(c=>{const kinds=new Set(Q.filter(q=>qFind(q,c)).map(q=>q.kind));return{c,kinds}}).sort((a,b)=>a.c.localeCompare(b.c,"vi",{numeric:true}));
   const QQ=Q.filter(q=>R.some(r=>qFind(q,r.c)));
@@ -1803,8 +1827,8 @@ function quoteView(p){if(QV&&QV.pid===p.id)return qReview(p);const Q=p.quotes||[
     const all=QQ.map(y=>qVal(y,c)).filter(y=>y!=null),best=v===Math.min(...all)&&all.length>1,over=b&&b.gv&&v>b.gv*1.0001,bad=b&&b.cdt&&v>b.cdt*1.0001,pc=b&&b.gv?v/b.gv*100:null,on=sel[c]===q.id;
     return`<td class="r qv${best?" qb":""}${bad?" qr":over?" qo":""}${on?" qs":""}" title="${esc(x.it.name+(x.it.spec?" · "+x.it.spec:"")+" · "+(x.l.how||""))}">${n0(v)}${pc!=null?`<small>${fm(pc,0)}%</small>`:""}</td><td class="qc"><input type="radio" name="qs-${esc(c)}" data-qsel="${esc(c)}" value="${q.id}"${on?" checked":""} aria-label="Chọn ${esc(q.vendor)}"></td>`};
   /* Bảng so sánh: gộp các dòng BOQ cùng tên công việc (mọi hạng mục) thành một đầu mục; mỗi nhà cung cấp: đơn giá, thành tiền, lời/lỗ so giá gốc */
-  const GR=new Map();R.forEach(({c,kinds})=>{const k=kinds.size===1?[...kinds][0]:"thau_phu",b=qBase(p,c,k);if(!b)return;const key=c.includes("|")?c:BOQ.nz((b.l.name||"")+" "+(b.l.spec||""))+"|"+BOQ.nz(b.unit||"");
-    if(!GR.has(key))GR.set(key,{key,name:c.includes("|")?"Cả nhóm "+c.split("|")[1]:b.l.name,spec:c.includes("|")?"":b.l.spec||"",unit:b.unit,codes:[],kl:0,tb:0,tg:0});const g=GR.get(key),kl=c.includes("|")?1:(b.l.qty||0);
+  const GR=new Map();R.forEach(({c,kinds})=>{const k=kinds.size===1?[...kinds][0]:"thau_phu",b=qBase(p,c,k);if(!b)return;const mk=c.includes("|")?{k:c,n:"Cả nhóm "+c.split("|")[1]}:qMain(b),key=mk.k;
+    if(!GR.has(key))GR.set(key,{key,name:mk.n,spec:"",unit:b.unit,codes:[],kl:0,tb:0,tg:0});const g=GR.get(key),kl=c.includes("|")?1:(b.l.qty||0);
     g.codes.push({c,b,kl});g.kl+=kl;g.tb+=c.includes("|")?b.cdt:b.cdt*kl;g.tg+=c.includes("|")?b.gv:b.gv*kl});
   const GL=[...GR.values()],neg=v=>v<0?' style="color:#C0141B"':"",pc=(a,b)=>b?(a<0?"("+fm(-a/b*100,1)+"%)":fm(a/b*100,1)+"%"):"-";
   const vq=(q,g)=>{let tn=0,kl=0,tg=0,n=0;g.codes.forEach(({c,b,kl:k})=>{const v=qVal(q,c);if(v==null)return;const grp=c.includes("|");tn+=grp?v:v*k;kl+=k;tg+=grp?b.gv:b.gv*k;n++});return n?{tn,kl,tg,n,dg:kl?tn/kl:null}:null};
@@ -1815,8 +1839,8 @@ function quoteView(p){if(QV&&QV.pid===p.id)return qReview(p);const Q=p.quotes||[
       <td class="r">${g.kl?n0(g.tb/g.kl):"-"}</td><td class="r">${n0(g.tb)}</td><td class="r">${g.kl?n0(g.tg/g.kl):"-"}</td><td class="r">${n0(g.tg)}</td>
       ${QQ.map((q,i)=>{const v=V[i];if(!v)return`<td class="qx" colspan="5"><span class="sub">Không báo giá</span></td>`;const on=g.codes.every(({c})=>!qFind(q,c)||sel[c]===q.id)&&g.codes.some(({c})=>sel[c]===q.id),isb=best!=null&&full[i]&&Math.abs(v.dg-best)<.5;
         return`<td class="r${isb?" qb":""}"><b>${v.dg!=null?n0(v.dg):"-"}</b>${full[i]?"":`<small class="spec">${v.n}/${g.codes.length} dòng</small>`}</td><td class="r">${n0(v.tn)}</td><td class="r"${neg(v.tg-v.tn)}>${n0(v.tg-v.tn)}</td><td class="r"${neg(v.tg-v.tn)}>${pc(v.tg-v.tn,v.tg)}</td><td class="qc"><input type="radio" name="qg-${gi}" data-qgs="${esc(g.key)}" value="${q.id}"${on?" checked":""} aria-label="Chọn ${esc(q.vendor)}"></td>`}).join("")}</tr>`+
-      (open?g.codes.map(({c,b,kl})=>`<tr class="qcd2"><td><span class="num" style="color:var(--muted)">${esc(c.split("|")[0])}</span> · ${esc((b.h||{}).name||"")}</td><td class="tc">${esc(b.unit||"")}</td><td class="r">${nq(kl)}</td><td class="r">${n0(b.cdt)}</td><td></td><td class="r">${n0(b.gv)}</td><td></td>${QQ.map(q=>{const v=qVal(q,c);return v==null?`<td colspan="5" class="qx"></td>`:`<td class="r">${n0(v)}</td><td class="r">${n0(c.includes("|")?v:v*kl)}</td><td colspan="2"></td><td class="qc"><input type="radio" name="qs-${esc(c)}" data-qsel="${esc(c)}" value="${q.id}"${sel[c]===q.id?" checked":""}></td>`}).join("")}</tr>`).join(""):"")}).join("");
-  const cmp=R.length?`<div class="pvh" style="margin-bottom:10px"><span class="sub">Hạng mục</span><select class="fi sel" id="qhm"><option value="">Tất cả</option>${HM.map(h=>{const x=p.hms.find(y=>y.code===h);return`<option value="${h}"${h===qHm?" selected":""}>${h} · ${esc(x?x.name:"")}</option>`}).join("")}</select><span class="sub">Mỗi dòng là một đầu mục công việc, cộng mọi hạng mục · đơn giá chưa VAT, quy về đơn vị BOQ · lời/lỗ = thành tiền giá gốc trừ thành tiền nhà cung cấp · <b style="color:#0E7A3F">xanh</b> rẻ nhất · chọn một nhà cho cả đầu mục, bấm "n dòng BOQ" để chọn riêng từng dòng</span></div>
+      (open?g.codes.map(({c,b,kl})=>`<tr class="qcd2"><td style="padding-left:22px"><span class="num" style="color:var(--muted)">${esc(c.split("|")[0])}</span> · ${esc((b.h||{}).name||"")}${b.l?`<small class="spec">${esc(b.l.name)}${b.l.spec?" · "+esc(b.l.spec):""}</small>`:""}</td><td class="tc">${esc(b.unit||"")}</td><td class="r">${nq(kl)}</td><td class="r">${n0(b.cdt)}</td><td></td><td class="r">${n0(b.gv)}</td><td></td>${QQ.map(q=>{const v=qVal(q,c);return v==null?`<td colspan="5" class="qx"></td>`:`<td class="r">${n0(v)}</td><td class="r">${n0(c.includes("|")?v:v*kl)}</td><td colspan="2"></td><td class="qc"><input type="radio" name="qs-${esc(c)}" data-qsel="${esc(c)}" value="${q.id}"${sel[c]===q.id?" checked":""}></td>`}).join("")}</tr>`).join(""):"")}).join("");
+  const cmp=R.length?`<div class="pvh" style="margin-bottom:10px"><span class="sub">Hạng mục</span><select class="fi sel" id="qhm"><option value="">Tất cả</option>${HM.map(h=>{const x=p.hms.find(y=>y.code===h);return`<option value="${h}"${h===qHm?" selected":""}>${h} · ${esc(x?x.name:"")}</option>`}).join("")}</select><span class="sub">Mỗi dòng là một đầu mục chính (vật liệu + mác, ví dụ Bê tông M300), cộng mọi dòng BOQ ở mọi hạng mục · đơn giá chưa VAT, quy về đơn vị BOQ · lời/lỗ = thành tiền giá gốc trừ thành tiền nhà cung cấp · <b style="color:#0E7A3F">xanh</b> rẻ nhất · chọn một nhà cho cả đầu mục, bấm "n dòng BOQ" để xem chi tiết từng dòng BOQ, kiểm tra và chọn riêng</span></div>
     <div class="tw bsw"><table class="t qt qt2"><thead><tr><th rowspan="2">Đầu mục BOQ</th><th rowspan="2">ĐVT</th><th rowspan="2">Khối lượng<br>BOQ tổng</th><th colspan="2" class="hg-a">Giá BOQ (CĐT)</th><th colspan="2" class="hg-b">Giá gốc</th>${QQ.map(q=>`<th colspan="5" class="hg-c" title="${esc(q.file||"")}">${esc(q.vendor)}<small style="display:block;font-weight:400">${esc(QKIND[q.kind][1])}</small></th>`).join("")}</tr>
       <tr class="h2"><th class="hs-a">Đơn giá</th><th class="hs-a">Thành tiền</th><th class="hs-b">Đơn giá</th><th class="hs-b">Thành tiền</th>${QQ.map(()=>`<th class="hs-c">Đơn giá</th><th class="hs-c">Thành tiền</th><th class="hs-c">Lời/lỗ so gốc</th><th class="hs-c">%</th><th class="hs-c">Chọn</th>`).join("")}</tr></thead>
       <tbody>${body}</tbody><tfoot><tr><td colspan="3"><b>Tổng cộng ${GL.length} đầu mục</b></td><td></td><td class="r"><b>${n0(TB)}</b></td><td></td><td class="r"><b>${n0(TG)}</b></td>${QQ.map((q,i)=>{const t=TOT[i];return`<td></td><td class="r"><b>${n0(t.tn)}</b></td><td class="r"${neg(t.tg-t.tn)}><b>${n0(t.tg-t.tn)}</b></td><td class="r"${neg(t.tg-t.tn)}><b>${pc(t.tg-t.tn,t.tg)}</b></td><td></td>`}).join("")}</tr></tfoot></table></div>
@@ -1873,7 +1897,7 @@ function qCmpTable(p,q){if(qCmpTable.q!==q){QX=new Set();qCmpTable.q=q}const who
   ${none.length?`<details class="qnd"><summary>${none.length} dòng báo giá không có trong BOQ (bấm để xem, ghép tay nếu cần)</summary><div class="tw"><table class="t qrv"><thead><tr><th>#</th><th>Dòng trong báo giá</th><th>ĐVT</th><th>Đơn giá</th><th>Ghép với dòng BOQ</th></tr></thead><tbody>${none.join("")}</tbody></table></div></details>`:""}`}
 function qReview(p){const {q,ai}=QV,LL=qLines(p),nl=new Set();q.items.forEach(it=>qL(it).forEach(l=>nl.add(l.c)));const lab=c=>{if(!c)return"";if(c.includes("|")){const [h,g]=c.split("|");return c+" · cả nhóm "+g}const x=qLine(p,c);return x?c+" · "+x.l.name+(x.l.spec?" · "+x.l.spec:"")+" ("+(x.l.unit||"")+")":c};
   const chip=(i,l)=>{const x=qLine(p,l.c),nm=x?x.l.name:l.c.split("|")[1]||l.c;return`<span class="qch ${l.conf>=.85?"ok":l.conf>=.6?"warn":"bad"}" title="${esc(lab(l.c)+" · "+(l.how||""))}">${esc(l.c.split("|")[0])} · ${esc(nm.length>34?nm.slice(0,33)+"…":nm)}<button type="button" data-qrm="${i}|${esc(l.c)}" aria-label="Bỏ dòng này">×</button></span>`};
-  return `<div class="vgrid">${card(`Kiểm tra báo giá${QV.tot>1?` ${QV.tot-(QV.rest||[]).length}/${QV.tot}`:""}: ${esc(q.vendor)}`,`${esc(q.file)} · đọc bằng ${esc(q.model||"Claude")} · ${n0(q.items.length)} dòng giá · áp cho ${n0(nl.size)} dòng BOQ${ai===false?" · Claude không ghép được (Claude đang bận hoặc lỗi), đang đoán theo tên và mác":""}`,`
+  return `<div class="vgrid">${card(`Kiểm tra báo giá${QV.tot>1?` ${QV.tot-(QV.rest||[]).length}/${QV.tot}`:""}: ${esc(q.vendor)}`,`${esc(q.file)} · đọc bằng ${esc(q.model||"Claude")} · ${n0(q.items.length)} dòng giá · áp cho ${n0(nl.size)} dòng BOQ${q._les?` · <b style="color:#0E7A3F">tự áp dụng ${q._les} lần anh đã sửa ghép trước đây</b>`:""}${ai===false?" · Claude không ghép được (Claude đang bận hoặc lỗi), đang đoán theo tên và mác":""}`,`
     <div class="qhd"><label class="fl"><span>Nhà cung cấp / thầu phụ</span><input class="fi" id="qv-vendor" value="${esc(q.vendor)}"></label><label class="fl"><span>Loại</span><select class="fi" id="qv-kind">${Object.entries(QKIND).map(([k,v])=>`<option value="${k}"${k===q.kind?" selected":""}>${v[0]} (${v[1].toLowerCase()})</option>`).join("")}</select></label>
       <label class="fl"><span>Ngày báo giá</span><input class="fi" id="qv-date" value="${esc(q.date||"")}"></label><label class="fl"><span>Đơn giá đã gồm VAT?</span><select class="fi" id="qv-vat"><option value="0"${q.vat_included?"":" selected"}>Chưa gồm VAT</option><option value="1"${q.vat_included?" selected":""}>Đã gồm VAT</option></select></label>
       <label class="fl"><span>Thuế VAT (%)</span><input class="fi" id="qv-vr" value="${q.vat_rate!=null?q.vat_rate:""}" placeholder="10"></label><label class="fl"><span>Trả sau (ngày)</span><input class="fi" id="qv-pd" value="${q.payDays!=null?q.payDays:""}"></label><label class="fl"><span>Giao hàng (ngày)</span><input class="fi" id="qv-dd" value="${q.deliDays!=null?q.deliDays:""}"></label></div>
@@ -2549,15 +2573,15 @@ view.addEventListener("change",async e=>{const t=e.target;if(!cur)return;const p
   if(t.id==="ctup"&&t.files.length){const f0=t.files[0];t.value="";let f;try{f=new File([await f0.arrayBuffer()],f0.name,{type:f0.type})}catch(er){return}keepFile(p.id,"01.3",f,"File hợp đồng").catch(()=>{});p._files13=undefined;ctFlow(p,f);return}
   if(t.dataset.qgs!==undefined){const q=(p.quotes||[]).find(x=>x.id===t.value),k=t.dataset.qgs;if(q){const S={...(p.qsel||{})};
       /* mã các dòng BOQ trong đầu mục được tính lại theo cùng khoá gộp */
-      qCodes(p.quotes||[]).forEach(c=>{const b=qBase(p,c,q.kind);if(!b)return;const key=c.includes("|")?c:BOQ.nz((b.l.name||"")+" "+(b.l.spec||""))+"|"+BOQ.nz(b.unit||"");if(key===k&&qFind(q,c))S[c]=q.id});p.qsel=S;persist();qRe()}return}
+      qCodes(p.quotes||[]).forEach(c=>{const b=qBase(p,c,q.kind);if(!b)return;const key=c.includes("|")?c:qMain(b).k;if(key===k&&qFind(q,c))S[c]=q.id});p.qsel=S;persist();qRe()}return}
   if(t.dataset.qsel!==undefined){p.qsel={...(p.qsel||{}),[t.dataset.qsel]:t.value};persist();qRe();return}
   if(t.dataset.qm!==undefined&&QV){const it=QV.q.items[+t.dataset.qm],c=qParse(t.value),okc=c&&(c.includes("|")?qGroups(p).some(G=>G.k===c):!!qLine(p,c));
     if(!c)return;if(!okc){t.style.borderColor="#E1141B";return}
-    const x=qLine(p,c);it.links=qL(it).filter(l=>l.c!==c);it.links.push({c,f:x?qUnitF(it.unit,x.l.unit):1,conf:1,how:"anh chọn"});delete it.code;
+    const x=qLine(p,c);it.links=qL(it).filter(l=>l.c!==c);it.links.push({c,f:x?qUnitF(it.unit,x.l.unit):1,conf:1,how:"anh chọn"});delete it.code;qLearn(p,it,c,true);
     /* Một dòng BOQ chỉ lấy giá từ một dòng của cùng báo giá */
     QV.q.items.forEach(o=>{if(o!==it&&o.links)o.links=o.links.filter(l=>l.c!==c)});qRe();return}
-  if(t.dataset.qsw!==undefined&&QV){const v=t.dataset.qsw,i=+v.split("|")[0],c=v.slice(v.indexOf("|")+1),j=+t.value,a=QV.q.items[i],L=qL(a),l=L.find(x=>x.c===c);a.links=L.filter(x=>x.c!==c);delete a.code;
-    if(l&&j>=0){const b=QV.q.items[j],x=qLine(p,c);b.links=qL(b).filter(y=>y.c!==c);b.links.push({c,f:x?qUnitF(b.unit,x.l.unit):1,conf:1,how:"anh chọn"});delete b.code}qRe();return}
+  if(t.dataset.qsw!==undefined&&QV){const v=t.dataset.qsw,i=+v.split("|")[0],c=v.slice(v.indexOf("|")+1),j=+t.value,a=QV.q.items[i],L=qL(a),l=L.find(x=>x.c===c);a.links=L.filter(x=>x.c!==c);delete a.code;qLearn(p,a,c,false);
+    if(l&&j>=0){const b=QV.q.items[j],x=qLine(p,c);b.links=qL(b).filter(y=>y.c!==c);b.links.push({c,f:x?qUnitF(b.unit,x.l.unit):1,conf:1,how:"anh chọn"});delete b.code;qLearn(p,b,c,true)}qRe();return}
   if(t.dataset.qf!==undefined&&QV){const v=parseFloat(String(t.value).replace(",",".")),it=QV.q.items[+t.dataset.qf];it.links=qL(it).map(l=>({...l,f:v>0?v:1}));delete it.code;qRe();return}
   if(t.id==="qv-kind"&&QV){QV.q.kind=t.value;return}});
 view.addEventListener("click",async e=>{const t=e.target;if(!cur)return;const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;
@@ -2568,8 +2592,8 @@ view.addEventListener("click",async e=>{const t=e.target;if(!cur)return;const p=
     try{const b=await FS.blob(o.value);qAnalyze(p,new File([b],o.dataset.n,{type:b.type}),false)}catch(er){if(m){m.textContent=er.message;m.style.color="#C0141B"}}return}
   const qcx=t.closest("[data-qcx]");if(qcx){const k="cmp:"+qcx.dataset.qcx;QX.has(k)?QX.delete(k):QX.add(k);qRe();return}
   const qe=t.closest("[data-qexp]");if(qe&&QV){const i=+qe.dataset.qexp;QX.has(i)?QX.delete(i):QX.add(i);qRe();return}
-  const qo=t.closest("[data-qok]");if(qo&&QV){const v=qo.dataset.qok,i=+v.split("|")[0],c=v.slice(v.indexOf("|")+1),it=QV.q.items[i];it.links=qL(it).map(l=>l.c===c?{...l,conf:1,how:"anh xác nhận"}:l);delete it.code;qRe();return}
-  const rm=t.closest("[data-qrm]");if(rm&&QV){const [i,c]=[rm.dataset.qrm.split("|")[0],rm.dataset.qrm.slice(rm.dataset.qrm.indexOf("|")+1)],it=QV.q.items[+i];it.links=qL(it).filter(l=>l.c!==c);delete it.code;qRe();return}
+  const qo=t.closest("[data-qok]");if(qo&&QV){const v=qo.dataset.qok,i=+v.split("|")[0],c=v.slice(v.indexOf("|")+1),it=QV.q.items[i];it.links=qL(it).map(l=>l.c===c?{...l,conf:1,how:"anh xác nhận"}:l);delete it.code;qLearn(p,it,c,true);qRe();return}
+  const rm=t.closest("[data-qrm]");if(rm&&QV){const [i,c]=[rm.dataset.qrm.split("|")[0],rm.dataset.qrm.slice(rm.dataset.qrm.indexOf("|")+1)],it=QV.q.items[+i];it.links=qL(it).filter(l=>l.c!==c);delete it.code;qLearn(p,it,c,false);qRe();return}
   const rb=t.closest("#qrematch");if(rb&&QV){rb.disabled=true;rb.textContent="Đang ghép lại…";const k=document.getElementById("qv-kind");if(k)QV.q.kind=k.value;QV.ai=await qMatch(p,QV.q,s=>{rb.textContent=s});qRe();return}
   const qNext=()=>{const R=QV&&QV.rest||[],tot=QV&&QV.tot;QV=R.length?{pid:p.id,...R[0],rest:R.slice(1),tot}:null};
   if(t.closest("#qcancel")){qNext();qRe();return}
