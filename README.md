@@ -84,6 +84,7 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - Chỉ huy trưởng lập theo mẫu hồ sơ thanh toán của công ty (Thông báo thanh toán + Khối lượng thanh toán thi công): nhập tay hoặc tải file Excel mẫu (web đọc nhà thầu, số hợp đồng, ngày, gói thầu, đợt, các dòng khối lượng theo hợp đồng, ngoài hợp đồng, khấu trừ, hỗ trợ, phạt). Chọn được hợp đồng đã lưu ở 05.2.
 - Tính đúng công thức mẫu: giá trị thực hiện đến kỳ này (gồm VAT) → được thanh toán (100% − % giữ lại, mặc định 90%) → + tạm ứng − hoàn trả tạm ứng → − đã thanh toán các kỳ trước (web tự cộng các đợt đã duyệt cùng hợp đồng) = đề nghị thanh toán kỳ này.
 - Luồng `tt` mặc định: Kế toán duyệt (được sửa số liệu: tạm ứng, khấu trừ, đã thanh toán…) → Giám đốc phê duyệt (Ban giám đốc); sửa ở Quản trị → Luồng duyệt. Có thông báo từng bước như phiếu vật tư. Duyệt xong lưu file Excel 2 sheet vào 05.3; đợt đã duyệt có nút Lập đợt tiếp theo.
+- Đề nghị đã duyệt vào cột **④ Chi phí thực tế** ở tab Đối chiếu 4 lớp: mỗi hợp đồng lấy đợt mới nhất (giá trị thực hiện lũy kế, chưa VAT), phân bổ vào dòng BOQ của gói và hạng mục gắn với hợp đồng 05.2 theo tỷ trọng giá vốn dự thầu; đề nghị chưa chọn hợp đồng hiện ở dòng Chưa phân bổ. Cảnh báo ④/③ trên 88%, chỉ số chi phí = giá vốn phần đã làm ÷ chi phí thực tế.
 - Dùng chung bảng `material_requests` (cột `kind` = `tt`, `data` = thông tin riêng) và các hàm `mr_save`, `mr_act` (migration `20261105_thanh_toan_ncc_tp.sql`).
 
 ## Hợp đồng NCC – TP gắn gói thầu (thư mục 05.2)
