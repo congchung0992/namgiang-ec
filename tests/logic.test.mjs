@@ -194,6 +194,7 @@ await (async () => {
     const res = await chat.onRequestPost({ request: req, env: { ANTHROPIC_API_KEY: "khoa-gia" } });
     globalThis.fetch = of;
     eq(res.status, 200, "mã trả về:"); eq(sent.messages[0].role, "user"); ok(sent.messages.length <= 12);
+    eq(sent.model, "claude-haiku-5-5", "mô hình mặc định:"); ok(sent.max_tokens >= 2000, "max_tokens phải đủ chỗ cho cả suy nghĩ và câu trả lời");
     pass++; console.log("  ĐẠT  " + name);
   } catch (e) { fail++; console.log("  LỖI  " + name + "\n        " + e.message) }
 })();

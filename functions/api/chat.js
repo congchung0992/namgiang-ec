@@ -25,8 +25,11 @@ export async function onRequestPost({ request, env }) {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
     body: JSON.stringify({
-      model: env.CLAUDE_MODEL || "claude-sonnet-5-5",
-      max_tokens: 1200,
+      // Mặc định Haiku 5.5: rẻ, đủ cho hỏi đáp số liệu. Đổi mô hình bằng biến CLAUDE_MODEL trên Cloudflare.
+      model: env.CLAUDE_MODEL || "claude-haiku-5-5",
+      // Mô hình có bước suy nghĩ, tính chung vào max_tokens: để dư chỗ cho câu trả lời, suy nghĩ ở mức thấp cho tiết kiệm
+      max_tokens: 4000,
+      output_config: { effort: "low" },
       system: SYSTEM + "\n\nNGỮ CẢNH (JSON số liệu hiện có trên web):\n" + context,
       messages
     })

@@ -32,3 +32,4 @@ manifest.webmanifest    Cho phép "Thêm vào màn hình chính" trên điện t
 ## Trợ lý AI (khung chat)
 - Nút tin nhắn ở góc phải dưới mở khung chat. Chưa kết nối Claude thì trợ lý trả lời từ số liệu trên web.
 - Kết nối Claude: vào Cloudflare → Workers & Pages → namgiang-ec → Settings → Variables and Secrets, thêm biến bí mật `ANTHROPIC_API_KEY` (khoá lấy ở console.anthropic.com), rồi triển khai lại. Mã xử lý nằm ở `functions/api/chat.js`; khoá không nằm trong mã nguồn.
+- Mô hình mặc định là Claude Haiku 5.5 (`claude-haiku-5-5`), rẻ và đủ cho hỏi đáp số liệu. Muốn đổi mô hình thì thêm biến `CLAUDE_MODEL` ở cùng chỗ, ví dụ `claude-sonnet-5-5`.
