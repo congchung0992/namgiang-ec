@@ -1824,7 +1824,7 @@ const tw_=s=>BOQ.nz(s).replace(/[^a-z0-9 ]/g," ").split(" ").filter(w=>w.length>
 const simW=(a,b)=>{const A=tw_(a),B=tw_(b);if(!A.length||!B.length)return 0;let k=0;A.forEach(w=>{if(B.includes(w))k++});return k/Math.max(A.length,B.length)};
 async function readGG(f){const m=document.getElementById("ggmsg");if(m)m.textContent="Đang đọc "+f.name+"…";
   try{await needX();const wb=XLSX.read(await f.arrayBuffer(),{type:"array"}),r=BOQ.parse(wb,XLSX);if(!r.count)throw new Error("Không tìm thấy bảng đơn giá trong file này");
-    ggP={pid:cur.id,file:f.name,r,assign:{},sel:null,flt:"all",keep:false};ggRe(1)}
+    ggP={pid:cur.id,file:f.name,blob:f,r,assign:{},sel:null,flt:"all",keep:false};ggRe(1)}
   catch(e){if(m){m.textContent=e.message||"Không đọc được file";m.style.color="#C0141B"}}}
 function ggMatch(p,r){const N=BOQ.nz,used=new Set(),G=r.hms,hmN=p.hms.map(h=>N(h.name));
   const sumLike=g=>g.lines.length&&g.lines.filter(l=>hmN.some(n=>n===N(l.name)||simW(n,l.name)>=.6)).length>=g.lines.length*.5;
@@ -1873,7 +1873,9 @@ function ggView(p){const R=ggP.res,rows=R.rows,ok=rows.filter(x=>x.m).length,cnt
 function ggApply(){const p=DB.projects.find(x=>x.id===ggP.pid);if(!p)return;const R=ggP.res;let n=0;
   R.rows.forEach(x=>{if(!x.m)return;const c=p.cost[x.l.code];if(ggP.keep&&c&&has(c)&&!c.src)return;p.cost[x.l.code]={v:x.v,n:x.n,...(c&&c.m!=null?{m:c.m}:{}),src:"g"};n++});
   p.xcost={};R.ex.forEach(x=>{const a=ggP.assign[x.g.sheet];if(a){const o=p.xcost[a]||(p.xcost[a]={v:0,n:0,src:[]});x.g.lines.forEach(l=>{if(l.vl!=null||l.nc!=null){o.v+=l.vl||0;o.n+=l.nc||0}else o.v+=l.total||0});o.src.push(x.g.sheet)}});
-  p.gg={file:ggP.file,date:fd(new Date()),n};const id=p.id;ggP=null;persist();location.hash="da-"+id+"-boq";route()}
+  p.gg={file:ggP.file,date:fd(new Date()),n};const id=p.id,blob=ggP.blob;ggP=null;persist();
+  /* Lưu luôn file giá gốc vào mục 01 Hồ sơ thầu của Thư mục dự án */
+  if(blob)keepFile(id,"01",blob,"File giá gốc").catch(()=>{});location.hash="da-"+id+"-boq";route()}
 view.addEventListener("click",e=>{if(!ggP)return;const t=e.target;let b;
   if(t.closest("#ggok")){ggApply();return}
   if(b=t.closest("tr[data-gv]")){ggP.sel=+b.dataset.gv;ggP.flt="all";ggRe();const d=view.querySelector("table.ggd");if(d)d.closest(".card").scrollIntoView({behavior:"smooth",block:"start"});return}
