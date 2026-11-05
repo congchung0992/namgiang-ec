@@ -1564,7 +1564,7 @@ const later=(t,items)=>card(t,"Phần này sẽ làm ở bước tiếp theo",ms
 /* ===== Báo giá nhà cung cấp / thầu phụ / tổ đội: đọc (Gemini), ghép BOQ, so sánh với giá CĐT và giá vốn, chọn rồi gửi duyệt ===== */
 const QKIND={ncc:["Nhà cung cấp","Vật tư"],thau_phu:["Thầu phụ","Trọn gói"],nhan_cong:["Tổ đội","Nhân công"]};
 const QFOLDER={ncc:"05.1",thau_phu:"05.3",nhan_cong:"05.3"};
-let QV=null,qHm="",qMsg="";
+let QV=null,qHm="",qMsg="",qBad="";
 const qLines=p=>{const L=[];p.hms.forEach(h=>h.lines.forEach(l=>L.push({h,l})));return L};
 const qGroups=p=>{const G=[];p.hms.forEach(h=>{const seen={};h.lines.forEach(l=>{const k=h.code+"|"+(l.g1||"");if(seen[k])return;seen[k]=1;G.push({k,h,g:l.g1||h.name})})});return G};
 const qLine=(p,code)=>{for(const h of p.hms)for(const l of h.lines)if(l.code===code)return{h,l};return null};
@@ -1612,15 +1612,22 @@ async function qMatch(p,q,progress){const todo=[];
     catch(e){ai=false}}
   q.items.forEach(it=>{if(it.code!==undefined)return;const top=it.cands&&it.cands[0];if(top&&top.s>=.75){it.code=top.code;it.conf=Math.min(.7,top.s-.3);it.how="đoán theo tên";it.f=top.grp?1:qUnitF(it.unit,top.unit)}else{it.code=null;it.conf=0;it.how=""}});
   return ai}
-async function qAnalyze(p,f,save){qMsg="";const m=document.getElementById("qmsg"),say=t=>{const x=document.getElementById("qmsg");if(x){x.textContent=t;x.style.color=""}};
-  try{say("Đang đọc báo giá "+f.name+"… (Gemini đọc kỹ từng dòng, file dài có thể mất 1–2 phút)");const r=await qReadFile(p,f);
+/* Đọc một báo giá, trả về để kiểm tra (không tự lưu) */
+async function qRead1(p,f,save,say){const r=await qReadFile(p,f);
     const q={id:"q"+Date.now().toString(36),vendor:r.vendor||f.name.replace(/\.\w+$/,""),no:r.quote_no||"",date:r.date||fd(new Date()),kind:QKIND[r.kind]?r.kind:"ncc",scope:r.scope||"",vat_included:!!r.vat_included,vat_rate:r.vat_rate,
       pay:r.payment_terms||"",payDays:r.payment_days,adv:r.advance_percent,deli:r.delivery_terms||"",deliDays:r.delivery_days,valid:r.validity||"",file:f.name,model:r.model||"",at:new Date().toISOString(),
       items:(r.items||[]).filter(it=>it&&it.name).map(it=>({name:String(it.name),spec:it.spec||"",unit:it.unit||"",q:it.qty,pv:it.price_material,pn:it.price_labor,p:it.price,amt:it.amount,note:it.note||""}))};
     if(!q.items.length)throw new Error("Không tìm thấy dòng đơn giá nào trong báo giá");
-    say(`Đã đọc ${q.items.length} dòng · đang ghép với BOQ…`);const ai=await qMatch(p,q,say);
-    QV={pid:p.id,q,file:save?f:null,ai};route()}
-  catch(e){const x=document.getElementById("qmsg");if(x){x.textContent=e.message||"Không đọc được báo giá";x.style.color="#C0141B"}}}
+    q.id="q"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);say(`${f.name}: đã đọc ${q.items.length} dòng · đang ghép với BOQ…`);const ai=await qMatch(p,q,say);
+    return{q,file:save?f:null,ai}}
+/* Đọc nhiều báo giá: 2 file một lượt, xong thì đưa anh kiểm tra lần lượt từng báo giá */
+async function qAnalyze(p,F,save){if(!Array.isArray(F))F=[F];qMsg="";const st={};const say=()=>{const x=document.getElementById("qmsg");if(x){x.style.color="";x.innerHTML=F.map((f,i)=>`<div>${i+1}. ${esc(f.name)} · ${esc(st[i]||"đang chờ")}</div>`).join("")}};
+  const out=[],bad=[];let k=0;say();
+  await Promise.all([0,1].map(async()=>{while(k<F.length){const i=k++,f=F[i];st[i]="đang đọc (Gemini đọc kỹ từng dòng, file dài có thể mất 1–2 phút)…";say();
+    try{out[i]=await qRead1(p,f,save,t=>{st[i]=t.replace(f.name+": ","");say()});st[i]="✓ "+out[i].q.items.length+" dòng";}catch(e){bad.push(f.name+": "+(e.message||"không đọc được"));st[i]="✗ "+(e.message||"không đọc được")}say()}}));
+  const L=out.filter(Boolean);qBad=bad.length?" · Chưa đọc được: "+bad.join(" · ")+" (anh tải lại các file này)":"";if(bad.length)qMsg=qBad.slice(3);
+  if(!L.length){const x=document.getElementById("qmsg");if(x){x.textContent=qMsg;x.style.color="#C0141B"}return}
+  QV={pid:p.id,...L[0],rest:L.slice(1),tot:L.length};route()}
 
 /* ---------- Màn Báo giá ---------- */
 function quoteView(p){if(QV&&QV.pid===p.id)return qReview(p);const Q=p.quotes||[],sel=p.qsel||{};
@@ -1640,7 +1647,7 @@ function quoteView(p){if(QV&&QV.pid===p.id)return qReview(p);const Q=p.quotes||[
     <div class="bh" style="margin-top:14px;flex-wrap:wrap;gap:10px"><span class="sub">${nSel?`Đã chọn ${n0(nSel)} dòng · giá vốn ${delta>=0?"tăng":"giảm"} ${ty(Math.abs(delta))} tỷ so với hiện tại`:"Tích chọn nhà cung cấp cho từng dòng, hoặc bấm Chọn rẻ nhất"}${pend?` · <b style="color:#B45309">đang chờ duyệt trong Hộp quyết định</b>`:""}</span>
       <div class="fla"><button class="back sm" style="margin:0" id="qbest">Chọn rẻ nhất</button>${nSel?`<button class="back sm" style="margin:0" id="qclr">Bỏ chọn</button><button class="pill" id="qsend" style="${sv("rev")}"><span class="dot">✓</span>${pend?"Cập nhật đề xuất":"Gửi duyệt chốt giá vốn"}</button>`:""}</div></div>`:`<div class="sub">Chưa có dòng nào ghép được với BOQ.</div>`;
   const F=(p._files05||[]).filter(x=>!Q.some(q=>q.file===x.name));
-  return `<div class="vgrid">${card("Báo giá nhà cung cấp, thầu phụ, tổ đội",`${Q.length} báo giá · đọc bằng Gemini, ghép từng dòng với BOQ`,`<div class="pvh" style="gap:10px;flex-wrap:wrap"><label class="pill" style="${sv("cost")};cursor:pointer"><input type="file" id="qup" accept=".xlsx,.xls,.xlsm,.csv,.pdf,.jpg,.jpeg,.png,.webp" hidden><span class="dot">${ic("up",2)}</span>Tải báo giá lên và phân tích</label>${F.length?`<select class="fi sel" id="qfs"><option value="">Hoặc chọn file đã có trong 05 Vật tư – Thầu phụ…</option>${F.map(x=>`<option value="${esc(x.id)}" data-n="${esc(x.name)}">${esc(x.name)}</option>`).join("")}</select><button class="back sm" style="margin:0" id="qfa">Phân tích file này</button>`:""}</div><div class="sub" id="qmsg" style="margin:10px 0 12px;min-height:18px">${esc(qMsg)}</div>${list}`,"span3")}
+  return `<div class="vgrid">${card("Báo giá nhà cung cấp, thầu phụ, tổ đội",`${Q.length} báo giá · đọc bằng Gemini, ghép từng dòng với BOQ`,`<div class="pvh" style="gap:10px;flex-wrap:wrap"><label class="pill" style="${sv("cost")};cursor:pointer"><input type="file" id="qup" accept=".xlsx,.xls,.xlsm,.csv,.pdf,.jpg,.jpeg,.png,.webp" multiple hidden><span class="dot">${ic("up",2)}</span>Tải báo giá lên và phân tích · chọn được nhiều file</label>${F.length?`<select class="fi sel" id="qfs"><option value="">Hoặc chọn file đã có trong 05 Vật tư – Thầu phụ…</option>${F.map(x=>`<option value="${esc(x.id)}" data-n="${esc(x.name)}">${esc(x.name)}</option>`).join("")}</select><button class="back sm" style="margin:0" id="qfa">Phân tích file này</button>`:""}</div><div class="sub" id="qmsg" style="margin:10px 0 12px;min-height:18px">${esc(qMsg)}</div>${list}`,"span3")}
   ${Q.length?card("So sánh đơn giá theo dòng BOQ","Giá chủ đầu tư · giá vốn hiện tại · từng báo giá",cmp,"span3"):""}</div>`}
 /* Chênh giá vốn nếu áp các lựa chọn */
 function qDelta(p){let d=0;Object.entries(p.qsel||{}).forEach(([c,qid])=>{const q=(p.quotes||[]).find(x=>x.id===qid),it=q&&q.items.find(x=>x.code===c);if(!it)return;const pr=qPrice(q,it);
@@ -1657,7 +1664,7 @@ function qApply(p){const pay=[];Object.entries(p.qsel||{}).forEach(([c,qid])=>{c
   const w=pay.filter(([q])=>q.payDays!=null);if(w.length){const s=w.reduce((a,[q,v])=>a+Math.abs(v),0)||1;p.terms={...p.terms,cost:Math.round(w.reduce((a,[q,v])=>a+q.payDays*Math.abs(v),0)/s)}}
   p.qlog=[...(p.qlog||[]),{at:new Date().toISOString(),n:Object.keys(p.qsel||{}).length}];p.qpend=null}
 function qReview(p){const {q,ai}=QV,LL=qLines(p),ok=q.items.filter(it=>it.code).length,lab=c=>{if(!c)return"";if(c.includes("|")){const [h,g]=c.split("|");return c+" · cả nhóm "+g}const x=qLine(p,c);return x?c+" · "+x.l.name+(x.l.spec?" · "+x.l.spec:"")+" ("+(x.l.unit||"")+")":c};
-  return `<div class="vgrid">${card(`Kiểm tra báo giá: ${esc(q.vendor)}`,`${esc(q.file)} · đọc bằng ${esc(q.model||"Gemini")} · ${n0(q.items.length)} dòng · ghép được ${n0(ok)} dòng${ai===false?" · Gemini không ghép được, đang đoán theo tên":""}`,`
+  return `<div class="vgrid">${card(`Kiểm tra báo giá${QV.tot>1?` ${QV.tot-(QV.rest||[]).length}/${QV.tot}`:""}: ${esc(q.vendor)}`,`${esc(q.file)} · đọc bằng ${esc(q.model||"Gemini")} · ${n0(q.items.length)} dòng · ghép được ${n0(ok)} dòng${ai===false?" · Gemini không ghép được, đang đoán theo tên":""}`,`
     <div class="qhd"><label class="fl"><span>Nhà cung cấp / thầu phụ</span><input class="fi" id="qv-vendor" value="${esc(q.vendor)}"></label><label class="fl"><span>Loại</span><select class="fi" id="qv-kind">${Object.entries(QKIND).map(([k,v])=>`<option value="${k}"${k===q.kind?" selected":""}>${v[0]} (${v[1].toLowerCase()})</option>`).join("")}</select></label>
       <label class="fl"><span>Ngày báo giá</span><input class="fi" id="qv-date" value="${esc(q.date||"")}"></label><label class="fl"><span>Đơn giá đã gồm VAT?</span><select class="fi" id="qv-vat"><option value="0"${q.vat_included?"":" selected"}>Chưa gồm VAT</option><option value="1"${q.vat_included?" selected":""}>Đã gồm VAT</option></select></label>
       <label class="fl"><span>Thuế VAT (%)</span><input class="fi" id="qv-vr" value="${q.vat_rate!=null?q.vat_rate:""}" placeholder="10"></label><label class="fl"><span>Trả sau (ngày)</span><input class="fi" id="qv-pd" value="${q.payDays!=null?q.payDays:""}"></label><label class="fl"><span>Giao hàng (ngày)</span><input class="fi" id="qv-dd" value="${q.deliDays!=null?q.deliDays:""}"></label></div>
@@ -1667,7 +1674,7 @@ function qReview(p){const {q,ai}=QV,LL=qLines(p),ok=q.items.filter(it=>it.code).
     ${q.items.map((it,i)=>`<tr data-qi="${i}"${it.code?"":' class="qnone"'}><td class="num" style="color:var(--muted)">${i+1}</td><td style="min-width:220px">${esc(it.name)}${it.spec?`<small class="spec">${esc(it.spec)}</small>`:""}</td><td>${esc(it.unit)}</td><td class="r">${it.q!=null?nq(it.q):"-"}</td><td class="r">${it.pv!=null?n0(it.pv):"-"}</td><td class="r">${it.pn!=null?n0(it.pn):"-"}</td><td class="r">${it.p!=null?n0(it.p):"-"}</td>
       <td style="min-width:320px"><input class="fi qmi" list="qdl" data-qm="${i}" value="${esc(lab(it.code))}" placeholder="Gõ mã hoặc tên công việc BOQ, để trống nếu không ghép"></td><td><input class="fi qfi" data-qf="${i}" value="${it.f&&it.f!==1?it.f:1}" title="Số đơn vị báo giá trong 1 đơn vị BOQ" style="width:70px"></td>
       <td title="${esc(it.how||"")}">${it.code?it.conf>=.85?st("ok","Chắc chắn"):it.conf>=.6?st("warn","Nên xem lại"):st("bad","Chưa chắc"):`<span class="sub">Không ghép</span>`}</td></tr>`).join("")}</tbody></table></div>
-    <div class="bh" style="margin-top:14px"><span class="sub">Anh xem lại các dòng "Nên xem lại", "Chưa chắc" và "Không ghép" · rê chuột vào độ tin cậy để xem lý do</span><div class="fla"><button class="back sm" style="margin:0" id="qcancel">Huỷ</button><button class="pill" id="qsave" style="${sv("rev")}"><span class="dot">✓</span>Lưu báo giá</button></div></div>`,"span3")}</div>`}
+    <div class="bh" style="margin-top:14px"><span class="sub">Anh xem lại các dòng "Nên xem lại", "Chưa chắc" và "Không ghép" · rê chuột vào độ tin cậy để xem lý do</span><div class="fla"><button class="back sm" style="margin:0" id="qcancel">${QV.rest&&QV.rest.length?"Bỏ qua báo giá này":"Huỷ"}</button>${QV.rest&&QV.rest.length?`<button class="back sm" style="margin:0" id="qsaveall" data-tone="save">Lưu cả ${QV.rest.length+1} báo giá, không xem từng cái</button>`:""}<button class="pill" id="qsave" style="${sv("rev")}"><span class="dot">✓</span>${QV.rest&&QV.rest.length?"Lưu và xem báo giá tiếp theo":"Lưu báo giá"}</button></div></div>`,"span3")}</div>`}
 
 function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="week")return weekView(p);const c=calc(p),mg=pct(c.gp,c.rev);
   const k3=kc("proj","Giá trị hợp đồng",ty(c.rev),"tỷ",`Chưa VAT · hồ sơ ${esc(p.qcode||"")} ngày ${esc(p.date||"")}`)+kc("cost","Giá vốn dự thầu",ty(c.cost),"tỷ",`Vật tư ${ty(c.cv)} · nhân công ${ty(c.cn)} · máy ${ty(c.cm)} tỷ`,"gv")+kc(mg>=10?"rev":"mat","Lãi gộp dự kiến",ty(c.gp),"tỷ",`Biên lãi ${fm(mg)}% doanh thu`,"lg");
@@ -2239,7 +2246,7 @@ window.NG={
 const qRe=()=>{const y=scrollY;route();scrollTo(0,y)};
 const qParse=v=>{v=String(v||"").trim();if(!v)return null;const c=v.split(" · ")[0].trim();return c||null};
 view.addEventListener("change",async e=>{const t=e.target;if(!cur)return;const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;
-  if(t.id==="qup"&&t.files[0]){const f=t.files[0];t.value="";let g;try{g=new File([await f.arrayBuffer()],f.name,{type:f.type})}catch(er){qMsg="Không đọc được file, nếu đang mở trong Excel anh đóng lại rồi chọn lại";qRe();return}qAnalyze(p,g,true);return}
+  if(t.id==="qup"&&t.files.length){const F=[...t.files];t.value="";let G;try{G=await Promise.all(F.map(async f=>new File([await f.arrayBuffer()],f.name,{type:f.type})))}catch(er){qMsg="Không đọc được file, nếu đang mở trong Excel anh đóng lại rồi chọn lại";qRe();return}qAnalyze(p,G,true);return}
   if(t.id==="qhm"){qHm=t.value;qRe();return}
   if(t.dataset.qsel!==undefined){p.qsel={...(p.qsel||{}),[t.dataset.qsel]:t.value};persist();qRe();return}
   if(t.dataset.qm!==undefined&&QV){const it=QV.q.items[+t.dataset.qm],c=qParse(t.value),okc=c&&(c.includes("|")?qGroups(p).some(G=>G.k===c):!!qLine(p,c));
@@ -2248,14 +2255,18 @@ view.addEventListener("change",async e=>{const t=e.target;if(!cur)return;const p
 view.addEventListener("click",async e=>{const t=e.target;if(!cur)return;const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;
   if(t.closest("#qfa")){const s=document.getElementById("qfs"),o=s&&s.selectedOptions[0];if(!o||!o.value)return;const m=document.getElementById("qmsg");if(m)m.textContent="Đang tải file từ thư mục dự án…";
     try{const b=await FS.blob(o.value);qAnalyze(p,new File([b],o.dataset.n,{type:b.type}),false)}catch(er){if(m){m.textContent=er.message;m.style.color="#C0141B"}}return}
-  if(t.closest("#qcancel")){QV=null;qRe();return}
-  if(t.closest("#qsave")&&QV){const q=QV.q,v=id=>(document.getElementById(id)||{}).value,num=x=>{x=parseFloat(String(x||"").replace(",","."));return isFinite(x)?x:null};
+  const qNext=()=>{const R=QV&&QV.rest||[],tot=QV&&QV.tot;QV=R.length?{pid:p.id,...R[0],rest:R.slice(1),tot}:null};
+  if(t.closest("#qcancel")){qNext();qRe();return}
+  if((t.closest("#qsave")||t.closest("#qsaveall"))&&QV){const q=QV.q,v=id=>(document.getElementById(id)||{}).value,num=x=>{x=parseFloat(String(x||"").replace(",","."));return isFinite(x)?x:null};
     q.vendor=(v("qv-vendor")||q.vendor).trim();q.kind=v("qv-kind")||q.kind;q.date=v("qv-date")||q.date;q.vat_included=v("qv-vat")==="1";q.vat_rate=num(v("qv-vr"));q.payDays=num(v("qv-pd"));q.deliDays=num(v("qv-dd"));
     q.items.forEach(it=>delete it.cands);p.quotes=[...(p.quotes||[]).filter(x=>x.id!==q.id),q];
     /* Lựa chọn cũ trỏ tới dòng không còn trong báo giá thì bỏ */
     Object.entries(p.qsel||{}).forEach(([c,id])=>{if(id===q.id&&!q.items.some(it=>it.code===c))delete p.qsel[c]});
-    const f=QV.file;QV=null;qMsg=`Đã lưu báo giá ${q.vendor} · ${q.items.filter(it=>it.code).length}/${q.items.length} dòng ghép với BOQ`;persist();
-    if(f)keepFile(p.id,QFOLDER[q.kind]||"05.1",f,"File báo giá").catch(()=>{});p._files05=undefined;qRe();return}
+    const f=QV.file;qMsg=`Đã lưu báo giá ${q.vendor} · ${q.items.filter(it=>it.code).length}/${q.items.length} dòng ghép với BOQ`;
+    if(f)keepFile(p.id,QFOLDER[q.kind]||"05.1",f,"File báo giá").catch(()=>{});
+    /* Lưu luôn các báo giá còn lại theo kết quả ghép tự động */
+    if(t.closest("#qsaveall")){(QV.rest||[]).forEach(x=>{x.q.items.forEach(it=>delete it.cands);p.quotes=[...p.quotes.filter(y=>y.id!==x.q.id),x.q];if(x.file)keepFile(p.id,QFOLDER[x.q.kind]||"05.1",x.file,"File báo giá").catch(()=>{})});qMsg=`Đã lưu ${1+(QV.rest||[]).length} báo giá`;QV=null}else qNext();
+    if(!QV){qMsg+=qBad;qBad=""}persist();p._files05=undefined;qRe();return}
   const ed=t.closest("[data-qed]");if(ed){const q=(p.quotes||[]).find(x=>x.id===ed.dataset.qed);if(q){const c=JSON.parse(JSON.stringify(q));c.items.forEach(it=>{it.cands=qCands(p,it)});QV={pid:p.id,q:c,file:null,ai:true};qRe()}return}
   const dl=t.closest("[data-qdel]");if(dl){if(!dl.dataset.ok){dl.dataset.ok=1;dl.textContent="Bấm lần nữa để xoá";return}const id=dl.dataset.qdel;p.quotes=(p.quotes||[]).filter(x=>x.id!==id);Object.entries(p.qsel||{}).forEach(([c,v])=>{if(v===id)delete p.qsel[c]});persist();qRe();return}
   if(t.closest("#qbest")){const Q=p.quotes||[],S={...(p.qsel||{})};const codes=new Set();Q.forEach(q=>q.items.forEach(it=>{if(it.code)codes.add(it.code)}));
