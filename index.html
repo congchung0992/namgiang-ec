@@ -1506,7 +1506,7 @@ async function keepFile(pid,folder,file,label){const f=named(pid,file);if(NGApp.
     setTimeout(()=>flushLocal().then(r=>{if(r.done){NGB.warn("");if(document.getElementById("fls"))filesLoad()}}).catch(()=>{}),20000)}
   if(cur&&cur.id===pid&&document.getElementById("fls"))filesLoad()}
 /* Rà nội dung file trước khi lưu: đọc file, gợi ý thư mục (Claude trên máy chủ, không được thì đoán theo tên và chữ trong file), anh xác nhận rồi mới lưu */
-const FRULE=[["05.2",10,/hop dong (thau phu|giao khoan|khoan|mua|nguyen tac|cung cap|mua ban)|thau phu|to doi|giao khoan|nhan khoan/],["01.3",6,/hop dong|phu luc|contract|\bhd\b|hdtc|hdkt/],["04.3",6,/thanh toan|cong no|hoa don|invoice|tam ung|uy nhiem chi|de nghi tt|\bdntt\b|quyet toan/],
+const FRULE=[["05.2",10,/hop dong (thau phu|giao khoan|khoan|mua|nguyen tac|cung cap|mua ban|ep coc|khoan coc|thue may|thue|van chuyen|lap dat)|thau phu|to doi|giao khoan|nhan khoan/],["01.3",6,/hop dong|phu luc|contract|\bhd\b|hdtc|hdkt/],["04.3",6,/thanh toan|cong no|hoa don|invoice|tam ung|uy nhiem chi|de nghi tt|\bdntt\b|quyet toan/],
   ["01.4",8,/bao lanh|bao hiem/],["04.1",6,/nghiem thu khoi luong|khoi luong hoan thanh|\bntkl\b|bang khoi luong/],["03.1",6,/nghiem thu|bien ban nghiem|\bbbnt\b/],["04.2",8,/phat sinh|\bvo\b|variation/],
   ["02.2",5,/tien do|schedule|ke hoach thi cong|bien phap|\bmpp\b|gantt/],["05.1",6,/bao gia|chao gia|nha cung cap|\bncc\b|don dat hang|\bpo\b/],["05.3",7,/de nghi thanh toan (ncc|thau phu|to doi)|thanh toan (ncc|thau phu|to doi|nha cung cap)|doi chieu cong no (ncc|nha cung cap|thau phu)/],["05.4",6,/phieu nhap|phieu xuat|giao nhan/],
   ["01.2",5,/\bboq\b|du toan|ho so thau|du thau|moi thau|chao gia|gia goc|tien luong/],["02.1",6,/ban ve|shop drawing|thiet ke|\bdwg\b|mat bang|mat cat/],["02.3",8,/hoan cong|ban giao|bao hanh/],
@@ -1532,7 +1532,9 @@ async function peek(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),o={
     else if(/^(txt|csv)$/.test(ext))o.text=(await f.text()).slice(0,6000)}catch(e){}
   return o}
 async function suggest(p,f){const g=guessFolder(f.name);if(g&&g.strong)return g;const o=await peek(f);let v=null;
-  if(!NGApp.guest)try{v=await Promise.race([NGB.drive.classify({name:o.name,text:o.text,doc:o.doc,img:o.img,project:{code:p.code,name:p.name}}),new Promise((_,no)=>setTimeout(()=>no(new Error("cham")),30000))]);v.ai=1}catch(e){v=null}
+  if(!NGApp.guest)try{v=await Promise.race([NGB.drive.classify({name:o.name,text:o.text,doc:o.doc,img:o.img,project:{code:p.code,name:p.name,cdt:p.cdt}}),new Promise((_,no)=>setTimeout(()=>no(new Error("cham")),30000))]);v.ai=1;
+    /* Lý do nói hợp đồng thầu phụ, nhà cung cấp mà lại chọn 01.3 (hợp đồng chủ đầu tư) thì theo lý do */
+    if(v.folder==="01.3"&&/thau phu|nha cung cap|\bncc\b|to doi|giao khoan|nhan khoan|ben a la[^.]*nam giang|nam giang[^.]*(la )?ben a/.test(noAcc(v.reason||"").toLowerCase()))v.folder="05.2"}catch(e){v=null}
   return v||guessFolder(o.name,o.text,o.isImg)||{folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}}
 function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(wrap)wrap.remove();const base=n=>n.replace(/\.[^.]+$/,""),ext=n=>(n.match(/\.[^.]+$/)||[""])[0];
   wrap=document.createElement("div");wrap.id="fview";wrap.setAttribute("role","dialog");wrap.setAttribute("aria-label","Xếp file vào thư mục");
@@ -1546,7 +1548,10 @@ function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(
     if(v.folder)v.folder=nf(v.folder);const ok=v.folder&&F.some(x=>x[0]===v.folder);if(ok)r.dataset.sug=v.folder;if(!r.dataset.man)sel.value=ok?v.folder:def;
     if(v.title&&GENERIC.test(noAcc(base(f.name)))&&nm.value===stdName(p.id,f.name))nm.value=stdName(p.id,v.title+ext(f.name));
     const fn=k=>{const x=F.find(y=>y[0]===k);return x?x[0]+" "+x[1]:k};
-    why.textContent=(v.folder?(ok?"Gợi ý: "+fn(v.folder):"Gợi ý "+v.folder+" nhưng tài khoản này không có quyền thư mục đó")+" · ":"")+v.reason;
+    const fa=k=>{const x=DF.find(y=>y[0]===k);return x?x[0]+" "+x[1]:k},gn=k=>{const g=DG.find(y=>y[0]===k);return g?g[0]+" "+g[1]:k};
+    why.textContent=(v.folder?(ok?"Gợi ý: "+fn(v.folder):"Nên để vào "+fa(v.folder)+" nhưng tài khoản này chưa được mở thư mục đó: nhờ Ban giám đốc cấp quyền ở Quản trị, hoặc chọn tạm thư mục khác")+" · ":"")+v.reason;
+    if(v.fit===false&&v.new_folder){const g=v.new_group||String(v.folder||"").slice(0,2);why.textContent+=` · Chưa có thư mục thật hợp: nên tạo thư mục mới "${v.new_folder}" trong nhóm ${gn(g)} (báo Ban giám đốc để thêm), tạm để ở mục gần nhất`;why.classList.add("dif")}
+    if(v.folder&&!ok)why.classList.add("dif");
     const dif=()=>{r.dataset.man=1;why.classList.toggle("dif",ok&&sel.value!==v.folder)};sel.onchange=dif;
     if(ok&&here&&v.folder!==here){why.textContent+=` · Anh đang mở mục ${fn(here)}`;why.classList.add("dif")}
     if(--left===0)wrap.querySelector("#fsm").textContent="Anh kiểm tra thư mục và tên file rồi bấm Lưu"}};

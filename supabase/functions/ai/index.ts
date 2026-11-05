@@ -171,16 +171,24 @@ const SYS_CLASSIFY = `Bạn phân loại hồ sơ của một công ty tổng th
 Các thư mục:
 ${Object.entries(FOLDERS).map(([k, v]) => `${k}: ${v}`).join("\n")}
 Đọc nội dung file (và tên file) rồi chọn MỘT thư mục hợp lý nhất.
+QUAN TRỌNG với hợp đồng: Nam Giang là tổng thầu.
+- 01.3 CHỈ dành cho hợp đồng, phụ lục ký với CHỦ ĐẦU TƯ (chủ đầu tư giao việc cho Nam Giang; Nam Giang là bên B/bên nhận thầu). Tên chủ đầu tư dự án được cho sẵn bên dưới.
+- Hợp đồng mà Nam Giang là bên A/bên giao thầu/bên mua/bên thuê (thuê thầu phụ, giao khoán tổ đội, mua vật tư, thuê máy, ép cọc, khoan cọc…) → 05.2, kể cả khi bên kia gọi Nam Giang là "nhà thầu chính".
+- Viết "reason" trước, rồi chọn "folder" khớp đúng với lý do vừa viết.
+"fit": false nếu không thư mục nào thật sự hợp; khi đó "new_group" là mã nhóm (01–06) nên đặt thư mục mới và "new_folder" là tên thư mục mới nên tạo (ngắn, tiếng Việt); nếu fit = true thì để "" cho cả hai.
 "reason": một câu ngắn tiếng Việt nêu file này là gì và vì sao chọn thư mục đó.
 "title": tên mô tả ngắn cho file bằng tiếng Việt, tối đa 8 chữ, không ghi ngày, không ghi mã dự án (ví dụ "Biên bản nghiệm thu đợt 2 phần móng").`;
 const CLASSIFY = {
   type: "object",
   properties: {
-    folder: { type: "string", enum: Object.keys(FOLDERS) },
     reason: { type: "string" },
-    title: { type: "string" }
+    folder: { type: "string", enum: Object.keys(FOLDERS) },
+    title: { type: "string" },
+    fit: { type: "boolean" },
+    new_group: { type: "string", enum: ["", "01", "02", "03", "04", "05", "06"] },
+    new_folder: { type: "string" }
   },
-  required: ["folder", "reason", "title"],
+  required: ["reason", "folder", "title", "fit", "new_group", "new_folder"],
   additionalProperties: false
 };
 
@@ -288,11 +296,11 @@ async function run(b: any, env: any): Promise<Response> {
       const content: any[] = [];
       const fb = b.doc && typeof b.doc.data === "string" ? fileBlock(String(b.doc.media_type || ""), b.doc.data) : b.img && typeof b.img.data === "string" ? fileBlock(String(b.img.media_type || ""), b.img.data) : null;
       if (fb) content.push(fb);
-      const proj = b.project && typeof b.project === "object" ? `${String(b.project.code || "").slice(0, 40)} ${String(b.project.name || "").slice(0, 200)}` : "";
+      const proj = b.project && typeof b.project === "object" ? `${String(b.project.code || "").slice(0, 40)} ${String(b.project.name || "").slice(0, 200)}` + (b.project.cdt ? `\nChủ đầu tư: ${String(b.project.cdt).slice(0, 200)}` : "") : "";
       content.push({ type: "text", text: `Dự án: ${proj}\nTên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung trích từ file:\n${b.text.slice(0, 8000)}` : "") });
       const { data: v } = await claude(env, { system: SYS_CLASSIFY, content, schema: CLASSIFY, maxTokens: 8000 });
       if (!FOLDERS[v.folder]) return json({ error: "khong_doc_duoc" }, 422);
-      return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120) });
+      return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120), fit: v.fit !== false, new_group: String(v.new_group || ""), new_folder: String(v.new_folder || "").slice(0, 80) });
     }
     if (b.action === "contract") {
       const content: any[] = [];
