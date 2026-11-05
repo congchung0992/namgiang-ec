@@ -1639,13 +1639,18 @@ const qText=it=>(it.name||"")+" "+(it.spec||"");
 async function qMatchLines(p,q,say){const comp=q.kind==="nhan_cong"?"n":"v",LL=qLines(p).filter(({l})=>comp==="n"?(l.nc>0||l.uNC>0||l.total>0):(l.vl>0||l.uVL>0||(l.vl==null&&l.nc==null)));
   const cand=[];LL.forEach(({h,l})=>{const sc=q.items.map((it,i)=>({i,s:qScore(qText(it),it.unit,l.name+" "+(l.spec||""),l.unit)})).sort((a,b)=>b.s-a.s);if(sc[0]&&sc[0].s>=.35)cand.push({h,l,top:sc.slice(0,4)})});
   q.items.forEach(it=>{it.links=[]});let ai=true;
-  for(let k=0;k<cand.length&&ai;k+=50){const part=cand.slice(k,k+50);if(say)say(`Đang ghép với BOQ ${Math.min(k+50,cand.length)}/${cand.length} dòng BOQ liên quan…`);
+  /* Dòng rõ ràng (trùng mác/quy cách, tên giống, không có dòng giá khác cùng mức) ghép ngay không cần Gemini; chỉ gửi dòng còn phân vân */
+  const kh=(a,b)=>{const A=qKey(a),B=qKey(b);if(!A.size||!B.size)return 0;let k=0;A.forEach(x=>{if(B.has(x))k++});return k===A.size?2:k?1:0},hard=[];
+  cand.forEach(x=>{const bt=x.l.name+" "+(x.l.spec||""),t=x.top[0],it=q.items[t.i],h=kh(qText(it),bt),t2=x.top.find(y=>y.i!==t.i&&kh(qText(q.items[y.i]),bt)>=h);
+    if(h===2&&t.s>=.55&&(!t2||t.s-t2.s>=.08||qText(q.items[t2.i])===qText(it)))it.links.push({c:x.l.code,f:qUnitF(it.unit,x.l.unit),conf:.88,how:"tự ghép: trùng mác, quy cách"});else hard.push(x)});
+  const hc=cand.length;cand.length=0;cand.push(...hard);
+  for(let k=0;k<cand.length&&ai;k+=80){const part=cand.slice(k,k+80);if(say)say(`Đã tự ghép ${hc-hard.length} dòng · Gemini đang xem ${Math.min(k+80,cand.length)}/${cand.length} dòng còn phân vân…`);
     try{const r=await NGB.ai({action:"match_lines",items:q.items.map((it,i)=>({i,name:it.name,spec:it.spec,unit:it.unit})),lines:part.map(x=>({code:x.l.code,name:x.l.name,spec:x.l.spec||"",unit:x.l.unit||"",hang_muc:x.h.name,goi_y:x.top.map(t=>t.i)}))});
       (r.matches||[]).forEach(m=>{const x=part.find(y=>y.l.code===m.code),it=q.items[m.i];if(!x||!it||m.i==null)return;it.links.push({c:m.code,f:+m.factor>0?+m.factor:qUnitF(it.unit,x.l.unit),conf:Math.max(0,Math.min(1,+m.confidence||0)),how:"Gemini: "+(m.reason||"")})})}
-    catch(e){ai=false;q.items.forEach(it=>{it.links=[]})}}
+    catch(e){ai=false;q.items.forEach(it=>{it.links=it.links.filter(l=>/^tự ghép/.test(l.how||""))})}}
   /* Không có Gemini: lấy dòng giá giống nhất; trùng mác/quy cách thì nhận cả khi tên khác nhau nhiều */
   const keyHit=(a,b)=>{const A=qKey(a),B=qKey(b);let k=0;A.forEach(x=>{if(B.has(x))k++});return k>0};
-  if(!ai)cand.forEach(({l,top})=>{const t=top[0],it=q.items[t.i],hit=keyHit(qText(it),l.name+" "+(l.spec||""));if(t.s>=.6||(hit&&t.s>=.45))it.links.push({c:l.code,f:qUnitF(it.unit,l.unit),conf:Math.min(.75,t.s-.2),how:"đoán theo tên và mác"})});
+  if(!ai)cand.forEach(({l,top})=>{const t=top[0],it=q.items[t.i],hit=keyHit(qText(it),l.name+" "+(l.spec||""));if(t.s>=.6||(hit&&t.s>=.45))it.links.push({c:l.code,f:qUnitF(it.unit,l.unit),conf:kh(qText(it),l.name+" "+(l.spec||""))===2?.7:Math.min(.75,t.s-.2),how:"đoán theo tên và mác"})});
   return ai}
 /* Thầu phụ: mỗi dòng báo giá ghép với một dòng hoặc một nhóm BOQ */
 async function qMatchItems(p,q,say){const todo=[];
