@@ -612,6 +612,10 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
 .pill:active,.back:active,.round:active,.pc:active,.glass:active{transform:scale(.96)!important;transition:transform .1s}
 .kc{transition:transform .25s cubic-bezier(.2,1.3,.4,1),box-shadow .25s}
 .kc:hover{transform:translateY(-4px)}
+/* Thẻ chỉ số gọn: tiêu đề trên, số và ghi chú cùng một hàng, cao khoảng một nửa trước */
+.kc{min-height:0;padding:12px 18px;border-radius:18px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;column-gap:14px;align-items:end}
+.kc h4{grid-column:1/-1;font-size:12.5px}.kc .v{font-size:clamp(24px,2.2vw,30px);margin-top:6px}.kc p{margin:0 0 3px;font-size:11.5px;line-height:1.35}
+@media (max-width:760px){.kc{padding:10px 14px}.kc .v{font-size:24px}}
 .card:not(.pc){transition:transform .3s cubic-bezier(.2,1.3,.4,1),box-shadow .3s}
 .card:not(.pc):hover{box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 18px 36px -26px rgba(20,20,60,.35)}
 #chat:not([hidden]){animation:moChat .45s cubic-bezier(.2,1.3,.4,1)}
