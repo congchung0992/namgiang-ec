@@ -1362,12 +1362,13 @@ function cfc(lab,a,b,cu){const W=1080,H=280,L=40,B=24,mx=Math.max(...a,...b,...c
   return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`}
 const bty=(lab,a,b,W,H)=>bars(lab,a.map(v=>+(v/1e9).toFixed(2)),b&&b.map(v=>+(v/1e9).toFixed(2)),"#12A150","#C21FC9",W,H);
 /* vẽ Gantt */
-const GZ={d:12,w:6,m:3};let gZoom="m",gMode="cv",gBase=(()=>{try{return localStorage.getItem("ngic.gbase")!=="0"}catch(e){return true}})();const gCol=new Set();
+const GZ={d:12,w:6,m:3};let gZoom="m",gMode="cv";const gCol=new Set();
 function gStat(p,tl){const S=p.sched,now=new Date(),od=Math.round((new Date(now.getFullYear(),now.getMonth(),now.getDate())-tl.st)/864e5);let V=0,A=0,P=0;
   const per={};tl.T.forEach(x=>{const q=S.t[x.key],w=x.rev||1,pl=Math.max(0,Math.min(1,(od-q.s+1)/q.d))*100,pc=q.pc||0;per[x.key]={pl,pc};V+=w;A+=w*pc;P+=w*pl});
-  const B=S.base&&S.base.t;let be=null,var_=null;if(B){be=0;tl.T.forEach(x=>{const b=B[x.key];if(b)be=Math.max(be,b.s+b.d)});var_=tl.end-be}
+  /* Không dùng tiến độ gốc: luôn theo tiến độ mới nhất; có thời hạn hợp đồng thì so với thời hạn đó */
+  const be=p.contract&&p.contract.dur>0?p.contract.dur:null,var_=be!=null?tl.end-be:null;
   return{od,act:V?A/V:0,plan:V?P/V:0,per,be,var:var_}}
-function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom],4):GZ[gZoom],days=Math.max(tl.end+20,S.D),endD=addD(tl.st,days),G=gStat(p,tl),B=S.base&&S.base.t;let hd="",vl="";
+function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom],4):GZ[gZoom],days=Math.max(tl.end+20,S.D),endD=addD(tl.st,days),G=gStat(p,tl);let hd="",vl="";
   for(let d=new Date(tl.st.getFullYear(),tl.st.getMonth(),1);d<endD;d=new Date(d.getFullYear(),d.getMonth()+1,1)){const o=Math.max(0,Math.round((d-tl.st)/864e5)),o2=Math.min(days,Math.round((new Date(d.getFullYear(),d.getMonth()+1,1)-tl.st)/864e5));
     hd+=`<span style="left:${o*W}px;width:${(o2-o)*W}px">T${d.getMonth()+1}/${String(d.getFullYear()).slice(2)}</span>`;vl+=`<i style="left:${o*W}px"></i>`;
     if(gZoom!=="m")for(let k=o+((8-addD(tl.st,o).getDay())%7);k<o2;k+=7)vl+=`<i class="wk" style="left:${k*W}px"></i>`}
@@ -1375,13 +1376,13 @@ function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom]
   const vr=v=>v==null?`<span class="sub">-</span>`:v>0?`<b class="vbad">+${v}</b>`:v<0?`<b class="vok">${v}</b>`:"0";
   const cell=(k,e,v,cls)=>`<input class="ge ${cls||""}" data-k="${esc(k)}" data-e="${e}" value="${esc(v)}" data-v="${esc(v)}" aria-label="${e}">`;
   /* Một dòng công việc (thanh kéo được); lab: nhãn cố định thay cho ô sửa tên (khi xem theo đầu mục công việc) */
-  const tr=(x,code,one,lab)=>{const q=S.t[x.key],b=B&&B[x.key],g=G.per[x.key],late=g.pl-g.pc>10,c=HC[x.hi%HC.length];
-      return `<div class="grw ${one?"gs1":""}" style="--t:${c[0]}"><div class="gl gg"><span class="gc c1 num">${code}</span><span class="gc c2">${lab?`<span class="glb" title="${esc(lab)}"><i style="background:${c[0]}"></i>${esc(lab)}</span>`:cell(x.key,"n",q.n||x.name,"gn")}</span><span class="gc c3">${cell(x.key,"d",q.d,"r")}</span><span class="gc c4">${cell(x.key,"s",fd(addD(tl.st,q.s)),"r")}</span><span class="gc c5">${cell(x.key,"f",fd(addD(tl.st,q.s+q.d-1)),"r")}</span><span class="gc c6">${cell(x.key,"p",q.pc?fm(q.pc,0):"-","r"+(late?" late":""))}</span><span class="gc c7 r" title="Ngày kết thúc lệch so với tiến độ gốc">${vr(b?q.s+q.d-(b.s+b.d):null)}</span></div>
-        <div class="gt">${b&&gBase?`<div class="gbl" style="left:${b.s*W}px;width:${b.d*W}px" title="Gốc ${fd(addD(tl.st,b.s))} – ${fd(addD(tl.st,b.s+b.d-1))}"></div>`:""}<div class="gb" data-k="${esc(x.key)}" style="left:${q.s*W}px;width:${q.d*W}px;--c:${c[0]};--c2:${c[1]}" title="${esc((lab?lab+" · ":"")+(q.n||x.name))} · ${fd(addD(tl.st,q.s))} – ${fd(addD(tl.st,q.s+q.d-1))} · ${fm(q.pc||0,0)}% (kế hoạch ${fm(g.pl,0)}%)"><i class="gp" style="width:${q.pc||0}%"></i><i class="gh l"></i><span>${q.d}</span><i class="gh r"></i></div></div></div>`};
+  const tr=(x,code,one,lab)=>{const q=S.t[x.key],g=G.per[x.key],late=g.pl-g.pc>10,c=HC[x.hi%HC.length];
+      return `<div class="grw ${one?"gs1":""}" style="--t:${c[0]}"><div class="gl gg"><span class="gc c1 num">${code}</span><span class="gc c2">${lab?`<span class="glb" title="${esc(lab)}"><i style="background:${c[0]}"></i>${esc(lab)}</span>`:cell(x.key,"n",q.n||x.name,"gn")}</span><span class="gc c3">${cell(x.key,"d",q.d,"r")}</span><span class="gc c4">${cell(x.key,"s",fd(addD(tl.st,q.s)),"r")}</span><span class="gc c5">${cell(x.key,"f",fd(addD(tl.st,q.s+q.d-1)),"r")}</span><span class="gc c6">${cell(x.key,"p",q.pc?fm(q.pc,0):"-","r"+(late?" late":""))}</span></div>
+        <div class="gt"><div class="gb" data-k="${esc(x.key)}" style="left:${q.s*W}px;width:${q.d*W}px;--c:${c[0]};--c2:${c[1]}" title="${esc((lab?lab+" · ":"")+(q.n||x.name))} · ${fd(addD(tl.st,q.s))} – ${fd(addD(tl.st,q.s+q.d-1))} · ${fm(q.pc||0,0)}% (kế hoạch ${fm(g.pl,0)}%)"><i class="gp" style="width:${q.pc||0}%"></i><i class="gh l"></i><span>${q.d}</span><i class="gh r"></i></div></div></div>`};
   /* Dòng tổng của một nhóm (hạng mục hoặc đầu mục công việc) */
   const grp=(key,code,name,ts,color,sub)=>{const s0=Math.min(...ts.map(x=>S.t[x.key].s)),e0=Math.max(...ts.map(x=>S.t[x.key].s+S.t[x.key].d)),wv=ts.reduce((a,x)=>a+(x.rev||1),0),pc0=ts.reduce((a,x)=>a+(x.rev||1)*(S.t[x.key].pc||0),0)/wv;
-    let bv=null;if(B){const bb=ts.map(x=>B[x.key]).filter(Boolean);if(bb.length)bv=e0-Math.max(...bb.map(b=>b.s+b.d))}const cl=gCol.has(key);
-    return `<div class="grw gs" style="--t:${color}"><div class="gl gg"><span class="gc c1 num">${code}</span><span class="gc c2"><button class="gtg" data-gc="${esc(key)}" aria-label="${cl?"Mở":"Thu"} ${esc(name)}">${cl?"▸":"▾"}</button><b>${esc(name)}</b>${sub?`<small class="sub"> · ${sub}</small>`:""}</span><span class="gc c3 r">${e0-s0}</span><span class="gc c4 r">${fd(addD(tl.st,s0))}</span><span class="gc c5 r">${fd(addD(tl.st,e0-1))}</span><span class="gc c6 r">${pc0?fm(pc0,0):"-"}</span><span class="gc c7 r">${vr(bv)}</span></div><div class="gt"><div class="gsb" style="left:${s0*W}px;width:${(e0-s0)*W}px;--c:${color}"><i style="width:${pc0}%"></i></div></div></div>`};
+    const cl=gCol.has(key);
+    return `<div class="grw gs" style="--t:${color}"><div class="gl gg"><span class="gc c1 num">${code}</span><span class="gc c2"><button class="gtg" data-gc="${esc(key)}" aria-label="${cl?"Mở":"Thu"} ${esc(name)}">${cl?"▸":"▾"}</button><b>${esc(name)}</b>${sub?`<small class="sub"> · ${sub}</small>`:""}</span><span class="gc c3 r">${e0-s0}</span><span class="gc c4 r">${fd(addD(tl.st,s0))}</span><span class="gc c5 r">${fd(addD(tl.st,e0-1))}</span><span class="gc c6 r">${pc0?fm(pc0,0):"-"}</span></div><div class="gt"><div class="gsb" style="left:${s0*W}px;width:${(e0-s0)*W}px;--c:${color}"><i style="width:${pc0}%"></i></div></div></div>`};
   let rows="";
   if(gMode==="cv"){
     /* Đầu mục công việc (cọc, đất, bê tông, kết cấu thép…) là dòng cha; từng nhà xưởng, văn phòng, phụ trợ là dòng con. Nhóm xếp theo ngày bắt đầu */
@@ -1396,7 +1397,7 @@ function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom]
     if(one){rows+=tr(ts[0],h.code,1);return}
     rows+=grp(h.code,h.code,h.name,ts,c[0]);
     if(!gCol.has(h.code))ts.forEach((x,i)=>rows+=tr(x,h.code+"."+("0"+(i+1)).slice(-2),0))});
-  return `<div class="gw bsw" id="gw"><div class="gantt" style="--w:${W}px;--days:${days};width:calc(var(--gl) + ${days*W}px)" data-w="${W}"><div class="gv" style="width:${days*W}px">${vl}</div><div class="grw g0"><div class="gl gg"><span class="gc c1">Mã</span><span class="gc c2">${gMode==="cv"?"Đầu mục công việc / hạng mục":"Hạng mục / công việc"}</span><span class="gc c3">Thời gian (ngày)</span><span class="gc c4">Bắt đầu</span><span class="gc c5">Kết thúc</span><span class="gc c6">% hoàn thành</span><span class="gc c7">Lệch gốc (ngày)</span></div><div class="gt gm">${hd}</div></div>${rows}</div></div>`}
+  return `<div class="gw bsw" id="gw"><div class="gantt" style="--w:${W}px;--days:${days};width:calc(var(--gl) + ${days*W}px)" data-w="${W}"><div class="gv" style="width:${days*W}px">${vl}</div><div class="grw g0"><div class="gl gg"><span class="gc c1">Mã</span><span class="gc c2">${gMode==="cv"?"Đầu mục công việc / hạng mục":"Hạng mục / công việc"}</span><span class="gc c3">Thời gian (ngày)</span><span class="gc c4">Bắt đầu</span><span class="gc c5">Kết thúc</span><span class="gc c6">% hoàn thành</span></div><div class="gt gm">${hd}</div></div>${rows}</div></div>`}
 const LD=(p,n)=>p&&p.leads&&p.leads[n]>0?p.leads[n]:LEAD(n);const LEAD=n=>/Kết cấu thép/.test(n)?30:/Thiết bị/.test(n)?45:/Cửa/.test(n)?21:/Cọc bê|Tôn|Cáp|Đèn/.test(n)?14:/Bê tông/.test(n)?3:7;
 
 /* ---------- Danh sách sheet ---------- */
@@ -1922,16 +1923,15 @@ function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return qu
     ${card("Giá trị vật liệu cần theo tháng","Phân bổ theo tiến độ thi công, tỷ đồng",`<div class="chart">${bars(tl.lab,mv.map(v=>+(v/1e9).toFixed(2)),null,"#F08A24",null,1080,230)}</div>`,"span3")}
     ${card("Kế hoạch cấp vật tư","Ngày đặt hàng = ngày cần đầu tiên trừ thời gian chờ nhà cung cấp (mặc định, sẽ lấy từ báo giá)",`<div class="tw"><table class="t"><thead><tr><th>Vật liệu</th><th>ĐVT</th><th class="r">Tổng</th><th>Cần từ</th><th class="r">Chờ</th><th>Đặt trước</th>${tl.lab.map(l=>`<th class="r">${l}</th>`).join("")}</tr></thead><tbody>${plan.map(x=>`<tr><td><b>${x.n}</b></td><td>${esc(x.u)}</td><td class="r">${nq(x.q)}</td><td class="num">${x.first?fd(x.first):"–"}</td><td class="r">${x.lead} ngày</td><td>${x.order?(x.order<new Date()?st("bad",fd(x.order)):x.order-new Date()<14*864e5?st("warn",fd(x.order)):st("ok",fd(x.order))):"–"}</td>${x.mq.map(v=>`<td class="r" style="color:${v>0?"inherit":"#C9CAD2"}">${v>0?nq(v>=100?Math.round(v):Math.round(v*10)/10):"–"}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`,"span3")}</div>`}
   if(s==="prog"){const tl=timeline(p),S=p.sched,mo=Math.round(tl.end/30.4*10)/10,G=gStat(p,tl),gap=G.act-G.plan,fin=addD(tl.st,tl.end-1);
-    return `<div class="vgrid">${kc(gap<-5?"cost":"prog","Khối lượng hoàn thành",fm(G.act,0),"%",`Kế hoạch đến hôm nay ${fm(G.plan,0)}% · ${gap<-5?"chậm":gap>5?"vượt":"đúng"} ${gap<-5||gap>5?fm(Math.abs(gap),0)+" điểm %":"tiến độ"}`)}${kc("proj","Thời gian thi công",fm(mo).replace(",0",""),"tháng",`Khởi công ${fd(tl.st)} · ${tl.end} ngày · ${tl.T.length} công việc`)}${kc(G.var>0?"cost":"rev","Hoàn thành dự kiến",fd(fin).slice(0,5),"/"+fin.getFullYear(),G.var==null?"Chưa chốt tiến độ gốc · 1 ngày chậm ≈ "+n0(delayCost(p,tl)/1e6)+" triệu":G.var>0?`Chậm ${G.var} ngày so gốc ≈ ${n0(G.var*delayCost(p,tl)/1e6)} triệu chi phí gián tiếp`:G.var<0?`Sớm ${-G.var} ngày so tiến độ gốc`:"Đúng tiến độ gốc")}
+    return `<div class="vgrid">${kc(gap<-5?"cost":"prog","Khối lượng hoàn thành",fm(G.act,0),"%",`Kế hoạch đến hôm nay ${fm(G.plan,0)}% · ${gap<-5?"chậm":gap>5?"vượt":"đúng"} ${gap<-5||gap>5?fm(Math.abs(gap),0)+" điểm %":"tiến độ"}`)}${kc("proj","Thời gian thi công",fm(mo).replace(",0",""),"tháng",`Khởi công ${fd(tl.st)} · ${tl.end} ngày · ${tl.T.length} công việc`)}${kc(G.var>0?"cost":"rev","Hoàn thành dự kiến",fd(fin).slice(0,5),"/"+fin.getFullYear(),G.var==null?"Theo tiến độ mới nhất · 1 ngày chậm ≈ "+n0(delayCost(p,tl)/1e6)+" triệu chi phí gián tiếp":G.var>0?`Quá thời hạn hợp đồng ${G.var} ngày ≈ ${n0(G.var*delayCost(p,tl)/1e6)} triệu chi phí gián tiếp`:G.var<0?`Sớm ${-G.var} ngày so thời hạn hợp đồng`:"Đúng thời hạn hợp đồng")}
     <section class="card span3"><div class="bh"><div><h3>Tiến độ thi công</h3><span class="sub">Sửa trực tiếp trong bảng (Enter để xuống dòng dưới, Esc để huỷ) · kéo thanh để dời ngày, kéo mép để đổi thời gian · Ctrl+Z hoàn tác</span></div>
       <div class="bh gtool"><label class="rt">Khởi công <input class="ci" id="sdate" value="${esc(S.start)}" style="width:104px;text-align:center" aria-label="Ngày khởi công"></label>
         <div class="seg2" role="group" aria-label="Thu phóng">${[["d","Ngày"],["w","Tuần"],["m","Tháng"]].map(([k,t])=>`<button data-gz="${k}" aria-pressed="${gZoom===k}">${t}</button>`).join("")}</div>
         <button class="back sm" data-gu="u" ${GU.u.length?"":"disabled"}>↶ Hoàn tác</button><button class="back sm" data-gu="r" ${GU.r.length?"":"disabled"}>↷ Làm lại</button>
         <div class="seg2" role="group" aria-label="Cách xếp">${[["cv","Theo đầu mục công việc"],["hm","Theo hạng mục"]].map(([k,t])=>`<button data-gm="${k}" aria-pressed="${gMode===k}">${t}</button>`).join("")}</div>
-        ${S.base?`<button class="back sm" data-gbase="1">${gBase?"Ẩn":"Hiện"} vạch tiến độ gốc</button>`:""}
         <button class="back sm" data-gcol="1">${gCol.size?"Mở tất cả":"Thu tất cả"}</button>
-        <button class="back sm" id="gbase">${S.base?"Chốt lại tiến độ gốc":"Chốt tiến độ gốc"}</button><button class="back sm" id="repro">Đề xuất lại</button></div></div>
-      <div class="gleg"><span><i class="lg1"></i>Kế hoạch hiện tại</span><span><i class="lg2"></i>Phần đã hoàn thành</span><span title="Bản tiến độ đã chốt làm mốc. Thanh màu nằm bên phải vạch vàng là đang chậm hơn mốc, bên trái là sớm hơn; số ngày lệch ở cột Lệch gốc"><i class="lg3"></i>Vạch vàng = tiến độ gốc${S.base?" đã chốt ngày "+esc(S.base.date)+" (mốc để so sớm / chậm)":" (chưa chốt)"}</span><span><i class="lg4"></i>Ngày cập nhật ${fd(new Date())}</span><span><b class="late">%</b> chậm hơn kế hoạch trên 10 điểm</span></div>
+        <button class="back sm" id="repro">Đề xuất lại</button></div></div>
+      <div class="gleg"><span><i class="lg1"></i>Kế hoạch hiện tại</span><span><i class="lg2"></i>Phần đã hoàn thành</span><span><i class="lg4"></i>Ngày cập nhật ${fd(new Date())}</span><span><b class="late">%</b> chậm hơn kế hoạch trên 10 điểm</span></div>
       <div style="margin-top:10px">${gantt(p,tl)}</div></section>
     ${p._noCost?"":card("Giá trị thực hiện theo tháng","Doanh thu và giá vốn phân bổ theo tiến độ, tỷ đồng",lg([["Doanh thu","#12A150"],["Giá vốn","#C21FC9"]])+`<div class="chart">${bty(tl.lab,tl.rev,tl.cost,1080,230)}</div>`,"span3")}</div>`}
   if(s==="hr")return `<div class="vgrid">${kc("hr","Nhân công trong BOQ",ty(c.nc),"tỷ","Giá trị nhân công dự thầu")}${kc("rev","Tổ đội, thầu phụ","0","đơn vị","Chưa có hợp đồng")}${kc("mat","Quân số","–","","Chưa cập nhật")}
@@ -2384,12 +2384,10 @@ document.addEventListener("keydown",e=>{if(!cur||!(e.ctrlKey||e.metaKey)||!docum
 view.addEventListener("click",e=>{if(!cur)return;const t=e.target;let b;
   if(b=t.closest("[data-gu]")){gUndo(b.dataset.gu==="r");return}
   if(b=t.closest("[data-gz]")){gZoom=b.dataset.gz;keep(route);return}
-  if(b=t.closest("[data-gbase]")){gBase=!gBase;try{localStorage.setItem("ngic.gbase",gBase?"1":"0")}catch(e){}keep(route);return}
   if(b=t.closest("[data-gm]")){gMode=b.dataset.gm;gCol.clear();keep(route);return}
   if(b=t.closest("[data-gc]")){const c=b.dataset.gc;gCol.has(c)?gCol.delete(c):gCol.add(c);keep(route);return}
   if(b=t.closest("[data-gcol]")){if(gCol.size)gCol.clear();else view.querySelectorAll("[data-gc]").forEach(x=>gCol.add(x.dataset.gc));keep(route);return}
-  if(b=t.closest("#gbase")){if(cur.sched.base&&!b.dataset.ok){b.dataset.ok=1;b.textContent="Bấm lần nữa để thay tiến độ gốc cũ";b.style.color="#C0141B";return}
-    gSave();const t2={};Object.entries(cur.sched.t).forEach(([k,q])=>t2[k]={s:q.s,d:q.d});cur.sched.base={t:t2,date:fd(new Date())};persist();keep(route)}});
+});
 /* kéo thả thanh tiến độ */
 let drag=null;
 view.addEventListener("pointerdown",e=>{const b=e.target.closest(".gb[data-k]");if(!b||!cur)return;e.preventDefault();const k=b.dataset.k,q=cur.sched.t[k],W=+b.closest(".gantt").dataset.w;
