@@ -80,6 +80,12 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - Bảng `material_requests`; mọi thay đổi qua hàm `mr_save`, `mr_act`, `mr_cancel` (máy chủ kiểm tra người bấm có đúng vai trò của bước hiện tại). Duyệt xong tự lưu file Excel phiếu vào 05.1; nút Tải Excel ra file theo mẫu, chữ ký ghi tên và ngày duyệt từng bước.
 - **Thông báo** (bảng `notifications`): mỗi khi phiếu tới bước mới, người giữ vai trò bước đó nhận thông báo; người lập nhận khi qua bước, bị trả về hoặc duyệt xong. Chuông trên thanh trên hiện số chưa đọc, nhận ngay qua Supabase Realtime, có nút bật thông báo của trình duyệt (hiện cả khi đang ở tab khác, khi web đang mở). Migration `20261105_phieu_yeu_cau_vat_tu.sql`.
 
+## Đề nghị thanh toán NCC – TP (tab Thanh toán NCC – TP)
+- Chỉ huy trưởng lập theo mẫu hồ sơ thanh toán của công ty (Thông báo thanh toán + Khối lượng thanh toán thi công): nhập tay hoặc tải file Excel mẫu (web đọc nhà thầu, số hợp đồng, ngày, gói thầu, đợt, các dòng khối lượng theo hợp đồng, ngoài hợp đồng, khấu trừ, hỗ trợ, phạt). Chọn được hợp đồng đã lưu ở 05.2.
+- Tính đúng công thức mẫu: giá trị thực hiện đến kỳ này (gồm VAT) → được thanh toán (100% − % giữ lại, mặc định 90%) → + tạm ứng − hoàn trả tạm ứng → − đã thanh toán các kỳ trước (web tự cộng các đợt đã duyệt cùng hợp đồng) = đề nghị thanh toán kỳ này.
+- Luồng `tt` mặc định: Kế toán duyệt (được sửa số liệu: tạm ứng, khấu trừ, đã thanh toán…) → Giám đốc phê duyệt (Ban giám đốc); sửa ở Quản trị → Luồng duyệt. Có thông báo từng bước như phiếu vật tư. Duyệt xong lưu file Excel 2 sheet vào 05.3; đợt đã duyệt có nút Lập đợt tiếp theo.
+- Dùng chung bảng `material_requests` (cột `kind` = `tt`, `data` = thông tin riêng) và các hàm `mr_save`, `mr_act` (migration `20261105_thanh_toan_ncc_tp.sql`).
+
 ## Hợp đồng NCC – TP gắn gói thầu (thư mục 05.2)
 - Khi lưu file vào 05.2, hộp rà file bắt buộc chọn **gói thầu** (theo sheet Gói thầu) và **hạng mục BOQ** hợp đồng áp dụng; chưa chọn thì không lưu. Web gợi ý gói (✨) theo tên file, nội dung file Word/Excel, mác/quy cách và nhà cung cấp đã chọn cho gói; hạng mục gợi ý theo tên hạng mục ghi trong file.
 - Liên kết lưu ở `p.hdl` (cùng phần tiến độ, chỉ huy trưởng cũng ghi được). Thư mục 05.2 hiện nhãn gói, hạng mục cho từng file; file chưa gắn có nút **Gắn gói thầu**. Sheet Gói thầu hiện hợp đồng đã có dưới tên từng gói.
