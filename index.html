@@ -1250,7 +1250,11 @@ function centerCols(root){(root||document).querySelectorAll("table.t").forEach(t
 function subLay(v){const sh=[...v.children].find(x=>x.classList&&x.classList.contains("sheets"));if(!sh)return;const w=document.createElement("div");w.className="sublay";
   const c=document.createElement("div");c.className="subc";let n=sh.nextSibling;while(n){const nx=n.nextSibling;c.appendChild(n);n=nx}
   v.insertBefore(w,sh);sh.classList.add("vert");w.appendChild(sh);w.appendChild(c)}
-function dashZeros(root){centerCols(root);(root||document).querySelectorAll("table.t td").forEach(td=>{if(td.querySelector("input,select,button,svg,.mbar,.st"))return;const t=td.textContent.replace(/\u2060/g,"").trim();if(Z0.test(t)||t==="–"){const b=td.querySelector("b");if(b)b.textContent="-";else td.textContent="-"}})}
+/* Chữ trong biểu đồ luôn hiện đúng cỡ (khoảng 10–11 điểm ảnh) dù biểu đồ co giãn theo màn hình */
+function fitCharts(root){(root||document).querySelectorAll(".chart svg,svg.fitc").forEach(sv=>{const vb=sv.viewBox&&sv.viewBox.baseVal;if(!vb||!vb.width)return;const sc=sv.getBoundingClientRect().width/vb.width;if(!(sc>0))return;
+  sv.querySelectorAll("text").forEach(t=>{if(!t.dataset.fs)t.dataset.fs=t.getAttribute("font-size")||"11";const f=+t.dataset.fs;t.setAttribute("font-size",(sc>1.08||sc<.85?f/Math.max(.75,Math.min(sc,1.8)):f).toFixed(1))})})}
+addEventListener("resize",()=>{clearTimeout(fitCharts.t);fitCharts.t=setTimeout(()=>fitCharts(),150)});
+function dashZeros(root){centerCols(root);setTimeout(()=>fitCharts(root),0);(root||document).querySelectorAll("table.t td").forEach(td=>{if(td.querySelector("input,select,button,svg,.mbar,.st"))return;const t=td.textContent.replace(/\u2060/g,"").trim();if(Z0.test(t)||t==="–"){const b=td.querySelector("b");if(b)b.textContent="-";else td.textContent="-"}})}
 const ty=v=>fm((+v||0)/1e9,2);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const COL={home:["#16171C","#4A4D5C","#E2E2E7","#16171C"],proj:["#0A2486","#3D5BFF","#E1E7FB","#0A2486"],boq:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],rev:["#12A150","#4FD889","#DAF4E4","#0B6B34"],cost:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"],prog:["#2D3CE6","#7FA2FF","#E0E5FD","#1E2BC4"],mat:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],hr:["#8B5CF6","#C2A6FF","#ECE4FE","#5B32C8"],rep:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],week:["#1E2BC4","#5B8CFF","#E3E8FE","#1E2BC4"],brief:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],inbox:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"]};
@@ -1374,7 +1378,9 @@ function cash(p,tl){const t=p.terms,V=p.value,sh=Math.round(t.pay/30),sc=Math.ro
   tl.cost.forEach((c,i)=>{out[i+sc]+=c});
   let cum=0;const cu=inn.map((v,i)=>cum+=v-out[i]);const lab=[...Array(n)].map((_,i)=>{const d=new Date(tl.st.getFullYear(),tl.st.getMonth()+i,1);return"T"+(d.getMonth()+1)+"/"+String(d.getFullYear()).slice(2)});
   const peak=Math.min(0,...cu),pi=cu.indexOf(peak);return{inn,out,cu,lab,peak:-peak,pm:pi>=0&&peak<0?lab[pi]:"",ret,ms:MP}}
-function cfc(lab,a,b,cu){const W=1080,H=320,L=40,B=24,mx=Math.max(...a,...b,...cu.map(Math.abs),1),y0=8+(H-8-B)/2,k=(H-8-B)/2/mx,cw=(W-L)/lab.length,bw=Math.min(18,cw*.32);let g="";
+/* Bề rộng biểu đồ theo khung đang hiển thị để chữ không bị phóng to theo màn hình */
+const CHW=()=>{const v=document.getElementById("view"),w=v&&v.clientWidth||1100;return Math.max(560,Math.min(1500,Math.round(w-(innerWidth>900?290:40))))};
+function cfc(lab,a,b,cu){const W=CHW(),H=300,L=40,B=24,T=22,mx=Math.max(...a,...b,...cu.map(Math.abs),1),y0=T+(H-T-B)/2,k=(H-T-B)/2/mx,cw=(W-L)/lab.length,bw=Math.min(18,cw*.32);let g="";
   [-mx,-mx/2,0,mx/2,mx].forEach(v=>g+=`<line x1="${L}" x2="${W}" y1="${y0-v*k}" y2="${y0-v*k}" stroke="${v?"#E4E5EA":"#B5B7C0"}"/><text x="${L-6}" y="${y0-v*k+4}" text-anchor="end" font-size="11" fill="#8C8E97">${fm(v/1e9,0)}</text>`);
   let pts="";lab.forEach((l,i)=>{const x=L+i*cw+cw/2;g+=`<rect x="${x-bw-1}" y="${y0-a[i]*k}" width="${bw}" height="${a[i]*k}" rx="3" fill="#12A150"><title>${l} thu: ${fm(a[i]/1e9,2)} tỷ</title></rect><rect x="${x+1}" y="${y0}" width="${bw}" height="${b[i]*k}" rx="3" fill="#C21FC9"><title>${l} chi: ${fm(b[i]/1e9,2)} tỷ</title></rect>`;
     /* số liệu (tỷ) ngay trên cột thu, dưới cột chi */
