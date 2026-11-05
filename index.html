@@ -107,6 +107,8 @@ table.xl{border-collapse:collapse;table-layout:fixed;font:14.5px/1.35 Calibri,"B
 #fview .fsr{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:8px 14px;align-items:center}
 #fview .fsr .on{font-size:15px;font-weight:600;overflow-wrap:anywhere}#fview .fsr .why{grid-column:1/-1;font-size:14.5px;color:var(--ink2)}#fview .fsr .why.dif{color:#B25E00}
 #fview .fsr select,#fview .fsr input{font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;width:100%;min-width:0}
+#fview .fdt{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}#fview .fdt input{width:auto;padding:5px 8px}
+.fday{border-bottom:1px solid var(--line)}.fday summary{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;font-size:15px;list-style:none}.fday summary::-webkit-details-marker{display:none}.fday summary svg{width:18px;height:18px;color:#8B5CF6}.fday[open] summary{background:#F5F3FF}.fday .ffile{padding-left:28px}
 #fview .fsr .nm{grid-column:1/-1}#fview .fsf{display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line)}
 @media (max-width:760px){#fview .fsr{grid-template-columns:1fr}}
 .ftb .fn{min-width:200px;word-break:break-word}
@@ -996,7 +998,7 @@ window.NGB=(function(){
     warn:toast,
     drive:{
       async status(){try{const r=await fetch("api/drive?action=status");if(!r.ok)return false;const j=await r.json();this.reason=j.connected?"":j.reason||"";return !!j.connected}catch(e){return false}},
-      async list(pid){return ok(await need().from("project_files").select("id,folder,name,size,at").eq("project_id",pid).order("at",{ascending:false}))},
+      async list(pid){return ok(await need().from("project_files").select("id,folder,name,size,at,sub").eq("project_id",pid).order("at",{ascending:false}))},
       async call(q,init){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");
         const r=await fetch("api/drive?"+new URLSearchParams(q),{...init,headers:{...(init.headers||{}),authorization:"Bearer "+session.access_token}});
         if(r.ok)return r;let c="";try{c=(await r.json()).error}catch(e){}
@@ -1474,12 +1476,12 @@ const DF=[["01.1","Pháp lý dự án","Giấy phép xây dựng, quyết địn
   ["05.1","Báo giá NCC – TP","Báo giá nhà cung cấp, thầu phụ, tổ đội; đơn đặt hàng",A4],["05.2","Hợp đồng NCC – TP","Hợp đồng mua vật tư, hợp đồng thầu phụ, giao khoán tổ đội, phụ lục",A4],["05.3","Thanh toán NCC – TP","Đề nghị thanh toán, nghiệm thu thanh toán, hoá đơn, đối chiếu công nợ nhà cung cấp, thầu phụ",A4],["05.4","Nhập xuất vật tư","Phiếu nhập, xuất, giao nhận vật tư",A4],
   ["06.1","Nhật ký thi công","Nhật ký công trường",A4],["06.2","Báo cáo – ảnh","Báo cáo tuần/tháng, ảnh hiện trường",A4],["06.3","Công văn – biên bản họp","Công văn đi/đến, biên bản họp giao ban",A4]];
 /* Mã thư mục cũ (8 thư mục) đổi sang thư mục con mới */
-const OLDF={"01":"01.2","02":"01.3","03":"02.2","04":"04.1","05":"04.3","06":"05.1","07":"05.2","08":"06.2"},nf=f=>OLDF[f]||f;
+const OLDF={"01":"01.2","02":"01.3","03":"02.2","04":"04.1","05":"04.3","06":"05.1","07":"05.2","08":"06.2"},nf=f=>{const [a,b]=String(f||"").split("/");return(OLDF[a]||a)+(b?"/"+b:"")};
 const fmtSize=b=>b==null?"-":b<1048576?fm(b/1024,0)+" KB":fm(b/1048576,1)+" MB";
 const LOCALF={open(){return new Promise((ok,er)=>{const q=indexedDB.open("ngic-files",1);q.onupgradeneeded=()=>q.result.createObjectStore("files",{keyPath:"id"});q.onsuccess=()=>ok(q.result);q.onerror=()=>er(q.error)})},
   async tx(mode,fn){const db=await this.open();return new Promise((ok,er)=>{const t=db.transaction("files",mode),q=fn(t.objectStore("files"));t.oncomplete=()=>{db.close();ok(q&&q.result)};t.onerror=t.onabort=()=>{db.close();er(t.error||new Error("Không lưu được file trong trình duyệt"))}})},
   async all(){return await this.tx("readonly",o=>o.getAll())||[]},
-  async list(pid){return (await this.all()).filter(x=>x.project_id===pid).sort((a,b)=>a.at<b.at?1:-1).map(({blob,...x})=>({...x,folder:nf(x.folder)}))},
+  async list(pid){return (await this.all()).filter(x=>x.project_id===pid).sort((a,b)=>a.at<b.at?1:-1).map(({blob,...x})=>{const [a,b]=String(x.folder||"").split("/");return{...x,folder:nf(a),sub:b||null}})},
   async put(pid,folder,file){const id="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);await this.tx("readwrite",o=>o.put({id,project_id:pid,folder,name:file.name,size:file.size,at:new Date().toISOString(),blob:file}))},
   async get(id){return (await this.tx("readonly",o=>o.get(id)))},
   async del(id){await this.tx("readwrite",o=>o.delete(id))},
@@ -1531,7 +1533,7 @@ const b64=buf=>{const u=new Uint8Array(buf);let s="";for(let i=0;i<u.length;i+=3
 function needPL(){return window.PDFLib?Promise.resolve():new Promise((ok,er)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";s.onload=ok;s.onerror=er;document.head.appendChild(s)})}
 async function pdfHead(f){const buf=await f.arrayBuffer();await needPL();const src=await PDFLib.PDFDocument.load(buf,{ignoreEncryption:true}),n=src.getPageCount();
   if(n<=3&&buf.byteLength<=3*1048576)return b64(buf);const d=await PDFLib.PDFDocument.create();(await d.copyPages(src,[...Array(Math.min(3,n)).keys()])).forEach(x=>d.addPage(x));const out=await d.save();return out.byteLength<=4*1048576?b64(out):null}
-async function imgB64(f){try{const bm=await createImageBitmap(f),k=Math.min(1,1000/Math.max(bm.width,bm.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(bm.width*k));c.height=Math.max(1,Math.round(bm.height*k));c.getContext("2d").drawImage(bm,0,0,c.width,c.height);const u=c.toDataURL("image/jpeg",.8);return u.slice(u.indexOf(",")+1)}catch(e){return null}}
+async function imgB64(f){try{const bm=await createImageBitmap(f),k=Math.min(1,1400/Math.max(bm.width,bm.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(bm.width*k));c.height=Math.max(1,Math.round(bm.height*k));c.getContext("2d").drawImage(bm,0,0,c.width,c.height);const u=c.toDataURL("image/jpeg",.8);return u.slice(u.indexOf(",")+1)}catch(e){return null}}
 const xmlText=x=>x.replace(/<\/w:p>|<\/a:p>/g,"\n").replace(/<[^>]+>/g,"").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&amp;/g,"&");
 async function peek(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),o={name:f.name};
   try{if(ext==="pdf"&&f.size<=60*1048576){const d=await pdfHead(f);if(d)o.doc={media_type:"application/pdf",data:d}}
@@ -1540,22 +1542,28 @@ async function peek(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),o={
     else if(/^(docx|pptx)$/.test(ext)){await needX();const z=XLSX.CFB.read(new Uint8Array(await f.arrayBuffer()),{type:"array"});o.text=z.FullPaths.filter(n=>/word\/document\.xml$|ppt\/slides\/slide\d+\.xml$/.test(n)).map(n=>xmlText(new TextDecoder().decode(new Uint8Array(XLSX.CFB.find(z,n).content)))).join("\n").slice(0,6000)}
     else if(/^(txt|csv)$/.test(ext))o.text=(await f.text()).slice(0,6000)}catch(e){}
   return o}
-async function suggest(p,f){const g=guessFolder(f.name);if(g&&g.strong)return g;const o=await peek(f);let v=null;
+async function suggest(p,f){const g=guessFolder(f.name);if(g&&g.strong&&!isImg(f))return g;const o=await peek(f);let v=null;
   if(!NGApp.guest)try{v=await Promise.race([NGB.drive.classify({name:o.name,text:o.text,doc:o.doc,img:o.img,project:{code:p.code,name:p.name,cdt:p.cdt}}),new Promise((_,no)=>setTimeout(()=>no(new Error("cham")),30000))]);v.ai=1;
     /* Lý do nói hợp đồng thầu phụ, nhà cung cấp mà lại chọn 01.3 (hợp đồng chủ đầu tư) thì theo lý do */
     if(v.folder==="01.3"&&/thau phu|nha cung cap|\bncc\b|to doi|giao khoan|nhan khoan|ben a la[^.]*nam giang|nam giang[^.]*(la )?ben a/.test(noAcc(v.reason||"").toLowerCase()))v.folder="05.2"}catch(e){v=null}
   return v||guessFolder(o.name,o.text,o.isImg)||{folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}}
 function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(wrap)wrap.remove();const base=n=>n.replace(/\.[^.]+$/,""),ext=n=>(n.match(/\.[^.]+$/)||[""])[0];
   wrap=document.createElement("div");wrap.id="fview";wrap.setAttribute("role","dialog");wrap.setAttribute("aria-label","Xếp file vào thư mục");
-  wrap.innerHTML=`<div class="fvb"><div class="fvh"><b>Rà nội dung ${files.length} file trước khi lưu</b><button class="back sm" style="margin:0" id="fvc">Huỷ</button></div><div class="fvc"><div class="fsl">${files.map((f,i)=>`<div class="fsr" data-i="${i}"><div class="on">${esc(f.name)} <span class="sub">· ${fmtSize(f.size)}</span></div><select aria-label="Thư mục">${DG.map(g=>{const o=F.filter(x=>x[0].startsWith(g[0]+"."));return o.length?`<optgroup label="${g[0]} ${esc(g[1])}">${o.map(x=>`<option value="${x[0]}">${x[0]} ${esc(x[1])}</option>`).join("")}</optgroup>`:""}).join("")}</select><input class="nm" aria-label="Tên file khi lưu" value="${esc(stdName(p.id,f.name))}"><div class="why">Đang đọc nội dung…</div></div>`).join("")}</div></div><div class="fsf"><span class="sub" id="fsm" style="flex:1;align-self:center">Đang đọc từng file để gợi ý thư mục · anh lưu được ngay, file chưa đọc xong sẽ vào thư mục đang chọn</span><button class="back" style="margin:0" id="fsok" disabled>Lưu vào thư mục đã chọn</button></div></div>`;
+  wrap.innerHTML=`<div class="fvb"><div class="fvh"><b>Rà nội dung ${files.length} file trước khi lưu</b><button class="back sm" style="margin:0" id="fvc">Huỷ</button></div><div class="fvc"><div class="fsl">${files.map((f,i)=>`<div class="fsr" data-i="${i}"><div class="on">${esc(f.name)} <span class="sub">· ${fmtSize(f.size)}</span></div><select aria-label="Thư mục">${DG.map(g=>{const o=F.filter(x=>x[0].startsWith(g[0]+"."));return o.length?`<optgroup label="${g[0]} ${esc(g[1])}">${o.map(x=>`<option value="${x[0]}">${x[0]} ${esc(x[1])}</option>`).join("")}</optgroup>`:""}).join("")}</select><input class="nm" aria-label="Tên file khi lưu" value="${esc(stdName(p.id,f.name))}">${isImg(f)?`<label class="fdt">Ngày chụp <input type="date" class="fdate"><span class="sub">Ảnh sẽ vào thư mục con theo ngày này</span></label>`:""}<div class="why">Đang đọc nội dung…</div></div>`).join("")}</div></div><div class="fsf"><span class="sub" id="fsm" style="flex:1;align-self:center">Đang đọc từng file để gợi ý thư mục · anh lưu được ngay, file chưa đọc xong sẽ vào thư mục đang chọn</span><button class="back" style="margin:0" id="fsok" disabled>Lưu vào thư mục đã chọn</button></div></div>`;
   document.body.appendChild(wrap);const rows=[...wrap.querySelectorAll(".fsr")],close=()=>wrap.remove();wrap.querySelector("#fvc").onclick=close;
   let left=files.length,saving=false;const okBtn=wrap.querySelector("#fsok"),def=F.some(x=>x[0]===here)?here:F[0][0];
   /* Chọn sẵn thư mục đang mở, anh lưu được ngay không phải chờ đọc xong; file tên rõ loại thì xếp ngay */
-  rows.forEach((r,i)=>{const sel=r.querySelector("select");sel.value=def;sel.onchange=()=>{r.dataset.man=1}});okBtn.disabled=false;
+  rows.forEach((r,i)=>{const sel=r.querySelector("select");sel.value=def;sel.onchange=()=>{r.dataset.man=1}});
+  /* Ảnh: ngày chụp lấy từ EXIF, không có thì chờ Claude đọc dấu ngày giờ in trên ảnh; tên ảnh dạng mã số thì đặt lại theo ngày */
+  const idName=n=>GENERIC.test(noAcc(base(n)))||/\d{9,}/.test(base(n));
+  const phName=(i,title)=>{const r=rows[i],f=files[i],nm=r&&r.querySelector(".nm"),d=r&&r.querySelector(".fdate");if(!nm||r.dataset.nmman)return;const day=d&&d.value?d.value.replace(/-/g,""):"";if(!idName(f.name)){nm.value=stdName(p.id,(day?day+"_":"")+f.name);return}nm.value=stdName(p.id,(day?day+"_":"")+(title||r.dataset.tt||"Anh hien truong")+"_"+String(i+1).padStart(2,"0")+ext(f.name))};
+  rows.forEach((r,i)=>{r.querySelector(".nm").addEventListener("input",()=>{r.dataset.nmman=1});const d=r.querySelector(".fdate");if(!d)return;d.onchange=()=>{r.dataset.dman=1;phName(i)};
+    exifDate(files[i]).then(x=>{if(x&&!d.value){d.value=x;r.dataset.dsrc="exif";phName(i)}})});okBtn.disabled=false;
   const Q=files.map((f,i)=>i),go=async()=>{while(Q.length){const i=Q.shift();const v=await suggest(p,files[i]).catch(()=>({folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}));show(i,v)}};
   const show=(i,v)=>{const f=files[i];if(saving||!rows[i])return;{const r=rows[i],sel=r.querySelector("select"),why=r.querySelector(".why"),nm=r.querySelector(".nm");
     if(v.folder)v.folder=nf(v.folder);const ok=v.folder&&F.some(x=>x[0]===v.folder);if(ok)r.dataset.sug=v.folder;if(!r.dataset.man)sel.value=ok?v.folder:def;
-    if(v.title&&GENERIC.test(noAcc(base(f.name)))&&nm.value===stdName(p.id,f.name))nm.value=stdName(p.id,v.title+ext(f.name));
+    const fdt=r.querySelector(".fdate");if(fdt){const pd=String(v.photo_date||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(pd&&!r.dataset.dman&&r.dataset.dsrc!=="exif"){fdt.value=pd[3]+"-"+pd[2].padStart(2,"0")+"-"+pd[1].padStart(2,"0");r.dataset.dsrc="anh"}if(v.title)r.dataset.tt=v.title;phName(i,v.title)}
+    else if(v.title&&GENERIC.test(noAcc(base(f.name)))&&nm.value===stdName(p.id,f.name))nm.value=stdName(p.id,v.title+ext(f.name));
     const fn=k=>{const x=F.find(y=>y[0]===k);return x?x[0]+" "+x[1]:k};
     const fa=k=>{const x=DF.find(y=>y[0]===k);return x?x[0]+" "+x[1]:k},gn=k=>{const g=DG.find(y=>y[0]===k);return g?g[0]+" "+g[1]:k};
     why.textContent=(v.folder?(ok?"Gợi ý: "+fn(v.folder):"Nên để vào "+fa(v.folder)+" nhưng tài khoản này chưa được mở thư mục đó: nhờ Ban giám đốc cấp quyền ở Quản trị, hoặc chọn tạm thư mục khác")+" · ":"")+v.reason;
@@ -1568,9 +1576,9 @@ function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(
   /* Lưu 3 file một lượt cho nhanh; từng dòng hiện trạng thái, file lỗi giữ lại để anh lưu lại */
   okBtn.onclick=async()=>{okBtn.disabled=true;saving=true;const fs=wrap.querySelector("#fsm");fs.style.color="";let n=0,w=0,last=null,err=null,k=0,done=0;const saved={};const todo=files.map((f,i)=>i).filter(i=>rows[i]),tot=todo.length;
     rows.forEach(r=>{if(r)r.querySelectorAll("select,input").forEach(x=>x.disabled=true)});
-    const one=async i=>{const f=files[i],r=rows[i],why=r.querySelector(".why"),folder=r.querySelector("select").value;let nm=r.querySelector(".nm").value.trim()||f.name;if(!/\.[A-Za-z0-9]{1,8}$/.test(nm))nm+=ext(f.name);
+    const one=async i=>{const f=files[i],r=rows[i],why=r.querySelector(".why"),folder=r.querySelector("select").value,fdv=(r.querySelector(".fdate")||{}).value||"",dest=folder+(/^\d{4}-\d{2}-\d{2}$/.test(fdv)?"/"+fdv:"");let nm=r.querySelector(".nm").value.trim()||f.name;if(!/\.[A-Za-z0-9]{1,8}$/.test(nm))nm+=ext(f.name);
       why.classList.remove("dif");why.textContent="⏳ Đang lưu…";
-      try{if(await FS.upload(p.id,folder,new File([f],nm,{type:f.type}))==="wait")w++;n++;last=folder;saved[i]=folder;why.textContent="✓ Đã lưu";if(r.dataset.sug&&r.dataset.sug!==folder){const fn2=k=>{const z=DF.find(y=>y[0]===k);return k+" "+(z?z[1]:"")};aiRule("thumuc",`File "${f.name}": anh xếp vào ${fn2(folder)}, không phải ${fn2(r.dataset.sug)}`)}rows[i]=null;setTimeout(()=>r.remove(),400)}
+      try{if(await FS.upload(p.id,dest,new File([f],nm,{type:f.type}))==="wait")w++;n++;last=folder;saved[i]=folder;why.textContent="✓ Đã lưu";if(r.dataset.sug&&r.dataset.sug!==folder){const fn2=k=>{const z=DF.find(y=>y[0]===k);return k+" "+(z?z[1]:"")};aiRule("thumuc",`File "${f.name}": anh xếp vào ${fn2(folder)}, không phải ${fn2(r.dataset.sug)}`)}rows[i]=null;setTimeout(()=>r.remove(),400)}
       catch(er){err=er;why.textContent="✗ "+er.message;why.classList.add("dif");r.querySelectorAll("select,input").forEach(x=>x.disabled=false)}
       fs.textContent=`Đã xong ${++done}/${tot} file`};
     fs.textContent=tot>1?`Đang lưu ${tot} file…`:"Đang lưu…";
@@ -1634,6 +1642,18 @@ document.addEventListener("click",e=>{if(!e.target.closest("#wxp")||!cur)return;
     if(!g){inp.value="";inp.placeholder="Không tìm thấy, anh thử tên khác";return}g.manual=1;g.loc=p.loc;wxSet(p.id,g);wxLoad()}});
 const filesView=()=>`<div class="sub" id="flmsg" style="min-height:18px;margin-bottom:8px"></div><div class="vgrid" id="fls"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`;
 let flSel=null,flTop=null;
+/* Danh sách file trong thư mục: file có thư mục ngày (ảnh hiện trường) gom theo ngày, ngày mới nhất mở sẵn */
+function fGroup(R,row){const D={},plain=[];R.forEach(x=>x.sub?(D[x.sub]=D[x.sub]||[]).push(x):plain.push(x));const K=Object.keys(D).sort().reverse();
+  return K.map((k,i)=>`<details class="fday"${i===0?" open":""}><summary>${ic("files",1.8)}<b>${k.slice(8,10)}/${k.slice(5,7)}/${k.slice(0,4)}</b><span class="sub">${D[k].length} file</span></summary>${D[k].map(row).join("")}</details>`).join("")+plain.map(row).join("")}
+/* Ngày chụp trong ảnh (EXIF của máy ảnh, điện thoại): "YYYY-MM-DD" hoặc null */
+async function exifDate(f){try{const b=new DataView(await f.slice(0,262144).arrayBuffer());if(b.getUint16(0)!==0xFFD8)return null;let o=2;
+  while(o+4<b.byteLength){const m=b.getUint16(o),len=b.getUint16(o+2);
+    if(m===0xFFE1&&b.getUint32(o+4)===0x45786966){const t=o+10,le=b.getUint16(t)===0x4949,g16=x=>b.getUint16(x,le),g32=x=>b.getUint32(x,le);
+      const rd=(ifd,tags)=>{const n=g16(t+ifd),r={};for(let i=0;i<n;i++){const e=t+ifd+2+i*12,tag=g16(e);if(!tags.includes(tag))continue;if(tag===0x8769){r[tag]=g32(e+8);continue}const cnt=g32(e+4),off=cnt>4?t+g32(e+8):e+8;let z="";for(let k=0;k<cnt-1&&off+k<b.byteLength;k++)z+=String.fromCharCode(b.getUint8(off+k));r[tag]=z}return r};
+      const i0=rd(g32(t+4),[0x8769,0x0132]);let z=i0[0x0132];if(i0[0x8769]){const ex=rd(i0[0x8769],[0x9003]);if(ex[0x9003])z=ex[0x9003]}
+      const mm=String(z||"").match(/^(\d{4}):(\d{2}):(\d{2})/);return mm&&mm[1]>"1990"?mm[1]+"-"+mm[2]+"-"+mm[3]:null}
+    if((m&0xFF00)!==0xFF00)break;o+=2+len}}catch(e){}return null}
+const isImg=f=>/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic|gif)$/i.test(f.name);
 async function filesLoad(){const box=document.getElementById("fls"),p=cur;if(!box||!p)return;
   try{const L=(await FS.list(p.id)).map(x=>({...x,folder:nf(x.folder)}));if(!document.getElementById("fls")||cur!==p)return;const G=NGApp.guest,on=true,canDel=G||NGApp.board||p._role==="gd",F=DF.filter(f=>NGApp.board||f[3].includes(p._role));
     const Gs=DG.filter(g=>F.some(f=>f[0].startsWith(g[0]+"."))),cnt=k=>L.filter(x=>x.folder===k||x.folder.startsWith(k+".")).length;
@@ -1647,7 +1667,7 @@ async function filesLoad(){const box=document.getElementById("fls"),p=cur;if(!bo
         <div class="fcol"><div class="fch">Nhóm hồ sơ</div>${Gs.map(g=>{const n=cnt(g[0]);return`<button class="frow" data-ftop="${g[0]}" aria-current="${g[0]===flTop}">${ic("files",1.8)}<span class="frn"><b>${g[0]}</b> ${esc(g[1])}</span>${n?`<i class="fcn">${n}</i>`:""}${chev}</button>`}).join("")}</div>
         <div class="fcol"><div class="fch">${G0?esc(G0[0]+" "+G0[1]):"Thư mục con"}</div>${subs.map(f=>{const n=cnt(f[0]);return`<button class="frow" data-fsel="${f[0]}" aria-current="${f[0]===flSel}">${ic("files",1.8)}<span class="frn"><b>${f[0]}</b> ${esc(f[1])}</span>${n?`<i class="fcn">${n}</i>`:""}${chev}</button>`}).join("")}</div>
         <div class="fcol fcf">${C?`<div class="fch fchf"><div><b>${C[0]} ${esc(C[1])}</b><small>${esc(C[2])}</small></div>${on?`<label class="back sm" data-tone="save" style="margin:0;cursor:pointer"><input type="file" data-fu="${C[0]}" multiple hidden>＋ Tải file vào đây</label>`:""}</div>
-          ${R.length?R.map(x=>{const t=fic(x.name);return`<div class="ffile"><span class="fty" style="--c:${t[1]}">${t[0]}</span><div class="ffn"><b title="${esc(x.name)}">${esc(x.name)}</b><small>${fmtSize(x.size)} · ${fd(new Date(x.at))}${x.wait?' · <span class="mau">Chờ đưa lên Drive</span>':""}</small>${/^05\.1$/.test(C[0])&&cur?(()=>{const q=qByFile(cur,x.name);if(!q)return`<div class="ftag"><span class="st warn">Chưa phân tích</span><button class="back sm" style="margin:0" data-fqa="${esc(x.id)}" data-n="${esc(x.name)}">Phân tích báo giá</button></div>`;const ci=qInfo(cur,q);return`<div class="ftag"><span class="ftg c">${esc(ci.cat)}</span><span class="ftg">${esc(qHmTxt(cur,ci.hm))}</span><span class="ftg v">${esc(q.vendor)}</span><button class="back sm" style="margin:0" data-go="da-${cur.id}-bg">Xem so sánh</button></div>`})():""}</div><div class="fla"><button class="back sm" style="margin:0" data-fv="${esc(x.id)}" data-n="${esc(x.name)}">Xem</button><button class="back sm" style="margin:0" data-fd="${esc(x.id)}" data-n="${esc(x.name)}">Tải về</button>${canDel?`<button class="back sm" style="margin:0" data-fx="${esc(x.id)}">Xoá</button>`:""}</div></div>`}).join("")
+          ${R.length?fGroup(R,x=>{const t=fic(x.name);return`<div class="ffile"><span class="fty" style="--c:${t[1]}">${t[0]}</span><div class="ffn"><b title="${esc(x.name)}">${esc(x.name)}</b><small>${fmtSize(x.size)} · ${fd(new Date(x.at))}${x.wait?' · <span class="mau">Chờ đưa lên Drive</span>':""}</small>${/^05\.1$/.test(C[0])&&cur?(()=>{const q=qByFile(cur,x.name);if(!q)return`<div class="ftag"><span class="st warn">Chưa phân tích</span><button class="back sm" style="margin:0" data-fqa="${esc(x.id)}" data-n="${esc(x.name)}">Phân tích báo giá</button></div>`;const ci=qInfo(cur,q);return`<div class="ftag"><span class="ftg c">${esc(ci.cat)}</span><span class="ftg">${esc(qHmTxt(cur,ci.hm))}</span><span class="ftg v">${esc(q.vendor)}</span><button class="back sm" style="margin:0" data-go="da-${cur.id}-bg">Xem so sánh</button></div>`})():""}</div><div class="fla"><button class="back sm" style="margin:0" data-fv="${esc(x.id)}" data-n="${esc(x.name)}">Xem</button><button class="back sm" style="margin:0" data-fd="${esc(x.id)}" data-n="${esc(x.name)}">Tải về</button>${canDel?`<button class="back sm" style="margin:0" data-fx="${esc(x.id)}">Xoá</button>`:""}</div></div>`})
             :`<div class="fempty">${C[0]==="01.2"&&p.file?`Chưa có file BOQ gốc (${esc(p.file)}). Anh tải file đó lên đây.`:"Thư mục này chưa có file."}</div>`}
           <div class="sub" style="padding:10px 12px 4px;font-size:13.5px">Tên file tự đặt dạng NămThángNgày_Mã dự án_tên không dấu</div>`:`<div class="fempty">Chọn thư mục con để xem file.</div>`}</div>
       </div></section>`}

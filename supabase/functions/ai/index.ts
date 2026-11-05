@@ -177,6 +177,7 @@ QUAN TRỌNG với hợp đồng: Nam Giang là tổng thầu.
 - Viết "reason" trước, rồi chọn "folder" khớp đúng với lý do vừa viết.
 "fit": false nếu không thư mục nào thật sự hợp; khi đó "new_group" là mã nhóm (01–06) nên đặt thư mục mới và "new_folder" là tên thư mục mới nên tạo (ngắn, tiếng Việt); nếu fit = true thì để "" cho cả hai.
 "reason": một câu ngắn tiếng Việt nêu file này là gì và vì sao chọn thư mục đó.
+"photo_date": nếu là ảnh có in ngày chụp (ví dụ dấu Timemark "Thứ Bảy, 31 Tháng 10, 2026 15:32", hoặc ngày giờ góc ảnh) thì ghi ngày đó dạng dd/mm/yyyy; không thấy ngày in trên ảnh thì "".
 "title": tên mô tả ngắn cho file bằng tiếng Việt, tối đa 8 chữ, không ghi ngày, không ghi mã dự án (ví dụ "Biên bản nghiệm thu đợt 2 phần móng").`;
 const CLASSIFY = {
   type: "object",
@@ -186,9 +187,10 @@ const CLASSIFY = {
     title: { type: "string" },
     fit: { type: "boolean" },
     new_group: { type: "string", enum: ["", "01", "02", "03", "04", "05", "06"] },
-    new_folder: { type: "string" }
+    new_folder: { type: "string" },
+    photo_date: { type: "string" }
   },
-  required: ["reason", "folder", "title", "fit", "new_group", "new_folder"],
+  required: ["reason", "folder", "title", "fit", "new_group", "new_folder", "photo_date"],
   additionalProperties: false
 };
 
@@ -300,7 +302,7 @@ async function run(b: any, env: any): Promise<Response> {
       content.push({ type: "text", text: `Dự án: ${proj}\nTên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung trích từ file:\n${b.text.slice(0, 8000)}` : "") });
       const { data: v } = await claude(env, { system: SYS_CLASSIFY, content, schema: CLASSIFY, maxTokens: 8000 });
       if (!FOLDERS[v.folder]) return json({ error: "khong_doc_duoc" }, 422);
-      return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120), fit: v.fit !== false, new_group: String(v.new_group || ""), new_folder: String(v.new_folder || "").slice(0, 80) });
+      return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120), fit: v.fit !== false, new_group: String(v.new_group || ""), new_folder: String(v.new_folder || "").slice(0, 80), photo_date: String(v.photo_date || "").slice(0, 10) });
     }
     if (b.action === "contract") {
       const content: any[] = [];
