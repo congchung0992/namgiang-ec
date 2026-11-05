@@ -24,6 +24,16 @@
 #fview iframe{flex:1;border:0;width:100%;height:100%;background:#fff}#fview img{max-width:100%;max-height:100%;margin:auto;object-fit:contain}
 #fview pre{margin:0;padding:16px;font-size:13px;white-space:pre-wrap;width:100%}#fview .fvm{margin:auto;padding:24px;text-align:center;font-size:14px;color:var(--ink2)}
 #fview .fvx{padding:12px;width:100%;min-width:0}
+#fview.fvz{padding:12px}#fview.fvz .fvb{width:100%;height:100%;border-radius:18px}#fview.fvz:fullscreen{padding:0}#fview.fvz:fullscreen .fvb{border-radius:0}
+.xlv{flex:1;min-width:0;display:flex;flex-direction:column;background:#fff}.xlg{flex:1;min-height:0;overflow:auto}
+table.xl{border-collapse:collapse;table-layout:fixed;font:12.5px/1.35 Calibri,"Be Vietnam Pro",Arial,sans-serif;color:#111}
+.xl td,.xl th{border:1px solid #E1E3E8;padding:3px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:22px;vertical-align:bottom}
+.xl thead th{position:sticky;top:0;z-index:2;background:#F1F3F6;color:#5B6170;font-weight:500;text-align:center;font-size:12px}
+.xl th.xr{position:sticky;left:0;z-index:1;background:#F1F3F6;color:#5B6170;font-weight:500;text-align:center;font-size:11.5px}.xl th.xc{left:0;z-index:3}
+.xl td.xn{text-align:right}.xl td.xm{white-space:normal;vertical-align:middle;text-align:center}.xl td:has(.xo){overflow:visible;position:relative}.xl .xo{display:block;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:0}
+.xlt{display:flex;gap:2px;overflow-x:auto;background:#F1F3F6;border-top:1px solid #E1E3E8;padding:0 8px;flex:none}
+.xlt button{border:0;background:transparent;padding:8px 14px;font:500 12.5px var(--f);color:#5B6170;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent}
+.xlt button[aria-selected="true"]{background:#fff;color:#0E7A3F;border-bottom-color:#12A150}
 .wxn{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--ink2);flex-wrap:wrap}.wxn b{font-size:26px;color:var(--ink)}.wxi{font-size:26px;line-height:1}
 .wxg{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px;margin-top:12px}
 .wxd{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:0}
@@ -1439,16 +1449,37 @@ const flMsg=(m,bad)=>{const x=document.getElementById("flmsg");if(x){x.textConte
 const saveBlob=(b,name)=>{const u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000)};
 /* Xem file: chỉ mở các loại an toàn; HTML, SVG không bao giờ được hiển thị trực tiếp */
 const FVT={pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",webp:"image/webp",bmp:"image/bmp"};
+/* Xem sheet Excel giống Excel: cột A B C, số dòng, độ rộng cột và ô gộp theo file, số đã định dạng, chữ tràn sang ô trống bên cạnh */
+function xlSheet(ws){if(!ws||!ws["!ref"])return `<div class="fvm">Sheet trống.</div>`;const R0=XLSX.utils.decode_range(ws["!ref"]),MR=Math.min(R0.e.r,R0.s.r+1999),MC=Math.min(R0.e.c,R0.s.c+79);
+  const cw=[],C=ws["!cols"]||[],RH=ws["!rows"]||[];for(let c=0;c<=MC;c++){const k=C[c];cw[c]=k&&k.hidden?0:Math.round(k&&k.wpx?k.wpx:k&&k.wch?k.wch*7+5:k&&k.width?k.width*7+5:64)}
+  const span={},cover=new Set();(ws["!merges"]||[]).forEach(m=>{span[m.s.r+","+m.s.c]=[m.e.r-m.s.r+1,m.e.c-m.s.c+1];for(let r=m.s.r;r<=m.e.r;r++)for(let c=m.s.c;c<=m.e.c;c++)if(r!==m.s.r||c!==m.s.c)cover.add(r+","+c)});
+  /* Số đọc theo định dạng của ô (số chữ số lẻ, phần trăm) nhưng viết kiểu Việt Nam, số âm trong ngoặc */
+  const txt=cl=>{if(!cl||cl.v==null||cl.v==="")return"";if(cl.t==="d"&&cl.v instanceof Date)return fd(cl.v);
+    if(cl.t==="n"){const z=String(cl.z||"General").split(";")[0];if(/[dmyhs]/i.test(z.replace(/"[^"]*"/g,""))&&!/General/i.test(z))return cl.w!=null?cl.w:String(cl.v);
+      const g=/General/i.test(z),dec=g?2:Math.min(6,((z.match(/\.([0#]+)/)||[,""])[1]).length),pc=!g&&z.includes("%"),v=pc?cl.v*100:cl.v;
+      return pn(v.toLocaleString("vi-VN",{minimumFractionDigits:g?0:dec,maximumFractionDigits:dec,useGrouping:g||/[#0],[#0]/.test(z)}))+(pc?"%":"")}
+    return cl.w!=null?cl.w:String(cl.v)};
+  const tw=44+cw.slice(R0.s.c).reduce((a,b)=>a+b,0);
+  let h=`<table class="xl" style="width:${tw}px"><colgroup><col style="width:44px">${cw.slice(R0.s.c).map(w=>`<col style="width:${w}px">`).join("")}</colgroup><thead><tr><th class="xc"></th>${cw.slice(R0.s.c).map((_,i)=>`<th>${XLSX.utils.encode_col(R0.s.c+i)}</th>`).join("")}</tr></thead><tbody>`;
+  for(let r=R0.s.r;r<=MR;r++){const rh=RH[r];if(rh&&rh.hidden)continue;h+=`<tr${rh&&rh.hpx?` style="height:${Math.round(rh.hpx)}px"`:""}><th class="xr">${r+1}</th>`;
+    for(let c=R0.s.c;c<=MC;c++){const k=r+","+c;if(cover.has(k))continue;const cl=ws[XLSX.utils.encode_cell({r,c})],t=txt(cl),sp=span[k],num=cl&&cl.t==="n";
+      let maxw=0;if(t&&!num&&!sp){maxw=cw[c];for(let d=c+1;d<=MC;d++){const nk=r+","+d;if(cover.has(nk)||span[nk])break;const nc=ws[XLSX.utils.encode_cell({r,c:d})];if(nc&&nc.v!=null&&nc.v!=="")break;maxw+=cw[d]}}
+      h+=`<td${sp?` rowspan="${sp[0]}" colspan="${sp[1]}" class="xm"`:num?` class="xn"`:""}${t?` title="${esc(t)}"`:""}>${t?(maxw>cw[c]?`<span class="xo" style="width:${maxw-8}px">${esc(t)}</span>`:esc(t)):""}</td>`}
+    h+="</tr>"}
+  return h+`</tbody></table>${R0.e.r>MR||R0.e.c>MC?`<div class="sub" style="padding:8px 12px">Đang hiện ${MR-R0.s.r+1} dòng, ${MC-R0.s.c+1} cột đầu · anh bấm Tải về để xem đủ</div>`:""}`}
 async function fileView(id,name){const ext=(name.split(".").pop()||"").toLowerCase();let wrap=document.getElementById("fview"),url=null;if(wrap)wrap.remove();
-  wrap=document.createElement("div");wrap.id="fview";wrap.setAttribute("role","dialog");wrap.setAttribute("aria-label","Xem file");wrap.innerHTML=`<div class="fvb"><div class="fvh"><b></b><button class="back sm" style="margin:0" id="fvd" disabled>Tải về</button><button class="back sm" style="margin:0" id="fvc">Đóng</button></div><div class="fvc"><div class="fvm">Đang mở file…</div></div></div>`;
+  wrap=document.createElement("div");wrap.id="fview";wrap.className="fvz";wrap.setAttribute("role","dialog");wrap.setAttribute("aria-label","Xem file");wrap.innerHTML=`<div class="fvb"><div class="fvh"><b></b><button class="back sm" style="margin:0" id="fvf">⛶ Toàn màn hình</button><button class="back sm" style="margin:0" id="fvd" disabled>Tải về</button><button class="back sm" style="margin:0" id="fvc">Đóng</button></div><div class="fvc"><div class="fvm">Đang mở file…</div></div></div>`;
   wrap.querySelector("b").textContent=name;document.body.appendChild(wrap);const body=wrap.querySelector(".fvc"),msg=(t)=>{body.innerHTML="";const d=document.createElement("div");d.className="fvm";d.textContent=t;body.appendChild(d)};
   const close=()=>{wrap.remove();if(url)URL.revokeObjectURL(url);removeEventListener("keydown",esck)},esck=e=>{if(e.key==="Escape")close()};addEventListener("keydown",esck);
-  wrap.querySelector("#fvc").onclick=close;wrap.onclick=e=>{if(e.target===wrap)close()};
+  wrap.querySelector("#fvc").onclick=()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});close()};wrap.onclick=e=>{if(e.target===wrap)close()};
+  wrap.querySelector("#fvf").onclick=()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else wrap.requestFullscreen&&wrap.requestFullscreen().catch(()=>{})};
   try{const b=await FS.blob(id);if(!document.body.contains(wrap))return;const dl=wrap.querySelector("#fvd");dl.disabled=false;dl.onclick=()=>saveBlob(b,name);body.innerHTML="";
     if(FVT[ext]){url=URL.createObjectURL(new Blob([b],{type:FVT[ext]}));if(ext==="pdf"){const f=document.createElement("iframe");f.title=name;f.src=url;body.appendChild(f)}else{const i=document.createElement("img");i.alt=name;i.src=url;body.appendChild(i)}}
     else if(ext==="txt"||ext==="csv"){const t=await b.text(),pre=document.createElement("pre");pre.textContent=t.slice(0,200000);body.appendChild(pre)}
-    else if(["xlsx","xls","xlsm"].includes(ext)){await needX();const wb=XLSX.read(await b.arrayBuffer(),{type:"array"}),names=wb.SheetNames.filter((n,i)=>!((wb.Workbook&&wb.Workbook.Sheets&&wb.Workbook.Sheets[i])||{}).Hidden),show=n=>{const a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""}).slice(0,500),w=Math.min(40,Math.max(0,...a.map(r=>r.length)));return `<div class="tw"><table class="t"><tbody>${a.map(r=>`<tr>${[...Array(w)].map((_,j)=>`<td>${esc(r[j])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`};
-      const x=document.createElement("div");x.className="fvx";x.innerHTML=`${names.length>1?`<select class="fi sel" aria-label="Sheet" style="margin-bottom:10px">${names.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join("")}</select>`:""}<div class="fvt">${names.length?show(names[0]):"File không có sheet nào."}</div>`;body.appendChild(x);const sel=x.querySelector("select");if(sel)sel.onchange=()=>{x.querySelector(".fvt").innerHTML=show(names[+sel.value])}}
+    else if(["xlsx","xls","xlsm"].includes(ext)){await needX();const wb=XLSX.read(await b.arrayBuffer(),{type:"array",cellNF:true,cellDates:true,cellStyles:true}),names=wb.SheetNames.filter((n,i)=>!((wb.Workbook&&wb.Workbook.Sheets&&wb.Workbook.Sheets[i])||{}).Hidden);
+      const x=document.createElement("div");x.className="xlv";x.innerHTML=`<div class="xlg"></div><div class="xlt" role="tablist">${names.map((n,i)=>`<button role="tab" data-xs="${i}" aria-selected="${!i}">${esc(n)}</button>`).join("")}</div>`;body.appendChild(x);
+      const g=x.querySelector(".xlg");g.innerHTML=names.length?xlSheet(wb.Sheets[names[0]]):`<div class="fvm">File không có sheet nào.</div>`;
+      x.querySelector(".xlt").onclick=e=>{const t=e.target.closest("[data-xs]");if(!t)return;x.querySelectorAll("[data-xs]").forEach(y=>y.setAttribute("aria-selected",y===t));g.innerHTML=xlSheet(wb.Sheets[names[+t.dataset.xs]]);g.scrollTo(0,0)}}
     else msg("Loại file này chưa xem trực tiếp được trên web, anh bấm Tải về để mở bằng phần mềm trên máy.")}
   catch(e){msg("Không mở được file: "+(e.message||""))}}
 const later=(t,items)=>card(t,"Phần này sẽ làm ở bước tiếp theo",ms(items),"span3");
