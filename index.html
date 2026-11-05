@@ -474,6 +474,10 @@ table.bt{min-width:1180px}
 .back[disabled]{opacity:.5;cursor:not-allowed}
 .seg2{display:inline-flex;background:#fff;border-radius:99px;padding:3px;box-shadow:inset 0 0 0 1px var(--line)}
 .seg2 button{border:0;background:transparent;border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.seg2 button:hover{background:#F1F2F8}.seg2 button[aria-pressed="true"]{background:#2D3CE6;color:#fff;box-shadow:0 4px 12px rgba(45,60,230,.28)}
+.seg2 button[data-gm="cv"]{color:#6D28D9}.seg2 button[data-gm="hm"]{color:#0B7F7B}.seg2 button[data-gm="cv"]:hover{background:#F3EEFF}.seg2 button[data-gm="hm"]:hover{background:#E6F7F6}
+.seg2 button[data-gm="cv"][aria-pressed="true"]{background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;box-shadow:0 4px 12px rgba(109,40,217,.3)}
+.seg2 button[data-gm="hm"][aria-pressed="true"]{background:linear-gradient(135deg,#14B8A6,#0B7F7B);color:#fff;box-shadow:0 4px 12px rgba(11,127,123,.3)}
 .seg2 button[data-wa="done"][aria-pressed="true"]{background:#12A150;color:#fff}
 .seg2 button[data-wa="miss"][aria-pressed="true"]{background:#E1141B;color:#fff}
 .fi.sel{padding:7px 10px;font-size:13px;min-width:170px}
