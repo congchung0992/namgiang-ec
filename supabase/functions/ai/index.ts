@@ -183,6 +183,30 @@ const CLASSIFY = {
   additionalProperties: false
 };
 
+/* Hợp đồng với chủ đầu tư: điều khoản thanh toán, tiến độ; ô thiếu ghi 0 hoặc "" */
+const CONTRACT = {
+  type: "object",
+  properties: {
+    contract_no: { type: "string" }, sign_date: { type: "string" },
+    value_before_vat: { type: "number" }, value_with_vat: { type: "number" }, vat_rate: { type: "number" },
+    advance_percent: { type: "number" }, advance_recovery: { type: "string" },
+    retention_percent: { type: "number" }, warranty_months: { type: "number" },
+    payment_days: { type: "number" }, payment_cycle: { type: "string" },
+    start_date: { type: "string" }, duration_days: { type: "number" }, end_date: { type: "string" },
+    penalty: { type: "string" }, notes: { type: "string" },
+    evidence: { type: "array", items: { type: "object", properties: { field: { type: "string" }, quote: { type: "string" } }, required: ["field", "quote"] } }
+  },
+  required: ["contract_no", "sign_date", "value_before_vat", "value_with_vat", "vat_rate", "advance_percent", "advance_recovery", "retention_percent", "warranty_months", "payment_days", "payment_cycle", "start_date", "duration_days", "end_date", "penalty", "notes", "evidence"]
+};
+const SYS_CONTRACT = `Bạn là chuyên viên hợp đồng của một tổng thầu xây dựng Việt Nam. Đọc hợp đồng thi công (hoặc phụ lục) ký với chủ đầu tư và lấy CHÍNH XÁC các điều khoản dưới đây. Không đoán, không bịa: điều khoản nào hợp đồng không ghi thì để 0 (ô số) hoặc "" (ô chữ).
+- value_before_vat, value_with_vat: giá trị hợp đồng (đồng, số thuần); vat_rate: thuế suất %.
+- advance_percent: % tạm ứng trên giá trị hợp đồng; advance_recovery: cách thu hồi tạm ứng (một câu).
+- retention_percent: % giá trị giữ lại bảo hành (hoặc bảo lãnh bảo hành thay thế thì ghi 0 và nói rõ ở notes); warranty_months: thời gian bảo hành (tháng).
+- payment_days: số ngày chủ đầu tư thanh toán kể từ khi nhận đủ hồ sơ thanh toán/nghiệm thu đợt; payment_cycle: chu kỳ thanh toán (theo tháng, theo đợt/giai đoạn…) và % mỗi đợt nếu có.
+- start_date, end_date: ngày khởi công, ngày hoàn thành (dd/mm/yyyy, nếu chỉ ghi "kể từ ngày bàn giao mặt bằng" thì để "" và ghi ở notes); duration_days: tổng thời gian thi công (ngày; tháng × 30).
+- penalty: phạt chậm tiến độ (một câu). notes: điều khoản khác ảnh hưởng dòng tiền (bảo lãnh, điều chỉnh giá, tạm giữ…), tối đa 3 câu.
+- evidence: với mỗi ô đã lấy được (field = tên ô), chép nguyên văn câu trong hợp đồng làm căn cứ, kèm số điều khoản nếu có.`;
+
 let keyCache: { v: string; m: string; at: number } | null = null;
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
@@ -247,6 +271,15 @@ async function run(b: any, env: any): Promise<Response> {
       const { data: v } = await claude(env, { system: SYS_CLASSIFY, content, schema: CLASSIFY, maxTokens: 8000 });
       if (!FOLDERS[v.folder]) return json({ error: "khong_doc_duoc" }, 422);
       return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120) });
+    }
+    if (b.action === "contract") {
+      const content: any[] = [];
+      const fb = b.doc && typeof b.doc.data === "string" ? fileBlock(String(b.doc.mime || ""), b.doc.data) : null;
+      if (fb) content.push(fb);
+      content.push({ type: "text", text: `Tên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung hợp đồng:\n${b.text.slice(0, 300000)}` : "") });
+      const { data, model } = await claude(env, { system: SYS_CONTRACT, content, schema: CONTRACT, effort: "medium", maxTokens: 32000 });
+      blank(data, ["contract_no", "sign_date", "value_before_vat", "value_with_vat", "vat_rate", "advance_percent", "advance_recovery", "retention_percent", "warranty_months", "payment_days", "payment_cycle", "start_date", "duration_days", "end_date", "penalty", "notes"]);
+      return json({ ...data, model });
     }
     if (b.action === "chat") {
       const msgs = (Array.isArray(b.messages) ? b.messages : []).filter((m: any) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string").slice(-12).map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) }));

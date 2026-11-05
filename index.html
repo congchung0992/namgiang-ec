@@ -21,6 +21,7 @@
 .qsw{padding:6px 8px;font-size:12.5px;max-width:340px}
 .hmbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}.hmc{border:1px solid #DADCE8;background:#fff;border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:#33364A;white-space:nowrap}.hmc:hover{background:#EEF0FB}.hmc.on{background:#2D3CE6;border-color:#2D3CE6;color:#fff;font-weight:600}
 .bxt2 tr.bxg td{background:#F7F8FC}.bxt2 tr.bxc td{font-size:13px}.btf td{background:#EEF7F1;position:sticky;bottom:0}.bxt2 tfoot td{background:#EEF7F1;font-weight:700}.bxt{display:inline-block;width:14px;color:var(--muted)}
+.ctb{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:#FFF7EC;border:1px solid #F7D9B0;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:13px}.ctb.ok{background:#EEF7F1;border-color:#BFE3CC}.ctb>span{flex:1;min-width:240px}
 .qexp{border:1px solid #DADCE8;background:#fff;border-radius:8px;padding:3px 10px;font-size:12px;cursor:pointer;white-space:nowrap}.qexp:hover{background:#EEF0FB}.qsec{margin-top:16px}.qsec h4{margin:0 0 8px;font-size:14px;color:#C0141B}
 .qx{border:0;background:transparent;color:#8C8E97;font-size:16px;cursor:pointer;border-radius:6px;padding:0 6px}.qx:hover{background:#FDECEC;color:#C0141B}.qnd{margin-top:12px}.qnd summary{cursor:pointer;font-size:13px;color:#4B4E5C;padding:6px 0}
 .t th.tc,.t td.tc{text-align:center!important}
@@ -869,7 +870,7 @@ window.NGB=(function(){
   const retryFetch=async(u,o={})=>{const m=(o.method||"GET").toUpperCase(),safe=m==="GET"||m==="HEAD";for(let i=0;;i++){try{return await fetch(u,o)}catch(e){if(!safe||i>=3||o.signal&&o.signal.aborted)throw e;await new Promise(r=>setTimeout(r,[600,1500,3000][i]))}}};
   const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY,{global:{fetch:retryFetch}}):null;
   const need=()=>{if(!sb)throw new Error("Không tải được bộ đăng nhập, anh kiểm tra kết nối mạng");return sb};
-  const CK=["cost","xcost","ratio","gg","terms","termsOk","quotes","qsel","qpend","qlog","leads"],SK=["sched","weeks"];
+  const CK=["cost","xcost","ratio","gg","terms","termsOk","contract","quotes","qsel","qpend","qlog","leads"],SK=["sched","weeks"];
   const pick=(p,K)=>{const o={};K.forEach(k=>{if(p[k]!==undefined)o[k]=p[k]});return o};
   const boqOf=p=>{const o={};Object.keys(p).forEach(k=>{if(!CK.includes(k)&&!SK.includes(k)&&k[0]!=="_")o[k]=p[k]});return o};
   const J=JSON.stringify;
@@ -1465,16 +1466,17 @@ function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(
     if(--left===0)wrap.querySelector("#fsm").textContent="Anh kiểm tra thư mục và tên file rồi bấm Lưu"}};
   go();go();
   /* Lưu 3 file một lượt cho nhanh; từng dòng hiện trạng thái, file lỗi giữ lại để anh lưu lại */
-  okBtn.onclick=async()=>{okBtn.disabled=true;saving=true;const fs=wrap.querySelector("#fsm");fs.style.color="";let n=0,w=0,last=null,err=null,k=0,done=0;const todo=files.map((f,i)=>i).filter(i=>rows[i]),tot=todo.length;
+  okBtn.onclick=async()=>{okBtn.disabled=true;saving=true;const fs=wrap.querySelector("#fsm");fs.style.color="";let n=0,w=0,last=null,err=null,k=0,done=0;const saved={};const todo=files.map((f,i)=>i).filter(i=>rows[i]),tot=todo.length;
     rows.forEach(r=>{if(r)r.querySelectorAll("select,input").forEach(x=>x.disabled=true)});
     const one=async i=>{const f=files[i],r=rows[i],why=r.querySelector(".why"),folder=r.querySelector("select").value;let nm=r.querySelector(".nm").value.trim()||f.name;if(!/\.[A-Za-z0-9]{1,8}$/.test(nm))nm+=ext(f.name);
       why.classList.remove("dif");why.textContent="⏳ Đang lưu…";
-      try{if(await FS.upload(p.id,folder,new File([f],nm,{type:f.type}))==="wait")w++;n++;last=folder;why.textContent="✓ Đã lưu";rows[i]=null;setTimeout(()=>r.remove(),400)}
+      try{if(await FS.upload(p.id,folder,new File([f],nm,{type:f.type}))==="wait")w++;n++;last=folder;saved[i]=folder;why.textContent="✓ Đã lưu";rows[i]=null;setTimeout(()=>r.remove(),400)}
       catch(er){err=er;why.textContent="✗ "+er.message;why.classList.add("dif");r.querySelectorAll("select,input").forEach(x=>x.disabled=false)}
       fs.textContent=`Đã xong ${++done}/${tot} file`};
     fs.textContent=tot>1?`Đang lưu ${tot} file…`:"Đang lưu…";
     /* File đầu lưu riêng: dự án mới thì máy chủ tạo thư mục Drive một lần, tránh tạo trùng khi lưu nhiều file cùng lúc */
     if(todo.length)await one(todo[k++]);await Promise.all([0,1,2].map(async()=>{while(k<todo.length)await one(todo[k++])}));
+    {const hc=files.map((f,i)=>i).find(i=>rows[i]===null&&(saved[i]==="01.3")&&ctOk(files[i].name));if(hc!=null){p._files13=undefined;setTimeout(()=>ctFlow(DB.projects.find(x=>x.id===p.id)||p,files[hc]),300)}}
     if(n){if(last)flSel=last;flMsg(w?`Đã nhận ${n} file · ${w} file đang giữ trên trình duyệt, chờ Google Drive hoạt động lại sẽ tự đưa lên`:`Đã lưu ${n} file`,!!w);filesLoad()}
     if(!err){close();return}
     fs.textContent="Có file chưa lưu được, anh xem dòng báo đỏ rồi bấm Lưu lại";fs.style.color="#C0141B";okBtn.disabled=false}}
@@ -1782,6 +1784,35 @@ function totalSec(p,c){const G=[],ix={},key=k=>BOQ.nz(k).replace(/^[ivxlc]+[.\s]
   return`<section class="card span3">${hmBar(p,"all")}<div class="bh"><div><h3>Tổng cộng các hạng mục · theo nhóm công việc</h3><span class="sub">Cộng các dòng cùng nhóm công việc ở mọi hạng mục (ví dụ công tác cọc của tất cả nhà xưởng) · bấm vào nhóm để xem từng hạng mục, bấm hạng mục để mở diễn giải chi tiết</span></div><button type="button" class="back sm" style="margin:0" id="bxall">${BX.size?"Thu gọn tất cả":"Mở tất cả"}</button></div>
   <div class="bks"><div class="bk"><span><i style="background:#2D3CE6"></i>Vật tư</span><b class="num">${n0(T.v)}</b><em>${tt?fm(pct(T.v,tt)):"0"}% giá vốn</em></div><div class="bk"><span><i style="background:#C21FC9"></i>Nhân công</span><b class="num">${n0(T.n)}</b><em>${tt?fm(pct(T.n,tt)):"0"}% giá vốn</em></div><div class="bk"><span><i style="background:#F08A24"></i>Máy, thiết bị thi công</span><b class="num">${n0(T.m)}</b><em>${tt?fm(pct(T.m,tt)):"0"}% giá vốn</em></div><div class="bk"><span><i style="background:#12A150"></i>Lãi gộp</span><b class="num">${n0(T.rev-tt)}</b><em>${fm(pct(T.rev-tt,T.rev))}% doanh thu</em></div></div>
   <div class="tw bsw" style="margin-top:10px"><table class="t bxt2"><thead><tr><th>Nhóm công việc</th><th>Số dòng</th><th>Thành tiền<br>giá thầu (đ)</th><th>Vật tư</th><th>Nhân công</th><th>Máy, TB</th><th>Tổng vốn</th><th>Lãi gộp (đ)</th><th>Biên</th></tr></thead><tbody>${body}</tbody><tfoot>${row(T,"<b>Tổng cộng</b>","bxf")}</tfoot></table></div></section>`}
+/* ---------- Hợp đồng chủ đầu tư: Claude đọc điều khoản, anh xem lại rồi áp vào dòng tiền ---------- */
+async function ctRead(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),buf=await f.arrayBuffer(),body={action:"contract",name:f.name};
+  if(ext==="pdf"||/^(jpe?g|png|webp)$/.test(ext)){if(f.size>30*1048576)throw new Error("File quá lớn để đọc (tối đa 30 MB)");body.doc={mime:ext==="pdf"?"application/pdf":/^jpe?g$/.test(ext)?"image/jpeg":"image/"+ext,data:b64(buf)}}
+  else if(ext==="docx"){await needX();const z=XLSX.CFB.read(new Uint8Array(buf),{type:"array"}),x=XLSX.CFB.find(z,"word/document.xml");if(!x)throw new Error("Không đọc được file Word này");body.text=xmlText(new TextDecoder().decode(new Uint8Array(x.content)))}
+  else if(/^(xlsx|xls|xlsm)$/.test(ext)){await needX();const wb=XLSX.read(buf,{type:"array"});body.text=wb.SheetNames.map(n=>"[Sheet "+n+"]\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false})).join("\n")}
+  else if(ext==="doc")throw new Error("File Word đời cũ (.doc) chưa đọc được, anh lưu lại thành .docx hoặc PDF");
+  else throw new Error("Chỉ đọc được hợp đồng PDF, Word (.docx), Excel hoặc ảnh chụp");
+  return NGB.ai(body)}
+const ctOk=f=>/\.(pdf|docx|xlsx|xls|xlsm|jpe?g|png|webp)$/i.test(f||"");
+function ctFlow(p,file){let w=document.getElementById("fview");if(w)w.remove();w=document.createElement("div");w.id="fview";w.setAttribute("role","dialog");w.setAttribute("aria-label","Đọc hợp đồng");
+  w.innerHTML=`<div class="fvb" style="height:auto;max-height:92vh"><div class="fvh"><b style="flex:1">Đọc điều khoản hợp đồng · ${esc(file.name)}</b><button class="back sm" style="margin:0" id="ctx">Đóng</button></div><div class="fvc" style="display:block;padding:16px" id="ctb"><div class="sub">Claude đang đọc hợp đồng, file dài có thể mất 1–2 phút…</div></div></div>`;
+  document.body.appendChild(w);w.querySelector("#ctx").onclick=()=>w.remove();
+  ctRead(file).then(r=>{const b=w.querySelector("#ctb");if(!b)return;const t=p.terms,num=v=>v==null?"":String(v).replace(".",","),ev=k=>((r.evidence||[]).find(x=>x.field===k)||{}).quote||"";
+    const row=(k,lab,u,val,cur)=>`<tr><td>${lab}</td><td class="r">${cur}</td><td><input class="fi" data-ck="${k}" value="${num(val!=null?val:"")}" placeholder="${val==null?"HĐ không ghi · giữ "+cur:""}" style="width:110px;padding:6px 10px"> ${u}</td><td class="sub" style="max-width:420px">${val==null?'<span style="color:#B45309">Hợp đồng không ghi, giữ giả định</span>':esc(ev(k)||"")}</td></tr>`;
+    const diff=r.value_before_vat&&p.value?Math.abs(r.value_before_vat-p.value)/p.value:0;
+    b.innerHTML=`<div class="sub" style="margin-bottom:10px">${r.contract_no?"Hợp đồng số <b>"+esc(r.contract_no)+"</b>":"Hợp đồng"}${r.sign_date?" · ký ngày "+esc(r.sign_date):""}${r.value_before_vat?" · giá trị trước VAT <b>"+n0(r.value_before_vat)+" đ</b>"+(diff>.005?` <span style="color:#C0141B">(BOQ trên web ${n0(p.value)} đ, lệch ${fm(diff*100,1)}%)</span>`:" · khớp BOQ"):""} · đọc bằng ${esc(r.model||"Claude")}</div>
+      <div class="tw"><table class="t"><thead><tr><th>Điều khoản</th><th>Đang dùng</th><th>Theo hợp đồng</th><th>Căn cứ trong hợp đồng</th></tr></thead><tbody>
+      ${row("advance_percent","Tạm ứng","%",r.advance_percent,fm(t.adv,0)+" %")}${row("retention_percent","Giữ lại bảo hành","%",r.retention_percent,fm(t.ret,0)+" %")}${row("payment_days","Chủ đầu tư trả sau","ngày",r.payment_days,fm(t.pay,0)+" ngày")}${row("warranty_months","Thời gian bảo hành","tháng",r.warranty_months,(t.wm||12)+" tháng")}
+      <tr><td>Ngày khởi công</td><td class="r">${esc(p.sched.start)}</td><td><label class="sub"><input type="checkbox" id="ctst"${r.start_date?" checked":" disabled"}> ${r.start_date?esc(r.start_date):"HĐ không ghi"}</label></td><td class="sub">${esc(ev("start_date")||"")}</td></tr></tbody></table></div>
+      <div class="sub" style="margin-top:10px;line-height:1.6">${r.duration_days?"Thời gian thi công: <b>"+n0(r.duration_days)+" ngày</b>"+(r.end_date?" · hoàn thành "+esc(r.end_date):"")+" · anh chỉnh tiến độ ở tab Tiến độ nếu khác<br>":""}${r.payment_cycle?"Chu kỳ thanh toán: "+esc(r.payment_cycle)+"<br>":""}${r.advance_recovery?"Thu hồi tạm ứng: "+esc(r.advance_recovery)+"<br>":""}${r.penalty?"Phạt chậm tiến độ: "+esc(r.penalty)+"<br>":""}${r.notes?"Lưu ý: "+esc(r.notes):""}</div>
+      <div class="bh" style="margin-top:14px"><span class="sub">Anh kiểm tra lại số theo căn cứ, sửa nếu Claude đọc sai rồi bấm Áp dụng. Dòng tiền tính lại ngay.</span><button class="pill" id="ctok" style="${sv("rev")}"><span class="dot">✓</span>Áp dụng vào dòng tiền</button></div>`;
+    b.querySelector("#ctok").onclick=()=>{const g=k=>{const v=parseVN((b.querySelector(`[data-ck="${k}"]`)||{}).value||"");return v!=null&&v>=0?v:null};
+      const a=g("advance_percent"),re=g("retention_percent"),pd2=g("payment_days"),wm=g("warranty_months");if(a!=null&&a<=100)t.adv=a;if(re!=null&&re<=100)t.ret=re;if(pd2!=null&&pd2<=365)t.pay=pd2;if(wm!=null&&wm<=120)t.wm=wm;
+      const st=b.querySelector("#ctst");if(st&&st.checked&&pd(r.start_date)){p.sched.start=fd(pd(r.start_date));p.sched.auto=0}
+      p.termsOk=1;p.contract={file:file.name,at:fd(new Date()),no:r.contract_no||"",sign:r.sign_date||"",value:r.value_before_vat||null,cycle:r.payment_cycle||"",rec:r.advance_recovery||"",penalty:r.penalty||"",notes:r.notes||"",dur:r.duration_days||null};
+      persist();w.remove();if(cur&&cur.id===p.id)keep(route)}}).catch(e=>{const b=w.querySelector("#ctb");if(b)b.innerHTML=`<div style="color:#C0141B;font-size:13px">${esc(e.message||"Không đọc được hợp đồng")}</div>`})}
+/* File trong thư mục 01.3 để chọn đọc lại */
+function ctFilesLoad(){if(!cur||!document.getElementById("ctsel"))return;const p=DB.projects.find(x=>x.id===cur.id);if(!p||p._files13!==undefined)return;p._files13=[];
+  FS.list(p.id).then(L=>{p._files13=L.map(x=>({...x,folder:nf(x.folder)})).filter(x=>x.folder==="01.3"&&ctOk(x.name)&&!x.wait);if(document.getElementById("ctsel"))keep(route)}).catch(()=>{})}
 function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="week")return weekView(p);const c=calc(p),mg=pct(c.gp,c.rev);
   const k3=kc("proj","Giá trị hợp đồng",ty(c.rev),"tỷ",`Chưa VAT · hồ sơ ${esc(p.qcode||"")} ngày ${esc(p.date||"")}`)+kc("cost","Giá vốn dự thầu",ty(c.cost),"tỷ",`Vật tư ${ty(c.cv)} · nhân công ${ty(c.cn)} · máy ${ty(c.cm)} tỷ`,"gv")+kc(mg>=10?"rev":"mat","Lãi gộp dự kiến",ty(c.gp),"tỷ",`Biên lãi ${fm(mg)}% doanh thu`,"lg");
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
@@ -1811,9 +1842,10 @@ function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return qu
     const ti=(k,lb,u)=>`<label class="rt">${lb} <input class="ci" data-term="${k}" inputmode="decimal" value="${fm(t[k],0)}"> ${u}</label>`;
     return `<div class="vgrid">${kc("rev","Giá trị hợp đồng",ty(c.rev),"tỷ","Theo BOQ đã ký, chưa VAT")}${kc("proj","Đã nghiệm thu","0","tỷ","Chưa có biên bản nghiệm thu khối lượng")}${kc(cf.peak>0?"cost":"rev","Vốn cần ứng lúc cao nhất",ty(cf.peak),"tỷ",cf.peak>0?"Vào "+cf.pm+" · theo tiến độ và điều khoản bên dưới":"Dòng tiền không âm")}
     <section class="card span3"><div class="bh"><div><h3>Dòng tiền dự kiến</h3><span class="sub">Tính từ tiến độ thi công và điều khoản thanh toán · cột xanh: tiền thu · cột hồng: tiền chi · đường xanh dương: lũy kế</span></div></div>
+      ${(()=>{const ct=p.contract,F=p._files13||[];return`<div class="ctb${ct?" ok":""}" id="ctsel">${ct?`<span>✓ Điều khoản lấy từ hợp đồng${ct.no?" số <b>"+esc(ct.no)+"</b>":""} · file ${esc(ct.file)} · đọc ngày ${esc(ct.at)}${ct.cycle?" · thanh toán "+esc(ct.cycle):""}</span>`:`<span>Điều khoản đang là <b>giả định</b>${F.length?" · có "+F.length+" file hợp đồng trong thư mục 01.3":" · chưa thấy file hợp đồng trong thư mục 01.3"}</span>`}${F.length?`<select class="fi" id="ctf" style="max-width:320px">${F.map(x=>`<option value="${esc(x.id)}" data-n="${esc(x.name)}">${esc(x.name)}</option>`).join("")}</select><button class="back sm" style="margin:0" id="ctgo">${ct?"Đọc lại":"Đọc điều khoản từ hợp đồng"}</button>`:""}<label class="back sm" style="margin:0;cursor:pointer"><input type="file" id="ctup" accept=".pdf,.docx,.xlsx,.xls,.jpg,.jpeg,.png" hidden>Tải hợp đồng lên và đọc</label></div>`})()}
       <div class="terms">${ti("adv","Tạm ứng","%")}${ti("ret","Giữ lại bảo hành","%")}${ti("pay","Chủ đầu tư trả sau","ngày")}${ti("cost","Trả nhà cung cấp, tổ đội sau","ngày")}</div>
       <div class="chart" style="margin-top:12px">${cfc(cf.lab,cf.inn,cf.out,cf.cu)}</div>
-      <div class="sub" style="margin-top:8px">Điều khoản đang là giả định, anh sửa theo hợp đồng ký với chủ đầu tư. Tiền giữ lại bảo hành ${ty(cf.ret)} tỷ thu sau khi hết hạn bảo hành, chưa tính trong biểu đồ.</div></section>
+      <div class="sub" style="margin-top:8px">${p.contract?"Điều khoản theo hợp đồng, anh vẫn sửa tay được ở các ô trên.":"Điều khoản đang là giả định, anh bấm đọc hợp đồng ở trên hoặc sửa tay."} Tiền giữ lại bảo hành ${ty(cf.ret)} tỷ thu sau khi hết hạn bảo hành, chưa tính trong biểu đồ.</div></section>
     ${card("Cơ cấu doanh thu","Theo nhóm hạng mục",`<div class="chart">${donut(gs)}</div>${dl(gs)}`)}
     ${card("Doanh thu theo hạng mục","Tỷ trọng trong giá trị hợp đồng",c.hs.filter(x=>x.rev>0).map(x=>`<div class="hm"><div>${esc(x.h.name)}<small>${n0(x.rev)} đ</small></div><div class="mbar" style="--c:#12A150"><i style="width:${pct(x.rev,c.rev)/pct(Math.max(...c.hs.map(y=>y.rev)),c.rev)*100}%"></i></div><b class="num">${fm(pct(x.rev,c.rev))}%</b></div>`).join(""),"span2")}</div>`}
   if(s==="cost"){const gs=[{n:"Vật liệu (giá thầu)",v:c.vl/1e9,c:"#2D3CE6"},{n:"Nhân công (giá thầu)",v:c.nc/1e9,c:"#C21FC9"},{n:"Thiết bị, trọn gói",v:c.eq/1e9,c:"#F08A24"}],gv=[{n:"Vật tư",v:c.cv/1e9,c:"#2D3CE6"},{n:"Nhân công",v:c.cn/1e9,c:"#C21FC9"},{n:"Máy, thiết bị thi công",v:c.cm/1e9,c:"#F08A24"}],tl=timeline(p);
@@ -2181,7 +2213,7 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
+  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -2389,6 +2421,7 @@ const qParse=v=>{v=String(v||"").trim();if(!v)return null;const c=v.split(" · "
 view.addEventListener("change",async e=>{const t=e.target;if(!cur)return;const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;
   if(t.id==="qup"&&t.files.length){const F=[...t.files];t.value="";let G;try{G=await Promise.all(F.map(async f=>new File([await f.arrayBuffer()],f.name,{type:f.type})))}catch(er){qMsg="Không đọc được file, nếu đang mở trong Excel anh đóng lại rồi chọn lại";qRe();return}qAnalyze(p,G,true);return}
   if(t.id==="qhm"){qHm=t.value;qRe();return}
+  if(t.id==="ctup"&&t.files.length){const f0=t.files[0];t.value="";let f;try{f=new File([await f0.arrayBuffer()],f0.name,{type:f0.type})}catch(er){return}keepFile(p.id,"01.3",f,"File hợp đồng").catch(()=>{});p._files13=undefined;ctFlow(p,f);return}
   if(t.dataset.qsel!==undefined){p.qsel={...(p.qsel||{}),[t.dataset.qsel]:t.value};persist();qRe();return}
   if(t.dataset.qm!==undefined&&QV){const it=QV.q.items[+t.dataset.qm],c=qParse(t.value),okc=c&&(c.includes("|")?qGroups(p).some(G=>G.k===c):!!qLine(p,c));
     if(!c)return;if(!okc){t.style.borderColor="#E1141B";return}
@@ -2400,6 +2433,7 @@ view.addEventListener("change",async e=>{const t=e.target;if(!cur)return;const p
   if(t.dataset.qf!==undefined&&QV){const v=parseFloat(String(t.value).replace(",",".")),it=QV.q.items[+t.dataset.qf];it.links=qL(it).map(l=>({...l,f:v>0?v:1}));delete it.code;qRe();return}
   if(t.id==="qv-kind"&&QV){QV.q.kind=t.value;return}});
 view.addEventListener("click",async e=>{const t=e.target;if(!cur)return;const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;
+  if(t.closest("#ctgo")){const s2=document.getElementById("ctf"),o=s2&&s2.selectedOptions[0];if(!o)return;const w0=t.closest("#ctgo");w0.textContent="Đang tải file…";try{const bl=await FS.blob(o.value);ctFlow(p,new File([bl],o.dataset.n,{type:bl.type}))}catch(er){w0.textContent=er.message}return}
   const bx=t.closest("[data-bx]");if(bx){const k=bx.dataset.bx;BX.has(k)?BX.delete(k):BX.add(k);qRe();return}
   if(t.closest("#bxall")){if(BX.size)BX=new Set();else view.querySelectorAll("[data-bx]").forEach(x=>BX.add(x.dataset.bx));qRe();return}
   if(t.closest("#qfa")){const s=document.getElementById("qfs"),o=s&&s.selectedOptions[0];if(!o||!o.value)return;const m=document.getElementById("qmsg");if(m)m.textContent="Đang tải file từ thư mục dự án…";
