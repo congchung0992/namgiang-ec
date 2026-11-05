@@ -2862,7 +2862,7 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;subLay(view);dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad();if(/-(pyc|tt|dc|goi|kh|files|lk|bn)(-|$)/.test(location.hash)&&cur&&(PY.pid!==cur.id||!PY.list||Date.now()-(PY.at||0)>30000))pyLoad();if(cur&&/^#?da-/.test(location.hash)&&!NGApp.guest)try{kbAuto(DB.projects.find(x=>x.id===cur.id)||cur)}catch(e){}}else{try{drawMap()}catch(e){console.error(e)}}
+  if(!isHome){view.innerHTML=html;subLay(view);dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad();if(/-(pyc|tt|dc|goi|kh|files|lk|bn)(-|$)/.test(location.hash)&&cur&&(PY.pid!==cur.id||!PY.list||Date.now()-(PY.at||0)>30000))pyLoad();if(!NGApp.guest&&NGApp.uid)try{kbAuto(cur&&/^#?da-/.test(location.hash)?(DB.projects.find(x=>x.id===cur.id)||cur):null)}catch(e){}}else{try{drawMap()}catch(e){console.error(e)}try{if(!NGApp.guest&&NGApp.uid)kbAuto(null)}catch(e){}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -3717,20 +3717,25 @@ async function kbText(blob,name){const ext=(name.split(".").pop()||"").toLowerCa
   if(/^(docx|pptx)$/.test(ext)){await needX();const z=XLSX.CFB.read(new Uint8Array(buf),{type:"array"});return{text:z.FullPaths.filter(n=>/word\/document\.xml$|ppt\/slides\/slide\d+\.xml$/.test(n)).map(n=>xmlText(new TextDecoder().decode(new Uint8Array(XLSX.CFB.find(z,n).content)))).join("\n").replace(/\n{3,}/g,"\n\n").slice(0,400000)}}
   return{text:new TextDecoder().decode(buf).slice(0,400000)}}
 /* Đọc lần lượt các file chưa đọc của dự án (gọi khi mở dự án, sau khi tải file lên, hoặc bấm Đọc lại) */
-async function kbRun(p,only){if(NGApp.guest||KB.busy)return;if(KB.pid!==p.id||!KB.files)await kbLoad(p);if(KB.pid!==p.id||/chưa cập nhật/.test(KB.msg))return;
-  const have=new Map((KB.docs||[]).map(d=>[d.file_id,d])),todo=(KB.files||[]).filter(f=>kbWant(f)&&(only?only.includes(f.id):!have.has(f.id)));if(!todo.length)return;
-  KB.busy=true;const run=++KB.run,R=()=>{if(cur&&cur.id===p.id&&/-bn(-|$)/.test(location.hash))keep(route)};
-  try{for(const f of todo){if(run!==KB.run||!cur||cur.id!==p.id)break;
-      const {data:ok,error}=await NGB.sb().rpc("kb_claim",{p_file:f.id,p_force:!!only});if(error)throw error;if(!ok)continue;
-      KB.now=f.name;R();
+/* Đọc lần lượt các file chưa đọc của một dự án; chạy ngầm, không cần đang mở dự án đó (mở web là đọc) */
+async function kbRun(p,only){if(NGApp.guest||KB.busy)return;const sb=NGB.sb(),mine=()=>KB.pid===p.id,R=()=>{if(cur&&cur.id===p.id&&/-bn(-|$)/.test(location.hash))keep(route)};
+  let docs,files;try{const [D,L]=await Promise.all([sb.from("kb_docs").select("file_id,folder,name,status,kind,summary,src,err,at").eq("project_id",p.id),NGB.drive.list(p.id)]);if(D.error)throw D.error;docs=D.data||[];files=L||[]}catch(e){if(mine())KB.msg=String(e.message||e);return}
+  const have=new Map(docs.map(d=>[d.file_id,d])),todo=files.filter(f=>kbWant(f)&&(only?only.includes(f.id):!have.has(f.id)));if(!todo.length)return;
+  KB.busy=true;const run=++KB.run;let left=todo.length;
+  const put=d=>{if(mine()&&KB.docs)KB.docs=[...KB.docs.filter(x=>x.file_id!==d.file_id),d]};
+  try{for(const f of todo){if(run!==KB.run)break;
+      const {data:ok,error}=await sb.rpc("kb_claim",{p_file:f.id,p_force:!!only});if(error)throw error;if(!ok){left--;continue}
+      KB.now=f.name;KB.nowp=p.id;KB.left=left;R();
       try{const blob=await NGB.drive.blob(f.id),x=await kbText(blob,f.name);const j=await NGB.ai({action:"digest",file:f.id,text:x.text||"",doc:x.doc||null});
-        KB.docs=[...KB.docs.filter(d=>d.file_id!==f.id),{file_id:f.id,folder:f.folder,name:f.name,status:"ok",kind:j.kind||"",summary:j.summary||"",src:x.text?"text":"notes",err:x.cut||"",at:new Date().toISOString()}];
-        if(j.facts)await kbLoad(p)}
-      catch(e){const m=String(e.message||e).slice(0,280);try{await NGB.sb().rpc("kb_mark",{p_file:f.id,p_status:"err",p_err:m})}catch(_){}
-        KB.docs=[...KB.docs.filter(d=>d.file_id!==f.id),{file_id:f.id,folder:f.folder,name:f.name,status:"err",kind:"",summary:"",err:m,at:new Date().toISOString()}];
-        if(/khoá Claude|hết tiền|Phiên đăng nhập/.test(m))break}}}
-  catch(e){KB.msg=String(e.message||e)}finally{KB.busy=false;KB.now="";R()}}
-function kbAuto(p){if(NGApp.guest||!p||!p.id)return;const t=KB.at[p.id]||0;if(Date.now()-t<120000)return;KB.at[p.id]=Date.now();kbLoad(p).then(()=>kbRun(p))}
+        put({file_id:f.id,folder:f.folder,name:f.name,status:"ok",kind:j.kind||"",summary:j.summary||"",src:x.text?"text":"notes",err:x.cut||"",at:new Date().toISOString()});if(j.facts&&mine())await kbLoad(p)}
+      catch(e){const m=String(e.message||e).slice(0,280);try{await sb.rpc("kb_mark",{p_file:f.id,p_status:"err",p_err:m})}catch(_){}
+        put({file_id:f.id,folder:f.folder,name:f.name,status:"err",kind:"",summary:"",err:m,at:new Date().toISOString()});if(/khoá Claude|hết tiền|Phiên đăng nhập/.test(m))break}
+      left--}}
+  catch(e){if(mine())KB.msg=String(e.message||e)}finally{KB.busy=false;KB.now="";KB.nowp=null;R()}}
+/* Mở web là tự đọc file mới của mọi dự án mình được xem (dự án đang mở trước), mỗi dự án nhiều nhất 2 phút một lần */
+async function kbAuto(p){if(NGApp.guest)return;const L=[...(p&&p.id?[p]:[]),...DB.projects.filter(x=>!p||x.id!==p.id)];
+  if(p&&p.id&&KB.pid!==p.id)kbLoad(p);if(KB.busy||KB.auto)return;KB.auto=1;
+  try{for(const x of L){const t=KB.at[x.id]||0;if(Date.now()-t<120000)continue;KB.at[x.id]=Date.now();await kbRun(x);if(KB.pid===x.id)kbLoad(x)}}finally{KB.auto=0}}
 /* Sau khi tải file lên: đọc file mới */
 if(window.NGB&&NGB.drive&&!NGB.drive._kb){const up=NGB.drive.upload.bind(NGB.drive);NGB.drive.upload=async(...a)=>{const r=await up(...a);const p=DB.projects.find(x=>x.id===a[0]);if(p)setTimeout(()=>{KB.at[p.id]=0;KB.files=null;kbAuto(p)},2500);return r};NGB.drive._kb=1}
 /* Màn Bộ não dự án */
