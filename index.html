@@ -22,6 +22,7 @@
 .hmbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}.hmc{border:1px solid #DADCE8;background:#fff;border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;color:#33364A;white-space:nowrap}.hmc:hover{background:#EEF0FB}.hmc.on{background:#2D3CE6;border-color:#2D3CE6;color:#fff;font-weight:600}
 .bxt2 tr.bxg td{background:#F7F8FC}.bxt2 tr.bxc td{font-size:13px}.btf td{background:#EEF7F1;position:sticky;bottom:0}.bxt2 tfoot td{background:#EEF7F1;font-weight:700}.bxt{display:inline-block;width:14px;color:var(--muted)}
 .ctb{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:#FFF7EC;border:1px solid #F7D9B0;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:13px}.ctb.ok{background:#EEF7F1;border-color:#BFE3CC}.ctb>span{flex:1;min-width:240px}
+.glb{display:flex;align-items:center;gap:6px;padding-left:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}.glb i{flex:none;width:8px;height:8px;border-radius:3px}
 .qexp{border:1px solid #DADCE8;background:#fff;border-radius:8px;padding:3px 10px;font-size:12px;cursor:pointer;white-space:nowrap}.qexp:hover{background:#EEF0FB}.qsec{margin-top:16px}.qsec h4{margin:0 0 8px;font-size:14px;color:#C0141B}
 .qx{border:0;background:transparent;color:#8C8E97;font-size:16px;cursor:pointer;border-radius:6px;padding:0 6px}.qx:hover{background:#FDECEC;color:#C0141B}.qnd{margin-top:12px}.qnd summary{cursor:pointer;font-size:13px;color:#4B4E5C;padding:6px 0}
 .t th.tc,.t td.tc{text-align:center!important}
@@ -1351,7 +1352,7 @@ function cfc(lab,a,b,cu){const W=1080,H=280,L=40,B=24,mx=Math.max(...a,...b,...c
   return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`}
 const bty=(lab,a,b,W,H)=>bars(lab,a.map(v=>+(v/1e9).toFixed(2)),b&&b.map(v=>+(v/1e9).toFixed(2)),"#12A150","#C21FC9",W,H);
 /* vẽ Gantt */
-const GZ={d:12,w:6,m:3};let gZoom="m";const gCol=new Set();
+const GZ={d:12,w:6,m:3};let gZoom="m",gMode="cv";const gCol=new Set();
 function gStat(p,tl){const S=p.sched,now=new Date(),od=Math.round((new Date(now.getFullYear(),now.getMonth(),now.getDate())-tl.st)/864e5);let V=0,A=0,P=0;
   const per={};tl.T.forEach(x=>{const q=S.t[x.key],w=x.rev||1,pl=Math.max(0,Math.min(1,(od-q.s+1)/q.d))*100,pc=q.pc||0;per[x.key]={pl,pc};V+=w;A+=w*pc;P+=w*pl});
   const B=S.base&&S.base.t;let be=null,var_=null;if(B){be=0;tl.T.forEach(x=>{const b=B[x.key];if(b)be=Math.max(be,b.s+b.d)});var_=tl.end-be}
@@ -1363,17 +1364,29 @@ function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom]
   if(G.od>=0&&G.od<=days)vl+=`<b style="left:${G.od*W}px" title="Ngày cập nhật ${fd(new Date())}"></b>`;
   const vr=v=>v==null?`<span class="sub">-</span>`:v>0?`<b class="vbad">+${v}</b>`:v<0?`<b class="vok">${v}</b>`:"0";
   const cell=(k,e,v,cls)=>`<input class="ge ${cls||""}" data-k="${esc(k)}" data-e="${e}" value="${esc(v)}" data-v="${esc(v)}" aria-label="${e}">`;
-  let rows="";p.hms.forEach((h,hi)=>{const ts=tl.T.filter(x=>x.h===h);if(!ts.length)return;const c=HC[hi%HC.length],one=ts.length===1&&ts[0].name===h.name;
-    const s0=Math.min(...ts.map(x=>S.t[x.key].s)),e0=Math.max(...ts.map(x=>S.t[x.key].s+S.t[x.key].d)),wv=ts.reduce((a,x)=>a+(x.rev||1),0),pc0=ts.reduce((a,x)=>a+(x.rev||1)*(S.t[x.key].pc||0),0)/wv;
-    let bv=null;if(B){const bb=ts.map(x=>B[x.key]).filter(Boolean);if(bb.length)bv=e0-Math.max(...bb.map(b=>b.s+b.d))}
-    const tr=(x,i)=>{const q=S.t[x.key],b=B&&B[x.key],g=G.per[x.key],late=g.pl-g.pc>10,code=h.code+"."+("0"+(i+1)).slice(-2);
-      return `<div class="grw ${one?"gs1":""}" style="--t:${c[0]}"><div class="gl gg"><span class="gc c1 num">${one?h.code:code}</span><span class="gc c2">${cell(x.key,"n",q.n||x.name,"gn")}</span><span class="gc c3">${cell(x.key,"d",q.d,"r")}</span><span class="gc c4">${cell(x.key,"s",fd(addD(tl.st,q.s)),"r")}</span><span class="gc c5">${cell(x.key,"f",fd(addD(tl.st,q.s+q.d-1)),"r")}</span><span class="gc c6">${cell(x.key,"p",q.pc?fm(q.pc,0):"-","r"+(late?" late":""))}</span><span class="gc c7 r" title="Ngày kết thúc lệch so với tiến độ gốc">${vr(b?q.s+q.d-(b.s+b.d):null)}</span></div>
-        <div class="gt">${b?`<div class="gbl" style="left:${b.s*W}px;width:${b.d*W}px" title="Gốc ${fd(addD(tl.st,b.s))} – ${fd(addD(tl.st,b.s+b.d-1))}"></div>`:""}<div class="gb" data-k="${esc(x.key)}" style="left:${q.s*W}px;width:${q.d*W}px;--c:${c[0]};--c2:${c[1]}" title="${esc(q.n||x.name)} · ${fd(addD(tl.st,q.s))} – ${fd(addD(tl.st,q.s+q.d-1))} · ${fm(q.pc||0,0)}% (kế hoạch ${fm(g.pl,0)}%)"><i class="gp" style="width:${q.pc||0}%"></i><i class="gh l"></i><span>${q.d}</span><i class="gh r"></i></div></div></div>`};
-    if(one){rows+=tr(ts[0],0);return}
-    const cl=gCol.has(h.code);
-    rows+=`<div class="grw gs" style="--t:${c[0]}"><div class="gl gg"><span class="gc c1 num">${h.code}</span><span class="gc c2"><button class="gtg" data-gc="${h.code}" aria-label="${cl?"Mở":"Thu"} ${esc(h.name)}">${cl?"▸":"▾"}</button><b>${esc(h.name)}</b></span><span class="gc c3 r">${e0-s0}</span><span class="gc c4 r">${fd(addD(tl.st,s0))}</span><span class="gc c5 r">${fd(addD(tl.st,e0-1))}</span><span class="gc c6 r">${pc0?fm(pc0,0):"-"}</span><span class="gc c7 r">${vr(bv)}</span></div><div class="gt"><div class="gsb" style="left:${s0*W}px;width:${(e0-s0)*W}px;--c:${c[0]}"><i style="width:${pc0}%"></i></div></div></div>`;
-    if(!cl)ts.forEach((x,i)=>rows+=tr(x,i))});
-  return `<div class="gw bsw" id="gw"><div class="gantt" style="--w:${W}px;--days:${days};width:calc(var(--gl) + ${days*W}px)" data-w="${W}"><div class="gv" style="width:${days*W}px">${vl}</div><div class="grw g0"><div class="gl gg"><span class="gc c1">Mã</span><span class="gc c2">Hạng mục / công việc</span><span class="gc c3">Thời gian (ngày)</span><span class="gc c4">Bắt đầu</span><span class="gc c5">Kết thúc</span><span class="gc c6">% hoàn thành</span><span class="gc c7">Lệch gốc (ngày)</span></div><div class="gt gm">${hd}</div></div>${rows}</div></div>`}
+  /* Một dòng công việc (thanh kéo được); lab: nhãn cố định thay cho ô sửa tên (khi xem theo đầu mục công việc) */
+  const tr=(x,code,one,lab)=>{const q=S.t[x.key],b=B&&B[x.key],g=G.per[x.key],late=g.pl-g.pc>10,c=HC[x.hi%HC.length];
+      return `<div class="grw ${one?"gs1":""}" style="--t:${c[0]}"><div class="gl gg"><span class="gc c1 num">${code}</span><span class="gc c2">${lab?`<span class="glb" title="${esc(lab)}"><i style="background:${c[0]}"></i>${esc(lab)}</span>`:cell(x.key,"n",q.n||x.name,"gn")}</span><span class="gc c3">${cell(x.key,"d",q.d,"r")}</span><span class="gc c4">${cell(x.key,"s",fd(addD(tl.st,q.s)),"r")}</span><span class="gc c5">${cell(x.key,"f",fd(addD(tl.st,q.s+q.d-1)),"r")}</span><span class="gc c6">${cell(x.key,"p",q.pc?fm(q.pc,0):"-","r"+(late?" late":""))}</span><span class="gc c7 r" title="Ngày kết thúc lệch so với tiến độ gốc">${vr(b?q.s+q.d-(b.s+b.d):null)}</span></div>
+        <div class="gt">${b?`<div class="gbl" style="left:${b.s*W}px;width:${b.d*W}px" title="Gốc ${fd(addD(tl.st,b.s))} – ${fd(addD(tl.st,b.s+b.d-1))}"></div>`:""}<div class="gb" data-k="${esc(x.key)}" style="left:${q.s*W}px;width:${q.d*W}px;--c:${c[0]};--c2:${c[1]}" title="${esc((lab?lab+" · ":"")+(q.n||x.name))} · ${fd(addD(tl.st,q.s))} – ${fd(addD(tl.st,q.s+q.d-1))} · ${fm(q.pc||0,0)}% (kế hoạch ${fm(g.pl,0)}%)"><i class="gp" style="width:${q.pc||0}%"></i><i class="gh l"></i><span>${q.d}</span><i class="gh r"></i></div></div></div>`};
+  /* Dòng tổng của một nhóm (hạng mục hoặc đầu mục công việc) */
+  const grp=(key,code,name,ts,color,sub)=>{const s0=Math.min(...ts.map(x=>S.t[x.key].s)),e0=Math.max(...ts.map(x=>S.t[x.key].s+S.t[x.key].d)),wv=ts.reduce((a,x)=>a+(x.rev||1),0),pc0=ts.reduce((a,x)=>a+(x.rev||1)*(S.t[x.key].pc||0),0)/wv;
+    let bv=null;if(B){const bb=ts.map(x=>B[x.key]).filter(Boolean);if(bb.length)bv=e0-Math.max(...bb.map(b=>b.s+b.d))}const cl=gCol.has(key);
+    return `<div class="grw gs" style="--t:${color}"><div class="gl gg"><span class="gc c1 num">${code}</span><span class="gc c2"><button class="gtg" data-gc="${esc(key)}" aria-label="${cl?"Mở":"Thu"} ${esc(name)}">${cl?"▸":"▾"}</button><b>${esc(name)}</b>${sub?`<small class="sub"> · ${sub}</small>`:""}</span><span class="gc c3 r">${e0-s0}</span><span class="gc c4 r">${fd(addD(tl.st,s0))}</span><span class="gc c5 r">${fd(addD(tl.st,e0-1))}</span><span class="gc c6 r">${pc0?fm(pc0,0):"-"}</span><span class="gc c7 r">${vr(bv)}</span></div><div class="gt"><div class="gsb" style="left:${s0*W}px;width:${(e0-s0)*W}px;--c:${color}"><i style="width:${pc0}%"></i></div></div></div>`};
+  let rows="";
+  if(gMode==="cv"){
+    /* Đầu mục công việc (cọc, đất, bê tông, kết cấu thép…) là dòng cha; từng nhà xưởng, văn phòng, phụ trợ là dòng con. Nhóm xếp theo ngày bắt đầu */
+    const key=x=>BOQ.nz(x.name).replace(/^[ivxlc]+[.\s]+|^\d+[.\s]+|^[a-z][.\s]+/,"").trim()||x.key,M=new Map();
+    tl.T.forEach(x=>{const own=x.name===x.h.name,k=own?"#"+x.h.code:key(x);if(!M.has(k))M.set(k,{k,name:own?x.h.name:x.name,own,ts:[]});M.get(k).ts.push(x)});
+    const G2=[...M.values()].map(g=>({...g,s0:Math.min(...g.ts.map(x=>S.t[x.key].s))})).sort((a,b)=>a.s0-b.s0||(a.own-b.own));
+    G2.forEach((g,gi)=>{const code=String(gi+1).padStart(2,"0"),ts=g.ts.slice().sort((a,b)=>S.t[a.key].s-S.t[b.key].s||a.hi-b.hi);
+      if(ts.length===1&&(g.own||ts[0].name===ts[0].h.name)){rows+=tr(ts[0],code,1,g.own?ts[0].h.code+" · "+ts[0].h.name:"");return}
+      rows+=grp("cv:"+g.k,code,g.name,ts,"#2D3CE6",ts.length+" hạng mục");
+      if(!gCol.has("cv:"+g.k))ts.forEach((x,i)=>rows+=tr(x,code+"."+String(i+1).padStart(2,"0"),0,x.h.code+" · "+x.h.name))})}
+  else p.hms.forEach((h,hi)=>{const ts=tl.T.filter(x=>x.h===h);if(!ts.length)return;const c=HC[hi%HC.length],one=ts.length===1&&ts[0].name===h.name;
+    if(one){rows+=tr(ts[0],h.code,1);return}
+    rows+=grp(h.code,h.code,h.name,ts,c[0]);
+    if(!gCol.has(h.code))ts.forEach((x,i)=>rows+=tr(x,h.code+"."+("0"+(i+1)).slice(-2),0))});
+  return `<div class="gw bsw" id="gw"><div class="gantt" style="--w:${W}px;--days:${days};width:calc(var(--gl) + ${days*W}px)" data-w="${W}"><div class="gv" style="width:${days*W}px">${vl}</div><div class="grw g0"><div class="gl gg"><span class="gc c1">Mã</span><span class="gc c2">${gMode==="cv"?"Đầu mục công việc / hạng mục":"Hạng mục / công việc"}</span><span class="gc c3">Thời gian (ngày)</span><span class="gc c4">Bắt đầu</span><span class="gc c5">Kết thúc</span><span class="gc c6">% hoàn thành</span><span class="gc c7">Lệch gốc (ngày)</span></div><div class="gt gm">${hd}</div></div>${rows}</div></div>`}
 const LD=(p,n)=>p&&p.leads&&p.leads[n]>0?p.leads[n]:LEAD(n);const LEAD=n=>/Kết cấu thép/.test(n)?30:/Thiết bị/.test(n)?45:/Cửa/.test(n)?21:/Cọc bê|Tôn|Cáp|Đèn/.test(n)?14:/Bê tông/.test(n)?3:7;
 
 /* ---------- Danh sách sheet ---------- */
@@ -1879,6 +1892,7 @@ function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return qu
       <div class="bh gtool"><label class="rt">Khởi công <input class="ci" id="sdate" value="${esc(S.start)}" style="width:104px;text-align:center" aria-label="Ngày khởi công"></label>
         <div class="seg2" role="group" aria-label="Thu phóng">${[["d","Ngày"],["w","Tuần"],["m","Tháng"]].map(([k,t])=>`<button data-gz="${k}" aria-pressed="${gZoom===k}">${t}</button>`).join("")}</div>
         <button class="back sm" data-gu="u" ${GU.u.length?"":"disabled"}>↶ Hoàn tác</button><button class="back sm" data-gu="r" ${GU.r.length?"":"disabled"}>↷ Làm lại</button>
+        <div class="seg2" role="group" aria-label="Cách xếp">${[["cv","Theo đầu mục công việc"],["hm","Theo hạng mục"]].map(([k,t])=>`<button data-gm="${k}" aria-pressed="${gMode===k}">${t}</button>`).join("")}</div>
         <button class="back sm" data-gcol="1">${gCol.size?"Mở tất cả":"Thu tất cả"}</button>
         <button class="back sm" id="gbase">${S.base?"Chốt lại tiến độ gốc":"Chốt tiến độ gốc"}</button><button class="back sm" id="repro">Đề xuất lại</button></div></div>
       <div class="gleg"><span><i class="lg1"></i>Kế hoạch hiện tại</span><span><i class="lg2"></i>Phần đã hoàn thành</span><span><i class="lg3"></i>Tiến độ gốc${S.base?" (chốt "+esc(S.base.date)+")":" (chưa chốt)"}</span><span><i class="lg4"></i>Ngày cập nhật ${fd(new Date())}</span><span><b class="late">%</b> chậm hơn kế hoạch trên 10 điểm</span></div>
@@ -2334,8 +2348,9 @@ document.addEventListener("keydown",e=>{if(!cur||!(e.ctrlKey||e.metaKey)||!docum
 view.addEventListener("click",e=>{if(!cur)return;const t=e.target;let b;
   if(b=t.closest("[data-gu]")){gUndo(b.dataset.gu==="r");return}
   if(b=t.closest("[data-gz]")){gZoom=b.dataset.gz;keep(route);return}
+  if(b=t.closest("[data-gm]")){gMode=b.dataset.gm;gCol.clear();keep(route);return}
   if(b=t.closest("[data-gc]")){const c=b.dataset.gc;gCol.has(c)?gCol.delete(c):gCol.add(c);keep(route);return}
-  if(b=t.closest("[data-gcol]")){if(gCol.size)gCol.clear();else cur.hms.forEach(h=>gCol.add(h.code));keep(route);return}
+  if(b=t.closest("[data-gcol]")){if(gCol.size)gCol.clear();else view.querySelectorAll("[data-gc]").forEach(x=>gCol.add(x.dataset.gc));keep(route);return}
   if(b=t.closest("#gbase")){if(cur.sched.base&&!b.dataset.ok){b.dataset.ok=1;b.textContent="Bấm lần nữa để thay tiến độ gốc cũ";b.style.color="#C0141B";return}
     gSave();const t2={};Object.entries(cur.sched.t).forEach(([k,q])=>t2[k]={s:q.s,d:q.d});cur.sched.base={t:t2,date:fd(new Date())};persist();keep(route)}});
 /* kéo thả thanh tiến độ */
