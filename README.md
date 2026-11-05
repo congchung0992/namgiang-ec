@@ -73,6 +73,13 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - **Phát sinh** (`p.ps`): tăng/giảm khối lượng dòng BOQ (đơn giá hợp đồng) hoặc công việc mới (mã PS001… theo `p.psSeq`), file căn cứ lưu 04.2. Gửi Hộp quyết định; chỉ phát sinh đã duyệt mới cộng vào giá trị hợp đồng và khối lượng được nghiệm thu. BOQ gốc không đổi. Có nút lập phát sinh từ các dòng ngoài BOQ khi soát file nghiệm thu.
 - **Đối chiếu 4 lớp** theo hạng mục và nhóm công việc: ① doanh thu dự thầu (+ phát sinh đã duyệt) · ② giá vốn dự thầu · ③ doanh thu nghiệm thu · ④ chi phí thực tế (chờ phiếu chi), kèm giá vốn dự thầu của phần đã làm và so kế hoạch.
 
+## Phiếu yêu cầu vật tư và luồng duyệt (tab Yêu cầu vật tư, Quản trị → Luồng duyệt)
+- Chỉ huy trưởng (hoặc GĐ dự án, QS) lập phiếu theo mẫu Đề xuất vật tư: gõ tay (gợi ý tên từ BOQ) hoặc tải file Excel theo mẫu; Lưu nháp hoặc Gửi duyệt.
+- Phiếu đi lần lượt qua các bước của luồng `pyc` (bảng `workflows`); mặc định: Kế toán vật tư duyệt (ghi đơn giá) → Giám đốc phê duyệt (Ban giám đốc). Ban giám đốc thêm, bớt, đổi thứ tự, đổi người duyệt ở Quản trị → Luồng duyệt; phiếu đã gửi giữ luồng lúc gửi. Trả về thì phiếu về người lập sửa, gửi lại từ bước đầu.
+- Vai trò mới **Kế toán vật tư** (`ktvt`), phân công ở Quản trị như các vai trò khác; thấy các tab hiện trường và phiếu, không thấy giá vốn.
+- Bảng `material_requests`; mọi thay đổi qua hàm `mr_save`, `mr_act`, `mr_cancel` (máy chủ kiểm tra người bấm có đúng vai trò của bước hiện tại). Duyệt xong tự lưu file Excel phiếu vào 05.1; nút Tải Excel ra file theo mẫu, chữ ký ghi tên và ngày duyệt từng bước.
+- **Thông báo** (bảng `notifications`): mỗi khi phiếu tới bước mới, người giữ vai trò bước đó nhận thông báo; người lập nhận khi qua bước, bị trả về hoặc duyệt xong. Chuông trên thanh trên hiện số chưa đọc, nhận ngay qua Supabase Realtime, có nút bật thông báo của trình duyệt (hiện cả khi đang ở tab khác, khi web đang mở). Migration `20261105_phieu_yeu_cau_vat_tu.sql`.
+
 ## Bài học cho AI
 - Bảng `ai_lessons` (migration `20261105_ai_lessons.sql`): `kind = match` là cặp dòng báo giá ↔ dòng BOQ đúng/sai (web tự áp khi ghép); `kind = rule` là câu dặn (`q` = phạm vi `baogia | hopdong | thumuc | chat | all`, `l` = nội dung).
 - Web tự ghi bài học khi anh sửa ghép báo giá, đổi gói vật tư, sửa số đọc từ hợp đồng hoặc đợt thanh toán, xếp file khác thư mục gợi ý. Anh tự dặn thêm ở Quản trị → Bài học cho AI.

@@ -558,6 +558,23 @@ table.t{border:1px solid #D9DDE8;border-radius:14px;overflow:clip;background:rgb
 .t thead th.hg-c{background:#DBF2E2;color:#0B6B33;border-bottom-color:#B3E0C1}.t thead th.hs-c{background:#EAF8EE;color:#0B6B33;border-bottom-color:#B3E0C1}
 .t col.cg-a{background:rgba(252,233,207,.22)}.t col.cg-b{background:rgba(230,217,251,.2)}.t col.cg-c{background:rgba(219,242,226,.25)}
 .bsr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}.bsr .fi{flex:0 1 420px;min-width:0}.bsr .sub{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+/* Phiếu yêu cầu vật tư */
+.pyh{display:flex;gap:18px;align-items:center;background:#fff;border-radius:16px;padding:14px 18px;margin-top:12px;box-shadow:inset 0 0 0 1px var(--line)}.pyh img{width:118px;height:auto;flex:none}.pyht{flex:1;min-width:0}.pyht h2{margin:0 0 8px;font-size:21px;font-weight:600;color:#2F5597;text-align:center}
+.pyg{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px 12px;align-items:center;font-size:15px}.pyg>span{color:var(--muted);font-size:14px}.pyg .fi{min-width:0;width:100%}
+.pyt .fi{min-width:0;width:100%;padding:6px 8px}.pyt .fi.r{text-align:right}.pyt .fi.tc{text-align:center}.pyt td{padding:6px}
+.pych b{font-weight:600;color:var(--ink)}.pych i{font-style:normal;margin:0 6px;color:var(--muted)}.pych small{color:var(--muted);margin-left:4px}
+.pysw{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pys{flex:1 1 170px;display:flex;flex-direction:column;gap:2px;border-radius:14px;padding:10px 12px;background:#F4F5F9;box-shadow:inset 0 0 0 1px var(--line);font-size:14px}.pys b{font-size:15px}.pys small{color:var(--muted)}
+.pys.ok{background:#E8F7EE;box-shadow:inset 0 0 0 1px #B3E0C1}.pys.ok b{color:#0B6B34}.pys.now{background:#FFF3E0;box-shadow:inset 0 0 0 2px #F08A24}.pys.now b{color:#A0560B}
+@media (max-width:760px){.pyh{flex-direction:column;align-items:stretch}.pyh img{align-self:center}.pyg{grid-template-columns:auto 1fr}}
+/* Thông báo */
+.badge.nb{width:auto;min-width:17px;height:17px;top:-3px;right:-3px;padding:0 4px;border-radius:99px;color:#fff;font-size:11px;font-weight:600;line-height:17px;text-align:center}
+.ntfp{position:fixed;z-index:9000;width:min(380px,calc(100vw - 16px));max-height:min(560px,75vh);display:flex;flex-direction:column;background:#fff;border-radius:18px;box-shadow:0 18px 48px rgba(16,24,64,.22),0 0 0 1px rgba(16,24,64,.06);overflow:hidden;font-family:var(--f)}
+.ntfh{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}.ntfh b{font-size:16px}.ntfh button,.ntfon{border:0;background:none;color:#2D3CE6;font:inherit;font-size:13.5px;cursor:pointer}
+.ntfon{display:block;text-align:left;padding:10px 14px;background:#EEF1FD;width:100%}.ntfn{padding:14px;color:var(--muted);font-size:14px}
+.ntfl{overflow:auto}.ntfi{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;border:0;background:#fff;padding:10px 14px 10px 26px;border-bottom:1px solid var(--line);font:inherit;cursor:pointer;position:relative}.ntfi:hover{background:#F6F7FB}
+.ntfi b{font-size:14.5px;font-weight:600}.ntfi span{font-size:13.5px;color:var(--ink2)}.ntfi small{font-size:12.5px;color:var(--muted)}.ntfi.un:before{content:"";position:absolute;left:11px;top:16px;width:8px;height:8px;border-radius:50%;background:#E1141B}
+.ntft{position:fixed;right:18px;bottom:90px;z-index:9500;max-width:min(360px,calc(100vw - 36px));background:#0A2486;color:#fff;border-radius:16px;padding:12px 16px;box-shadow:0 14px 36px rgba(10,36,134,.35);display:flex;flex-direction:column;gap:3px;cursor:pointer;animation:ntfin .35s ease}.ntft b{font-size:15px}.ntft span{font-size:13.5px;opacity:.9}
+@keyframes ntfin{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
 table.ntt thead th{position:sticky;top:0;z-index:2}table.pvt thead th,table.ntt thead tr.h2 th{white-space:normal;line-height:1.25}.ntt thead tr.h2 th{top:44px}table.pvt td .spec{display:block}
 .tw.bsw{max-height:calc(100vh - 110px);overflow:auto}.bt thead th{position:sticky;top:0;z-index:2}.bt thead tr.h2 th{top:var(--h1,42px)}.t tr[hidden]{display:none}
 .pvh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.pvh .fi.sel{min-width:0;flex:0 1 380px}
@@ -1000,6 +1017,7 @@ window.NGB=(function(){
       const {error:e1}=await c.auth.signInWithPassword({email:session.user.email,password:old});if(e1)throw new Error(/invalid login/i.test(e1.message)?"Mật khẩu hiện tại không đúng":"Không kiểm tra được mật khẩu, anh thử lại");
       const {error:e2}=await c.auth.updateUser({password:pw});if(e2)throw new Error(/same|different/i.test(e2.message)?"Mật khẩu mới phải khác mật khẩu cũ":/weak|short|least/i.test(e2.message)?"Mật khẩu mới quá yếu, cần ít nhất 8 ký tự":"Không đổi được mật khẩu: "+e2.message)},
     loadAll,
+    sb:()=>need(),
     admin:{
       async secrets(){return ok(await need().rpc("app_secret_status"))||[]},
       async setSecret(name,value){ok(await need().rpc("set_app_secret",{sname:name,svalue:value}))},
@@ -1484,11 +1502,11 @@ const LD=(p,n)=>p&&p.leads&&p.leads[n]>0?p.leads[n]:LEAD(n);const LEAD=n=>/Kết
 
 /* ---------- Danh sách sheet ---------- */
 const SHEETS=[["home","Tổng quan"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
-const BSHEETS=[["home","Tổng quan"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Gói thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["hr","Nhân sự"]];
+const BSHEETS=[["home","Tổng quan"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Gói thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["hr","Nhân sự"]];
 /* Tab Hồ sơ: file lưu ở Google Drive qua api/drive; bảng quyền này chỉ để gọn màn hình, máy chủ kiểm tra lại (supabase/schema.sql) */
 /* Thư mục hồ sơ: 6 nhóm lớn (DG), file lưu ở thư mục con (DF: mã, tên, gợi ý, vai trò được xem); máy chủ kiểm tra lại quyền */
 const DG=[["01","Pháp lý – Hợp đồng"],["02","Kỹ thuật – Tiến độ"],["03","Chất lượng – An toàn"],["04","Thanh toán CĐT"],["05","NCC – TP"],["06","Hiện trường – Văn bản"]];
-const A4=["gd","qs","kt","cht"],QK=["gd","qs","kt"],QC=["gd","qs","cht"];
+const A4=["gd","qs","kt","cht","ktvt"],QK=["gd","qs","kt"],QC=["gd","qs","cht"];
 const DF=[["01.1","Pháp lý dự án","Giấy phép xây dựng, quyết định phê duyệt, thẩm duyệt PCCC, thông báo khởi công, bàn giao mặt bằng",A4],["01.2","Hồ sơ thầu","Hồ sơ mời thầu, dự thầu, BOQ gốc, giá gốc, báo giá",A4],["01.3","Hợp đồng – phụ lục","Hợp đồng và phụ lục với chủ đầu tư",A4],["01.4","Bảo lãnh – bảo hiểm","Bảo lãnh thực hiện, tạm ứng, bảo hành; bảo hiểm công trình",A4],
   ["02.1","Bản vẽ thiết kế","Thiết kế được duyệt, bản vẽ thi công, thay đổi thiết kế",A4],["02.2","Tiến độ – biện pháp","Tiến độ, kế hoạch tuần/tháng, biện pháp thi công",A4],["02.3","Hoàn công – bàn giao","Bản vẽ hoàn công, hồ sơ hoàn thành, bàn giao, bảo hành",A4],
   ["03.1","Nghiệm thu kỹ thuật","Nghiệm thu vật liệu đầu vào, công việc, giai đoạn",A4],["03.2","Thí nghiệm – CO/CQ","Kết quả thí nghiệm, chứng chỉ xuất xưởng, xuất xứ",A4],["03.3","An toàn – môi trường","Kế hoạch an toàn, huấn luyện, kiểm tra, sự cố",A4],
@@ -2151,7 +2169,7 @@ function ctFlow(p,file){let w=document.getElementById("fview");if(w)w.remove();w
 /* File trong thư mục 01.3 để chọn đọc lại */
 function ctFilesLoad(){if(!cur||!document.getElementById("ctsel"))return;const p=DB.projects.find(x=>x.id===cur.id);if(!p||p._files13!==undefined)return;p._files13=[];
   FS.list(p.id).then(L=>{p._files13=L.map(x=>({...x,folder:nf(x.folder)})).filter(x=>x.folder==="01.3"&&ctOk(x.name)&&!x.wait);if(document.getElementById("ctsel"))keep(route)}).catch(()=>{})}
-function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="goi")return pkView(p);if(s==="bcn")return bcView(p);if(s==="week")return weekView(p);if(s==="nt")return ntView(p,sub);if(s==="dc")return dcView(p);const c=calc(p),mg=pct(c.gp,c.rev);
+function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="goi")return pkView(p);if(s==="bcn")return bcView(p);if(s==="week")return weekView(p);if(s==="nt")return ntView(p,sub);if(s==="pyc")return pycView(p,sub);if(s==="dc")return dcView(p);const c=calc(p),mg=pct(c.gp,c.rev);
   const k3=kc("proj","Giá trị hợp đồng",ty(c.rev),"tỷ",`Chưa VAT · hồ sơ ${esc(p.qcode||"")} ngày ${esc(p.date||"")}`)+kc("cost","Giá vốn dự thầu",ty(c.cost),"tỷ",`Vật tư ${ty(c.cv)} · nhân công ${ty(c.cn)} · máy ${ty(c.cm)} tỷ`,"gv")+kc(mg>=10?"rev":"mat","Lãi gộp dự kiến",ty(c.gp),"tỷ",`Biên lãi ${fm(mg)}% doanh thu`,"lg");
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
     return `<div class="vgrid">${k3}${WXBOX}
@@ -2471,7 +2489,7 @@ function localOld(){try{const d=STORE.load();return(d.projects||[]).filter(p=>!D
 function migCard(){const n=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().length:0;return n?card("Dữ liệu còn trên trình duyệt này",`Có ${n} dự án chưa đưa lên hệ thống · sau khi đưa lên, bản trên trình duyệt được giữ lại làm dự phòng`,`<button class="pill" id="mig" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Đưa lên hệ thống</button>`):""}
 /* Quyền trên giao diện: chỉ để gọn màn hình, máy chủ mới là nơi chặn thật (supabase/schema.sql) */
 const canOv=()=>!window.NGApp||NGApp.board||DB.projects.some(p=>p._role==="gd");
-const FIELD=["prog","week","bcn","mat","hr","files"],sheetsFor=b=>b&&b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS;
+const FIELD=["prog","week","bcn","mat","pyc","hr","files"],sheetsFor=b=>b&&b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS;
 function projList(){const B=DB.projects,SP=canOv()?SAMPLES():[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":window.NGApp&&NGApp.board?"Chưa có dự án nào, anh tải BOQ để tạo dự án đầu tiên":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
   <div class="plist">
   ${!window.NGApp||NGApp.board?`<label class="card pc upl" id="drop"><input type="file" id="boqf" accept=".xlsx,.xls,.xlsm" hidden>
@@ -2687,7 +2705,7 @@ window.renderHello=function(){homeReal();const box=document.getElementById("hp")
 const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["rep","Báo cáo","bao-cao"],["hr","Quản trị","quan-tri"]];
 const topFor=()=>TOP.filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"?window.NGApp&&!NGApp.guest:canOv()));
 /* Màn quản trị: Ban giám đốc phân quyền; máy chủ tự từ chối nếu không đủ quyền */
-const ROLES=[["gd","Giám đốc dự án"],["qs","QS"],["kt","Kế toán"],["cht","Chỉ huy trưởng"]];let admPid="";
+const ROLES=[["gd","Giám đốc dự án"],["qs","QS"],["kt","Kế toán"],["ktvt","Kế toán vật tư"],["cht","Chỉ huy trưởng"]];let admPid="";
 const roleSel=(v,attr)=>`<select class="fi sel" ${attr} aria-label="Vai trò">${ROLES.map(r=>`<option value="${r[0]}"${r[0]===v?" selected":""}>${r[1]}</option>`).join("")}</select>`;
 let admTab="tk";
 const pwCard=()=>card("Đổi mật khẩu của tôi","Nhập mật khẩu đang dùng rồi đặt mật khẩu mới, tối thiểu 8 ký tự · đổi xong lần đăng nhập sau dùng mật khẩu mới",`<form id="admpw" class="admf pwf" autocomplete="off">
@@ -2695,7 +2713,7 @@ const pwCard=()=>card("Đổi mật khẩu của tôi","Nhập mật khẩu đan
   <label class="fl"><span>Mật khẩu mới</span><input class="fi" type="password" name="pw" required minlength="8" autocomplete="new-password"></label>
   <label class="fl"><span>Nhập lại mật khẩu mới</span><input class="fi" type="password" name="pw2" required minlength="8" autocomplete="new-password"></label>
   <div><button class="pill" style="${sv("hr")}"><span class="dot">${ic("hr",2)}</span>Đổi mật khẩu</button></div></form><div class="sub" id="pwmsg" style="margin-top:10px"></div>`,"span3");
-const adminView=t=>{const bd=window.NGApp&&NGApp.board;if(!bd)t="mk";admTab=t;return`<div class="vh"><div><h1>${bd?"Quản trị":"Tài khoản của tôi"}</h1><p>${t==="ai"?"Kết nối trí tuệ nhân tạo dùng để đọc báo giá và xếp hồ sơ":t==="bh"?"Những gì anh đã sửa hoặc dặn, AI đọc lại mỗi lần làm việc để làm đúng ý anh":t==="do"?"Mỗi lần web gọi Claude được ghi lại: việc gì, mẫu nào, bao nhiêu token, mất bao lâu, chi phí ước tính":t==="mk"?"Đổi mật khẩu đăng nhập của anh/chị":"Tài khoản và phân công theo dự án · tài khoản mới chưa có quyền gì cho tới khi được phân công"}</p></div></div>${bd?`<div class="sheets" role="tablist">${pill("hr","Tài khoản & phân công","quan-tri",t==="tk")}${pill("rep","Kết nối AI","quan-tri-ai",t==="ai")}${pill("rev","Đo lường AI","quan-tri-do",t==="do")}${pill("brief","Bài học cho AI","quan-tri-bh",t==="bh")}${pill("inbox","Đổi mật khẩu","quan-tri-mk",t==="mk")}</div>`:""}<div class="vgrid" id="adm">${t==="mk"?pwCard():`<section class="card span3"><span class="sub">Đang tải…</span></section>`}</div>`};
+const adminView=t=>{const bd=window.NGApp&&NGApp.board;if(!bd)t="mk";admTab=t;return`<div class="vh"><div><h1>${bd?"Quản trị":"Tài khoản của tôi"}</h1><p>${t==="ai"?"Kết nối trí tuệ nhân tạo dùng để đọc báo giá và xếp hồ sơ":t==="bh"?"Những gì anh đã sửa hoặc dặn, AI đọc lại mỗi lần làm việc để làm đúng ý anh":t==="do"?"Mỗi lần web gọi Claude được ghi lại: việc gì, mẫu nào, bao nhiêu token, mất bao lâu, chi phí ước tính":t==="mk"?"Đổi mật khẩu đăng nhập của anh/chị":t==="wf"?"Các bước duyệt của từng loại phiếu · thêm, bớt, đổi người duyệt khi cần · mỗi bước có thông báo đến người duyệt":"Tài khoản và phân công theo dự án · tài khoản mới chưa có quyền gì cho tới khi được phân công"}</p></div></div>${bd?`<div class="sheets" role="tablist">${pill("hr","Tài khoản & phân công","quan-tri",t==="tk")}${pill("rep","Kết nối AI","quan-tri-ai",t==="ai")}${pill("pyc","Luồng duyệt","quan-tri-wf",t==="wf")}${pill("rev","Đo lường AI","quan-tri-do",t==="do")}${pill("brief","Bài học cho AI","quan-tri-bh",t==="bh")}${pill("inbox","Đổi mật khẩu","quan-tri-mk",t==="mk")}</div>`:""}<div class="vgrid" id="adm">${t==="mk"?pwCard():`<section class="card span3"><span class="sub">Đang tải…</span></section>`}</div>`};
 const LOGIN_DOMAIN="namgiang-ec.pages.dev";
 const genPw=()=>{const c="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=crypto.getRandomValues(new Uint32Array(10));return [...a].map(x=>c[x%c.length]).join("")};
 /* ---------- Đo lường AI: đọc bảng ai_usage, gom theo tác vụ, mẫu, ngày ---------- */
@@ -2729,7 +2747,7 @@ async function rulesLoad(){const box=document.getElementById("adm");if(!box)retu
   if(admTab!=="bh"||!document.getElementById("adm"))return;const who=id=>{const x=P.find(y=>y.id===id);return x?(x.full_name||String(x.email||"").replace("@"+LOGIN_DOMAIN,"")):"–"},nm=k=>(RSC.find(x=>x[0]===k)||[k,k])[1];
   box.innerHTML=card("Dặn AI một điều","Viết như dặn nhân viên, ví dụ: \"Báo giá bê tông có nhiều loại cát thì lấy loại cát vàng\", \"Tạm ứng trong hợp đồng tính trên giá trị trước VAT\"",`<form id="rlf" class="rlf"><select class="fi" name="scope">${RSC.map(([k,t])=>`<option value="${k}">${t}</option>`).join("")}</select><input class="fi" name="text" maxlength="600" required placeholder="Nội dung bài học…"><button class="pill" style="${sv("brief")}"><span class="dot">＋</span>Ghi nhớ</button></form><div class="sub" id="rlm" style="margin-top:8px">Ngoài ra, mỗi lần anh sửa ghép báo giá, sửa số đọc từ hợp đồng, đổi gói vật tư hay xếp file khác thư mục gợi ý, web tự ghi một bài học ở đây.</div>`,"span3")+
   card(`Bài học đã ghi · ${R.length}`,"Mỗi lượt gọi Claude được gửi kèm tối đa 60 bài học mới nhất đúng phạm vi việc đó",R.length?`<div class="tw"><table class="t ail"><thead><tr><th>Ngày</th><th>Phạm vi</th><th style="width:100%">Bài học</th><th>Người ghi</th><th></th></tr></thead><tbody>${R.map(r=>`<tr><td class="num">${fd(new Date(r.at))}</td><td>${esc(nm(r.q))}</td><td style="white-space:normal">${esc(r.l)}</td><td>${esc(who(r.user_id))}</td><td><button class="back sm" style="margin:0" data-rldel="${r.id}">Xoá</button></td></tr>`).join("")}</tbody></table></div>`:`<span class="sub">Chưa có bài học nào.</span>`,"span3")}
-async function adminLoad(msg){const box=document.getElementById("adm");if(!box)return;if(admTab==="do")return aiLogLoad();if(admTab==="bh")return rulesLoad();
+async function adminLoad(msg){const box=document.getElementById("adm");if(!box)return;if(admTab==="do")return aiLogLoad();if(admTab==="wf")return wfLoad();if(admTab==="bh")return rulesLoad();
   /* Chưa có khoá trên web mà có trên Cloudflare: tự lấy một lần */
   if(admTab==="ai"&&!adminLoad.cf){adminLoad.cf=1;try{const SS=await NGB.admin.secrets();if(!SS.some(x=>x.name==="claude")){const r=await NGB.keyFromCF();msg="Đã lấy khoá Claude từ Cloudflare (····"+r.tail+")";setTimeout(async()=>{const m=()=>document.getElementById("admkm");if(m())m().textContent="Đang gọi thử Claude…";try{const p=await NGB.ai({action:"ping"});if(m()){m().textContent="Kết nối Claude được · đang dùng "+p.model;m().style.color="#0E7A3F"}}catch(er){if(m()){m().textContent=er.message;m().style.color="#C0141B"}}},400)}}catch(e){}}
   try{const A=NGB.admin,P=await A.people();if(!DB.projects.some(p=>p.id===admPid))admPid=DB.projects[0]?DB.projects[0].id:"";const M=admPid?await A.members(admPid):[],nm=id=>{const x=P.find(y=>y.id===id);return x?(x.full_name?x.full_name+" · ":"")+String(x.email||"").replace("@namgiang-ec.pages.dev",""):id},free=P.filter(x=>!M.some(m=>m.user_id===x.id));
@@ -2759,12 +2777,12 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   else if(h==="bao-cao"){top="bao-cao";html=report()}
   else if(h==="ban-tin"){top="ban-tin";html=brief()}
   else if(h==="duyet"){top="duyet";html=inbox()}
-  else if(/^quan-tri(-ai|-mk|-do|-bh)?$/.test(h)&&window.NGApp&&!NGApp.guest){top="quan-tri";html=adminView(h==="quan-tri-ai"?"ai":h==="quan-tri-mk"?"mk":h==="quan-tri-do"?"do":h==="quan-tri-bh"?"bh":"tk")}
+  else if(/^quan-tri(-ai|-mk|-do|-bh|-wf)?$/.test(h)&&window.NGApp&&!NGApp.guest){top="quan-tri";html=adminView(h==="quan-tri-ai"?"ai":h==="quan-tri-mk"?"mk":h==="quan-tri-do"?"do":h==="quan-tri-bh"?"bh":h==="quan-tri-wf"?"wf":"tk")}
   else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){window.NG_PID=p.code||id;top="du-an";const L=p.boq?sheetsFor(DB.projects.find(x=>x.id===id)):SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:L[0][0],sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;subLay(view);dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
+  if(!isHome){view.innerHTML=html;subLay(view);dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad();if(/-pyc/.test(location.hash)&&cur&&(PY.pid!==cur.id||!PY.list||Date.now()-(PY.at||0)>30000))pyLoad()}else{try{drawMap()}catch(e){console.error(e)}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -3207,6 +3225,162 @@ view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.targe
     if(old&&!old.st&&DB.dec[psDid(p,old)])delete DB.dec[psDid(p,old)];
     x.L=L;x.at=new Date().toISOString();if(PSE.file){x.file=stdName(p.id,PSE.file.name);keepFile(p.id,"04.2",PSE.file,"File phát sinh").catch(()=>{})}
     p.ps=[...(p.ps||[]).filter(y=>y.id!==x.id),x];PSE=null;persist();keep(route);return}});}
+
+/* ---------- Phiếu yêu cầu vật tư (PYC), luồng duyệt động, thông báo trong app ----------
+   Dữ liệu ở bảng material_requests; mọi thay đổi trạng thái qua hàm mr_save / mr_act / mr_cancel trên máy chủ (tự kiểm tra quyền từng bước).
+   Luồng duyệt ở bảng workflows (key "pyc"), Ban giám đốc sửa ở Quản trị → Luồng duyệt; phiếu đã gửi giữ luồng tại lúc gửi.
+   Thông báo ở bảng notifications: chuông trên thanh trên, nhận ngay qua Supabase Realtime, bật được thông báo của trình duyệt. */
+var PY={pid:null,list:null,busy:false,err:"",edit:null,msg:"",note:""},WFC=null,NTI={list:[],on:false,ch:null,t:null},WFE=null;
+COL.pyc=["#C2410C","#FB923C","#FFEDD5","#9A3412"];I.pyc='<path d="M5 3h10l4 4v14H5zM14 3v5h5M8 12h8M8 16h5M16.5 15.5l1.5 1.5 3-3"/>';
+const WFR=[["ktvt","Kế toán vật tư"],["kt","Kế toán"],["qs","QS"],["gd","Giám đốc dự án"],["cht","Chỉ huy trưởng"],["board","Ban giám đốc"]],wfRole=r=>(WFR.find(x=>x[0]===r)||[0,r])[1];
+const pyErr=e=>{const m=String(e&&e.message||e||"");const K={khong_quyen:"Tài khoản này không có quyền làm bước này",da_gui:"Phiếu đã gửi duyệt, không sửa được nữa",khong_co_dong:"Phiếu chưa có dòng vật tư nào",khong_cho_duyet:"Phiếu không còn ở trạng thái chờ duyệt (có thể người khác vừa xử lý), anh tải lại",can_ly_do:"Trả về cần ghi lý do",da_duyet:"Phiếu đã duyệt xong, chỉ Ban giám đốc huỷ được",khong_xoa:"Chỉ xoá được phiếu nháp, bị trả về hoặc đã huỷ",auth:"Phiếu đăng nhập đã hết, anh đăng nhập lại"};const k=Object.keys(K).find(x=>m.includes(x));return k?K[k]:"Máy chủ báo lỗi: "+m.slice(0,140)};
+const fdt=s=>{const d=new Date(s);return isNaN(d)?"":fd(d)+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)};
+const pyCan=p=>NGApp.board||["cht","gd","qs"].includes(p._role);
+const pyStep=r=>r.status==="pending"?(r.steps||[])[r.step]:null;
+const pyMine=(p,r)=>{const s=pyStep(r);return !!s&&(NGApp.board||(s.role!=="board"&&p._role===s.role))};
+const pyOwn=r=>r.created_by===NGApp.uid||NGApp.board;
+const pySt=r=>r.status==="pending"?st("warn","Chờ "+esc((pyStep(r)||{}).name||"")):r.status==="approved"?st("ok","Đã duyệt"):r.status==="returned"?st("bad","Bị trả về"):r.status==="cancelled"?st("bad","Đã huỷ"):st("warn","Nháp");
+const pyTot=it=>(it||[]).reduce((a,x)=>a+(+x.q||0)*(+x.p||0),0);
+async function wfGet(){if(WFC)return WFC;const {data,error}=await NGB.sb().from("workflows").select("key,name,steps,updated_at").order("key");if(error)throw error;WFC={};(data||[]).forEach(w=>WFC[w.key]=w);return WFC}
+async function pyLoad(){const p=cur;if(!p||PY.busy)return;if(NGApp.guest){PY={...PY,pid:p.id,list:[],at:Date.now(),err:"Phiếu yêu cầu vật tư cần đăng nhập tài khoản thật (chế độ thử không lưu lên máy chủ)"};keep(route);return}
+  PY.busy=true;PY.at=Date.now();try{const [{data,error}]=await Promise.all([NGB.sb().from("material_requests").select("*").eq("project_id",p.id).order("created_at",{ascending:false}),wfGet()]);if(error)throw error;PY.pid=p.id;PY.list=data||[];PY.err=""}
+  catch(e){PY.pid=p.id;PY.list=[];PY.err=pyErr(e)}finally{PY.busy=false}if(cur&&cur.id===p.id&&/-pyc/.test(location.hash))keep(route)}
+const pyChain=steps=>`<span class="pych"><b>Lập phiếu</b>${(steps||[]).map(s=>`<i>→</i><b>${esc(s.name)}</b><small>${esc(wfRole(s.role))}${s.price?" · ghi đơn giá":""}</small>`).join("")}</span>`;
+function pycView(p,sub){if(PY.pid!==p.id||!PY.list)return`<div class="vgrid"><section class="card span3" id="pycld"><span class="sub">Đang tải phiếu yêu cầu vật tư…</span></section></div>`;
+  if(PY.edit&&PY.edit.pid===p.id)return pyForm(p);
+  const r=sub&&PY.list.find(x=>x.id===sub);if(r)return pyDetail(p,r);
+  const L=PY.list,mine=L.filter(x=>pyMine(p,x)),pend=L.filter(x=>x.status==="pending"),ok=L.filter(x=>x.status==="approved"),wf=(WFC||{}).pyc;
+  return `<div class="vgrid">${kc(mine.length?"cost":"rev","Chờ anh duyệt",mine.length,"phiếu",mine.length?"Bấm vào phiếu để duyệt":"Không có phiếu chờ anh")}${kc("mat","Đang chờ duyệt",pend.length,"phiếu",pend.length?"Bước hiện tại ghi ở cột Trạng thái":"Không có phiếu đang chạy")}${kc("prog","Đã duyệt",ok.length,"phiếu",ok.length?"Gần nhất "+fdt(ok[0].updated_at).slice(0,10):"Chưa có phiếu duyệt xong")}
+  <section class="card span3"><div class="bh"><div><h3>Phiếu yêu cầu vật tư</h3><span class="sub">Chỉ huy trưởng lập phiếu · đi lần lượt qua các bước duyệt · mỗi bước có thông báo đến người duyệt · ${wf?"luồng hiện tại: "+pyChain(wf.steps):"chưa có luồng duyệt"}${NGApp.board?` · <a href="#quan-tri-wf">sửa luồng duyệt</a>`:""}</span></div>${pyCan(p)?`<button class="pill" data-pynew="1" style="${sv("pyc")};margin:0"><span class="dot">+</span>Lập phiếu mới</button>`:""}</div>
+    ${PY.err?`<div class="ctb" style="margin-top:12px">${esc(PY.err)}</div>`:""}${PY.msg?`<div class="sub" style="margin-top:8px;color:#0B6B34">${esc(PY.msg)}</div>`:""}
+    ${L.length?`<div class="tw" style="margin-top:12px"><table class="t"><thead><tr><th>Số hiệu</th><th>Ngày lập</th><th>Nội dung</th><th>Số dòng</th><th>Cần hàng</th><th>Người lập</th><th>Trạng thái</th><th></th></tr></thead><tbody>${L.map(x=>`<tr${pyMine(p,x)?' class="wcons"':""} data-go="da-${p.id}-pyc-${x.id}" style="cursor:pointer"><td class="tc"><b>${esc(x.no)}</b></td><td class="num tc">${fdt(x.created_at).slice(0,10)}</td><td>${esc(x.title||"")}</td><td class="tc">${(x.items||[]).length}</td><td class="num tc">${x.need_date?fdi(x.need_date):"-"}</td><td>${esc(x.created_name||"")}</td><td class="tc">${pySt(x)}${pyMine(p,x)?" "+st("bad","Đến lượt anh"):""}</td><td class="tc"><button class="back sm" data-go="da-${p.id}-pyc-${x.id}">Xem</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="sub" style="margin-top:10px">Chưa có phiếu nào.${pyCan(p)?" Bấm Lập phiếu mới, hoặc tải file Excel đề xuất vật tư theo mẫu công ty.":""}</div>`}</section></div>`}
+/* Gợi ý tên vật tư: vật liệu chính và các dòng BOQ có vật liệu */
+const pyDl=p=>{const S=new Set();try{mats(p).forEach(m=>S.add(m.n))}catch(e){}p.hms.forEach(h=>h.lines.forEach(l=>{if(l.vl>0||l.uVL>0)S.add((l.name+(l.spec?" "+l.spec:"")).slice(0,90))}));return`<datalist id="pydl">${[...S].slice(0,800).map(x=>`<option value="${esc(x)}">`).join("")}</datalist>`};
+function pyHead(p,r,ed){const no=ed?`<input class="fi" data-pye="no" value="${esc(r.no||"")}" placeholder="Tự đánh số" style="min-width:0;width:130px">`:`<b>${esc(r.no)}</b>`;
+  return`<div class="pyh"><img src="img/logo-bcn.png" alt="Nam Giang"><div class="pyht"><h2>ĐỀ XUẤT VẬT TƯ</h2><div class="pyg"><span>Dự án</span><b>${esc(p.name||"")}</b><span>Số hiệu</span>${no}<span>Địa chỉ</span><b>${esc(p.loc||"")}</b><span>Ngày</span><b>${fdt(r.created_at||new Date()).slice(0,10)}</b>
+    <span>Nội dung</span>${ed?`<input class="fi" data-pye="title" value="${esc(r.title||"")}" placeholder="Ví dụ: Vật tư làm cổng, hàng rào tạm">`:`<b>${esc(r.title||"")}</b>`}<span>Cần hàng</span>${ed?`<input class="fi" type="date" data-pye="need_date" value="${esc(r.need_date||"")}" style="min-width:0;width:160px">`:`<b>${r.need_date?fdi(r.need_date):"-"}</b>`}</div></div></div>`}
+function pyItems(r,mode){const it=r.items||[],tot=pyTot(it),ed=mode==="edit",pr=mode==="price"||ed;
+  const c=(i,k,v,cls="",ph="")=>`<input class="fi ${cls}" data-pyi="${i}|${k}" value="${esc(v==null?"":v)}" placeholder="${ph}"${k==="n"?' list="pydl"':""}>`;
+  return`<div class="tw" style="margin-top:12px"><table class="t pyt"><thead><tr><th>No.</th><th>Tên vật tư/ thiết bị</th><th>Đơn vị</th><th>Đề xuất</th><th>Đơn giá (đ)</th><th>Thành tiền (đ)</th><th>Màu sắc</th><th>Ghi chú</th>${ed?"<th></th>":""}</tr></thead><tbody>${it.map((x,i)=>`<tr><td class="tc">${i+1}</td>
+    <td style="min-width:240px">${ed?c(i,"n",x.n,"","Tên vật tư, quy cách"):esc(x.n)}</td><td class="tc">${ed?c(i,"u",x.u,"tc",""):esc(x.u||"")}</td><td class="r">${ed?c(i,"q",x.q!=null&&x.q!==""?nq(x.q):"","r","0"):nq(x.q)}</td>
+    <td class="r">${pr?c(i,"p",x.p?n0(x.p):"","r","-"):x.p?n0(x.p):"-"}</td><td class="r">${n0((+x.q||0)*(+x.p||0))}</td><td>${ed?c(i,"c",x.c):esc(x.c||"")}</td><td>${ed?c(i,"g",x.g):esc(x.g||"")}</td>${ed?`<td class="tc"><button class="back sm" data-pyrm="${i}" aria-label="Xoá dòng">×</button></td>`:""}</tr>`).join("")||`<tr><td colspan="${ed?9:8}" class="sub">Chưa có dòng vật tư.</td></tr>`}</tbody>
+    ${tot?`<tfoot><tr><td colspan="5">Tổng cộng (chưa VAT)</td><td class="r">${n0(tot)}</td><td colspan="${ed?3:2}"></td></tr></tfoot>`:""}</table></div>`}
+function pyForm(p){const r=PY.edit;
+  return `<div class="vgrid"><section class="card span3"><div class="bh"><div><h3>${r.id&&!r.isNew?"Sửa phiếu "+esc(r.no):"Lập phiếu yêu cầu vật tư"}</h3><span class="sub">Gõ tên vật tư (có gợi ý từ BOQ) hoặc tải file Excel theo mẫu Đề xuất vật tư · Lưu nháp để làm tiếp sau · Gửi duyệt thì phiếu đi qua: ${pyChain(((WFC||{}).pyc||{}).steps)}</span></div>
+    <label class="pill" style="${sv("files")};cursor:pointer"><input type="file" id="pyxf" accept=".xlsx,.xls,.xlsm" hidden><span class="dot">↑</span>Tải từ file Excel</label></div>
+    ${pyHead(p,r,1)}${pyItems(r,"edit")}
+    <div class="bh" style="margin-top:12px"><button class="back" data-pyadd="1">+ Thêm dòng</button><span class="sub" id="pymsg" style="color:#C0141B">${esc(PY.msg||"")}</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="back" data-pycancel="1">Huỷ</button><button class="back" data-pysave="0">Lưu nháp</button><button class="pill" data-pysave="1" style="${sv("rev")}"><span class="dot">✓</span>Gửi duyệt</button></div></div></section></div>${pyDl(p)}`}
+function pyDetail(p,r){const s=pyStep(r),mine=pyMine(p,r),L=r.log||[],pe=mine&&s&&s.price;if(pe&&PY.priceId!==r.id){PY.price=JSON.parse(JSON.stringify(r.items||[]));PY.priceId=r.id}
+  const done=(r.steps||[]).map((x,i)=>{const lg=[...L].reverse().find(a=>a.act==="approve"&&a.step===x.name&&(r.status==="approved"||i<r.step));const cls=r.status==="approved"||i<r.step?"ok":r.status==="pending"&&i===r.step?"now":"";
+    return`<div class="pys ${cls}"><b>${i+1}. ${esc(x.name)}</b><small>${esc(wfRole(x.role))}</small><small>${cls==="ok"&&lg?"✓ "+esc(lg.name)+" · "+fdt(lg.at):cls==="now"?"Đang chờ duyệt":r.status==="returned"&&i===0?"Phiếu bị trả về":"Chưa tới"}</small></div>`}).join("");
+  const sub=L.find(a=>a.act==="submit");
+  const acts=[];if(mine)acts.push(`<textarea class="fi" id="pynote" rows="2" placeholder="Ý kiến (bắt buộc khi trả về)" style="flex:1;min-width:240px">${esc(PY.note||"")}</textarea><button class="back" data-pyact="return">Trả về CHT</button><button class="pill" data-pyact="approve" style="${sv("rev")}"><span class="dot">✓</span>Duyệt${s&&s.price?" và ghi đơn giá":""}</button>`);
+  if(pyOwn(r)&&(r.status==="draft"||r.status==="returned"))acts.push(`<button class="back" data-pyedit="1">Sửa phiếu</button><button class="back" data-pydel="1">Xoá phiếu</button>`);
+  if(pyOwn(r)&&r.status==="pending")acts.push(`<button class="back" data-pycx="1">Huỷ phiếu</button>`);
+  return `<div class="vgrid"><section class="card span3"><div class="bh"><div><h3>Phiếu ${esc(r.no)} · ${pySt(r)}</h3><span class="sub">Lập bởi ${esc(r.created_name||"")} · ${fdt(r.created_at)}${sub?" · gửi duyệt "+fdt(sub.at):""}</span></div><div style="display:flex;gap:8px"><button class="back sm" data-go="da-${p.id}-pyc">‹ Danh sách</button><button class="back sm" data-pyx="1">Tải Excel</button></div></div>
+    ${r.steps&&r.steps.length?`<div class="pysw"><div class="pys ok"><b>Lập phiếu</b><small>${esc(r.created_name||"")}</small><small>${sub?"✓ "+fdt(sub.at):"Chưa gửi"}</small></div>${done}</div>`:""}
+    ${pyHead(p,r,0)}${pe?pyItems({...r,items:PY.price},"price"):pyItems(r,"view")}
+    ${PY.msg?`<div class="sub" style="margin-top:8px;color:${/^Đã/.test(PY.msg)?"#0B6B34":"#C0141B"}">${esc(PY.msg)}</div>`:""}
+    ${acts.length?`<div class="bh" style="margin-top:14px;justify-content:flex-end;gap:8px;flex-wrap:wrap">${acts.join("")}</div>`:""}</section>
+    <section class="card span3"><h3>Lịch sử phiếu</h3>${ms(L.slice().reverse().map(a=>[a.act==="return"||a.act==="cancel"?"#E1141B":a.act==="approve"?"#12A150":"#2D3CE6",`${fdt(a.at)} · ${a.name||""} · ${{create:"Lập phiếu",submit:"Gửi duyệt",approve:"Duyệt",return:"Trả về",cancel:"Huỷ phiếu"}[a.act]||a.act}${a.step?" ("+a.step+")":""}`,a.note||""]))}</section></div>`}
+/* Đọc file Excel theo mẫu Đề xuất vật tư: dòng tiêu đề có "Tên vật tư", lấy đến hết dòng có tên */
+async function pyReadX(f){await needX();const wb=XLSX.read(await f.arrayBuffer(),{type:"array"}),N=BOQ.nz,num=BOQ.num,out=[];
+  wb.SheetNames.forEach((n,si)=>{const w=(wb.Workbook&&wb.Workbook.Sheets&&wb.Workbook.Sheets[si])||{};if(w.Hidden||out.length)return;const a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:"",raw:true});
+    const h=a.findIndex(r=>(r||[]).some(x=>/ten vat tu|vat tu|thiet bi|noi dung/.test(N(x)))&&(r||[]).some(x=>/don vi|dvt/.test(N(x))));if(h<0)return;const H=a[h].map(N),col=re=>H.findIndex(x=>re.test(x));
+    const c={n:col(/ten vat tu|vat tu|thiet bi|noi dung/),u:col(/don vi|dvt/),q:col(/de xuat|so luong|khoi luong|sl\b/),p:col(/don gia/),c:col(/mau/),g:col(/ghi chu/)};
+    for(let i=h+1;i<a.length;i++){const r=a[i]||[],nm=String(r[c.n]==null?"":r[c.n]).replace(/\s+/g," ").trim();if(!nm){if(out.length&&(r||[]).every(x=>x===""||x==null))continue;continue}
+      if(/nguoi de xuat|ke toan|phe duyet/.test(N(nm)))break;const q=c.q>=0?num(r[c.q]):null;if(q==null&&!String(r[c.u]||"").trim())continue;
+      out.push({n:nm,u:String(c.u>=0?r[c.u]:"").trim(),q:q==null?"":Math.round(q*100)/100,p:c.p>=0?num(r[c.p])||"":"",c:c.c>=0?String(r[c.c]||"").trim():"",g:c.g>=0?String(r[c.g]||"").trim():""})}});
+  return out}
+/* Xuất Excel theo mẫu Đề xuất vật tư của công ty, chữ ký ghi tên và ngày duyệt từng bước */
+async function pyExcel(p,r){await needXJ();const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("De xuat vat tu",{pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  const F="Times New Roman",BD={style:"thin",color:{argb:"FF000000"}},box={top:BD,left:BD,bottom:BD,right:BD},GRN="FF92D050";
+  ws.columns=[{width:7},{width:36},{width:10},{width:12},{width:15},{width:17},{width:14},{width:24}];
+  try{const b=await (await fetch("img/logo-bcn.png")).arrayBuffer();const id=wb.addImage({buffer:b,extension:"png"});ws.addImage(id,{tl:{col:0.6,row:0.3},ext:{width:150,height:96}})}catch(e){}
+  ws.mergeCells("A1:B4");ws.mergeCells("C1:H1");const t=ws.getCell("C1");t.value="ĐỀ XUẤT VẬT TƯ";t.font={name:F,size:16,bold:true,color:{argb:"FF2F5597"}};t.alignment={horizontal:"center",vertical:"middle"};ws.getRow(1).height=30;
+  const kv=(row,a,b,c,d)=>{ws.getCell("C"+row).value=a;ws.mergeCells(`D${row}:E${row}`);ws.getCell("D"+row).value=b;ws.getCell("F"+row).value=c;ws.mergeCells(`G${row}:H${row}`);ws.getCell("G"+row).value=d;
+    ["C","D","E","F","G","H"].forEach(k=>{const cl=ws.getCell(k+row);cl.border=box;cl.font={name:F,size:11,bold:k==="C"};cl.alignment={vertical:"middle",horizontal:k==="G"?"center":k==="C"?"center":"left",wrapText:true}})};
+  kv(2,"Dự Án",p.name||"","Số hiệu :",r.no);kv(3,"Địa Chỉ",p.loc||"","Ngày/ Tháng / Năm",fdt(r.created_at).slice(0,10));kv(4,"Nội dung",r.title||"","Cần hàng",r.need_date?fdi(r.need_date):"");
+  for(let i=1;i<=4;i++){ws.getCell("A"+i).border=box}
+  const H=["No.","Tên vật tư/ thiết bị","Đơn vị","Đề xuất","Đơn Giá","Thành tiền","Màu sắc","Ghi Chú"],hr=ws.getRow(6);hr.values=H;hr.height=22;
+  H.forEach((_,j)=>{const cl=hr.getCell(j+1);cl.font={name:F,size:11,bold:true};cl.fill={type:"pattern",pattern:"solid",fgColor:{argb:GRN}};cl.border=box;cl.alignment={horizontal:"center",vertical:"middle"}});
+  let row=7;(r.items||[]).forEach((x,i)=>{const R=ws.getRow(row);R.values=[i+1,x.n,x.u||"",+x.q||0,x.p?+x.p:null,x.p?Math.round((+x.q||0)*(+x.p||0)):null,x.c||"",x.g||""];R.height=24;
+    for(let j=1;j<=8;j++){const cl=R.getCell(j);cl.font={name:F,size:11,italic:j===8};cl.border=box;cl.alignment={vertical:"middle",wrapText:j===2||j===8,horizontal:j===2?"left":"center"};if(j===4)cl.numFmt='#,##0.##;-#,##0.##;"-"';if(j===5||j===6){cl.numFmt='#,##0;-#,##0;"-"';cl.alignment={vertical:"middle",horizontal:"right"}}}row++});
+  const tot=pyTot(r.items);if(tot){ws.mergeCells(`A${row}:E${row}`);const a=ws.getCell("A"+row);a.value="Tổng cộng (chưa VAT)";a.font={name:F,size:11,bold:true};a.alignment={horizontal:"center"};const v=ws.getCell("F"+row);v.value=Math.round(tot);v.numFmt="#,##0";v.font={name:F,size:11,bold:true};for(let j=1;j<=8;j++)ws.getRow(row).getCell(j).border=box;row++}
+  row+=2;const L=r.log||[],sub=L.find(a=>a.act==="submit"),sig=[["Người đề xuất",r.created_name||"",sub?fdt(sub.at):""],...(r.steps||[]).map(s=>{const a=[...L].reverse().find(x=>x.act==="approve"&&x.step===s.name);return[s.name,a&&r.status!=="returned"?a.name:"",a&&r.status!=="returned"?"Đã duyệt "+fdt(a.at):""]})];
+  const cols=sig.length<=1?[[1,8]]:sig.map((_,i)=>{const w=8/sig.length,a=Math.round(i*w)+1,b=Math.round((i+1)*w);return[a,Math.max(a,b)]});
+  sig.forEach((s,i)=>{const [a,b]=cols[i];[[0,s[0],true,false],[1,s[2],false,true],[4,s[1],true,false]].forEach(([o,v,bo,it])=>{const rr=row+o;if(b>a)ws.mergeCells(rr,a,rr,b);const cl=ws.getCell(rr,a);cl.value=v;cl.font={name:F,size:11,bold:bo,italic:it||o===0};cl.alignment={horizontal:"center",wrapText:true}})});
+  const buf=await wb.xlsx.writeBuffer();return{blob:new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),name:`De_xuat_vat_tu_${slug(r.no)}.xlsx`}}
+async function pyKeepX(p,r){try{const {blob,name}=await pyExcel(p,r);await keepFile(p.id,"05.1",new File([blob],name,{type:blob.type}),"Phiếu đề xuất vật tư")}catch(e){console.error(e)}}
+/* ---------- Thông báo ---------- */
+const ntAgo=s=>{const m=Math.round((Date.now()-new Date(s))/6e4);return m<1?"vừa xong":m<60?m+" phút trước":m<1440?Math.round(m/60)+" giờ trước":fdt(s).slice(0,10)};
+function ntfBadge(){const n=NTI.list.filter(x=>!x.read).length;document.querySelectorAll('[aria-label="Thông báo"]').forEach(b=>{let x=b.querySelector(".badge");if(!x){x=document.createElement("span");x.className="badge";b.appendChild(x)}x.textContent=n?(n>9?"9+":n):"";x.classList.toggle("nb",n>0);x.hidden=!n;b.title=n?n+" thông báo chưa đọc":"Thông báo"})}
+async function ntfLoad(){if(!window.NGApp||NGApp.guest||!NGApp.uid)return;try{const {data,error}=await NGB.sb().from("notifications").select("*").order("at",{ascending:false}).limit(60);if(!error){NTI.list=data||[];ntfBadge();ntfPanel(true)}}catch(e){}}
+function ntfPanel(only){let b=document.getElementById("ntfp");if(only&&!b)return;if(!b){b=document.createElement("div");b.id="ntfp";b.className="ntfp";b.setAttribute("role","dialog");b.setAttribute("aria-label","Thông báo");document.body.appendChild(b)}
+  const perm=window.Notification?Notification.permission:"x",L=NTI.list;
+  b.innerHTML=`<div class="ntfh"><b>Thông báo</b>${L.some(x=>!x.read)?`<button type="button" data-nfall="1">Đánh dấu đã đọc hết</button>`:""}</div>${perm==="default"?`<button type="button" class="ntfon" data-nton="1">🔔 Bật thông báo trên máy này (hiện cả khi đang ở tab khác)</button>`:perm==="denied"?`<div class="ntfn">Trình duyệt đang chặn thông báo của web này · mở biểu tượng ổ khoá cạnh địa chỉ web để cho phép</div>`:""}
+    <div class="ntfl">${L.length?L.map(x=>`<button type="button" class="ntfi${x.read?"":" un"}" data-nfi="${x.id}"><b>${esc(x.title)}</b><span>${esc(x.body)}</span><small>${ntAgo(x.at)}</small></button>`).join(""):`<div class="ntfn">Chưa có thông báo nào.</div>`}</div>`;
+  if(!only){const t=document.querySelector('.top [aria-label="Thông báo"]')||document.querySelector('[aria-label="Thông báo"]'),vis=[...document.querySelectorAll('[aria-label="Thông báo"]')].find(x=>x.offsetParent),rc=(vis||t).getBoundingClientRect();b.style.top=(rc.bottom+8)+"px";b.style.right=Math.max(8,innerWidth-rc.right-8)+"px";b.hidden=false}}
+async function ntfRead(ids){if(!ids.length)return;NTI.list.forEach(x=>{if(ids.includes(x.id))x.read=true});ntfBadge();ntfPanel(true);try{await NGB.sb().from("notifications").update({read:true}).in("id",ids)}catch(e){}}
+function ntfStart(){if(NTI.on||!window.NGApp||NGApp.guest||!NGApp.uid)return;NTI.on=true;ntfLoad();
+  try{NTI.ch=NGB.sb().channel("ntf-"+NGApp.uid).on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:"user_id=eq."+NGApp.uid},e=>{const x=e.new;if(!x||NTI.list.some(y=>y.id===x.id))return;NTI.list.unshift(x);ntfBadge();ntfPanel(true);ntfPop(x)}).subscribe()}catch(e){}
+  NTI.t=setInterval(()=>{if(!document.hidden)ntfLoad()},60000)}
+function ntfPop(x){if(x.kind==="pyc"&&cur&&x.project_id===cur.id){PY.list=null;if(/-pyc/.test(location.hash))keep(route)}
+  NGB.warn("");const t=document.createElement("div");t.className="ntft";t.innerHTML=`<b>${esc(x.title)}</b><span>${esc(x.body)}</span>`;t.onclick=()=>{ntfRead([x.id]);if(x.link)location.hash=x.link;t.remove()};document.body.appendChild(t);setTimeout(()=>t.remove(),9000);
+  try{if(window.Notification&&Notification.permission==="granted"){const n=new Notification(x.title,{body:x.body,icon:"img/mark.png",tag:"ng-"+x.id});n.onclick=()=>{window.focus();ntfRead([x.id]);if(x.link)location.hash=x.link;n.close()}}}catch(e){}}
+document.addEventListener("click",async e=>{const bell=e.target.closest('[aria-label="Thông báo"]'),pn=document.getElementById("ntfp");
+  if(bell){e.stopPropagation();if(NGApp.guest){NGB.warn("Thông báo cần đăng nhập tài khoản thật");return}if(pn&&!pn.hidden){pn.hidden=true;return}ntfPanel();ntfLoad();return}
+  if(!pn||pn.hidden)return;if(!e.target.closest("#ntfp")){pn.hidden=true;return}
+  const i=e.target.closest("[data-nfi]");if(i){const x=NTI.list.find(y=>String(y.id)===i.dataset.nfi);if(x){ntfRead([x.id]);pn.hidden=true;if(x.link)location.hash=x.link}return}
+  if(e.target.closest("[data-nfall]")){ntfRead(NTI.list.filter(x=>!x.read).map(x=>x.id));return}
+  if(e.target.closest("[data-nton]")){try{await Notification.requestPermission()}catch(er){}ntfPanel(true)}});
+{const s0=NGApp.sync;NGApp.sync=async function(){const r=await s0.apply(this,arguments);WFC=null;PY.list=null;ntfStart();return r}}
+/* ---------- Quản trị → Luồng duyệt ---------- */
+async function wfLoad(msg){const box=document.getElementById("adm");if(!box)return;try{WFC=null;await wfGet()}catch(e){box.innerHTML=card("Luồng duyệt","",`<div class="sub">Chưa tải được: ${esc(pyErr(e))}</div>`,"span3");return}
+  if(!WFE)WFE=JSON.parse(JSON.stringify(WFC));box.innerHTML=wfView(msg)}
+function wfView(msg){return Object.values(WFE).map(w=>`<section class="card span3"><div class="bh"><div><h3>${esc(w.name)}</h3><span class="sub">Phiếu đi lần lượt qua các bước dưới đây · mỗi bước gửi thông báo đến người giữ vai trò đó trong dự án (Ban giám đốc: mọi tài khoản Ban giám đốc) · Ban giám đốc duyệt thay được ở mọi bước · sửa luồng chỉ áp cho phiếu gửi sau khi lưu</span></div></div>
+  <div class="pysw" style="margin-top:12px"><div class="pys ok"><b>Lập phiếu</b><small>Chỉ huy trưởng, GĐ dự án, QS</small></div>${w.steps.map((s,i)=>`<div class="pys"><b>${i+1}. ${esc(s.name||"")}</b><small>${esc(wfRole(s.role))}${s.price?" · ghi đơn giá":""}</small></div>`).join("")}</div>
+  <div class="tw" style="margin-top:12px"><table class="t"><thead><tr><th>Bước</th><th>Tên bước</th><th>Người duyệt</th><th>Được ghi đơn giá</th><th>Thứ tự</th><th></th></tr></thead><tbody>${w.steps.map((s,i)=>`<tr><td class="tc">${i+1}</td><td><input class="fi" data-wf="${w.key}|${i}|name" value="${esc(s.name||"")}" placeholder="Ví dụ: Kế toán vật tư duyệt"></td>
+    <td><select class="fi sel" data-wf="${w.key}|${i}|role">${WFR.map(r=>`<option value="${r[0]}"${r[0]===s.role?" selected":""}>${r[1]}</option>`).join("")}</select></td><td class="tc"><input type="checkbox" data-wf="${w.key}|${i}|price"${s.price?" checked":""} aria-label="Được ghi đơn giá"></td>
+    <td class="tc" style="white-space:nowrap"><button class="back sm" data-wfmv="${w.key}|${i}|-1"${i?"":" disabled"} aria-label="Lên">↑</button><button class="back sm" data-wfmv="${w.key}|${i}|1"${i<w.steps.length-1?"":" disabled"} aria-label="Xuống">↓</button></td><td class="tc"><button class="back sm" data-wfrm="${w.key}|${i}" aria-label="Bỏ bước">×</button></td></tr>`).join("")||`<tr><td colspan="6" class="sub">Chưa có bước duyệt nào · phiếu gửi đi sẽ coi như duyệt xong ngay</td></tr>`}</tbody></table></div>
+  <div class="bh" style="margin-top:12px"><button class="back" data-wfadd="${w.key}">+ Thêm bước duyệt</button><span class="sub" id="wfmsg">${esc(msg||"")}</span><div style="display:flex;gap:8px"><button class="back" data-wfrst="1">Huỷ thay đổi</button><button class="pill" data-wfsave="${w.key}" style="${sv("hr")}"><span class="dot">✓</span>Lưu luồng duyệt</button></div></div></section>`).join("")}
+const wfRe=m=>{const b=document.getElementById("adm");if(b)b.innerHTML=wfView(m)};
+view.addEventListener("change",e=>{const t=e.target;if(!t.dataset.wf||!WFE)return;const [k,i,f]=t.dataset.wf.split("|"),s=WFE[k].steps[+i];s[f]=f==="price"?t.checked:t.value;if(f==="role"&&!s.name)s.name=wfRole(t.value)+" duyệt";wfRe()});
+view.addEventListener("click",async e=>{const b=e.target.closest("[data-wfadd],[data-wfrm],[data-wfmv],[data-wfsave],[data-wfrst]");if(!b||!WFE)return;const d=b.dataset;
+  if(d.wfadd){WFE[d.wfadd].steps.push({id:"s"+Date.now().toString(36),name:"",role:"gd",price:false});wfRe();return}
+  if(d.wfrm){const [k,i]=d.wfrm.split("|");WFE[k].steps.splice(+i,1);wfRe();return}
+  if(d.wfmv){const [k,i,m]=d.wfmv.split("|"),S=WFE[k].steps,a=+i,c=a+(+m);[S[a],S[c]]=[S[c],S[a]];wfRe();return}
+  if(d.wfrst){WFE=JSON.parse(JSON.stringify(WFC));wfRe("Đã huỷ thay đổi");return}
+  if(d.wfsave){const w=WFE[d.wfsave];if(w.steps.some(s=>!String(s.name||"").trim())){wfRe("Bước nào cũng cần có tên");return}b.disabled=true;
+    try{const {error}=await NGB.sb().from("workflows").update({steps:w.steps.map(s=>({id:s.id,name:s.name.trim(),role:s.role,price:!!s.price})),updated_at:new Date().toISOString(),updated_by:NGApp.uid}).eq("key",w.key);if(error)throw error;WFC=null;await wfGet();WFE=JSON.parse(JSON.stringify(WFC));wfRe("Đã lưu · áp dụng cho phiếu gửi duyệt từ bây giờ")}
+    catch(er){wfRe("Chưa lưu được: "+pyErr(er))}}});
+/* ---------- Sự kiện màn Phiếu yêu cầu vật tư ---------- */
+{const P=()=>cur&&DB.projects.find(x=>x.id===cur.id),R=()=>keep(route);
+view.addEventListener("input",e=>{const t=e.target;if(t.id==="pynote")PY.note=t.value});
+view.addEventListener("change",async e=>{const t=e.target,p=P();if(!p)return;
+  if(PY.edit&&t.dataset.pye){PY.edit[t.dataset.pye]=t.value;return}
+  if(t.dataset.pyi){const [i,k]=t.dataset.pyi.split("|"),L=PY.edit?PY.edit.items:PY.price;if(!L||!L[+i])return;let v=t.value;if(k==="q"||k==="p"){v=parseVN(v);v=v==null?"":v}L[+i][k]=v;R();return}
+  if(t.id==="pyxf"&&t.files[0]&&PY.edit){const f=t.files[0];t.value="";try{const L=await pyReadX(f);if(!L.length){PY.msg="Không thấy bảng vật tư trong file (cần cột Tên vật tư và Đơn vị)";R();return}PY.edit.items=[...PY.edit.items.filter(x=>x.n),...L];PY.msg="";R()}catch(er){PY.msg="Chưa đọc được file: "+(er.message||er);R()}}});
+view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.target.closest("[data-pynew],[data-pyadd],[data-pyrm],[data-pycancel],[data-pysave],[data-pyact],[data-pyedit],[data-pydel],[data-pycx],[data-pyx]");if(!b)return;const d=b.dataset,sub=location.hash.split("-")[3],r=PY.list&&PY.list.find(x=>x.id===sub);
+  if(d.pynew){PY.edit={pid:p.id,isNew:1,id:"py"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),no:"",title:"",need_date:"",items:[{n:"",u:"",q:"",p:"",c:"",g:""}]};PY.msg="";R();return}
+  if(d.pyadd&&PY.edit){PY.edit.items.push({n:"",u:"",q:"",p:"",c:"",g:""});R();return}
+  if(d.pyrm!=null&&PY.edit){PY.edit.items.splice(+d.pyrm,1);R();return}
+  if(d.pycancel){PY.edit=null;PY.msg="";R();return}
+  if(d.pysave&&PY.edit){const x=PY.edit,items=x.items.filter(y=>String(y.n||"").trim()).map(y=>({n:y.n.trim(),u:y.u||"",q:+y.q||0,p:+y.p||0,c:y.c||"",g:y.g||""})),go=d.pysave==="1";
+    if(go&&!items.length){PY.msg="Phiếu chưa có dòng vật tư nào";R();return}if(go&&items.some(y=>!(y.q>0))){PY.msg="Dòng nào cũng cần khối lượng đề xuất";R();return}
+    b.disabled=true;try{const {data,error}=await NGB.sb().rpc("mr_save",{p_id:x.id,p_project:p.id,p_no:x.no||"",p_title:x.title||"",p_need:x.need_date||null,p_items:items,p_submit:go,p_note:""});if(error)throw error;
+      PY.edit=null;PY.list=[data,...PY.list.filter(y=>y.id!==data.id)];PY.msg=go?`Đã gửi phiếu ${data.no} · ${data.status==="pending"?"đang chờ "+((data.steps||[])[0]||{}).name:"đã duyệt xong (luồng không có bước)"}`:"Đã lưu nháp "+data.no;location.hash="da-"+p.id+"-pyc-"+data.id;R()}
+    catch(er){PY.msg=pyErr(er);b.disabled=false;R()}return}
+  if(!r)return;
+  if(d.pyedit){PY.edit={pid:p.id,id:r.id,no:r.no,title:r.title,need_date:r.need_date||"",items:JSON.parse(JSON.stringify(r.items||[]))};PY.msg="";R();return}
+  if(d.pyx){const o=b.textContent;b.textContent="Đang tạo file…";try{const {blob,name}=await pyExcel(p,r);saveBlob(blob,stdName(p.id,name));b.textContent=o}catch(er){b.textContent=o;PY.msg=er.message||String(er);R()}return}
+  if(d.pydel||d.pycx){if(!b.dataset.ok){b.dataset.ok=1;b.textContent="Bấm lần nữa để "+(d.pydel?"xoá":"huỷ");b.style.color="#C0141B";return}
+    try{const {error}=await NGB.sb().rpc("mr_cancel",{p_id:r.id,p_delete:!!d.pydel});if(error)throw error;PY.msg=d.pydel?"Đã xoá phiếu "+r.no:"Đã huỷ phiếu "+r.no;PY.list=null;location.hash="da-"+p.id+"-pyc"}catch(er){PY.msg=pyErr(er);R()}return}
+  if(d.pyact){const note=(document.getElementById("pynote")||{}).value||"";if(d.pyact==="return"&&!note.trim()){PY.msg="Anh ghi lý do trả về vào ô ý kiến";R();return}const s=pyStep(r);
+    b.disabled=true;try{const {data,error}=await NGB.sb().rpc("mr_act",{p_id:r.id,p_act:d.pyact,p_note:note,p_items:s&&s.price&&PY.price&&PY.priceId===r.id?PY.price:null});if(error)throw error;
+      PY.list=PY.list.map(y=>y.id===data.id?data:y);PY.note="";PY.price=null;PY.msg=d.pyact==="return"?"Đã trả phiếu về người lập":data.status==="approved"?"Đã duyệt xong phiếu "+data.no+" · file Excel lưu vào 05.1":"Đã duyệt · phiếu chuyển sang "+((data.steps||[])[data.step]||{}).name;
+      if(data.status==="approved")pyKeepX(p,data);R()}catch(er){PY.msg=pyErr(er);b.disabled=false;R()}}});}
 
 NGBoot();
 })();
