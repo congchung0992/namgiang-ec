@@ -17,6 +17,8 @@
 .qch.warn{background:#FFF1E2;color:#B45309}.qch.bad{background:#FDECEC;color:#C0141B}.qch button{border:0;background:transparent;color:inherit;font-size:14px;line-height:1;cursor:pointer;padding:0 3px;border-radius:4px}.qch button:hover{background:rgba(0,0,0,.08)}
 .qcmp tr.qgh td{background:#F3F4FA;padding:8px 10px}.qgl{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.qgl .sub{font-size:12px}.qgp{font-size:12.5px;color:#4B4E5C}.qgf{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}.qgf .qfi{width:64px;padding:4px 8px}.qgl .qmi{flex:1;min-width:240px;max-width:420px;padding:5px 10px}
 .qcmp tr.qst td{background:#FAFAFD;font-weight:600}.qcmp tr.qtt td{background:#EEF7F1}.qcd{display:inline-block;border-radius:6px;padding:1px 6px;font-size:12px;background:#E5F6EC;color:#0E7A3F}.qcd.warn{background:#FFF1E2;color:#B45309}.qcd.bad{background:#FDECEC;color:#C0141B}
+.pwf{grid-template-columns:1fr 1fr 1fr auto!important}@media (max-width:900px){.pwf{grid-template-columns:1fr!important}}
+.qsw{padding:6px 8px;font-size:12.5px;max-width:340px}
 .qexp{border:1px solid #DADCE8;background:#fff;border-radius:8px;padding:3px 10px;font-size:12px;cursor:pointer;white-space:nowrap}.qexp:hover{background:#EEF0FB}.qsec{margin-top:16px}.qsec h4{margin:0 0 8px;font-size:14px;color:#C0141B}
 .qx{border:0;background:transparent;color:#8C8E97;font-size:16px;cursor:pointer;border-radius:6px;padding:0 6px}.qx:hover{background:#FDECEC;color:#C0141B}.qnd{margin-top:12px}.qnd summary{cursor:pointer;font-size:13px;color:#4B4E5C;padding:6px 0}
 .t th.tc,.t td.tc{text-align:center!important}
@@ -906,6 +908,10 @@ window.NGB=(function(){
     session:async()=>sb?(await sb.auth.getSession()).data.session:null,
     async signIn(email,pw){const {error}=await need().auth.signInWithPassword({email,password:pw});if(error)throw new Error(/invalid login/i.test(error.message)?"Sai tên đăng nhập hoặc mật khẩu":"Không đăng nhập được, anh kiểm tra mạng rồi thử lại")},
     signOut:async()=>{if(sb)await sb.auth.signOut()},
+    /* Đổi mật khẩu của chính mình: kiểm tra mật khẩu cũ trước rồi mới đổi */
+    async changePw(old,pw){const c=need(),{data:{session}}=await c.auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");
+      const {error:e1}=await c.auth.signInWithPassword({email:session.user.email,password:old});if(e1)throw new Error(/invalid login/i.test(e1.message)?"Mật khẩu hiện tại không đúng":"Không kiểm tra được mật khẩu, anh thử lại");
+      const {error:e2}=await c.auth.updateUser({password:pw});if(e2)throw new Error(/same|different/i.test(e2.message)?"Mật khẩu mới phải khác mật khẩu cũ":/weak|short|least/i.test(e2.message)?"Mật khẩu mới quá yếu, cần ít nhất 8 ký tự":"Không đổi được mật khẩu: "+e2.message)},
     loadAll,
     admin:{
       async secrets(){return ok(await need().rpc("app_secret_status"))||[]},
@@ -1724,10 +1730,10 @@ function qCmpTable(p,q){if(qCmpTable.q!==q){QX=new Set();qCmpTable.q=q}const who
   const neg=v=>v<0?' style="color:#C0141B"':"",pc=(a,b)=>b?(a<0?"("+fm(-a/b*100,1)+"%)":fm(a/b*100,1)+"%"):"-",T={tb:0,tg:0,tn:0},sure=l=>(l.conf==null?1:l.conf)>=.6;
   const calc1=(it,l)=>{const b=qBase(p,l.c,q.kind),v=qCmp(q,qPrice(q,it,l));if(!b)return null;const grp=l.c.includes("|"),kl=grp?1:(b.l.qty||0);return{b,v,grp,kl,tb:grp?b.cdt:b.cdt*kl,tg:grp?b.gv:b.gv*kl,tn:v==null?0:grp?v:v*kl}};
   const nmOf=c=>{if(c.includes("|"))return"Cả nhóm "+c.split("|")[1];const x=qLine(p,c);return x?x.l.name:c};
-  const rows=[],unsure=[],none=[];
+  const rows=[],unsure=[],none=[],ol=q.items.map((x,j)=>{const pr=x.p!=null?x.p:(x.pv||0)+(x.pn||0);return[j,`${j+1}. ${x.name}${x.spec?" · "+x.spec:""}${pr?" · "+n0(pr):""}`]}),opts=i=>ol.map(([j,t])=>`<option value="${j}"${j===i?" selected":""}>${esc(t)}</option>`).join("")+`<option value="-1">— Không dùng báo giá này —</option>`;
   q.items.forEach((it,i)=>{const L=qL(it),ok=L.filter(sure),pr0=it.p!=null?it.p:(it.pv||0)+(it.pn||0);
     L.filter(l=>!sure(l)).forEach(l=>{const r=calc1(it,l);if(!r)return;const x=r.grp?null:r.b.l;
-      unsure.push(`<tr><td class="num"><span class="qcd bad">${esc(r.grp?l.c.split("|")[0]:l.c)}</span></td><td>${esc(nmOf(l.c))}${x&&x.spec?`<small class="spec">${esc(x.spec)}</small>`:""}</td><td>${esc(r.b.unit||"")}</td><td class="r">${nq(r.kl)}</td><td>${i+1}. ${esc(it.name)}${it.spec?`<small class="spec">${esc(it.spec)}</small>`:""}</td><td class="r">${n0(r.b.gv)}</td><td class="r"><b>${r.v==null?"-":n0(r.v)}</b></td><td class="sub" style="max-width:260px">${esc(l.how||"")}</td><td style="white-space:nowrap"><button type="button" class="back sm" style="margin:0" data-qok="${i}|${esc(l.c)}">Đúng</button> <button type="button" class="back sm" style="margin:0" data-qrm="${i}|${esc(l.c)}">Bỏ</button></td></tr>`)});
+      unsure.push(`<tr><td class="num"><span class="qcd bad">${esc(r.grp?l.c.split("|")[0]:l.c)}</span></td><td>${esc(nmOf(l.c))}${x&&x.spec?`<small class="spec">${esc(x.spec)}</small>`:""}</td><td>${esc(r.b.unit||"")}</td><td class="r">${nq(r.kl)}</td><td style="min-width:260px"><select class="fi qsw" data-qsw="${i}|${esc(l.c)}" aria-label="Chọn dòng báo giá cho dòng BOQ này">${opts(i)}</select></td><td class="r">${n0(r.b.gv)}</td><td class="r"><b>${r.v==null?"-":n0(r.v)}</b></td><td class="sub" style="max-width:260px">${esc(l.how||"")}</td><td style="white-space:nowrap"><button type="button" class="back sm" style="margin:0" data-qok="${i}|${esc(l.c)}">Đúng</button> <button type="button" class="back sm" style="margin:0" data-qrm="${i}|${esc(l.c)}">Bỏ</button></td></tr>`)});
     if(!ok.length){if(!L.length)none.push(`<tr class="qnone"><td class="num">${i+1}</td><td>${esc(it.name)}${it.spec?`<small class="spec">${esc(it.spec)}</small>`:""}</td><td>${esc(it.unit||"")}</td><td class="r">${pr0?n0(pr0):"-"}</td><td style="min-width:300px"><input class="fi qmi" list="qdl" data-qm="${i}" placeholder="Gõ mã hoặc tên công việc BOQ để ghép"></td></tr>`);return}
     const S={kl:0,tb:0,tg:0,tn:0,v:null};let unit="";const R=ok.map(l=>({l,r:calc1(it,l)})).filter(x=>x.r);
     R.forEach(({r})=>{S.kl+=r.kl;S.tb+=r.tb;S.tg+=r.tg;S.tn+=r.tn;if(r.v!=null)S.v=r.v;unit=unit===""?(r.b.unit||""):unit===(r.b.unit||"")?unit:"*"});
@@ -1743,7 +1749,7 @@ function qCmpTable(p,q){if(qCmpTable.q!==q){QX=new Set();qCmpTable.q=q}const who
   <div class="tw bsw"><table class="t qcmp"><thead><tr><th rowspan="2">STT</th><th rowspan="2">Dòng báo giá</th><th rowspan="2">ĐVT</th><th rowspan="2">Khối lượng<br>BOQ tổng</th><th colspan="2" class="hg-a">Giá BOQ (CĐT)</th><th colspan="2" class="hg-b">Giá gốc</th><th colspan="2" class="hg-c">Giá ${who} (chưa VAT)</th><th colspan="2">Lời/lỗ so giá gốc</th><th colspan="2">Lời/lỗ so BOQ</th><th rowspan="2">Áp cho</th></tr>
   <tr class="h2"><th class="hs-a">Đơn giá</th><th class="hs-a">Thành tiền</th><th class="hs-b">Đơn giá</th><th class="hs-b">Thành tiền</th><th class="hs-c">Đơn giá</th><th class="hs-c">Thành tiền</th><th>Giá trị</th><th>%</th><th>Giá trị</th><th>%</th></tr></thead>
   <tbody>${rows.length?rows.join("")+`<tr class="qtt"><td></td><td colspan="4"><b>Tổng ${rows.length} dòng giá · so phần ${cmp}</b></td><td class="r"><b>${n0(T.tb)}</b></td><td></td><td class="r"><b>${n0(T.tg)}</b></td><td></td><td class="r"><b>${n0(T.tn)}</b></td><td class="r"${neg(T.tg-T.tn)}><b>${n0(T.tg-T.tn)}</b></td><td class="r"${neg(T.tg-T.tn)}><b>${pc(T.tg-T.tn,T.tg)}</b></td><td class="r"${neg(T.tb-T.tn)}><b>${n0(T.tb-T.tn)}</b></td><td class="r"${neg(T.tb-T.tn)}><b>${pc(T.tb-T.tn,T.tb)}</b></td><td></td></tr>`:`<tr><td colspan="15" class="sub">Chưa dòng giá nào ghép chắc chắn với BOQ · xác nhận ở mục bên dưới hoặc bấm "Ghép lại với BOQ"</td></tr>`}</tbody></table></div>
-  ${unsure.length?`<div class="qsec"><h4>Cần anh xác nhận · ${unsure.length} dòng BOQ ghép chưa chắc (chưa tính vào tổng)</h4><div class="tw"><table class="t"><thead><tr><th>Mã BOQ</th><th>Đầu mục BOQ</th><th>ĐVT</th><th>Khối lượng</th><th>Gợi ý dòng báo giá</th><th>Đơn giá gốc</th><th>Đơn giá ${who}</th><th>Lý do</th><th></th></tr></thead><tbody>${unsure.join("")}</tbody></table></div></div>`:""}
+  ${unsure.length?`<div class="qsec"><h4>Cần anh xác nhận · ${unsure.length} dòng BOQ ghép chưa chắc (chưa tính vào tổng)</h4><div class="tw"><table class="t"><thead><tr><th>Mã BOQ</th><th>Đầu mục BOQ</th><th>ĐVT</th><th>Khối lượng</th><th>Dòng báo giá (chọn lại nếu sai)</th><th>Đơn giá gốc</th><th>Đơn giá ${who}</th><th>Lý do</th><th></th></tr></thead><tbody>${unsure.join("")}</tbody></table></div></div>`:""}
   ${none.length?`<details class="qnd"><summary>${none.length} dòng báo giá không có trong BOQ (bấm để xem, ghép tay nếu cần)</summary><div class="tw"><table class="t qrv"><thead><tr><th>#</th><th>Dòng trong báo giá</th><th>ĐVT</th><th>Đơn giá</th><th>Ghép với dòng BOQ</th></tr></thead><tbody>${none.join("")}</tbody></table></div></details>`:""}`}
 function qReview(p){const {q,ai}=QV,LL=qLines(p),nl=new Set();q.items.forEach(it=>qL(it).forEach(l=>nl.add(l.c)));const lab=c=>{if(!c)return"";if(c.includes("|")){const [h,g]=c.split("|");return c+" · cả nhóm "+g}const x=qLine(p,c);return x?c+" · "+x.l.name+(x.l.spec?" · "+x.l.spec:"")+" ("+(x.l.unit||"")+")":c};
   const chip=(i,l)=>{const x=qLine(p,l.c),nm=x?x.l.name:l.c.split("|")[1]||l.c;return`<span class="qch ${l.conf>=.85?"ok":l.conf>=.6?"warn":"bad"}" title="${esc(lab(l.c)+" · "+(l.how||""))}">${esc(l.c.split("|")[0])} · ${esc(nm.length>34?nm.slice(0,33)+"…":nm)}<button type="button" data-qrm="${i}|${esc(l.c)}" aria-label="Bỏ dòng này">×</button></span>`};
@@ -1754,7 +1760,7 @@ function qReview(p){const {q,ai}=QV,LL=qLines(p),nl=new Set();q.items.forEach(it
     <div class="sub" style="margin:8px 0 12px">${q.pay?"Thanh toán: "+esc(q.pay)+" · ":""}${q.deli?"Giao hàng: "+esc(q.deli)+" · ":""}${q.valid?"Hiệu lực: "+esc(q.valid)+" · ":""}<button class="back sm" style="margin:0" id="qrematch">Ghép lại với BOQ</button></div>
     <datalist id="qdl">${LL.map(({l})=>`<option value="${esc(lab(l.code))}">`).join("")}${qGroups(p).map(G=>`<option value="${esc(lab(G.k))}">`).join("")}</datalist>
     ${qCmpTable(p,q)}
-    <div class="bh" style="margin-top:14px"><span class="sub">Lời/lỗ = thành tiền gốc (hoặc BOQ) trừ thành tiền NCC · số âm là lỗ · bấm "n dòng" để xem, bỏ hoặc thêm dòng BOQ · dòng chưa chắc phải bấm "Đúng" mới được tính</span><div class="fla"><button class="back sm" style="margin:0" id="qcancel">${QV.rest&&QV.rest.length?"Bỏ qua báo giá này":"Huỷ"}</button>${QV.rest&&QV.rest.length?`<button class="back sm" style="margin:0" id="qsaveall" data-tone="save">Lưu cả ${QV.rest.length+1} báo giá, không xem từng cái</button>`:""}<button class="pill" id="qsave" style="${sv("rev")}"><span class="dot">✓</span>${QV.rest&&QV.rest.length?"Lưu và xem báo giá tiếp theo":"Lưu báo giá"}</button></div></div>`,"span3")}</div>`}
+    <div class="bh" style="margin-top:14px"><span class="sub">Lời/lỗ = thành tiền gốc (hoặc BOQ) trừ thành tiền NCC · số âm là lỗ · bấm "n dòng" để xem, bỏ hoặc thêm dòng BOQ · dòng chưa chắc: bấm "Đúng", hoặc chọn lại dòng báo giá ở ô bên cạnh, mới được tính</span><div class="fla"><button class="back sm" style="margin:0" id="qcancel">${QV.rest&&QV.rest.length?"Bỏ qua báo giá này":"Huỷ"}</button>${QV.rest&&QV.rest.length?`<button class="back sm" style="margin:0" id="qsaveall" data-tone="save">Lưu cả ${QV.rest.length+1} báo giá, không xem từng cái</button>`:""}<button class="pill" id="qsave" style="${sv("rev")}"><span class="dot">✓</span>${QV.rest&&QV.rest.length?"Lưu và xem báo giá tiếp theo":"Lưu báo giá"}</button></div></div>`,"span3")}</div>`}
 function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="week")return weekView(p);const c=calc(p),mg=pct(c.gp,c.rev);
   const k3=kc("proj","Giá trị hợp đồng",ty(c.rev),"tỷ",`Chưa VAT · hồ sơ ${esc(p.qcode||"")} ngày ${esc(p.date||"")}`)+kc("cost","Giá vốn dự thầu",ty(c.cost),"tỷ",`Vật tư ${ty(c.cv)} · nhân công ${ty(c.cn)} · máy ${ty(c.cm)} tỷ`,"gv")+kc(mg>=10?"rev":"mat","Lãi gộp dự kiến",ty(c.gp),"tỷ",`Biên lãi ${fm(mg)}% doanh thu`,"lg");
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
@@ -2082,12 +2088,17 @@ window.renderHello=function(){homeReal();const box=document.getElementById("hp")
     `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div>`};
 /* ---------- Điều hướng ---------- */
 const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["rep","Báo cáo","bao-cao"],["hr","Quản trị","quan-tri"]];
-const topFor=()=>TOP.filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"?window.NGApp&&NGApp.board&&!NGApp.guest:canOv()));
+const topFor=()=>TOP.filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"?window.NGApp&&!NGApp.guest:canOv()));
 /* Màn quản trị: Ban giám đốc phân quyền; máy chủ tự từ chối nếu không đủ quyền */
 const ROLES=[["gd","Giám đốc dự án"],["qs","QS"],["kt","Kế toán"],["cht","Chỉ huy trưởng"]];let admPid="";
 const roleSel=(v,attr)=>`<select class="fi sel" ${attr} aria-label="Vai trò">${ROLES.map(r=>`<option value="${r[0]}"${r[0]===v?" selected":""}>${r[1]}</option>`).join("")}</select>`;
 let admTab="tk";
-const adminView=t=>{admTab=t;return`<div class="vh"><div><h1>Quản trị</h1><p>${t==="ai"?"Kết nối trí tuệ nhân tạo dùng để đọc báo giá và xếp hồ sơ":"Tài khoản và phân công theo dự án · tài khoản mới chưa có quyền gì cho tới khi được phân công"}</p></div></div><div class="sheets" role="tablist">${pill("hr","Tài khoản & phân công","quan-tri",t!=="ai")}${pill("rep","Kết nối AI","quan-tri-ai",t==="ai")}</div><div class="vgrid" id="adm"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`};
+const pwCard=()=>card("Đổi mật khẩu của tôi","Nhập mật khẩu đang dùng rồi đặt mật khẩu mới, tối thiểu 8 ký tự · đổi xong lần đăng nhập sau dùng mật khẩu mới",`<form id="admpw" class="admf pwf" autocomplete="off">
+  <label class="fl"><span>Mật khẩu hiện tại</span><input class="fi" type="password" name="old" required autocomplete="current-password"></label>
+  <label class="fl"><span>Mật khẩu mới</span><input class="fi" type="password" name="pw" required minlength="8" autocomplete="new-password"></label>
+  <label class="fl"><span>Nhập lại mật khẩu mới</span><input class="fi" type="password" name="pw2" required minlength="8" autocomplete="new-password"></label>
+  <div><button class="pill" style="${sv("hr")}"><span class="dot">${ic("hr",2)}</span>Đổi mật khẩu</button></div></form><div class="sub" id="pwmsg" style="margin-top:10px"></div>`,"span3");
+const adminView=t=>{const bd=window.NGApp&&NGApp.board;if(!bd)t="mk";admTab=t;return`<div class="vh"><div><h1>${bd?"Quản trị":"Tài khoản của tôi"}</h1><p>${t==="ai"?"Kết nối trí tuệ nhân tạo dùng để đọc báo giá và xếp hồ sơ":t==="mk"?"Đổi mật khẩu đăng nhập của anh/chị":"Tài khoản và phân công theo dự án · tài khoản mới chưa có quyền gì cho tới khi được phân công"}</p></div></div>${bd?`<div class="sheets" role="tablist">${pill("hr","Tài khoản & phân công","quan-tri",t==="tk")}${pill("rep","Kết nối AI","quan-tri-ai",t==="ai")}${pill("inbox","Đổi mật khẩu","quan-tri-mk",t==="mk")}</div>`:""}<div class="vgrid" id="adm">${t==="mk"?pwCard():`<section class="card span3"><span class="sub">Đang tải…</span></section>`}</div>`};
 const LOGIN_DOMAIN="namgiang-ec.pages.dev";
 const genPw=()=>{const c="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=crypto.getRandomValues(new Uint32Array(10));return [...a].map(x=>c[x%c.length]).join("")};
 async function adminLoad(msg){const box=document.getElementById("adm");if(!box)return;
@@ -2117,12 +2128,12 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   else if(h==="bao-cao"){top="bao-cao";html=report()}
   else if(h==="ban-tin"){top="ban-tin";html=brief()}
   else if(h==="duyet"){top="duyet";html=inbox()}
-  else if((h==="quan-tri"||h==="quan-tri-ai")&&window.NGApp&&NGApp.board&&!NGApp.guest){top="quan-tri";html=adminView(h==="quan-tri-ai"?"ai":"tk")}
+  else if(/^quan-tri(-ai|-mk)?$/.test(h)&&window.NGApp&&!NGApp.guest){top="quan-tri";html=adminView(h==="quan-tri-ai"?"ai":h==="quan-tri-mk"?"mk":"tk")}
   else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){top="du-an";const L=p.boq?sheetsFor(DB.projects.find(x=>x.id===id)):SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:L[0][0],sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
+  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -2335,6 +2346,8 @@ view.addEventListener("change",async e=>{const t=e.target;if(!cur)return;const p
     const x=qLine(p,c);it.links=qL(it).filter(l=>l.c!==c);it.links.push({c,f:x?qUnitF(it.unit,x.l.unit):1,conf:1,how:"anh chọn"});delete it.code;
     /* Một dòng BOQ chỉ lấy giá từ một dòng của cùng báo giá */
     QV.q.items.forEach(o=>{if(o!==it&&o.links)o.links=o.links.filter(l=>l.c!==c)});qRe();return}
+  if(t.dataset.qsw!==undefined&&QV){const v=t.dataset.qsw,i=+v.split("|")[0],c=v.slice(v.indexOf("|")+1),j=+t.value,a=QV.q.items[i],L=qL(a),l=L.find(x=>x.c===c);a.links=L.filter(x=>x.c!==c);delete a.code;
+    if(l&&j>=0){const b=QV.q.items[j],x=qLine(p,c);b.links=qL(b).filter(y=>y.c!==c);b.links.push({c,f:x?qUnitF(b.unit,x.l.unit):1,conf:1,how:"anh chọn"});delete b.code}qRe();return}
   if(t.dataset.qf!==undefined&&QV){const v=parseFloat(String(t.value).replace(",",".")),it=QV.q.items[+t.dataset.qf];it.links=qL(it).map(l=>({...l,f:v>0?v:1}));delete it.code;qRe();return}
   if(t.id==="qv-kind"&&QV){QV.q.kind=t.value;return}});
 view.addEventListener("click",async e=>{const t=e.target;if(!cur)return;const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;
@@ -2387,6 +2400,9 @@ window.NGApp={board:false,uid:null,drive:false,guest:false,
   async sync(){const d=await NGB.loadAll();DB.projects=d.projects;DB.dec=d.dec;NGApp.board=d.isBoard;NGApp.uid=d.uid;NGApp.drive=await NGB.drive.status();route();if(window.renderHello)window.renderHello();
     flushLocal().then(r=>{if(r.done&&document.getElementById("fls"))filesLoad()}).catch(()=>{})}};
 addEventListener("hashchange",()=>{pending=null;route()});route();
+view.addEventListener("submit",async e=>{const f=e.target;if(f.id!=="admpw")return;e.preventDefault();const d=Object.fromEntries(new FormData(f)),m=document.getElementById("pwmsg"),btn=f.querySelector(".pill"),say=(x,ok)=>{m.textContent=x;m.style.color=ok?"#12A150":"#C0141B"};
+  if(d.pw!==d.pw2)return say("Hai lần nhập mật khẩu mới không giống nhau");if(d.pw.length<8)return say("Mật khẩu mới cần ít nhất 8 ký tự");
+  btn.disabled=true;say("Đang đổi…",true);try{await NGB.changePw(d.old,d.pw);f.reset();say("Đã đổi mật khẩu. Lần đăng nhập sau dùng mật khẩu mới.",true)}catch(er){say(er.message)}btn.disabled=false});
 view.addEventListener("submit",async e=>{const f=e.target;if(f.id!=="admnew")return;e.preventDefault();const d=Object.fromEntries(new FormData(f)),btn=f.querySelector(".pill");btn.disabled=true;
   try{const r=await NGB.admin.users({action:"create",username:d.username,full_name:d.full_name,password:d.password,is_board:d.is_board==="1"});
     await adminLoad(`Đã tạo tài khoản ${d.full_name}: tên đăng nhập ${r.email.replace("@"+LOGIN_DOMAIN,"")} · mật khẩu ${d.password} · anh gửi cho người dùng, rồi phân công dự án ở dưới`)}
