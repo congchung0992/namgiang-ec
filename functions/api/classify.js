@@ -5,14 +5,25 @@
 const SB = "https://omzyspsszmitcnejsmxq.supabase.co";
 const SB_KEY = "sb_publishable_L9ww2j1N61HVF3MfpqnQcw_Vo14XjI0";
 const FOLDERS = {
-  "01": "Hồ sơ thầu: BOQ, dự toán, báo giá, hồ sơ dự thầu, bản vẽ mời thầu",
-  "02": "Hợp đồng, phụ lục hợp đồng với chủ đầu tư",
-  "03": "Tiến độ: tiến độ thi công, kế hoạch được duyệt",
-  "04": "Nghiệm thu khối lượng: biên bản nghiệm thu, bảng khối lượng hoàn thành",
-  "05": "Thanh toán, công nợ: hồ sơ đề nghị thanh toán, hoá đơn, bảo lãnh, tạm ứng, uỷ nhiệm chi",
-  "06": "Vật tư: báo giá nhà cung cấp, đơn đặt hàng, phiếu nhập/xuất, phiếu giao nhận vật tư",
-  "07": "Thầu phụ, tổ đội: hợp đồng giao khoán, hợp đồng thầu phụ, thanh toán tổ đội",
-  "08": "Nhật ký, ảnh: nhật ký công trường, ảnh hiện trường"
+  "01.1": "Pháp lý dự án: giấy phép xây dựng, quyết định phê duyệt, thẩm duyệt PCCC, thông báo khởi công, bàn giao mặt bằng, hồ sơ năng lực",
+  "01.2": "Hồ sơ thầu: hồ sơ mời thầu, hồ sơ dự thầu, BOQ, dự toán, giá gốc, báo giá cho chủ đầu tư",
+  "01.3": "Hợp đồng, phụ lục hợp đồng với chủ đầu tư",
+  "01.4": "Bảo lãnh (thực hiện, tạm ứng, bảo hành), bảo hiểm công trình",
+  "02.1": "Bản vẽ thiết kế, bản vẽ thi công (shop drawing), thay đổi thiết kế",
+  "02.2": "Tiến độ thi công, kế hoạch tuần/tháng, biện pháp thi công",
+  "02.3": "Hoàn công, hồ sơ hoàn thành công trình, biên bản bàn giao, bảo hành",
+  "03.1": "Nghiệm thu kỹ thuật: nghiệm thu vật liệu đầu vào, nghiệm thu công việc, giai đoạn",
+  "03.2": "Kết quả thí nghiệm, chứng chỉ CO/CQ vật liệu, thiết bị",
+  "03.3": "An toàn lao động, vệ sinh môi trường, huấn luyện, sự cố",
+  "04.1": "Biên bản nghiệm thu khối lượng hoàn thành, bảng khối lượng",
+  "04.2": "Phát sinh tăng giảm, công văn xác nhận phát sinh, điều chỉnh",
+  "04.3": "Hồ sơ đề nghị thanh toán, hoá đơn, uỷ nhiệm chi, đối chiếu công nợ",
+  "05.1": "Báo giá nhà cung cấp, đơn đặt hàng, hợp đồng mua vật tư thiết bị",
+  "05.2": "Phiếu nhập, phiếu xuất, phiếu giao nhận vật tư",
+  "05.3": "Hợp đồng thầu phụ, hợp đồng giao khoán tổ đội, nghiệm thu và thanh toán thầu phụ",
+  "06.1": "Nhật ký thi công",
+  "06.2": "Báo cáo tuần/tháng, ảnh hiện trường",
+  "06.3": "Công văn đi/đến, biên bản họp giao ban"
 };
 const SYSTEM = `Bạn phân loại hồ sơ của một công ty tổng thầu xây dựng Việt Nam vào đúng thư mục dự án.
 Các thư mục:
