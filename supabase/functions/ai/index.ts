@@ -55,7 +55,7 @@ async function gemini(env: any, { system, parts, schema, kind = "flash", budget 
     const call = (gen: any) => fetch(`${GA}/models/${model}:generateContent`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": env.KEY },
-      signal: AbortSignal.timeout(Math.max(5000, end - Date.now())),
+      signal: AbortSignal.timeout(Math.max(5000, Math.min(end - Date.now(), isLast ? 120000 : 70000))), // một mẫu treo thì sau 70 giây chuyển mẫu khác
       body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature: 0, responseMimeType: "application/json", ...gen } })
     });
     // Suy nghĩ ít (nhanh, rẻ hơn); mẫu không nhận tham số nào thì bỏ dần: khuôn mới → khuôn cũ → chỉ JSON
