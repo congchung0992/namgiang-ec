@@ -24,7 +24,10 @@ function sb(auth) {
   });
 }
 
+// Giữ khoá truy cập Google trong bộ nhớ (hạn 1 giờ) để không phải xin lại ở mỗi lần tải file
+let tokCache = null;
 async function googleToken(env) {
+  if (tokCache && tokCache.exp > Date.now() + 60000) return tokCache.tok;
   const r = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -37,7 +40,9 @@ async function googleToken(env) {
     let why = ""; try { why = (await r.json()).error || ""; } catch {}
     const e = new Error("google_token_" + r.status + " " + why); e.code = "google_auth"; throw e;
   }
-  return (await r.json()).access_token;
+  const j = await r.json();
+  tokCache = { tok: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 };
+  return j.access_token;
 }
 
 async function makeFolder(tok, name, parent) {
@@ -68,7 +73,9 @@ async function projectFolders(api, tok, pid) {
   const root = await rootFolder(tok);
   const projId = await makeFolder(tok, cleanName(`${pr.boq.code || pid}-${pr.boq.name || "Dự án"}`), root);
   const folders = {};
-  for (const k of Object.keys(FOLDERS)) folders[k] = await makeFolder(tok, FOLDERS[k], projId);
+  // Tạo 8 thư mục con cùng lúc thay vì lần lượt (lần đầu mỗi dự án)
+  const ids = await Promise.all(Object.keys(FOLDERS).map(k => makeFolder(tok, FOLDERS[k], projId)));
+  Object.keys(FOLDERS).forEach((k, i) => { folders[k] = ids[i]; });
   const ins = await api("project_drive", { method: "POST", body: JSON.stringify({ project_id: pid, root_id: projId, folders }) });
   if (ins.ok) return folders;
   const again = await get(); // người khác vừa tạo cùng lúc
@@ -90,10 +97,10 @@ async function upload(request, api, tok, url) {
   const size = Number(request.headers.get("content-length") || 0);
   if (!size) return json({ error: "empty" }, 400);
   if (size > MAX_SIZE) return json({ error: "too_large" }, 413);
-  const can = await api("rpc/can_folder", { method: "POST", body: JSON.stringify({ pid, folder }) });
+  // Kiểm tra quyền và xin khoá Google cùng lúc cho nhanh; chưa đủ quyền thì dừng trước khi đụng tới Drive
+  const [can, accessToken] = await Promise.all([api("rpc/can_folder", { method: "POST", body: JSON.stringify({ pid, folder }) }), tok()]);
   if (can.status === 401) return json({ error: "auth" }, 401);
   if (!can.ok || (await can.json()) !== true) return json({ error: "forbidden" }, 403);
-  const accessToken = await tok();
   const folders = await projectFolders(api, accessToken, pid);
   const mime = request.headers.get("content-type") || "application/octet-stream";
   const init = await fetch(G + "/upload/drive/v3/files?uploadType=resumable&fields=id,mimeType,size", {
