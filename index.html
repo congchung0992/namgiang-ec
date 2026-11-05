@@ -312,6 +312,8 @@ body.scroll main{height:auto;display:block}
 .pc .nums span{display:block;font-size:11.5px;color:var(--muted)}
 .pc .nums b{font-size:17px;font-weight:600;letter-spacing:-.01em}
 .phead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end;margin-bottom:14px}
+.neg{color:#D3131B;font-weight:inherit}
+.kc .neg,.glass .neg,.ai .neg,.tip .neg,.msg.me .neg,.fd[aria-current="true"] .neg,.pill[aria-current="true"] .neg{color:#fff;background:rgba(225,20,27,.88);border-radius:.3em;padding:0 .2em}
 .phd{display:flex;align-items:center;gap:12px;margin-bottom:10px;min-width:0}
 .pbk{width:40px;height:40px;flex:none;border:0;border-radius:50%;background:#fff;color:var(--ink2);display:grid;place-items:center;cursor:pointer;box-shadow:inset 0 0 0 1px var(--line);transition:transform .15s}.pbk:hover{color:var(--ink)}.pbk:active{transform:scale(.94)}
 .phm{min-width:0;flex:1}.pht{display:flex;align-items:center;gap:10px;min-width:0}
@@ -784,6 +786,19 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
 </div>
 
 <script>
+/* Số âm hiện trong ngoặc ( ) và tô đỏ: các hàm định dạng số gọi pn(); ký tự ẩn \u2060 đánh dấu để tô màu sau khi vẽ */
+window.NEGM="\u2060";
+window.pn=s=>s[0]==="-"||s[0]==="−"?(/[1-9]/.test(s)?NEGM+"("+s.slice(1)+")":s.slice(1)):s;
+(()=>{const SKIP=/^(SCRIPT|STYLE|OPTION|TEXTAREA|TITLE)$/;
+  const wrap=n=>{const el=n.parentNode;if(!el||SKIP.test(el.nodeName)||el.closest&&el.closest(".neg"))return;
+    if(el.namespaceURI==="http://www.w3.org/2000/svg"){el.setAttribute("fill","#E1141B");return}
+    const parts=n.nodeValue.split(/(\u2060\([^)]*\))/);if(parts.length<2)return;const fr=document.createDocumentFragment();
+    parts.forEach(t=>{if(!t)return;if(t[0]===NEGM){const sp=document.createElement("span");sp.className="neg";sp.textContent=t;fr.appendChild(sp)}else fr.appendChild(document.createTextNode(t))});el.replaceChild(fr,n)};
+  const scan=root=>{if(root.nodeType===3){if(root.nodeValue.includes(NEGM))wrap(root);return}if(root.nodeType!==1)return;
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:x=>x.nodeValue.includes(NEGM)?1:3}),L=[];while(w.nextNode())L.push(w.currentNode);L.forEach(wrap)};
+  let q=[],busy=false;new MutationObserver(M=>{M.forEach(m=>{if(m.type==="characterData")q.push(m.target);else m.addedNodes.forEach(x=>q.push(x))});
+    if(!busy){busy=true;requestAnimationFrame(()=>{const Q=q;q=[];busy=false;Q.forEach(x=>{if(x.isConnected)scan(x)})})}}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  addEventListener("DOMContentLoaded",()=>scan(document.body))})();
 /* ===== Máy chủ Supabase: đăng nhập và lưu số liệu =====
    Khoá công khai được phép nằm trong mã web; quyền xem, sửa do phân quyền trên máy chủ quyết định (supabase/schema.sql). */
 window.NGB=(function(){
@@ -913,9 +928,9 @@ const PER={
  w:{lab:["T2","T3","T4","T5","T6","T7","CN"],rev:11.6,revD:6,cost:[1.9,2.4,1.6,2.8,2.1,1.2,0.4],costT:12.4,costD:-3,unit:"tuần này",vs:"so với tuần trước"},
  m:{lab:Array.from({length:31},(_,i)=>i+1+""),rev:50.2,revD:14,cost:[1.1,1.6,1.3,0.4,1.8,1.5,1.2,1.7,1.9,1.4,0.5,1.6,1.8,1.3,1.5,1.1,0.9,0.4,1.7,2.1,1.6,1.4,1.2,1.8,0.5,1.9,1.6,1.5,1.3,1.7,1.2],costT:43.1,costD:8,unit:"tháng 10/2026",vs:"so với tháng 9"},
  y:{lab:["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12"],rev:391.2,revD:14,cost:[24.9,20.3,31.2,33,36.8,35.1,38.6,42.4,39.8,43.1,0,0],costT:345.2,costD:11,unit:"10 tháng 2026",vs:"so với cùng kỳ 2025"}};
-const fm=v=>v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1});
+const fm=v=>pn(v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1}));
 let PCUR=PER,curP="m";
-function rev(p){curP=p;const d=PCUR[p],mx0=Math.max(...d.cost,0),mx=mx0||1,n=d.cost.length,top=d.cost.indexOf(mx0),fm=d.f||(v=>v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1}));
+function rev(p){curP=p;const d=PCUR[p],mx0=Math.max(...d.cost,0),mx=mx0||1,n=d.cost.length,top=d.cost.indexOf(mx0),fm=d.f||(v=>pn(v.toLocaleString("vi-VN",{minimumFractionDigits:1,maximumFractionDigits:1})));
  const bw=100/n;const bars=d.cost.map((v,i)=>`<rect x="${i*bw+bw*.14}" y="${100-v/mx*92}" width="${bw*.72}" height="${v/mx*92}" fill="${i===top?"#7C4DFF":"#C9A8FF"}" rx="0.6"><title>${d.lab[i]}: ${fm(v)} tỷ</title></rect>`).join("");
  const ch=(v)=>v==null?"":`<span class="ch${v<0?" dn":""}">${v<0?"▼":"▲"} ${Math.abs(v)}%</span>`;
  document.getElementById("rev").innerHTML=`
@@ -1110,11 +1125,11 @@ function parse(wb,X,opt){opt=opt||{};var OC=opt.cols||{},OM=opt.match||{};
 return {parse:parse,nz:nz,num:num};})();
 /* ===== Dự án & sheet chi tiết ===== */
 (()=>{
-const fm=(v,d=1)=>(+v||0).toLocaleString("vi-VN",{minimumFractionDigits:d,maximumFractionDigits:d});
-const n0=v=>Math.round(+v||0).toLocaleString("vi-VN");
-const nq=v=>(+v||0).toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fm=(v,d=1)=>pn((+v||0).toLocaleString("vi-VN",{minimumFractionDigits:d,maximumFractionDigits:d}));
+const n0=v=>pn(Math.round(+v||0).toLocaleString("vi-VN"));
+const nq=v=>pn((+v||0).toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2}));
 const Z0=/^[-–]?\s*0([.,]0+)?\s*(%|đ|tỷ|tr|triệu)?$/;
-function dashZeros(root){(root||document).querySelectorAll("table.t td").forEach(td=>{if(td.querySelector("input,select,button,svg,.mbar,.st"))return;const t=td.textContent.trim();if(Z0.test(t)||t==="–"){const b=td.querySelector("b");if(b)b.textContent="-";else td.textContent="-"}})}
+function dashZeros(root){(root||document).querySelectorAll("table.t td").forEach(td=>{if(td.querySelector("input,select,button,svg,.mbar,.st"))return;const t=td.textContent.replace(/\u2060/g,"").trim();if(Z0.test(t)||t==="–"){const b=td.querySelector("b");if(b)b.textContent="-";else td.textContent="-"}})}
 const ty=v=>fm((+v||0)/1e9,2);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const COL={home:["#16171C","#4A4D5C","#E2E2E7","#16171C"],proj:["#0A2486","#3D5BFF","#E1E7FB","#0A2486"],boq:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],rev:["#12A150","#4FD889","#DAF4E4","#0B6B34"],cost:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"],prog:["#2D3CE6","#7FA2FF","#E0E5FD","#1E2BC4"],mat:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],hr:["#8B5CF6","#C2A6FF","#ECE4FE","#5B32C8"],rep:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],week:["#1E2BC4","#5B8CFF","#E3E8FE","#1E2BC4"],brief:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],inbox:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"]};
@@ -1724,13 +1739,13 @@ function ring(v,c){const r=17,L=2*Math.PI*r,p=Math.max(0,Math.min(100,v||0));ret
 function homeReal(){const K=document.getElementById("kpis"),pie=document.querySelector(".pie");if(!K||!pie)return;
   const set=(id,h,sm,led,foot,go)=>{const c=document.getElementById(id);if(!c)return;c.querySelector("h3").textContent=h;c.querySelector(".gt small").textContent=sm;c.querySelector(".led").innerHTML=led;c.querySelector(".gfoot").innerHTML=foot;c.dataset.go=go};
   const yb=document.querySelector('.seg [data-p="y"]');if(yb)yb.textContent="Toàn bộ";const sp=document.getElementById("spark");if(sp)sp.style.display="none";
-  if(!DB.projects.length){const E={lab:[],rev:0,revD:null,cost:[],costT:0,costD:null,vs:"chưa có dự án",f:v=>v.toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2})};PCUR={w:{...E,unit:"tuần này"},m:{...E,unit:"tháng này"},y:{...E,unit:"toàn bộ kế hoạch"}};rev(curP);
+  if(!DB.projects.length){const E={lab:[],rev:0,revD:null,cost:[],costT:0,costD:null,vs:"chưa có dự án",f:v=>pn(v.toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2}))};PCUR={w:{...E,unit:"tuần này"},m:{...E,unit:"tháng này"},y:{...E,unit:"toàn bộ kế hoạch"}};rev(curP);
     const ft=t=>`<div><p style="margin:0">${t}</p></div>`;set("t-rev","Giá trị hợp đồng","Chưa có dự án",`0<small>tỷ</small>`,ft("Tải BOQ ở trang Dự án để bắt đầu"),"du-an");set("t-pay","Vốn cần ứng tối đa","Chưa có dự án",`0<small>tỷ</small>`,ft("Tính khi đã có tiến độ"),"du-an");set("t-prog","Tiến độ thực tế","Chưa có dự án",`0<small>%</small>`,ft("Tính khi đã có tiến độ"),"du-an");
     pie.querySelector("h3").textContent="Giá vốn theo nhóm";pie.querySelector(".sub").textContent="Chưa có số liệu";drawPie([]);pie.querySelector(".total").innerHTML=`<b class="num">0 tỷ</b><span class="sub">tổng giá vốn</span>`;return}
   const R=DB.projects.map(p=>{const c=calc(p),tl=timeline(p),cf=cash(p,tl),g=gStat(p,tl);return{p,c,tl,cf,g}}),S=k=>R.reduce((a,x)=>a+x.c[k],0),n=R.length,revT=S("rev"),costT=S("cost"),peak=R.reduce((a,x)=>a+x.cf.peak,0);
   const day={},dk=d=>fd(d);R.forEach(({p,tl})=>tl.T.forEach(x=>{const q=p.sched.t[x.key];if(!q||!(q.d>0))return;for(let o=q.s;o<q.s+q.d;o++){const k=dk(addD(tl.st,o)),e=day[k]||(day[k]={r:0,c:0});e.r+=x.rev/q.d;e.c+=x.cost/q.d}}));
   const today=new Date(),t0=new Date(today.getFullYear(),today.getMonth(),today.getDate()),start=new Date(Math.min(...R.map(x=>+x.tl.st))),end=new Date(Math.max(...R.map(x=>+addD(x.tl.st,Math.max(x.tl.end-1,0))))),at=t0<start?start:t0>end?end:t0;
-  const sum=(from,cnt)=>{let r=0,c=0;for(let i=0;i<cnt;i++){const e=day[dk(addD(from,i))];if(e){r+=e.r;c+=e.c}}return{r,c}},f2=v=>v.toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2}),b=v=>+(v/1e9).toFixed(4);
+  const sum=(from,cnt)=>{let r=0,c=0;for(let i=0;i<cnt;i++){const e=day[dk(addD(from,i))];if(e){r+=e.r;c+=e.c}}return{r,c}},f2=v=>pn(v.toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2})),b=v=>+(v/1e9).toFixed(4);
   const mon=addD(at,-((at.getDay()+6)%7)),m0=new Date(at.getFullYear(),at.getMonth(),1),mN=new Date(at.getFullYear(),at.getMonth()+1,0).getDate(),mm=at.getMonth()+1,yy=at.getFullYear();
   const wk=[...Array(7)].map((_,i)=>sum(addD(mon,i),1)),md=[...Array(mN)].map((_,i)=>sum(addD(m0,i),1)),ms=[];for(let d=new Date(start.getFullYear(),start.getMonth(),1);d<=end;d=new Date(d.getFullYear(),d.getMonth()+1,1))ms.push({d,v:sum(d,new Date(d.getFullYear(),d.getMonth()+1,0).getDate())});
   const lb=d=>"T"+(d.getMonth()+1)+"/"+String(d.getFullYear()).slice(2),vs=t0<start?"khởi công "+fd(start):"theo tiến độ kế hoạch",tot=a=>a.reduce((x,y)=>({r:x.r+y.r,c:x.c+y.c}),{r:0,c:0}),WK=tot(wk),MD=tot(md);
