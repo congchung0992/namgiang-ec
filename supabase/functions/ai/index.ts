@@ -194,9 +194,14 @@ const CONTRACT = {
     payment_days: { type: "number" }, payment_cycle: { type: "string" },
     start_date: { type: "string" }, duration_days: { type: "number" }, end_date: { type: "string" },
     penalty: { type: "string" }, notes: { type: "string" },
+    milestones: { type: "array", items: { type: "object", properties: {
+      name: { type: "string" }, kind: { type: "string", enum: ["tam_ung", "giai_doan", "quyet_toan", "bao_hanh"] },
+      percent: { type: "number" }, basis: { type: "string" }, condition: { type: "string" }, documents: { type: "string" },
+      progress_percent: { type: "number" }, days_after: { type: "number" }, clause: { type: "string" }
+    }, required: ["name", "kind", "percent", "basis", "condition", "documents", "progress_percent", "days_after", "clause"] } },
     evidence: { type: "array", items: { type: "object", properties: { field: { type: "string" }, quote: { type: "string" } }, required: ["field", "quote"] } }
   },
-  required: ["contract_no", "sign_date", "value_before_vat", "value_with_vat", "vat_rate", "advance_percent", "advance_recovery", "retention_percent", "warranty_months", "payment_days", "payment_cycle", "start_date", "duration_days", "end_date", "penalty", "notes", "evidence"]
+  required: ["contract_no", "sign_date", "value_before_vat", "value_with_vat", "vat_rate", "advance_percent", "advance_recovery", "retention_percent", "warranty_months", "payment_days", "payment_cycle", "start_date", "duration_days", "end_date", "penalty", "notes", "milestones", "evidence"]
 };
 const SYS_CONTRACT = `Bạn là chuyên viên hợp đồng của một tổng thầu xây dựng Việt Nam. Đọc hợp đồng thi công (hoặc phụ lục) ký với chủ đầu tư và lấy CHÍNH XÁC các điều khoản dưới đây. Không đoán, không bịa: điều khoản nào hợp đồng không ghi thì để 0 (ô số) hoặc "" (ô chữ).
 - value_before_vat, value_with_vat: giá trị hợp đồng (đồng, số thuần); vat_rate: thuế suất %.
@@ -205,6 +210,13 @@ const SYS_CONTRACT = `Bạn là chuyên viên hợp đồng của một tổng t
 - payment_days: số ngày chủ đầu tư thanh toán kể từ khi nhận đủ hồ sơ thanh toán/nghiệm thu đợt; payment_cycle: chu kỳ thanh toán (theo tháng, theo đợt/giai đoạn…) và % mỗi đợt nếu có.
 - start_date, end_date: ngày khởi công, ngày hoàn thành (dd/mm/yyyy, nếu chỉ ghi "kể từ ngày bàn giao mặt bằng" thì để "" và ghi ở notes); duration_days: tổng thời gian thi công (ngày; tháng × 30).
 - penalty: phạt chậm tiến độ (một câu). notes: điều khoản khác ảnh hưởng dòng tiền (bảo lãnh, điều chỉnh giá, tạm giữ…), tối đa 3 câu.
+- milestones: liệt kê ĐẦY ĐỦ từng đợt thanh toán theo đúng thứ tự trong hợp đồng (tạm ứng, các đợt theo giai đoạn/nghiệm thu, quyết toán, hoàn trả bảo hành). Với mỗi đợt:
+  name: tên ngắn (ví dụ "Lần 2 – hoàn thành phần móng"); kind: tam_ung | giai_doan | quyet_toan | bao_hanh;
+  percent: % giá trị được thanh toán ở đợt đó (số thuần); basis: tính trên giá trị nào (giá trị hợp đồng gồm/chưa VAT, giá trị nghiệm thu, giá trị tạm tính…);
+  condition: ĐIỀU KIỆN để được thanh toán đợt đó, ghi đủ và cụ thể (hạng mục/khối lượng phải hoàn thành, nghiệm thu, bảo lãnh phải nộp, khấu trừ tạm ứng…);
+  documents: hồ sơ phải nộp để được thanh toán (biên bản nghiệm thu, hoá đơn, bảo lãnh, đề nghị thanh toán…), "" nếu không ghi;
+  progress_percent: nếu điều kiện gắn với % khối lượng/giá trị hoàn thành thì ghi số % đó, không thì 0;
+  days_after: số ngày chủ đầu tư thanh toán sau khi đủ điều kiện/hồ sơ, 0 nếu không ghi; clause: số điều khoản.
 - evidence: với mỗi ô đã lấy được (field = tên ô), chép nguyên văn câu trong hợp đồng làm căn cứ, kèm số điều khoản nếu có.`;
 
 let keyCache: { v: string; m: string; at: number } | null = null;
@@ -278,6 +290,7 @@ async function run(b: any, env: any): Promise<Response> {
       if (fb) content.push(fb);
       content.push({ type: "text", text: `Tên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung hợp đồng:\n${b.text.slice(0, 300000)}` : "") });
       const { data, model } = await claude(env, { system: SYS_CONTRACT, content, schema: CONTRACT, effort: "medium", maxTokens: 32000 });
+      (data.milestones || []).forEach((m: any) => blank(m, ["basis", "documents", "progress_percent", "days_after", "clause"]));
       blank(data, ["contract_no", "sign_date", "value_before_vat", "value_with_vat", "vat_rate", "advance_percent", "advance_recovery", "retention_percent", "warranty_months", "payment_days", "payment_cycle", "start_date", "duration_days", "end_date", "penalty", "notes"]);
       return json({ ...data, model });
     }
