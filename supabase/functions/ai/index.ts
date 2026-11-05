@@ -8,23 +8,27 @@ const GA = "https://generativelanguage.googleapis.com/v1beta";
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type, apikey, x-client-info", "access-control-allow-methods": "POST, OPTIONS" };
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, "content-type": "application/json; charset=utf-8" } });
 
-/* ---------- Gemini: tự chọn mẫu mới nhất đang có, trả JSON theo khuôn ---------- */
-let picked: any = {};
-async function pickModel(env: any, kind: string) {
-  if (kind === "pro" && env.PRO) return env.PRO;
-  if (kind === "flash" && env.FLASH) return env.FLASH;
-  if (picked[kind]) return picked[kind];
+/* ---------- Gemini: danh sách mẫu đang có, thử lần lượt; trả JSON theo khuôn ---------- */
+let models: string[] | null = null, proBlocked = 0;
+const ver = (n: string) => { const m = n.match(/gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
+async function listModels(env: any) {
+  if (models) return models;
   const r = await fetch(`${GA}/models?pageSize=200`, { headers: { "x-goog-api-key": env.KEY } });
   if (!r.ok) throw new Error("gemini_models_" + r.status);
-  const L = ((await r.json()).models || [])
+  models = ((await r.json()).models || [])
     .filter((m: any) => (m.supportedGenerationMethods || []).includes("generateContent"))
     .map((m: any) => m.name.replace(/^models\//, ""))
-    .filter((n: string) => /^gemini-/.test(n) && n.includes(kind) && !/lite|image|tts|audio|live|embed|thinking|exp|learnlm|robotics|computer|nano/.test(n));
-  const ver = (n: string) => { const m = n.match(/gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
-  // Ưu tiên bản mới nhất; cùng phiên bản thì bản chính thức trước bản thử (preview)
-  L.sort((a: string, b: string) => ver(b) - ver(a) || (Number(/preview/.test(a)) - Number(/preview/.test(b))) || a.length - b.length);
-  if (!L.length) throw new Error("gemini_no_model");
-  return (picked[kind] = L[0]);
+    .filter((n: string) => /^gemini-/.test(n) && /pro|flash/.test(n) && !/image|tts|audio|live|embed|thinking|exp|learnlm|robotics|computer|nano/.test(n))
+    // Bản mới trước; cùng phiên bản thì bản chính thức trước bản thử (preview)
+    .sort((a: string, b: string) => ver(b) - ver(a) || (Number(/preview/.test(a)) - Number(/preview/.test(b))) || a.length - b.length);
+  return models!;
+}
+/* Thứ tự thử: đọc báo giá → pro (nếu khoá có lượt) rồi flash; việc nhẹ → flash; cuối cùng flash-lite */
+async function candidates(env: any, kind: string) {
+  const L = await listModels(env), pro = L.filter(n => /pro/.test(n)), fl = L.filter(n => /flash/.test(n) && !/lite/.test(n)), lite = L.filter(n => /lite/.test(n));
+  const fix = [kind === "pro" ? env.PRO : "", env.FLASH].filter(Boolean);
+  const usePro = kind === "pro" && Date.now() - proBlocked > 3600000;
+  return [...new Set([...fix, ...(usePro ? pro.slice(0, 1) : []), ...fl.slice(0, 3), ...lite.slice(0, 1)])];
 }
 const upperSchema = (s: any): any => {
   if (Array.isArray(s)) return s.map(upperSchema);
@@ -37,43 +41,48 @@ const upperSchema = (s: any): any => {
   }
   return o;
 };
-async function gemini1(env: any, { system, parts, schema, kind = "flash" }: any) {
-  const model = await pickModel(env, kind);
-  const call = (gen: any) => fetch(`${GA}/models/${model}:generateContent`, {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-goog-api-key": env.KEY },
-    body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature: 0, responseMimeType: "application/json", ...gen } })
-  });
-  // Khuôn JSON: thử kiểu mới (responseJsonSchema), không được thì kiểu cũ (responseSchema), cuối cùng chỉ yêu cầu JSON
-  const run = async () => {
-    let r = await call({ responseJsonSchema: schema });
-    if (r.status === 400) r = await call({ responseSchema: upperSchema(schema) });
-    if (r.status === 400) r = await call({});
-    return r;
-  };
-  let r = await run();
-  // Google bảo chờ (giới hạn số lần mỗi phút) thì chờ đúng thời gian đó rồi thử lại một lần, tối đa 30 giây
-  if (r.status === 429) {
-    const t = await r.text(), m = t.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/), wait = m ? parseFloat(m[1]) : 0;
-    console.error("gemini 429", model, t.replace(/\s+/g, " ").slice(0, 700));
-    if (wait > 0 && wait <= 30) { await new Promise(res => setTimeout(res, wait * 1000 + 500)); r = await run(); }
-    else throw new Error("gemini_429");
+const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+async function gemini(env: any, { system, parts, schema, kind = "flash" }: any) {
+  const C = await candidates(env, kind);
+  if (!C.length) throw new Error("gemini_no_model");
+  let last = "gemini_unknown";
+  for (const model of C) {
+    const call = (gen: any) => fetch(`${GA}/models/${model}:generateContent`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": env.KEY },
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature: 0, responseMimeType: "application/json", ...gen } })
+    });
+    // Khuôn JSON: thử kiểu mới (responseJsonSchema), không được thì kiểu cũ (responseSchema), cuối cùng chỉ yêu cầu JSON
+    const run = async () => {
+      let r = await call({ responseJsonSchema: schema });
+      if (r.status === 400) r = await call({ responseSchema: upperSchema(schema) });
+      if (r.status === 400) r = await call({});
+      return r;
+    };
+    let r = await run();
+    // Quá tải (503/500) hoặc giới hạn mỗi phút (429 có retryDelay ngắn): chờ rồi thử lại tối đa 2 lần trên cùng mẫu
+    for (let k = 0; k < 2 && [429, 500, 503].includes(r.status); k++) {
+      const t = await r.text();
+      console.error("gemini", model, r.status, t.replace(/\s+/g, " ").slice(0, 400));
+      if (r.status === 429) {
+        if (/limit: 0/.test(t)) { if (/pro/.test(model)) proBlocked = Date.now(); break; } // khoá không có lượt cho mẫu này
+        const m = t.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/), w = m ? parseFloat(m[1]) : 0;
+        if (!(w > 0 && w <= 30)) break;
+        await sleep(w * 1000 + 500);
+      } else await sleep(k ? 6000 : 2500);
+      r = await run();
+    }
+    if (r.ok) {
+      const j = await r.json();
+      const text = ((j.candidates || [])[0]?.content?.parts || []).map((p: any) => p.text || "").join("").trim();
+      if (!text) { last = "gemini_empty_" + ((j.candidates || [])[0]?.finishReason || "none"); continue; }
+      try { return { data: JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "")), model }; } catch { last = "gemini_badjson"; continue; }
+    }
+    if (!r.bodyUsed) console.error("gemini", model, r.status, (await r.text()).replace(/\s+/g, " ").slice(0, 400));
+    last = "gemini_" + r.status;
+    if (r.status === 400 || r.status === 401) break; // khoá sai: đổi mẫu cũng không được
   }
-  if (!r.ok) { console.error("gemini", model, r.status, (await r.text()).replace(/\s+/g, " ").slice(0, 700)); throw new Error("gemini_" + r.status); }
-  const j = await r.json();
-  const text = ((j.candidates || [])[0]?.content?.parts || []).map((p: any) => p.text || "").join("").trim();
-  if (!text) throw new Error("gemini_empty_" + ((j.candidates || [])[0]?.finishReason || "none"));
-  return { data: JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "")), model };
-}
-/* Bản pro bị từ chối vì hết lượt (khoá miễn phí thường không có lượt cho bản pro) thì tự dùng bản flash */
-async function gemini(env: any, opts: any) {
-  const order = opts.kind === "pro" ? ["pro", "flash"] : ["flash"];
-  let last: any;
-  for (const k of order) {
-    try { return await gemini1(env, { ...opts, kind: k }); }
-    catch (e) { last = e; if (!/gemini_(429|404|403)/.test(String((e as Error).message))) throw e; }
-  }
-  throw last;
+  throw new Error(last);
 }
 
 /* ---------- Khuôn dữ liệu ---------- */
@@ -185,12 +194,17 @@ Deno.serve(async (req) => {
   let key = Deno.env.get("GEMINI_API_KEY") || "";
   if (!key) {
     if (keyCache && Date.now() - keyCache.at < 300000 && b.action !== "ping") key = keyCache.v;
-    else { const { data } = await admin.from("app_secrets").select("value").eq("name", "gemini").maybeSingle(); key = data?.value || ""; keyCache = { v: key, at: Date.now() }; picked = {}; }
+    else { const { data } = await admin.from("app_secrets").select("value").eq("name", "gemini").maybeSingle(); key = data?.value || ""; keyCache = { v: key, at: Date.now() }; models = null; }
   }
   if (!key) return json({ error: "chua_ket_noi" }, 503);
   const env = { KEY: key, PRO: Deno.env.get("GEMINI_MODEL_PRO") || "", FLASH: Deno.env.get("GEMINI_MODEL") || "" };
   try {
-    if (b.action === "ping") { const pro = await pickModel(env, "pro"), flash = await pickModel(env, "flash"); return json({ ok: true, pro, flash }); }
+    if (b.action === "ping") {
+      // Thử gọi thật một câu ngắn để biết khoá có lượt dùng không
+      const { model } = await gemini(env, { system: "Trả lời JSON.", parts: [{ text: "Trả về {\"ok\": true}" }], schema: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] }, kind: "flash" });
+      const C = await candidates(env, "pro");
+      return json({ ok: true, flash: model, pro: C[0] && /pro/.test(C[0]) ? C[0] : model + " (khoá miễn phí không dùng được bản pro)" });
+    }
     if (b.action === "extract") {
       const parts: any[] = [];
       if (b.doc && b.doc.mime && typeof b.doc.data === "string") parts.push({ inline_data: { mime_type: b.doc.mime, data: b.doc.data } });
@@ -217,7 +231,8 @@ Deno.serve(async (req) => {
   } catch (e) {
     const m = String((e as Error)?.message || "");
     console.error("ai", m);
-    if (/gemini_(400|401|403)/.test(m) || /gemini_models_(400|401|403)/.test(m)) return json({ error: "sai_khoa" }, 502);
+    if (/gemini_(400|401|403)\b/.test(m) || /gemini_models_(400|401|403)/.test(m)) return json({ error: "sai_khoa" }, 502);
+    if (/gemini_(503|500)\b/.test(m)) return json({ error: "qua_tai" }, 502);
     if (/gemini_429/.test(m)) return json({ error: "het_luot" }, 502);
     return json({ error: "ai_error", detail: m.slice(0, 100) }, 502);
   }

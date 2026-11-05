@@ -932,7 +932,7 @@ window.NGB=(function(){
       async ai(body){const {data:{session}}=await need().auth.getSession();if(!session)throw Object.assign(new Error("Phiên đăng nhập đã hết, anh đăng nhập lại"),{code:"auth"});let r;
         try{r=await fetch(SB_URL+"/functions/v1/ai",{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,authorization:"Bearer "+session.access_token},body:JSON.stringify(body)})}catch(e){throw Object.assign(new Error("Mất kết nối tới máy chủ"),{code:"net"})}
         let j={};try{j=await r.json()}catch(e){}if(r.ok)return j;
-        throw Object.assign(new Error({chua_ket_noi:"Chưa có khoá Gemini · Ban giám đốc dán khoá ở màn Quản trị",sai_khoa:"Khoá Gemini không đúng hoặc đã bị thu hồi · kiểm tra lại ở màn Quản trị",het_luot:"Gemini báo hết lượt dùng (khoá miễn phí giới hạn mỗi ngày) · thử lại sau hoặc bật tính phí ở Google AI Studio",auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",ai_error:"Gemini đang lỗi hoặc quá tải, anh thử lại sau ít phút"}[j.error]||"Máy chủ đang lỗi"),{code:j.error||"server"})},
+        throw Object.assign(new Error({chua_ket_noi:"Chưa có khoá Gemini · Ban giám đốc dán khoá ở màn Quản trị",sai_khoa:"Khoá Gemini không đúng hoặc đã bị thu hồi · kiểm tra lại ở màn Quản trị",het_luot:"Gemini báo hết lượt dùng (khoá miễn phí giới hạn mỗi ngày) · thử lại sau hoặc bật tính phí ở Google AI Studio",auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",qua_tai:"Máy chủ Google Gemini đang quá tải (lỗi phía Google, thường hết sau vài phút) · anh bấm tải lại file này sau ít phút",ai_error:"Gemini đang lỗi hoặc quá tải, anh thử lại sau ít phút"}[j.error]||"Máy chủ đang lỗi"),{code:j.error||"server"})},
       async geocode(q){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
         const r=await fetch("api/geocode?q="+encodeURIComponent(q),{headers:{authorization:"Bearer "+session.access_token}});if(!r.ok)throw new Error("geocode_"+r.status);return r.json()}
     },
@@ -1622,10 +1622,10 @@ async function qRead1(p,f,save,say){const r=await qReadFile(p,f);
     if(!q.items.length)throw new Error("Không tìm thấy dòng đơn giá nào trong báo giá");
     q.id="q"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);say(`${f.name}: đã đọc ${q.items.length} dòng · đang ghép với BOQ…`);const ai=await qMatch(p,q,say);
     return{q,file:save?f:null,ai}}
-/* Đọc nhiều báo giá: 2 file một lượt, xong thì đưa anh kiểm tra lần lượt từng báo giá */
+/* Đọc nhiều báo giá: lần lượt từng file (khoá Gemini miễn phí giới hạn số lần gọi mỗi phút), xong thì đưa anh kiểm tra lần lượt từng báo giá */
 async function qAnalyze(p,F,save){if(!Array.isArray(F))F=[F];qMsg="";const st={};const say=()=>{const x=document.getElementById("qmsg");if(x){x.style.color="";x.innerHTML=F.map((f,i)=>`<div>${i+1}. ${esc(f.name)} · ${esc(st[i]||"đang chờ")}</div>`).join("")}};
   const out=[],bad=[];let k=0;say();
-  await Promise.all([0,1].map(async()=>{while(k<F.length){const i=k++,f=F[i];st[i]="đang đọc (Gemini đọc kỹ từng dòng, file dài có thể mất 1–2 phút)…";say();
+  await Promise.all([0].map(async()=>{while(k<F.length){const i=k++,f=F[i];st[i]="đang đọc (Gemini đọc kỹ từng dòng, file dài có thể mất 1–2 phút)…";say();
     try{out[i]=await qRead1(p,f,save,t=>{st[i]=t.replace(f.name+": ","");say()});st[i]="✓ "+out[i].q.items.length+" dòng";}catch(e){bad.push(f.name+": "+(e.message||"không đọc được"));st[i]="✗ "+(e.message||"không đọc được")}say()}}));
   const L=out.filter(Boolean);qBad=bad.length?" · Chưa đọc được: "+bad.join(" · ")+" (anh tải lại các file này)":"";if(bad.length)qMsg=qBad.slice(3);
   if(!L.length){const x=document.getElementById("qmsg");if(x){x.textContent=qMsg;x.style.color="#C0141B"}return}
