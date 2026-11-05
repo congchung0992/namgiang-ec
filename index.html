@@ -31,6 +31,7 @@
 .qt2 th[data-v]{--vb:var(--v1);--vt:var(--v2);--vx:var(--v3)}.qt2 th[data-v="0"]{--v1:#DBF2E2;--v2:#EAF8EE;--v3:#0B6B33}.qt2 th[data-v="1"]{--v1:#D6E6FB;--v2:#E8F1FD;--v3:#1A4FA0}.qt2 th[data-v="2"]{--v1:#FBDCE6;--v2:#FDEBF1;--v3:#A3174B}.qt2 th[data-v="3"]{--v1:#D3F1F2;--v2:#E6F8F8;--v3:#0B6B70}.qt2 th[data-v="4"]{--v1:#FCE5CC;--v2:#FEF1E2;--v3:#8A4B00}.qt2 th[data-v="5"]{--v1:#E3E0FA;--v2:#EFEDFD;--v3:#3F2FA8}
 .t.qt2 thead th.hg-c[data-v]{background:var(--v1);color:var(--v3);border-bottom-color:var(--v1)}.t.qt2 thead th.hs-c[data-v]{background:var(--v2);color:var(--v3)}
 .qt2 [data-vb]{border-left:2px solid #C9CCD8!important}.qt2 th.hg-c[data-v]{border-left:2px solid #fff}
+.pkt .pkn{min-width:200px;font-weight:600;padding:5px 8px;margin-bottom:2px}.pkt .sel{min-width:150px;max-width:200px;padding:5px 8px}.pkt .pkmv{min-width:140px;font-size:13px;color:var(--muted)}
 .qt2 tr.qcg td{background:#fff;border-top:1px solid #D9DDE8}.qt2 .olc{width:26px;min-width:26px;padding:0!important;position:relative;text-align:center;background:#F3F4F8!important}
 .olb{width:18px;height:18px;border:1px solid #9AA0B4;background:#fff;border-radius:3px;font-size:15px;line-height:14px;padding:0;cursor:pointer;color:#33364A;font-weight:700}.olb:hover{background:#EEF0FB}
 .oll{position:absolute;left:12px;top:0;bottom:0;border-left:2px solid #9AA0B4}.oll.end{bottom:50%}.oll.end::after{content:"";position:absolute;left:-2px;bottom:-1px;width:8px;border-bottom:2px solid #9AA0B4}
@@ -902,7 +903,7 @@ window.NGB=(function(){
   const retryFetch=async(u,o={})=>{const m=(o.method||"GET").toUpperCase(),safe=m==="GET"||m==="HEAD";for(let i=0;;i++){try{return await fetch(u,o)}catch(e){if(!safe||i>=3||o.signal&&o.signal.aborted)throw e;await new Promise(r=>setTimeout(r,[600,1500,3000][i]))}}};
   const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY,{global:{fetch:retryFetch}}):null;
   const need=()=>{if(!sb)throw new Error("Không tải được bộ đăng nhập, anh kiểm tra kết nối mạng");return sb};
-  const CK=["cost","xcost","ratio","gg","terms","termsOk","contract","quotes","qsel","qpend","qlog","leads"],SK=["sched","weeks"];
+  const CK=["cost","xcost","ratio","gg","terms","termsOk","contract","quotes","qsel","qpend","qlog","leads","pk","pksel"],SK=["sched","weeks"];
   const pick=(p,K)=>{const o={};K.forEach(k=>{if(p[k]!==undefined)o[k]=p[k]});return o};
   const boqOf=p=>{const o={};Object.keys(p).forEach(k=>{if(!CK.includes(k)&&!SK.includes(k)&&k[0]!=="_")o[k]=p[k]});return o};
   const J=JSON.stringify;
@@ -1285,7 +1286,7 @@ I.brief='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4
 I.week='<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8.5 15l2.5 2.5 4.5-5"/>';
 I.up='<path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>';
 const sv=k=>`--c:${COL[k][0]};--c2:${COL[k][1]};--t:${COL[k][2]};--cd:${COL[k][3]}`;
-COL.files=["#0A2486","#4E6BFF","#E4E9FC","#0A2486"];COL.bg=["#D9480F","#FF9F6B","#FFE8DA","#A63A0B"];I.bg='<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7M9 8h3"/>';I.files='<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>';
+COL.files=["#0A2486","#4E6BFF","#E4E9FC","#0A2486"];COL.goi=["#0F766E","#2DD4BF","#D5F5EF","#0B5A54"];I.goi='<path d="M3 7l9-4 9 4-9 4zM3 7v10l9 4 9-4V7M12 11v10"/>';COL.bg=["#D9480F","#FF9F6B","#FFE8DA","#A63A0B"];I.bg='<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7M9 8h3"/>';I.files='<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>';
 const pill=(k,label,go,cur)=>`<button class="pill" data-go="${go}" aria-current="${!!cur}" style="${sv(k)}"><span class="dot">${ic(k,2)}</span>${label}</button>`;
 const st=(lv,t)=>`<span class="st ${lv}">${t}</span>`;
 
@@ -1453,16 +1454,16 @@ const LD=(p,n)=>p&&p.leads&&p.leads[n]>0?p.leads[n]:LEAD(n);const LEAD=n=>/Kết
 
 /* ---------- Danh sách sheet ---------- */
 const SHEETS=[["home","Tổng quan"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
-const BSHEETS=[["home","Tổng quan"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["bg","Báo giá"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["mat","Vật liệu"],["hr","Nhân sự"]];
+const BSHEETS=[["home","Tổng quan"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Gói thầu"],["bg","Báo giá"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["mat","Vật liệu"],["hr","Nhân sự"]];
 /* Tab Hồ sơ: file lưu ở Google Drive qua api/drive; bảng quyền này chỉ để gọn màn hình, máy chủ kiểm tra lại (supabase/schema.sql) */
 /* Thư mục hồ sơ: 6 nhóm lớn (DG), file lưu ở thư mục con (DF: mã, tên, gợi ý, vai trò được xem); máy chủ kiểm tra lại quyền */
 const DG=[["01","Pháp lý – Hợp đồng"],["02","Kỹ thuật – Tiến độ"],["03","Chất lượng – An toàn"],["04","Thanh toán CĐT"],["05","NCC – TP"],["06","Hiện trường – Văn bản"]];
 const A4=["gd","qs","kt","cht"],QK=["gd","qs","kt"],QC=["gd","qs","cht"];
-const DF=[["01.1","Pháp lý dự án","Giấy phép xây dựng, quyết định phê duyệt, thẩm duyệt PCCC, thông báo khởi công, bàn giao mặt bằng",A4],["01.2","Hồ sơ thầu","Hồ sơ mời thầu, dự thầu, BOQ gốc, giá gốc, báo giá",["gd","qs"]],["01.3","Hợp đồng – phụ lục","Hợp đồng và phụ lục với chủ đầu tư",QK],["01.4","Bảo lãnh – bảo hiểm","Bảo lãnh thực hiện, tạm ứng, bảo hành; bảo hiểm công trình",QK],
-  ["02.1","Bản vẽ thiết kế","Thiết kế được duyệt, bản vẽ thi công, thay đổi thiết kế",A4],["02.2","Tiến độ – biện pháp","Tiến độ, kế hoạch tuần/tháng, biện pháp thi công",QC],["02.3","Hoàn công – bàn giao","Bản vẽ hoàn công, hồ sơ hoàn thành, bàn giao, bảo hành",QC],
-  ["03.1","Nghiệm thu kỹ thuật","Nghiệm thu vật liệu đầu vào, công việc, giai đoạn",QC],["03.2","Thí nghiệm – CO/CQ","Kết quả thí nghiệm, chứng chỉ xuất xưởng, xuất xứ",QC],["03.3","An toàn – môi trường","Kế hoạch an toàn, huấn luyện, kiểm tra, sự cố",QC],
-  ["04.1","Nghiệm thu khối lượng","Biên bản, bảng khối lượng hoàn thành",A4],["04.2","Phát sinh","Phát sinh tăng giảm, công văn xác nhận",QK],["04.3","Thanh toán – công nợ CĐT","Hồ sơ đề nghị thanh toán đợt với chủ đầu tư, hoá đơn, đối chiếu công nợ",QK],
-  ["05.1","Báo giá NCC – TP","Báo giá nhà cung cấp, thầu phụ, tổ đội; đơn đặt hàng",QK],["05.2","Hợp đồng NCC – TP","Hợp đồng mua vật tư, hợp đồng thầu phụ, giao khoán tổ đội, phụ lục",QK],["05.3","Thanh toán NCC – TP","Đề nghị thanh toán, nghiệm thu thanh toán, hoá đơn, đối chiếu công nợ nhà cung cấp, thầu phụ",QK],["05.4","Nhập xuất vật tư","Phiếu nhập, xuất, giao nhận vật tư",A4],
+const DF=[["01.1","Pháp lý dự án","Giấy phép xây dựng, quyết định phê duyệt, thẩm duyệt PCCC, thông báo khởi công, bàn giao mặt bằng",A4],["01.2","Hồ sơ thầu","Hồ sơ mời thầu, dự thầu, BOQ gốc, giá gốc, báo giá",A4],["01.3","Hợp đồng – phụ lục","Hợp đồng và phụ lục với chủ đầu tư",A4],["01.4","Bảo lãnh – bảo hiểm","Bảo lãnh thực hiện, tạm ứng, bảo hành; bảo hiểm công trình",A4],
+  ["02.1","Bản vẽ thiết kế","Thiết kế được duyệt, bản vẽ thi công, thay đổi thiết kế",A4],["02.2","Tiến độ – biện pháp","Tiến độ, kế hoạch tuần/tháng, biện pháp thi công",A4],["02.3","Hoàn công – bàn giao","Bản vẽ hoàn công, hồ sơ hoàn thành, bàn giao, bảo hành",A4],
+  ["03.1","Nghiệm thu kỹ thuật","Nghiệm thu vật liệu đầu vào, công việc, giai đoạn",A4],["03.2","Thí nghiệm – CO/CQ","Kết quả thí nghiệm, chứng chỉ xuất xưởng, xuất xứ",A4],["03.3","An toàn – môi trường","Kế hoạch an toàn, huấn luyện, kiểm tra, sự cố",A4],
+  ["04.1","Nghiệm thu khối lượng","Biên bản, bảng khối lượng hoàn thành",A4],["04.2","Phát sinh","Phát sinh tăng giảm, công văn xác nhận",A4],["04.3","Thanh toán – công nợ CĐT","Hồ sơ đề nghị thanh toán đợt với chủ đầu tư, hoá đơn, đối chiếu công nợ",A4],
+  ["05.1","Báo giá NCC – TP","Báo giá nhà cung cấp, thầu phụ, tổ đội; đơn đặt hàng",A4],["05.2","Hợp đồng NCC – TP","Hợp đồng mua vật tư, hợp đồng thầu phụ, giao khoán tổ đội, phụ lục",A4],["05.3","Thanh toán NCC – TP","Đề nghị thanh toán, nghiệm thu thanh toán, hoá đơn, đối chiếu công nợ nhà cung cấp, thầu phụ",A4],["05.4","Nhập xuất vật tư","Phiếu nhập, xuất, giao nhận vật tư",A4],
   ["06.1","Nhật ký thi công","Nhật ký công trường",A4],["06.2","Báo cáo – ảnh","Báo cáo tuần/tháng, ảnh hiện trường",A4],["06.3","Công văn – biên bản họp","Công văn đi/đến, biên bản họp giao ban",A4]];
 /* Mã thư mục cũ (8 thư mục) đổi sang thư mục con mới */
 const OLDF={"01":"01.2","02":"01.3","03":"02.2","04":"04.1","05":"04.3","06":"05.1","07":"05.2","08":"06.2"},nf=f=>OLDF[f]||f;
@@ -1838,6 +1839,45 @@ function qMain(b){const l=b.l,t=BOQ.nz((l.name||"")+" "+(l.spec||"")),r=MR.find(
   if(r&&K.length)return{k:"m|"+r[0]+"|"+K.join(",")+"|"+u,n:r[0]+" "+K.map(x=>x.toUpperCase()).join(" ")};
   if(r)return{k:"m|"+r[0]+"|"+u,n:r[0]+(K.length?"":" (khác)")};
   return{k:"n|"+t+"|"+u,n:l.name}}
+/* ---------- Gói thầu: tách BOQ thành gói vật tư cần mua và gói thầu phụ – tổ đội thi công, rồi chọn báo giá cho từng gói ---------- */
+const PKW=[["Ép cọc, khoan cọc",/\bcoc\b/],["Đào, đắp, san lấp",/\bdao\b|\bdap\b|san lap|van chuyen dat|dat thai/],["Kết cấu thép",/ket cau thep|khung thep|gia cong|lap dung|xa go|thep hinh|thep hop|thep tam/],["Cốp pha",/cop pha|van khuon/],["Cốt thép",/cot thep|\bthep\b/],["Chống thấm",/chong tham/],["Bê tông",/be tong/],["Xây",/\bxay\b/],["Trát, láng",/\btrat\b|\blang\b/],["Ốp lát",/\bop\b|\blat\b/],["Sơn, bả",/\bson\b|\bba\b|ma tit/],["Lợp mái, bao che",/\bton\b|lop mai|bao che|mang xoi|\bseno\b/],["Trần, vách",/\btran\b|\bvach\b|thach cao/],["Cửa",/\bcua\b/],["PCCC",/pccc|chua chay|bao chay|sprinkler|binh chua|hong nuoc|hydrant/],["Điện",/\bdien\b|\bcap\b|\bden\b|o cam|cong tac|aptomat|\bmcb\b|tu dien|chieu sang/],["Cấp thoát nước",/\bong\b|cap nuoc|thoat nuoc|\bnuoc\b|ho ga|be phot|thiet bi ve sinh/]];
+const PKT={v:["Gói vật tư","Vật tư cần mua, bóc từ các dòng BOQ (phần vật liệu), gộp theo loại và mác ở mọi hạng mục",["ncc","thau_phu"]],n:["Gói thầu phụ – tổ đội","Phần thi công (nhân công) của các dòng BOQ, gộp theo loại công việc để giao thầu phụ hoặc tổ đội",["thau_phu","nhan_cong"]]};
+/* Đơn giá báo giá cho phần vật tư (v) hoặc nhân công (n) của một dòng BOQ */
+function pkPrice(q,c,t){const x=qFind(q,c);if(!x)return null;const pr=qPrice(q,x.it,x.l);if(!pr)return null;
+  return t==="v"?(pr.v!=null?pr.v:q.kind==="ncc"?pr.t:null):(pr.n!=null?pr.n:q.kind==="nhan_cong"?pr.t:null)}
+function pkBuild(p){const O=p.pk||{},MV=O.mv||{},NM=O.nm||{},G={v:new Map(),n:new Map()};
+  p.hms.forEach(h=>h.lines.forEach(l=>{const q=l.qty||0;if(!q||!l.code)return;const cc=lineCost(p,l);let uv=l.uVL!=null?l.uVL:l.vl!=null?l.vl/q:null,un=l.uNC!=null?l.uNC:l.nc!=null?l.nc/q:null;if(uv==null&&un==null){uv=(l.total||0)/q;un=0}
+    [["v",uv||0,cc.v],["n",un||0,cc.n]].forEach(([t,cu,gv])=>{if(!(cu>0||gv>0))return;let key,name;
+      if(MV[l.code+"|"+t]){key=MV[l.code+"|"+t];name=key.split("|").slice(1).join("|")}
+      else if(t==="v"){const m=qMain({l,unit:l.unit});key="v:"+m.k;name=m.n}
+      else{const z=BOQ.nz((l.name||"")+" "+(l.spec||"")),w=PKW.find(r=>r[1].test(z));name=w?w[0]:"Khác · "+tcase(l.g1||h.name);key="n:"+name}
+      const M=G[t];if(!M.has(key))M.set(key,{key,t,name:NM[key]||name,auto:name,lines:[],units:new Set(),kl:0,tg:0,tb:0});const g=M.get(key);
+      g.lines.push({c:l.code,l,h,q,cu,gv});g.units.add(l.unit||"");g.kl+=q;g.tg+=gv;g.tb+=cu*q})}));
+  const S=["v","n"].map(t=>[...G[t].values()].sort((a,b)=>b.tg-a.tg));
+  S.forEach(L=>L.forEach(g=>{g.unit=g.units.size===1?[...g.units][0]:"";g.lines.sort((a,b)=>a.c.localeCompare(b.c,"vi",{numeric:true}))}));return{v:S[0],n:S[1]}}
+/* Các báo giá đã có cho một gói: số dòng phủ được, thành tiền */
+function pkOffers(p,g){return(p.quotes||[]).filter(q=>PKT[g.t][2].includes(q.kind)).map(q=>{let n=0,tn=0,tg=0;g.lines.forEach(x=>{const v=pkPrice(q,x.c,g.t);if(v==null)return;n++;tn+=v*x.q;tg+=x.gv});return{q,n,tn,tg,full:n===g.lines.length}}).filter(o=>o.n)}
+function pkView(p){const P=pkBuild(p),sel=p.pksel||{},neg=v=>v<0?' style="color:#C0141B"':"",pc=(a,b)=>b?(a<0?"("+fm(-a/b*100,1)+"%)":fm(a/b*100,1)+"%"):"-";let all={tg:0,tb:0,tn:0,tgs:0};
+  const sec=t=>{const L=P[t];if(!L.length)return card(PKT[t][0],PKT[t][1],`<span class="sub">Chưa có dòng BOQ nào</span>`,"span3");let T={tg:0,tb:0,tn:0,tgs:0,ns:0};
+    const opts=g=>`<option value="__new">+ Gói mới…</option>`+P[t].filter(x=>x.key!==g.key).map(x=>`<option value="${esc(x.key)}">${esc(x.name)}</option>`).join("");
+    const body=L.map((g,gi)=>{const O=pkOffers(p,g),fo=O.filter(o=>o.full),best=fo.length>1?fo.reduce((a,b)=>b.tn<a.tn?b:a):null,sq=O.find(o=>o.q.id===sel[g.key]),open=QX.has("pk:"+g.key);
+      T.tg+=g.tg;T.tb+=g.tb;if(sq){T.tn+=sq.tn;T.tgs+=sq.tg;T.ns++}
+      return`<tr class="qcg"><td class="olc"><button type="button" class="olb" data-pkx="${esc(g.key)}" title="${open?"Thu gọn":"Mở chi tiết"}">${open?"−":"+"}</button></td><td class="tc">${gi+1}</td><td style="min-width:230px"><input class="fi pkn" data-pkn="${esc(g.key)}" value="${esc(g.name)}" title="Sửa tên gói${g.name!==g.auto?" · tự nhận diện: "+esc(g.auto):""}"><span class="sub">${g.lines.length} dòng BOQ · ${new Set(g.lines.map(x=>x.h.code)).size} hạng mục</span></td><td class="tc">${esc(g.unit)}</td><td class="r">${g.unit?nq(g.kl):"-"}</td>
+        <td class="r">${g.unit&&g.kl?n0(g.tg/g.kl):"-"}</td><td class="r"><b>${n0(g.tg)}</b></td><td class="r">${n0(g.tb)}</td>
+        <td style="max-width:220px;min-width:170px">${O.length?O.map(o=>`<small class="spec">${o===best?"🟢 ":""}${esc(o.q.vendor)} · ${n0(o.tn)}${o.full?"":` (${o.n}/${g.lines.length} dòng)`}</small>`).join(""):`<span class="sub">Chưa có báo giá</span>`}</td>
+        <td><select class="fi sel" data-pkq="${esc(g.key)}"${O.length?"":" disabled"}><option value="">— Chưa chọn —</option>${O.map(o=>`<option value="${o.q.id}"${sq===o?" selected":""}>${esc(o.q.vendor)}${o===best?" (rẻ nhất)":""}</option>`).join("")}</select></td>
+        <td class="r">${sq?`<b>${n0(sq.tn)}</b>${sq.full?"":`<small class="spec">${sq.n}/${g.lines.length} dòng</small>`}`:"-"}</td><td class="r"${sq?neg(sq.tg-sq.tn):""}>${sq?n0(sq.tg-sq.tn):"-"}</td><td class="r"${sq?neg(sq.tg-sq.tn):""}>${sq?pc(sq.tg-sq.tn,sq.tg):"-"}</td></tr>`+
+        g.lines.map((x,i)=>{const v=sq?pkPrice(sq.q,x.c,t):null;return`<tr class="qcd2" data-pkg="${esc(g.key)}"${open?"":" hidden"}><td class="olc"><i class="oll${i===g.lines.length-1?" end":""}"></i></td><td></td><td style="padding-left:14px"><span class="num" style="color:var(--muted)">${esc(x.c)}</span> · ${esc(x.h.name)}<small class="spec">${esc(x.l.name)}${x.l.spec?" · "+esc(x.l.spec):""}</small></td><td class="tc">${esc(x.l.unit||"")}</td><td class="r">${nq(x.q)}</td><td class="r">${n0(x.gv/x.q)}</td><td class="r">${n0(x.gv)}</td><td class="r">${n0(x.cu*x.q)}</td><td></td>
+          <td><select class="fi sel pkmv" data-pkmv="${esc(x.c+"|"+t)}" aria-label="Chuyển sang gói khác"><option value="">Chuyển sang gói…</option>${opts(g)}</select></td><td class="r">${v!=null?n0(v*x.q):"-"}</td><td></td><td></td></tr>`}).join("")}).join("");
+    all.tg+=T.tg;all.tb+=T.tb;all.tn+=T.tn;all.tgs+=T.tgs;
+    return card(`${PKT[t][0]} · ${L.length} gói`,PKT[t][1]+` · đã chọn ${T.ns}/${L.length} gói`,`<div class="tw bsw"><table class="t qt qt2 pkt"><thead><tr><th class="olh" title="Mức 1: chỉ gói · mức 2: mở hết dòng BOQ"><button type="button" data-pklv="1">1</button><button type="button" data-pklv="2">2</button></th><th>STT</th><th>Gói thầu</th><th>ĐVT</th><th>Khối lượng</th><th class="hg-b">Đơn giá gốc</th><th class="hg-b">Thành tiền gốc</th><th class="hg-a">Thành tiền BOQ</th><th>Báo giá đã có</th><th class="hg-c">Chọn đơn vị</th><th class="hg-c">Thành tiền theo báo giá</th><th class="hg-c">Lời/lỗ so gốc</th><th class="hg-c">%</th></tr></thead>
+      <tbody>${body}</tbody><tfoot><tr><td></td><td></td><td colspan="4"><b>Tổng cộng ${L.length} gói</b></td><td class="r"><b>${n0(T.tg)}</b></td><td class="r"><b>${n0(T.tb)}</b></td><td></td><td></td><td class="r"><b>${T.ns?n0(T.tn):"-"}</b></td><td class="r"${neg(T.tgs-T.tn)}><b>${T.ns?n0(T.tgs-T.tn):"-"}</b></td><td class="r"${neg(T.tgs-T.tn)}><b>${T.ns?pc(T.tgs-T.tn,T.tgs):"-"}</b></td></tr></tfoot></table></div>`,"span3")};
+  const html=sec("v")+sec("n");const nq0=(p.quotes||[]).length;
+  return`<div class="vgrid">${card("Phân chia gói thầu","Tự bóc từ BOQ: mỗi dòng BOQ tách phần vật tư (đi mua) và phần thi công (giao thầu phụ, tổ đội) · sửa được tên gói, chuyển dòng sang gói khác · chọn báo giá của đơn vị cho từng gói, giá vốn chỉ đổi khi anh duyệt ở Hộp quyết định",`<div class="bh" style="flex-wrap:wrap;gap:10px"><span class="sub">${nq0?`Đang có ${nq0} báo giá · tải thêm báo giá ở sheet Báo giá`:"Chưa có báo giá nào · tải báo giá ở sheet Báo giá, hệ thống tự ghép vào gói"}</span><button class="back sm" style="margin:0" data-go="da-${p.id}-bg">Sang sheet Báo giá →</button>${Object.keys(sel).length?`<button class="back sm" style="margin:0" id="qsend">Gửi đề xuất chốt giá vốn</button>`:""}</div>`,"span3")}${html}</div>`}
+/* Chọn báo giá cho cả gói: ghi lựa chọn từng dòng BOQ, phần vật tư (#v) hoặc thi công (#n) */
+function pkPick(p,key,qid){const P=pkBuild(p),g=[...P.v,...P.n].find(x=>x.key===key);if(!g)return;const S={...(p.qsel||{})},q=(p.quotes||[]).find(x=>x.id===qid);p.pksel={...(p.pksel||{})};
+  g.lines.forEach(x=>{delete S[x.c+"#"+g.t];if(q&&pkPrice(q,x.c,g.t)!=null){S[x.c+"#"+g.t]=q.id;if(S[x.c])delete S[x.c]}});
+  if(q)p.pksel[key]=q.id;else delete p.pksel[key];p.qsel=S}
 function quoteView(p){if(QV&&QV.pid===p.id)return qReview(p);const Q=p.quotes||[],sel=p.qsel||{};
   const hmOf=c=>c.split(/[.|]/)[0],codes=qCodes(Q),HM=[...new Set(codes.map(hmOf))].sort(),R=codes.filter(c=>!qHm||hmOf(c)===qHm).map(c=>{const kinds=new Set(Q.filter(q=>qFind(q,c)).map(q=>q.kind));return{c,kinds}}).sort((a,b)=>a.c.localeCompare(b.c,"vi",{numeric:true}));
   const QQ=Q.filter(q=>R.some(r=>qFind(q,r.c)));
@@ -1871,15 +1911,16 @@ function quoteView(p){if(QV&&QV.pid===p.id)return qReview(p);const Q=p.quotes||[
   ${qPackView(p)}
   ${Q.length?card("So sánh báo giá theo đầu mục BOQ","Khối lượng BOQ tổng · giá chủ đầu tư · giá gốc · từng nhà cung cấp",cmp,"span3"):""}</div>`}
 /* Chênh giá vốn nếu áp các lựa chọn */
-function qDelta(p){let d=0;Object.entries(p.qsel||{}).forEach(([c,qid])=>{const q=(p.quotes||[]).find(x=>x.id===qid),x=q&&qFind(q,c);if(!x)return;const pr=qPrice(q,x.it,x.l);
+function qDelta(p){let d=0;Object.entries(p.qsel||{}).forEach(([k,qid])=>{const [c,pt]=k.split("#"),q=(p.quotes||[]).find(x=>x.id===qid),x=q&&qFind(q,c);if(!x)return;const pr=qPrice(q,x.it,x.l);
   if(c.includes("|")){const b=qBase(p,c,"thau_phu");if(b&&pr.t!=null)d+=pr.t-b.gv;return}
-  const y=qLine(p,c);if(!y)return;const qty=y.l.qty||0,cc=lineCost(p,y.l),cur={v:qty?cc.v/qty:0,n:qty?cc.n/qty:0},nw=qNew(q,pr,cur);d+=((nw.v+nw.n)-(cur.v+cur.n))*qty});return d}
+  const y=qLine(p,c);if(!y)return;const qty=y.l.qty||0,cc=lineCost(p,y.l),cur={v:qty?cc.v/qty:0,n:qty?cc.n/qty:0},nw=pt?pkNew(q,c,pt,cur):qNew(q,pr,cur);d+=((nw.v+nw.n)-(cur.v+cur.n))*qty});return d}
+const pkNew=(q,c,pt,cur)=>{const v=pkPrice(q,c,pt);return pt==="v"?{v:v!=null?v:cur.v,n:cur.n}:{v:cur.v,n:v!=null?v:cur.n}};
 const qNew=(q,pr,cur)=>q.kind==="ncc"?{v:pr.v!=null?pr.v:pr.t,n:cur.n}:q.kind==="nhan_cong"?{v:cur.v,n:pr.n!=null?pr.n:pr.t}:pr.v!=null||pr.n!=null?{v:pr.v||0,n:pr.n||0}:{v:pr.t,n:0};
 /* Áp lựa chọn vào giá vốn (khi anh duyệt trong Hộp quyết định) */
-function qApply(p){const pay=[];Object.entries(p.qsel||{}).forEach(([c,qid])=>{const q=(p.quotes||[]).find(x=>x.id===qid),x=q&&qFind(q,c);if(!x)return;const pr=qPrice(q,x.it,x.l);
+function qApply(p){const pay=[];Object.entries(p.qsel||{}).forEach(([k,qid])=>{const [c,pt]=k.split("#"),q=(p.quotes||[]).find(x=>x.id===qid),x=q&&qFind(q,c);if(!x)return;const pr=qPrice(q,x.it,x.l);
   if(c.includes("|")){const [hc,g]=c.split("|"),h=p.hms.find(y=>y.code===hc),L=h?h.lines.filter(l=>(l.g1||"")===g):[],tot=L.reduce((a,l)=>a+lineCost(p,l).t,0);if(!tot||pr.t==null)return;const k=pr.t/tot;
     L.forEach(l=>{const cc=lineCost(p,l),qq=l.qty||0;if(!qq)return;p.cost[l.code]={v:cc.v/qq*k,n:cc.n/qq*k,src:"q:"+q.id}});pay.push([q,pr.t]);return}
-  const y=qLine(p,c);if(!y)return;const qty=y.l.qty||0,cc=lineCost(p,y.l),nw=qNew(q,pr,{v:qty?cc.v/qty:0,n:qty?cc.n/qty:0}),old=p.cost[c]||{};p.cost[c]={...old,v:nw.v,n:nw.n,src:"q:"+q.id};pay.push([q,(nw.v+nw.n)*qty]);
+  const y=qLine(p,c);if(!y)return;const qty=y.l.qty||0,cc=lineCost(p,y.l),nw=pt?pkNew(q,c,pt,{v:qty?cc.v/qty:0,n:qty?cc.n/qty:0}):qNew(q,pr,{v:qty?cc.v/qty:0,n:qty?cc.n/qty:0}),old=p.cost[c]||{};p.cost[c]={...old,v:nw.v,n:nw.n,src:"q:"+q.id};pay.push([q,(nw.v+nw.n)*qty]);
   if(q.deliDays>0){const t=BOQ.nz(y.l.name+" "+(y.l.spec||"")),u=BOQ.nz(y.l.unit).replace("²","2").replace("³","3").replace("kg","tan"),r=MR.find(m=>m[1].test(t)&&m[2].test(u));if(r){(p.leads=p.leads||{})[r[0]]=q.deliDays}}});
   /* Thời hạn trả nhà cung cấp trong dòng tiền = trung bình theo giá trị các báo giá được chọn */
   const w=pay.filter(([q])=>q.payDays!=null);if(w.length){const s=w.reduce((a,[q,v])=>a+Math.abs(v),0)||1;p.terms={...p.terms,cost:Math.round(w.reduce((a,[q,v])=>a+q.payDays*Math.abs(v),0)/s)}}
@@ -1979,7 +2020,7 @@ function ctFlow(p,file){let w=document.getElementById("fview");if(w)w.remove();w
 /* File trong thư mục 01.3 để chọn đọc lại */
 function ctFilesLoad(){if(!cur||!document.getElementById("ctsel"))return;const p=DB.projects.find(x=>x.id===cur.id);if(!p||p._files13!==undefined)return;p._files13=[];
   FS.list(p.id).then(L=>{p._files13=L.map(x=>({...x,folder:nf(x.folder)})).filter(x=>x.folder==="01.3"&&ctOk(x.name)&&!x.wait);if(document.getElementById("ctsel"))keep(route)}).catch(()=>{})}
-function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="week")return weekView(p);const c=calc(p),mg=pct(c.gp,c.rev);
+function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="goi")return pkView(p);if(s==="week")return weekView(p);const c=calc(p),mg=pct(c.gp,c.rev);
   const k3=kc("proj","Giá trị hợp đồng",ty(c.rev),"tỷ",`Chưa VAT · hồ sơ ${esc(p.qcode||"")} ngày ${esc(p.date||"")}`)+kc("cost","Giá vốn dự thầu",ty(c.cost),"tỷ",`Vật tư ${ty(c.cv)} · nhân công ${ty(c.cn)} · máy ${ty(c.cm)} tỷ`,"gv")+kc(mg>=10?"rev":"mat","Lãi gộp dự kiến",ty(c.gp),"tỷ",`Biên lãi ${fm(mg)}% doanh thu`,"lg");
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
     return `<div class="vgrid">${k3}${WXBOX}
@@ -2596,6 +2637,11 @@ const qParse=v=>{v=String(v||"").trim();if(!v)return null;const c=v.split(" · "
 view.addEventListener("change",async e=>{const t=e.target;if(!cur)return;const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;
   if(t.id==="qup"&&t.files.length){const F=[...t.files];t.value="";let G;try{G=await Promise.all(F.map(async f=>new File([await f.arrayBuffer()],f.name,{type:f.type})))}catch(er){qMsg="Không đọc được file, nếu đang mở trong Excel anh đóng lại rồi chọn lại";qRe();return}qAnalyze(p,G,true);return}
   if(t.id==="qhm"){qHm=t.value;qRe();return}
+  if(t.dataset.pkq!==undefined){pkPick(p,t.dataset.pkq,t.value);persist();qRe();return}
+  if(t.dataset.pkn!==undefined){const k=t.dataset.pkn,v=t.value.trim(),O=p.pk={...(p.pk||{})};O.nm={...(O.nm||{})};const au=[...pkBuild(p).v,...pkBuild(p).n].find(x=>x.key===k);if(v&&au&&v!==au.auto){O.nm[k]=v;aiRule("baogia",`Gói thầu "${au.auto}" anh đặt tên là "${v}"`)}else delete O.nm[k];persist();qRe();return}
+  if(t.dataset.pkmv!==undefined&&t.value){const [c,tp]=t.dataset.pkmv.split("|");let k=t.value;if(k==="__new"){const n=(prompt("Tên gói mới")||"").trim();if(!n){t.value="";return}k=tp+":u|"+n}const O=p.pk={...(p.pk||{})};O.mv={...(O.mv||{}),[c+"|"+tp]:k};
+    const old=[...pkBuild(p).v,...pkBuild(p).n].find(g=>g.key===k);const x=qLine(p,c);if(x)aiRule("baogia",`Dòng BOQ "${x.l.name}${x.l.spec?" · "+x.l.spec:""}" (phần ${tp==="v"?"vật tư":"thi công"}) thuộc gói "${old?old.name:k.split("|").slice(1).join("|")}"`);
+    Object.keys(p.pksel||{}).forEach(g=>pkPick(p,g,p.pksel[g]));persist();qRe();return}
   if(t.dataset.ms!==undefined&&p.contract&&p.contract.ms){const [i,f]=t.dataset.ms.split("|"),m=p.contract.ms[+i],v=parseVN(t.value);if(m&&v!=null&&v>=0){const old=f==="prog"?m.prog||m.progress_percent:f==="percent"?m.percent:m.days_after;if(f==="prog")m.prog=Math.min(100,v);else if(f==="percent")m.percent=Math.min(100,v);else m.days_after=Math.min(365,v);persist();
     if(old!==v)aiRule("hopdong",`Đợt thanh toán "${m.name}" (${m.condition.slice(0,120)}): ${f==="prog"?"đạt khi khối lượng hoàn thành":f==="percent"?"tỷ lệ thanh toán":"số ngày chủ đầu tư trả"} đúng là ${v}${f==="days_after"?" ngày":" %"}`)}qRe();return}
   if(t.dataset.qcat!==undefined){const q=(p.quotes||[]).find(x=>x.id===t.dataset.qcat);if(q){const v=t.value.trim(),au=qInfo(p,q).auto;if(v&&v!==au){q.cat=v;aiRule("baogia",`Báo giá kiểu "${q.items.slice(0,3).map(i=>i.name).join("; ")}" thuộc gói "${v}" (không phải "${au}")`)}else delete q.cat;persist();qRe()}return}
@@ -2620,6 +2666,8 @@ view.addEventListener("click",async e=>{const t=e.target;if(!cur)return;const p=
   if(t.closest("#qfa")){const s=document.getElementById("qfs"),o=s&&s.selectedOptions[0];if(!o||!o.value)return;const m=document.getElementById("qmsg");if(m)m.textContent="Đang tải file từ thư mục dự án…";
     try{const b=await FS.blob(o.value);qAnalyze(p,new File([b],o.dataset.n,{type:b.type}),false)}catch(er){if(m){m.textContent=er.message;m.style.color="#C0141B"}}return}
   const qlv=t.closest("[data-qlv]");if(qlv){const on=qlv.dataset.qlv==="2";view.querySelectorAll("[data-qcx]").forEach(x=>qOut(x,on));return}
+  const pkx=t.closest("[data-pkx]");if(pkx){const k=pkx.dataset.pkx,on=!QX.has("pk:"+k);on?QX.add("pk:"+k):QX.delete("pk:"+k);pkx.textContent=on?"−":"+";pkx.closest("tbody").querySelectorAll("tr[data-pkg]").forEach(r=>{if(r.dataset.pkg===k)r.hidden=!on});return}
+  const pkl=t.closest("[data-pklv]");if(pkl){const on=pkl.dataset.pklv==="2";pkl.closest("table").querySelectorAll("[data-pkx]").forEach(b=>{const k=b.dataset.pkx;on?QX.add("pk:"+k):QX.delete("pk:"+k);b.textContent=on?"−":"+"});pkl.closest("table").querySelectorAll("tr[data-pkg]").forEach(r=>r.hidden=!on);return}
   const qcx=t.closest("[data-qcx]");if(qcx){qOut(qcx,!QX.has("cmp:"+qcx.dataset.qcx));return}
   const qe=t.closest("[data-qexp]");if(qe&&QV){const i=+qe.dataset.qexp;QX.has(i)?QX.delete(i):QX.add(i);qRe();return}
   const qo=t.closest("[data-qok]");if(qo&&QV){const v=qo.dataset.qok,i=+v.split("|")[0],c=v.slice(v.indexOf("|")+1),it=QV.q.items[i];it.links=qL(it).map(l=>l.c===c?{...l,conf:1,how:"anh xác nhận"}:l);delete it.code;qLearn(p,it,c,true);qRe();return}
@@ -2633,7 +2681,7 @@ view.addEventListener("click",async e=>{const t=e.target;if(!cur)return;const p=
     const clean=x=>x.items.forEach(it=>{const L=qL(it),ok=l=>(l.conf==null?1:l.conf)>=.6;it.links=L.filter(ok);if(L.some(l=>!ok(l)))it.pend=L.filter(l=>!ok(l));else delete it.pend;delete it.code;delete it.f;delete it.conf;delete it.how;delete it.cands});
     clean(q);p.quotes=[...(p.quotes||[]).filter(x=>x.id!==q.id),q];
     /* Lựa chọn cũ trỏ tới dòng không còn trong báo giá thì bỏ */
-    Object.entries(p.qsel||{}).forEach(([c,id])=>{if(id===q.id&&!qFind(q,c))delete p.qsel[c]});
+    Object.entries(p.qsel||{}).forEach(([k,id])=>{if(id===q.id&&!qFind(q,k.split("#")[0]))delete p.qsel[k]});
     const f=QV.file;qMsg=`Đã lưu báo giá ${q.vendor} · ${q.items.length} dòng giá, áp cho ${qCodes([q]).length} dòng BOQ`;
     if(f){q.dname=stdName(p.id,f.name);keepFile(p.id,QFOLDER[q.kind]||"05.1",f,"File báo giá").catch(()=>{})}
     /* Lưu luôn các báo giá còn lại theo kết quả ghép tự động */
