@@ -28,7 +28,9 @@ async function candidates(env: any, kind: string) {
   const L = await listModels(env), pro = L.filter(n => /pro/.test(n)), fl = L.filter(n => /flash/.test(n) && !/lite/.test(n)), lite = L.filter(n => /lite/.test(n));
   const fix = [kind === "pro" ? env.PRO : "", env.FLASH].filter(Boolean);
   const usePro = kind === "pro" && Date.now() - proBlocked > 3600000;
-  return [...new Set([...fix, ...(usePro ? pro.slice(0, 1) : []), ...fl.slice(0, 3), ...lite.slice(0, 1)])];
+  // Thêm một bản flash ổn định đời cũ (ít người dùng, ít bị quá tải) làm dự phòng
+  const old = fl.filter(n => !/preview/.test(n) && ver(n) < ver(fl[0] || "")).slice(0, 1);
+  return [...new Set([...fix, ...(usePro ? pro.slice(0, 1) : []), ...fl.slice(0, 2), ...old, ...lite.slice(0, 1)])];
 }
 const upperSchema = (s: any): any => {
   if (Array.isArray(s)) return s.map(upperSchema);
@@ -42,35 +44,44 @@ const upperSchema = (s: any): any => {
   return o;
 };
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+/* Supabase cắt hàm sau ~150 giây: giữ tổng thời gian dưới 120 giây, mẫu nào quá tải thì chuyển ngay sang mẫu khác */
 async function gemini(env: any, { system, parts, schema, kind = "flash" }: any) {
-  const C = await candidates(env, kind);
+  const C = await candidates(env, kind), end = Date.now() + 120000;
   if (!C.length) throw new Error("gemini_no_model");
   let last = "gemini_unknown";
-  for (const model of C) {
+  for (let ci = 0; ci < C.length; ci++) {
+    const model = C[ci], isLast = ci === C.length - 1;
+    if (end - Date.now() < 15000) break;
     const call = (gen: any) => fetch(`${GA}/models/${model}:generateContent`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": env.KEY },
+      signal: AbortSignal.timeout(Math.max(5000, end - Date.now())),
       body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature: 0, responseMimeType: "application/json", ...gen } })
     });
-    // Khuôn JSON: thử kiểu mới (responseJsonSchema), không được thì kiểu cũ (responseSchema), cuối cùng chỉ yêu cầu JSON
+    // Suy nghĩ ít (nhanh, rẻ hơn); mẫu không nhận tham số nào thì bỏ dần: khuôn mới → khuôn cũ → chỉ JSON
+    const think = ver(model) >= 3 ? { thinkingConfig: { thinkingLevel: "low" } } : { thinkingConfig: { thinkingBudget: 0 } };
     const run = async () => {
-      let r = await call({ responseJsonSchema: schema });
+      let r = await call({ responseJsonSchema: schema, ...think });
+      if (r.status === 400) r = await call({ responseJsonSchema: schema });
       if (r.status === 400) r = await call({ responseSchema: upperSchema(schema) });
       if (r.status === 400) r = await call({});
       return r;
     };
-    let r = await run();
-    // Quá tải (503/500) hoặc giới hạn mỗi phút (429 có retryDelay ngắn): chờ rồi thử lại tối đa 2 lần trên cùng mẫu
+    let r: Response;
+    try { r = await run(); } catch (e) { last = "gemini_503"; console.error("gemini", model, "timeout", String(e).slice(0, 100)); continue; }
+    // 429 có hẹn chờ ngắn: chờ rồi thử lại; 503/500: chỉ thử lại trên mẫu cuối cùng, còn lại chuyển mẫu khác ngay
     for (let k = 0; k < 2 && [429, 500, 503].includes(r.status); k++) {
       const t = await r.text();
-      console.error("gemini", model, r.status, t.replace(/\s+/g, " ").slice(0, 400));
+      console.error("gemini", model, r.status, t.replace(/\s+/g, " ").slice(0, 300));
+      let w = 0;
       if (r.status === 429) {
-        if (/limit: 0/.test(t)) { if (/pro/.test(model)) proBlocked = Date.now(); break; } // khoá không có lượt cho mẫu này
-        const m = t.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/), w = m ? parseFloat(m[1]) : 0;
-        if (!(w > 0 && w <= 30)) break;
-        await sleep(w * 1000 + 500);
-      } else await sleep(k ? 6000 : 2500);
-      r = await run();
+        if (/limit: 0/.test(t)) { if (/pro/.test(model)) proBlocked = Date.now(); break; }
+        const m = t.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/); w = m ? parseFloat(m[1]) * 1000 + 500 : 0;
+        if (!(w > 0 && w <= 30500)) break;
+      } else { if (!isLast) break; w = k ? 6000 : 2500; }
+      if (end - Date.now() < w + 20000) break;
+      await sleep(w);
+      try { r = await run(); } catch { break; }
     }
     if (r.ok) {
       const j = await r.json();
@@ -78,9 +89,9 @@ async function gemini(env: any, { system, parts, schema, kind = "flash" }: any) 
       if (!text) { last = "gemini_empty_" + ((j.candidates || [])[0]?.finishReason || "none"); continue; }
       try { return { data: JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "")), model }; } catch { last = "gemini_badjson"; continue; }
     }
-    if (!r.bodyUsed) console.error("gemini", model, r.status, (await r.text()).replace(/\s+/g, " ").slice(0, 400));
+    if (!r.bodyUsed) console.error("gemini", model, r.status, (await r.text()).replace(/\s+/g, " ").slice(0, 300));
     last = "gemini_" + r.status;
-    if (r.status === 400 || r.status === 401) break; // khoá sai: đổi mẫu cũng không được
+    if (r.status === 400 || r.status === 401 || r.status === 403) break; // khoá sai: đổi mẫu cũng không được
   }
   throw new Error(last);
 }
@@ -233,7 +244,7 @@ Deno.serve(async (req) => {
       const parts: any[] = [];
       if (b.doc && b.doc.mime && typeof b.doc.data === "string") parts.push({ inline_data: { mime_type: b.doc.mime, data: b.doc.data } });
       parts.push({ text: `Tên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung bảng tính:\n${b.text.slice(0, 400000)}` : "") });
-      const { data, model } = await gemini(env, { system: SYS_EXTRACT, parts, schema: QUOTE, kind: "pro" });
+      const { data, model } = await gemini(env, { system: SYS_EXTRACT, parts, schema: QUOTE, kind: env.PRO ? "pro" : "flash" });
       return json({ ...data, model });
     }
     if (b.action === "match") {
