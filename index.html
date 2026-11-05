@@ -1575,8 +1575,9 @@ function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(
   const phName=(i,title)=>{const r=rows[i],f=files[i],nm=r&&r.querySelector(".nm"),d=r&&r.querySelector(".fdate");if(!nm||r.dataset.nmman)return;const day=d&&d.value?d.value.replace(/-/g,""):"";if(!idName(f.name)){nm.value=stdName(p.id,(day?day+"_":"")+f.name);return}nm.value=stdName(p.id,(day?day+"_":"")+(title||r.dataset.tt||"Anh hien truong")+"_"+String(i+1).padStart(2,"0")+ext(f.name))};
   rows.forEach((r,i)=>{r.querySelector(".nm").addEventListener("input",()=>{r.dataset.nmman=1});const d=r.querySelector(".fdate");if(!d)return;d.onchange=()=>{r.dataset.dman=1;phName(i)};
     exifDate(files[i]).then(x=>{if(x&&!d.value){d.value=x;r.dataset.dsrc="exif";phName(i)}})});okBtn.disabled=false;
-  const Q=files.map((f,i)=>i),go=async()=>{while(Q.length){const i=Q.shift();const v=await suggest(p,files[i]).catch(()=>({folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}));show(i,v)}};
-  const show=(i,v)=>{const f=files[i];if(saving||!rows[i])return;{const r=rows[i],sel=r.querySelector("select"),why=r.querySelector(".why"),nm=r.querySelector(".nm");
+  const Q=files.map((f,i)=>i),PEND=new Map(),ask=i=>{if(!PEND.has(i)){const k=Q.indexOf(i);if(k>=0)Q.splice(k,1);PEND.set(i,suggest(p,files[i]).catch(()=>({folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"})))}return PEND.get(i)},go=async()=>{while(Q.length){const i=Q[0];show(i,await ask(i))}};
+  const photoFix=(i,v)=>{const r=rows[i];if(!r)return;const fdt=r.querySelector(".fdate");if(!fdt)return;const pd=String((v&&v.photo_date)||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(pd&&!r.dataset.dman&&r.dataset.dsrc!=="exif"){fdt.value=pd[3]+"-"+pd[2].padStart(2,"0")+"-"+pd[1].padStart(2,"0");r.dataset.dsrc="anh"}if(v&&v.title)r.dataset.tt=v.title;phName(i,v&&v.title)};
+  const show=(i,v)=>{const f=files[i];if(!rows[i]||rows[i].dataset.done)return;if(saving){photoFix(i,v);return}{const r=rows[i],sel=r.querySelector("select"),why=r.querySelector(".why"),nm=r.querySelector(".nm");
     if(v.folder)v.folder=nf(v.folder);const ok=v.folder&&F.some(x=>x[0]===v.folder);if(ok)r.dataset.sug=v.folder;if(!r.dataset.man)sel.value=ok?v.folder:def;
     const fdt=r.querySelector(".fdate");if(fdt){const pd=String(v.photo_date||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(pd&&!r.dataset.dman&&r.dataset.dsrc!=="exif"){fdt.value=pd[3]+"-"+pd[2].padStart(2,"0")+"-"+pd[1].padStart(2,"0");r.dataset.dsrc="anh"}if(v.title)r.dataset.tt=v.title;phName(i,v.title)}
     else if(v.title&&GENERIC.test(noAcc(base(f.name)))&&nm.value===stdName(p.id,f.name))nm.value=stdName(p.id,v.title+ext(f.name));
@@ -1592,7 +1593,12 @@ function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(
   /* Lưu 3 file một lượt cho nhanh; từng dòng hiện trạng thái, file lỗi giữ lại để anh lưu lại */
   okBtn.onclick=async()=>{okBtn.disabled=true;saving=true;const fs=wrap.querySelector("#fsm");fs.style.color="";let n=0,w=0,last=null,err=null,k=0,done=0;const saved={};const todo=files.map((f,i)=>i).filter(i=>rows[i]),tot=todo.length;
     rows.forEach(r=>{if(r)r.querySelectorAll("select,input").forEach(x=>x.disabled=true)});
-    const one=async i=>{const f=files[i],r=rows[i],why=r.querySelector(".why"),folder=r.querySelector("select").value,fdv=(r.querySelector(".fdate")||{}).value||"",dest=folder+(/^\d{4}-\d{2}-\d{2}$/.test(fdv)?"/"+fdv:"");let nm=r.querySelector(".nm").value.trim()||f.name;if(!/\.[A-Za-z0-9]{1,8}$/.test(nm))nm+=ext(f.name);
+    const one=async i=>{const f=files[i],r=rows[i],why=r.querySelector(".why"),sl=r.querySelector("select");const fd0=r.querySelector(".fdate");
+      /* Bấm Lưu khi file chưa đọc xong: chờ kết quả đọc của chính file đó (tối đa 40 giây) để vào đúng thư mục, đúng ngày chụp */
+      if(fd0&&!fd0.value)await exifDate(f).then(x=>{if(x&&!fd0.value){fd0.value=x;r.dataset.dsrc="exif";phName(i)}});
+      if(!r.dataset.sug&&!r.dataset.man||fd0&&!fd0.value){why.classList.remove("dif");why.textContent=fd0?"⏳ Đang đọc ngày chụp trên ảnh…":"⏳ Đang đọc nội dung để chọn thư mục…";const v=await Promise.race([ask(i),new Promise(z=>setTimeout(()=>z(null),40000))]);
+        if(v){photoFix(i,v);const fv=v.folder&&nf(v.folder);if(fv&&!r.dataset.man&&F.some(x=>x[0]===fv)){sl.value=fv;r.dataset.sug=fv}}}
+      r.dataset.done=1;const folder=sl.value;const fdv=(fd0||{}).value||"",dest=folder+(/^\d{4}-\d{2}-\d{2}$/.test(fdv)?"/"+fdv:"");let nm=r.querySelector(".nm").value.trim()||f.name;if(!/\.[A-Za-z0-9]{1,8}$/.test(nm))nm+=ext(f.name);
       why.classList.remove("dif");why.textContent="⏳ Đang lưu…";
       try{if(await FS.upload(p.id,dest,new File([f],nm,{type:f.type}))==="wait")w++;n++;last=folder;saved[i]=folder;why.textContent="✓ Đã lưu";if(r.dataset.sug&&r.dataset.sug!==folder){const fn2=k=>{const z=DF.find(y=>y[0]===k);return k+" "+(z?z[1]:"")};aiRule("thumuc",`File "${f.name}": anh xếp vào ${fn2(folder)}, không phải ${fn2(r.dataset.sug)}`)}rows[i]=null;setTimeout(()=>r.remove(),400)}
       catch(er){err=er;why.textContent="✗ "+er.message;why.classList.add("dif");r.querySelectorAll("select,input").forEach(x=>x.disabled=false)}
