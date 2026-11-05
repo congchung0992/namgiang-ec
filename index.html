@@ -378,6 +378,10 @@ body.scroll main{height:auto;display:block}
 .sheets{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 8px;margin-bottom:4px}
 #flmsg:empty{display:none}
 .sheets::-webkit-scrollbar{display:none}
+.sublay{display:grid;grid-template-columns:196px minmax(0,1fr);gap:18px;align-items:start}.subc{min-width:0}
+.sheets.vert{flex-direction:column;gap:6px;overflow:visible;position:sticky;top:12px;padding:10px;margin:0;background:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:20px}
+.sheets.vert .pill{width:100%;justify-content:flex-start;margin:0;white-space:normal;text-align:left;line-height:1.25}
+@media (max-width:900px){.sublay{display:block}.sheets.vert{flex-direction:row;overflow-x:auto;position:static;background:none;border:0;padding:2px 2px 8px;margin-bottom:4px}.sheets.vert .pill{width:auto}}
 .vgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .span2{grid-column:span 2}.span3{grid-column:1 / -1}
 .kc{border-radius:26px;padding:20px 22px;color:#fff;position:relative;overflow:hidden;isolation:isolate;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;
@@ -1242,6 +1246,10 @@ function centerCols(root){(root||document).querySelectorAll("table.t").forEach(t
   [...tb.tHead.rows].forEach((tr,ri)=>{grid[ri]=grid[ri]||[];let ci=0;[...tr.cells].forEach(th=>{while(grid[ri][ci])ci++;const cs=th.colSpan||1,rs=th.rowSpan||1;for(let r=0;r<rs;r++)for(let c=0;c<cs;c++){grid[ri+r]=grid[ri+r]||[];grid[ri+r][ci+c]=1}
     const t=th.textContent.trim();if(cs===1&&/^(#|STT|TT|ĐVT|Đơn vị)$/i.test(t)){if(t==="#")th.textContent="STT";th.classList.add("tc");C.add(ci)}ci+=cs})});
   if(!C.size)return;[...tb.tBodies].forEach(b=>[...b.rows].forEach(tr=>{let ci=0;[...tr.cells].forEach(td=>{const cs=td.colSpan||1;if(cs===1&&C.has(ci))td.classList.add("tc");ci+=cs})}))})}
+/* Tab con (dự án, quản trị…) xếp thành cột dọc bên trái, nội dung bên phải cho đỡ tốn chiều cao */
+function subLay(v){const sh=[...v.children].find(x=>x.classList&&x.classList.contains("sheets"));if(!sh)return;const w=document.createElement("div");w.className="sublay";
+  const c=document.createElement("div");c.className="subc";let n=sh.nextSibling;while(n){const nx=n.nextSibling;c.appendChild(n);n=nx}
+  v.insertBefore(w,sh);sh.classList.add("vert");w.appendChild(sh);w.appendChild(c)}
 function dashZeros(root){centerCols(root);(root||document).querySelectorAll("table.t td").forEach(td=>{if(td.querySelector("input,select,button,svg,.mbar,.st"))return;const t=td.textContent.replace(/\u2060/g,"").trim();if(Z0.test(t)||t==="–"){const b=td.querySelector("b");if(b)b.textContent="-";else td.textContent="-"}})}
 const ty=v=>fm((+v||0)/1e9,2);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -2299,7 +2307,7 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
+  if(!isHome){view.innerHTML=html;subLay(view);dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad()}else{try{drawMap()}catch(e){console.error(e)}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
