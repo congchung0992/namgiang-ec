@@ -939,6 +939,8 @@ window.NGB=(function(){
     queue(db,cb){lastDb=db;onState=cb;dirty=true;clearTimeout(timer);timer=setTimeout(run,300)},
     async saveNow(db){lastDb=db;clearTimeout(timer);while(running)await new Promise(r=>setTimeout(r,100));try{await flush(db);dirty=false;toast("");return true}catch(e){toast("Chưa lưu được lên máy chủ, dữ liệu trên trình duyệt vẫn còn nguyên.");return false}}
   }})();
+/* Gọi Gemini (Edge Function "ai"); hàm nằm trong NGB.drive, gọi tắt NGB.ai */
+NGB.ai=b=>NGB.drive.ai(b);
 /* ===== Biểu tượng ===== */
 const I={
  home:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',
