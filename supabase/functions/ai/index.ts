@@ -1,105 +1,70 @@
 // Supabase Edge Function: ai
-// Gọi Gemini (Google) cho web: đọc báo giá (extract), ghép dòng với BOQ (match), gợi ý thư mục khi tải file (classify), kiểm tra khoá (ping).
-// Khoá Gemini do Ban giám đốc dán ở màn Quản trị, lưu trong bảng app_secrets (chỉ máy chủ đọc được, không trả về trình duyệt).
-// Có biến môi trường GEMINI_API_KEY thì ưu tiên biến đó. Người gọi phải đăng nhập.
+// Gọi Claude (Anthropic) cho web: đọc báo giá (extract), ghép dòng với BOQ (match, match_lines), gợi ý thư mục khi tải file (classify),
+// trợ lý chat (chat), kiểm tra khoá (ping). Khoá Claude do Ban giám đốc dán ở màn Quản trị, lưu trong bảng app_secrets
+// (chỉ máy chủ đọc được). Có biến môi trường ANTHROPIC_API_KEY thì ưu tiên biến đó. Người gọi phải đăng nhập.
+// Mỗi lượt ghi một dòng vào ai_usage để đo lường (việc, mẫu, token, thời gian, lỗi).
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import Anthropic from "npm:@anthropic-ai/sdk@1.5.0";
 
-const GA = "https://generativelanguage.googleapis.com/v1beta";
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type, apikey, x-client-info", "access-control-allow-methods": "POST, OPTIONS" };
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, "content-type": "application/json; charset=utf-8" } });
 
-/* ---------- Gemini: danh sách mẫu đang có, thử lần lượt; trả JSON theo khuôn ---------- */
-let models: string[] | null = null, proBlocked = 0;
-const ver = (n: string) => { const m = n.match(/gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
-async function listModels(env: any) {
-  if (models) return models;
-  const r = await fetch(`${GA}/models?pageSize=200`, { headers: { "x-goog-api-key": env.KEY } });
-  if (!r.ok) throw new Error("gemini_models_" + r.status);
-  models = ((await r.json()).models || [])
-    .filter((m: any) => (m.supportedGenerationMethods || []).includes("generateContent"))
-    .map((m: any) => m.name.replace(/^models\//, ""))
-    .filter((n: string) => /^gemini-/.test(n) && /pro|flash/.test(n) && !/image|tts|audio|live|embed|thinking|exp|learnlm|robotics|computer|nano/.test(n))
-    // Bản mới trước; cùng phiên bản thì bản chính thức trước bản thử (preview)
-    .sort((a: string, b: string) => ver(b) - ver(a) || (Number(/preview/.test(a)) - Number(/preview/.test(b))) || a.length - b.length);
-  return models!;
-}
-/* Thứ tự thử: đọc báo giá → pro (nếu khoá có lượt) rồi flash; việc nhẹ → flash; cuối cùng flash-lite */
-async function candidates(env: any, kind: string) {
-  const L = await listModels(env), pro = L.filter(n => /pro/.test(n)), fl = L.filter(n => /flash/.test(n) && !/lite/.test(n)), lite = L.filter(n => /lite/.test(n));
-  const fix = [kind === "pro" ? env.PRO : "", env.FLASH].filter(Boolean);
-  const usePro = kind === "pro" && Date.now() - proBlocked > 3600000;
-  // Thêm một bản flash ổn định đời cũ (ít người dùng, ít bị quá tải) làm dự phòng
-  const old = fl.filter(n => !/preview/.test(n) && ver(n) < ver(fl[0] || "")).slice(0, 1);
-  return [...new Set([...fix, ...(usePro ? pro.slice(0, 1) : []), ...fl.slice(0, 2), ...old, ...lite.slice(0, 1)])];
-}
-const upperSchema = (s: any): any => {
-  if (Array.isArray(s)) return s.map(upperSchema);
+/* Mẫu mặc định Claude Opus 5.5; Ban giám đốc đổi được ở màn Quản trị (lưu app_secrets "claude_model") */
+const MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"];
+/* Khuôn JSON cho structured outputs: mọi object phải có additionalProperties: false */
+const strictify = (s: any): any => {
+  if (Array.isArray(s)) return s.map(strictify);
   if (!s || typeof s !== "object") return s;
   const o: any = {};
-  for (const [k, v] of Object.entries(s)) {
-    if (k === "additionalProperties") continue;
-    if (k === "type") { const t = Array.isArray(v) ? v.find((x: string) => x !== "null") : v; o.type = String(t).toUpperCase(); if (Array.isArray(v) && v.includes("null")) o.nullable = true; }
-    else o[k] = upperSchema(v);
-  }
+  for (const [k, v] of Object.entries(s)) o[k] = strictify(v);
+  if (o.type === "object") o.additionalProperties = false;
   return o;
 };
-const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
-/* Supabase cắt hàm sau ~150 giây: giữ tổng thời gian dưới 120 giây, mẫu nào quá tải thì chuyển ngay sang mẫu khác */
-async function gemini(env: any, { system, parts, schema, kind = "flash", budget = 120000 }: any) {
-  const C = await candidates(env, kind), end = Date.now() + budget;
-  if (!C.length) throw new Error("gemini_no_model");
-  let last = "gemini_unknown";
-  for (let ci = 0; ci < C.length; ci++) {
-    const model = C[ci], isLast = ci === C.length - 1;
-    if (end - Date.now() < Math.min(15000, budget / 3)) break;
-    const call = (gen: any) => fetch(`${GA}/models/${model}:generateContent`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": env.KEY },
-      signal: AbortSignal.timeout(Math.max(5000, Math.min(end - Date.now(), isLast ? 120000 : 70000))), // một mẫu treo thì sau 70 giây chuyển mẫu khác
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature: 0, responseMimeType: "application/json", ...gen } })
-    });
-    // Suy nghĩ ít (nhanh, rẻ hơn); mẫu không nhận tham số nào thì bỏ dần: khuôn mới → khuôn cũ → chỉ JSON
-    const think = ver(model) >= 3 ? { thinkingConfig: { thinkingLevel: "low" } } : { thinkingConfig: { thinkingBudget: 0 } };
-    const run = async () => {
-      let r = await call({ responseJsonSchema: schema, ...think });
-      if (r.status === 400) r = await call({ responseJsonSchema: schema });
-      if (r.status === 400) r = await call({ responseSchema: upperSchema(schema) });
-      if (r.status === 400) r = await call({});
-      return r;
-    };
-    let r: Response;
-    try { r = await run(); } catch (e) { last = "gemini_503"; console.error("gemini", model, "timeout", String(e).slice(0, 100)); continue; }
-    // 429 có hẹn chờ ngắn: chờ rồi thử lại; 503/500: chỉ thử lại trên mẫu cuối cùng, còn lại chuyển mẫu khác ngay
-    for (let k = 0; k < 2 && [429, 500, 503].includes(r.status); k++) {
-      const t = await r.text();
-      console.error("gemini", model, r.status, t.replace(/\s+/g, " ").slice(0, 300));
-      let w = 0;
-      if (r.status === 429) {
-        if (/limit: 0/.test(t)) { if (/pro/.test(model)) proBlocked = Date.now(); break; }
-        const m = t.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/); w = m ? parseFloat(m[1]) * 1000 + 500 : 0;
-        if (!(w > 0 && w <= 30500)) break;
-      } else { if (!isLast) break; w = k ? 6000 : 2500; }
-      if (end - Date.now() < w + 20000) break;
-      await sleep(w);
-      try { r = await run(); } catch { break; }
-    }
-    if (r.ok) {
-      const j = await r.json();
-      const text = ((j.candidates || [])[0]?.content?.parts || []).map((p: any) => p.text || "").join("").trim();
-      if (!text) { last = "gemini_empty_" + ((j.candidates || [])[0]?.finishReason || "none"); continue; }
-      const u = j.usageMetadata || {};
-      if (env.M) { env.M.model = model; env.M.in += u.promptTokenCount || 0; env.M.out += (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0); }
-      try { return { data: JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "")), model }; } catch { last = "gemini_badjson"; continue; }
-    }
-    if (!r.bodyUsed) console.error("gemini", model, r.status, (await r.text()).replace(/\s+/g, " ").slice(0, 300));
-    last = "gemini_" + r.status;
-    if (r.status === 400 || r.status === 401 || r.status === 403) break; // khoá sai: đổi mẫu cũng không được
+class AiErr extends Error { constructor(public code: string, msg?: string) { super(msg || code); } }
+
+/* Một lượt gọi Claude, trả JSON theo khuôn. Stream để không bị cắt ở yêu cầu dài; tự chuyển mẫu dự phòng khi bị từ chối */
+async function claude(env: any, { system, content, schema, effort = "low", maxTokens = 16000 }: any) {
+  const model = env.MODEL;
+  const req: any = {
+    model, max_tokens: maxTokens, system,
+    messages: [{ role: "user", content }],
+    output_config: { effort, ...(schema ? { format: { type: "json_schema", schema: strictify(schema) } } : {}) },
+  };
+  // Haiku không có fallbacks phía máy chủ
+  if (model !== "claude-haiku-5-5") { req.betas = ["server-side-fallback-2026-07-01"]; req.fallbacks = "default"; }
+  let msg: any;
+  try { msg = await env.client.beta.messages.stream(req).finalMessage(); }
+  catch (e) {
+    if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) throw new AiErr("sai_khoa", String(e.message));
+    if (e instanceof Anthropic.RateLimitError) throw new AiErr("het_luot", String(e.message));
+    if (e instanceof Anthropic.BadRequestError) throw new AiErr(/credit|balance|billing/i.test(String(e.message)) ? "het_tien" : "ai_error", String(e.message));
+    if (e instanceof Anthropic.APIConnectionTimeoutError) throw new AiErr("qua_tai", "timeout");
+    if (e instanceof Anthropic.APIError) throw new AiErr((e.status || 0) >= 500 ? "qua_tai" : "ai_error", String(e.message));
+    throw e;
   }
-  throw new Error(last);
+  const u = msg.usage || {};
+  env.M.model = msg.model || model;
+  env.M.in += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
+  env.M.out += u.output_tokens || 0;
+  if (msg.stop_reason === "refusal") throw new AiErr("tu_choi", "refusal");
+  if (msg.stop_reason === "max_tokens") throw new AiErr("qua_dai", "max_tokens");
+  const text = (msg.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").trim();
+  if (!schema) return { text, model: env.M.model };
+  try { return { data: JSON.parse(text), model: env.M.model }; } catch { throw new AiErr("ai_error", "badjson"); }
 }
+/* File gửi lên: PDF → document, ảnh → image */
+const fileBlock = (mime: string, data: string) => mime === "application/pdf"
+  ? { type: "document", source: { type: "base64", media_type: "application/pdf", data } }
+  : /^image\/(jpeg|png|gif|webp)$/.test(mime) ? { type: "image", source: { type: "base64", media_type: mime, data } } : null;
+
+const SYS_CHAT = `Bạn là "Trợ lý Nam Giang", trợ lý quản lý dự án của Công ty CP Đầu tư và Xây lắp Nam Giang (tổng thầu xây dựng).
+Trả lời bằng tiếng Việt, ngắn gọn, đi thẳng vào số liệu. Số tiền viết kiểu Việt Nam (dấu chấm phân cách nghìn, dấu phẩy thập phân), dùng "tỷ" hoặc "triệu" cho dễ đọc; ngày dạng dd/mm/yyyy.
+Chỉ dựa vào dữ liệu trong phần NGỮ CẢNH. Nếu dữ liệu không có, nói rõ là chưa có và gợi ý cần nhập gì. Không bịa số.
+Nhắc khi con số dựa trên giả định (giá vốn ước tính, điều khoản thanh toán giả định, thời gian chờ vật tư mặc định).
+Có thể dùng gạch đầu dòng "- " và **in đậm**; không dùng bảng hay tiêu đề.`;
 
 /* ---------- Khuôn dữ liệu ---------- */
-const nul = (t: string) => ({ type: [t, "null"] });
+const nul = (t: string) => ({ anyOf: [{ type: t }, { type: "null" }] });
 const QUOTE = {
   type: "object",
   properties: {
@@ -216,7 +181,7 @@ const CLASSIFY = {
   additionalProperties: false
 };
 
-let keyCache: { v: string; at: number } | null = null;
+let keyCache: { v: string; m: string; at: number } | null = null;
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return json({ error: "bad_request" }, 405);
@@ -227,64 +192,73 @@ Deno.serve(async (req) => {
   if (whoErr || !who?.user) return json({ error: "auth" }, 401);
   let b: any;
   try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
-  // Khoá: biến môi trường, không có thì đọc bảng app_secrets (giữ 5 phút trong bộ nhớ)
-  let key = Deno.env.get("GEMINI_API_KEY") || "";
-  if (!key) {
-    if (keyCache && Date.now() - keyCache.at < 300000 && b.action !== "ping") key = keyCache.v;
-    else { const { data } = await admin.from("app_secrets").select("value").eq("name", "gemini").maybeSingle(); key = data?.value || ""; keyCache = { v: key, at: Date.now() }; models = null; }
+  // Khoá và mẫu: đọc bảng app_secrets (giữ 5 phút trong bộ nhớ; kiểm tra kết nối thì đọc lại ngay)
+  if (!keyCache || Date.now() - keyCache.at > 300000 || b.action === "ping") {
+    const { data } = await admin.from("app_secrets").select("name,value").in("name", ["claude", "claude_model"]);
+    const get = (n: string) => (data || []).find((x: any) => x.name === n)?.value || "";
+    keyCache = { v: get("claude"), m: get("claude_model"), at: Date.now() };
   }
+  const key = Deno.env.get("ANTHROPIC_API_KEY") || keyCache.v;
   if (!key) return json({ error: "chua_ket_noi" }, 503);
-  // Đo lường: mỗi lượt gọi ghi một dòng vào ai_usage (việc, mẫu, token, thời gian, lỗi)
   const M = { model: "", in: 0, out: 0, err: "" }, t0 = Date.now();
-  const env = { KEY: key, PRO: Deno.env.get("GEMINI_MODEL_PRO") || "", FLASH: Deno.env.get("GEMINI_MODEL") || "", M };
+  const env = { client: new Anthropic({ apiKey: key, timeout: 120000, maxRetries: 1 }), MODEL: MODELS.includes(keyCache.m) ? keyCache.m : MODELS[0], M };
   const res = await run(b, env);
   try {
-    await admin.from("ai_usage").insert({ user_id: who.user.id, provider: "gemini", action: String(b.action || "").slice(0, 40), model: M.model || null, in_tok: M.in, out_tok: M.out, ms: Date.now() - t0, ok: res.status < 300, err: M.err || null, project_id: String(b.pid || b.project?.code || "").slice(0, 60) || null });
+    await admin.from("ai_usage").insert({ user_id: who.user.id, provider: "claude", action: String(b.action || "").slice(0, 40), model: M.model || null, in_tok: M.in, out_tok: M.out, ms: Date.now() - t0, ok: res.status < 300, err: M.err || null, project_id: String(b.pid || b.project?.code || "").slice(0, 60) || null });
   } catch (e) { console.error("ai_usage", String(e).slice(0, 100)); }
   return res;
 });
 async function run(b: any, env: any): Promise<Response> {
   try {
     if (b.action === "ping") {
-      // Thử gọi thật một câu ngắn để biết khoá có lượt dùng không
-      const { model } = await gemini(env, { system: "Trả lời JSON.", parts: [{ text: "Trả về {\"ok\": true}" }], schema: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] }, kind: "flash" });
-      const C = await candidates(env, "pro");
-      return json({ ok: true, flash: model, pro: C[0] && /pro/.test(C[0]) ? C[0] : model + " (khoá miễn phí không dùng được bản pro)" });
+      const { data } = await claude(env, { system: "Trả lời JSON.", content: "Trả về {\"ok\": true}", schema: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] }, maxTokens: 2000 });
+      return json({ ok: !!data?.ok, model: env.M.model });
     }
     if (b.action === "extract") {
-      const parts: any[] = [];
-      if (b.doc && b.doc.mime && typeof b.doc.data === "string") parts.push({ inline_data: { mime_type: b.doc.mime, data: b.doc.data } });
-      parts.push({ text: `Tên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung bảng tính:\n${b.text.slice(0, 400000)}` : "") });
-      const { data, model } = await gemini(env, { system: SYS_EXTRACT, parts, schema: QUOTE, kind: env.PRO ? "pro" : "flash" });
+      const content: any[] = [];
+      const fb = b.doc && typeof b.doc.data === "string" ? fileBlock(String(b.doc.mime || ""), b.doc.data) : null;
+      if (fb) content.push(fb);
+      content.push({ type: "text", text: `Tên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung bảng tính:\n${b.text.slice(0, 400000)}` : "") });
+      const { data, model } = await claude(env, { system: SYS_EXTRACT, content, schema: QUOTE, effort: "medium", maxTokens: 64000 });
       return json({ ...data, model });
     }
     if (b.action === "match") {
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 80);
-      const { data, model } = await gemini(env, { system: SYS_MATCH, parts: [{ text: JSON.stringify({ items }) }], schema: MATCH, kind: "flash" });
+      const { data, model } = await claude(env, { system: SYS_MATCH, content: JSON.stringify({ items }), schema: MATCH, maxTokens: 32000 });
       return json({ ...data, model });
     }
     if (b.action === "match_lines") {
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 300), lines = (Array.isArray(b.lines) ? b.lines : []).slice(0, 80);
-      const { data, model } = await gemini(env, { system: SYS_MATCH_LINES, parts: [{ text: JSON.stringify({ bao_gia: items, boq: lines }) }], schema: MATCH_LINES, kind: "flash" });
+      const { data, model } = await claude(env, { system: SYS_MATCH_LINES, content: JSON.stringify({ bao_gia: items, boq: lines }), schema: MATCH_LINES, maxTokens: 32000 });
       return json({ ...data, model });
     }
     if (b.action === "classify") {
-      const parts: any[] = [];
-      if (b.doc && b.doc.media_type === "application/pdf" && typeof b.doc.data === "string") parts.push({ inline_data: { mime_type: "application/pdf", data: b.doc.data } });
-      else if (b.img && /^image\/(jpeg|png|gif|webp)$/.test(b.img.media_type) && typeof b.img.data === "string") parts.push({ inline_data: { mime_type: b.img.media_type, data: b.img.data } });
+      const content: any[] = [];
+      const fb = b.doc && typeof b.doc.data === "string" ? fileBlock(String(b.doc.media_type || ""), b.doc.data) : b.img && typeof b.img.data === "string" ? fileBlock(String(b.img.media_type || ""), b.img.data) : null;
+      if (fb) content.push(fb);
       const proj = b.project && typeof b.project === "object" ? `${String(b.project.code || "").slice(0, 40)} ${String(b.project.name || "").slice(0, 200)}` : "";
-      parts.push({ text: `Dự án: ${proj}\nTên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung trích từ file:\n${b.text.slice(0, 8000)}` : "") });
-      const { data: v } = await gemini(env, { system: SYS_CLASSIFY, parts, schema: CLASSIFY, kind: "flash", budget: 25000 });
+      content.push({ type: "text", text: `Dự án: ${proj}\nTên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung trích từ file:\n${b.text.slice(0, 8000)}` : "") });
+      const { data: v } = await claude(env, { system: SYS_CLASSIFY, content, schema: CLASSIFY, maxTokens: 8000 });
       if (!FOLDERS[v.folder]) return json({ error: "khong_doc_duoc" }, 422);
       return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120) });
     }
+    if (b.action === "chat") {
+      const msgs = (Array.isArray(b.messages) ? b.messages : []).filter((m: any) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string").slice(-12).map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) }));
+      if (!msgs.length || msgs[0].role !== "user") return json({ error: "no_message" }, 400);
+      const ctx = JSON.stringify(b.context || {}).slice(0, 150000);
+      const r: any = { model: env.MODEL, max_tokens: 4000, system: SYS_CHAT + "\n\nNGỮ CẢNH (JSON số liệu hiện có trên web):\n" + ctx, messages: msgs, output_config: { effort: "low" } };
+      if (env.MODEL !== "claude-haiku-5-5") { r.betas = ["server-side-fallback-2026-07-01"]; r.fallbacks = "default"; }
+      let msg: any;
+      try { msg = await env.client.beta.messages.stream(r).finalMessage(); }
+      catch (e) { throw e instanceof Anthropic.AuthenticationError ? new AiErr("sai_khoa") : e instanceof Anthropic.RateLimitError ? new AiErr("het_luot") : e instanceof Anthropic.APIError && (e.status || 0) >= 500 ? new AiErr("qua_tai") : e; }
+      const u = msg.usage || {}; env.M.model = msg.model; env.M.in += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0); env.M.out += u.output_tokens || 0;
+      if (msg.stop_reason === "refusal") throw new AiErr("tu_choi");
+      return json({ text: (msg.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n").trim() });
+    }
     return json({ error: "bad_request" }, 400);
   } catch (e) {
-    const m = String((e as Error)?.message || "");
-    console.error("ai", m); env.M.err = m.slice(0, 120);
-    if (/gemini_(400|401|403)\b/.test(m) || /gemini_models_(400|401|403)/.test(m)) return json({ error: "sai_khoa" }, 502);
-    if (/gemini_(503|500)\b/.test(m)) return json({ error: "qua_tai" }, 502);
-    if (/gemini_429/.test(m)) return json({ error: "het_luot" }, 502);
-    return json({ error: "ai_error", detail: m.slice(0, 100) }, 502);
+    const code = e instanceof AiErr ? e.code : "ai_error", m = String((e as Error)?.message || "");
+    console.error("ai", code, m.slice(0, 300)); env.M.err = (code + (m && m !== code ? ": " + m : "")).slice(0, 160);
+    return json({ error: code }, 502);
   }
 }
