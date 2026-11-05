@@ -105,6 +105,13 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - Trợ lý chat đọc hồ sơ dự án + danh mục tài liệu, tự mở bản chữ hoặc tìm theo từ khoá khi cần, ghi nguồn [1], [2] có nút mở file. Khi anh dặn điều gì lâu dài, trợ lý hỏi lại rồi mới ghi vào hồ sơ dự án hoặc kiến thức chung của công ty.
 - Máy chủ: `supabase/migrations/20261105_bo_nao_du_an.sql`, hàm `ai` (việc `digest`, `chat` có công cụ đọc tài liệu).
 
+## Tra cứu liên kết (tab Tra cứu liên kết, nút 🔗 Liên quan)
+- Mọi thứ của dự án được nối theo logic quản lý dự án: hạng mục ↔ dòng BOQ ↔ gói thầu ↔ báo giá ↔ đơn vị (NCC, thầu phụ, tổ đội) ↔ bảng so sánh giá ↔ hợp đồng ↔ yêu cầu vật tư ↔ đề nghị thanh toán ↔ nghiệm thu, phát sinh ↔ file hồ sơ.
+- Mối nối tự suy ra từ dữ liệu; file được nối theo tên đơn vị, gói, hạng mục nhắc trong tên và tóm tắt; anh tự "Nối thêm" được (lưu p.lk cùng tiến độ).
+- Ô tìm kiếm không phân biệt dấu, lọc theo loại; bấm kết quả mở khung Liên quan, đi tiếp từ mục này sang mục khác, có nút quay lại, mở trang, mở file, hỏi trợ lý.
+- Bản đồ gói thầu: mỗi gói đi tới bước nào (báo giá → so sánh giá → hợp đồng → yêu cầu vật tư → nghiệm thu → thanh toán), tô màu theo kế hoạch giao thầu.
+- Trợ lý chat nhận kèm tóm tắt liên kết của dự án đang mở để trả lời lần theo mối nối.
+
 ## Bài học cho AI
 - Bảng `ai_lessons` (migration `20261105_ai_lessons.sql`): `kind = match` là cặp dòng báo giá ↔ dòng BOQ đúng/sai (web tự áp khi ghép); `kind = rule` là câu dặn (`q` = phạm vi `baogia | hopdong | thumuc | chat | all`, `l` = nội dung).
 - Web tự ghi bài học khi anh sửa ghép báo giá, đổi gói vật tư, sửa số đọc từ hợp đồng hoặc đợt thanh toán, xếp file khác thư mục gợi ý. Anh tự dặn thêm ở Quản trị → Bài học cho AI.
