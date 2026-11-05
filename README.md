@@ -65,3 +65,8 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - So sánh: đơn giá quy về đơn vị BOQ, chưa VAT; nhà cung cấp so phần vật tư, tổ đội so phần nhân công, thầu phụ so cả đơn giá.
 - Chọn → gửi Hộp quyết định → duyệt thì ghi giá vốn (nguồn `q:<id>`), thời gian giao hàng (kế hoạch đặt vật tư) và số ngày trả nhà cung cấp (dòng tiền).
 - Gợi ý thư mục khi tải file cũng dùng Claude qua cùng Edge Function.
+
+## Bài học cho AI
+- Bảng `ai_lessons` (migration `20261105_ai_lessons.sql`): `kind = match` là cặp dòng báo giá ↔ dòng BOQ đúng/sai (web tự áp khi ghép); `kind = rule` là câu dặn (`q` = phạm vi `baogia | hopdong | thumuc | chat | all`, `l` = nội dung).
+- Web tự ghi bài học khi anh sửa ghép báo giá, đổi gói vật tư, sửa số đọc từ hợp đồng hoặc đợt thanh toán, xếp file khác thư mục gợi ý. Anh tự dặn thêm ở Quản trị → Bài học cho AI.
+- Edge Function `ai` gửi kèm 60 bài học mới nhất đúng phạm vi vào lời dặn hệ thống của mỗi lượt gọi Claude.

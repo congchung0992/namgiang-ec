@@ -26,7 +26,7 @@ class AiErr extends Error { constructor(public code: string, msg?: string) { sup
 async function claude(env: any, { system, content, schema, effort = "low", maxTokens = 16000 }: any) {
   const model = env.MODEL;
   const req: any = {
-    model, max_tokens: maxTokens, system,
+    model, max_tokens: maxTokens, system: system + (env.R ? "\n\n" + env.R : ""),
     messages: [{ role: "user", content }],
     output_config: { effort, ...(schema ? { format: { type: "json_schema", schema: strictify(schema) } } : {}) },
   };
@@ -240,6 +240,15 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "chua_ket_noi" }, 503);
   const M = { model: "", in: 0, out: 0, err: "" }, t0 = Date.now();
   const env = { client: new Anthropic({ apiKey: key, timeout: 120000, maxRetries: 1 }), MODEL: MODELS.includes(keyCache.m) ? keyCache.m : MODELS[0], M };
+  // Bài học anh Chung đã ghi (bảng ai_lessons, kind = rule; q = phạm vi, l = nội dung): gửi kèm mọi lượt gọi đúng phạm vi
+  const SC: any = { extract: "baogia", match: "baogia", match_lines: "baogia", contract: "hopdong", classify: "thumuc", chat: "chat" };
+  try {
+    const sc = SC[b.action];
+    if (sc) {
+      const { data: R } = await admin.from("ai_lessons").select("l").eq("kind", "rule").in("q", [sc, "all"]).order("at", { ascending: false }).limit(60);
+      if (R && R.length) (env as any).R = "GHI NHỚ TỪ ANH CHUNG (các lần anh đã sửa hoặc dặn; ưu tiên làm theo khi phù hợp với tài liệu đang đọc):\n" + R.reverse().map((x: any) => "- " + String(x.l).slice(0, 400)).join("\n");
+    }
+  } catch (e) { console.error("rules", String(e).slice(0, 100)); }
   const res = await run(b, env);
   try {
     await admin.from("ai_usage").insert({ user_id: who.user.id, provider: "claude", action: String(b.action || "").slice(0, 40), model: M.model || null, in_tok: M.in, out_tok: M.out, ms: Date.now() - t0, ok: res.status < 300, err: M.err || null, project_id: String(b.pid || b.project?.code || "").slice(0, 60) || null });
@@ -298,7 +307,7 @@ async function run(b: any, env: any): Promise<Response> {
       const msgs = (Array.isArray(b.messages) ? b.messages : []).filter((m: any) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string").slice(-12).map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) }));
       if (!msgs.length || msgs[0].role !== "user") return json({ error: "no_message" }, 400);
       const ctx = JSON.stringify(b.context || {}).slice(0, 150000);
-      const r: any = { model: env.MODEL, max_tokens: 4000, system: SYS_CHAT + "\n\nNGỮ CẢNH (JSON số liệu hiện có trên web):\n" + ctx, messages: msgs, output_config: { effort: "low" } };
+      const r: any = { model: env.MODEL, max_tokens: 4000, system: SYS_CHAT + (env.R ? "\n\n" + env.R : "") + "\n\nNGỮ CẢNH (JSON số liệu hiện có trên web):\n" + ctx, messages: msgs, output_config: { effort: "low" } };
       if (env.MODEL !== "claude-haiku-5-5") { r.betas = ["server-side-fallback-2026-07-01"]; r.fallbacks = "default"; }
       let msg: any;
       try { msg = await env.client.beta.messages.stream(r).finalMessage(); }
