@@ -1,3 +1,4 @@
+import { gemini } from "./quote.js";
 // Cloudflare Pages Function: /api/classify
 // Đọc nội dung file sắp tải lên (PDF, ảnh, hoặc chữ trích từ Excel/Word) và gợi ý thư mục hồ sơ phù hợp.
 // Chỉ người đã đăng nhập mới gọi được, để khoá Claude không bị người ngoài dùng.
@@ -46,7 +47,7 @@ const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, header
 
 export async function onRequestPost({ request, env }) {
   const key = env.ANTHROPIC_API_KEY;
-  if (!key) return json({ error: "chua_ket_noi" }, 503);
+  if (!key && !env.GEMINI_API_KEY) return json({ error: "chua_ket_noi" }, 503);
   const origin = request.headers.get("origin");
   if (origin && new URL(origin).host !== new URL(request.url).host) return json({ error: "origin" }, 403);
   const auth = request.headers.get("authorization") || "";
@@ -66,6 +67,18 @@ export async function onRequestPost({ request, env }) {
   const proj = b.project && typeof b.project === "object" ? `${String(b.project.code || "").slice(0, 40)} ${String(b.project.name || "").slice(0, 200)}` : "";
   content.push({ type: "text", text: `Dự án: ${proj}\nTên file: ${name}` + (text ? `\nNội dung trích từ file:\n${text}` : "") });
 
+  // Có khoá Gemini thì dùng Gemini (ưu tiên), không thì dùng Claude
+  if (env.GEMINI_API_KEY) {
+    const parts = [];
+    if (b.doc && b.doc.media_type === "application/pdf" && typeof b.doc.data === "string") parts.push({ inline_data: { mime_type: "application/pdf", data: b.doc.data } });
+    else if (b.img && IMG.includes(b.img.media_type) && typeof b.img.data === "string") parts.push({ inline_data: { mime_type: b.img.media_type, data: b.img.data } });
+    parts.push({ text: content[content.length - 1].text });
+    try {
+      const { data: v } = await gemini(env, { system: SYSTEM, parts, schema: SCHEMA, kind: "flash" });
+      if (!FOLDERS[v.folder]) return json({ error: "khong_doc_duoc" }, 422);
+      return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120) });
+    } catch (e) { console.error("classify gemini", e && e.message); return json({ error: "ai_error" }, 502); }
+  }
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
