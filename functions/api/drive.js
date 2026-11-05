@@ -9,18 +9,18 @@ const ROOT = "Nam Giang E&C - Dự án";
 // 6 thư mục lớn, mỗi thư mục có thư mục con; file chỉ lưu ở thư mục con (mã 01.1 … 06.3)
 const GROUPS = {
   "01": "01 Pháp lý - Hợp đồng", "02": "02 Kỹ thuật - Tiến độ", "03": "03 Chất lượng - An toàn",
-  "04": "04 Khối lượng - Thanh toán", "05": "05 Vật tư - Thầu phụ", "06": "06 Hiện trường - Văn bản"
+  "04": "04 Thanh toán CĐT", "05": "05 NCC - TP", "06": "06 Hiện trường - Văn bản"
 };
 const FOLDERS = {
   "01.1": "01.1 Pháp lý dự án", "01.2": "01.2 Hồ sơ thầu", "01.3": "01.3 Hợp đồng - phụ lục", "01.4": "01.4 Bảo lãnh - bảo hiểm",
   "02.1": "02.1 Bản vẽ thiết kế", "02.2": "02.2 Tiến độ - biện pháp thi công", "02.3": "02.3 Hoàn công - bàn giao",
   "03.1": "03.1 Nghiệm thu kỹ thuật", "03.2": "03.2 Thí nghiệm - CO CQ", "03.3": "03.3 An toàn - môi trường",
-  "04.1": "04.1 Nghiệm thu khối lượng", "04.2": "04.2 Phát sinh", "04.3": "04.3 Thanh toán - hoá đơn - công nợ",
-  "05.1": "05.1 Báo giá - đặt hàng vật tư", "05.2": "05.2 Nhập xuất vật tư", "05.3": "05.3 Thầu phụ - tổ đội",
+  "04.1": "04.1 Nghiệm thu khối lượng", "04.2": "04.2 Phát sinh", "04.3": "04.3 Hồ sơ thanh toán - công nợ CĐT",
+  "05.1": "05.1 Báo giá NCC - TP", "05.2": "05.2 Hợp đồng NCC - TP", "05.3": "05.3 Thanh toán NCC - TP", "05.4": "05.4 Nhập xuất vật tư",
   "06.1": "06.1 Nhật ký thi công", "06.2": "06.2 Báo cáo - ảnh hiện trường", "06.3": "06.3 Công văn - biên bản họp"
 };
 // Thư mục cũ (8 thư mục ngang hàng) chuyển thành thư mục con nào
-const OLD = { "01": "01.2", "02": "01.3", "03": "02.2", "04": "04.1", "05": "04.3", "06": "05.1", "07": "05.3", "08": "06.2" };
+const OLD = { "01": "01.2", "02": "01.3", "03": "02.2", "04": "04.1", "05": "04.3", "06": "05.1", "07": "05.2", "08": "06.2" };
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 const MAX_SIZE = 95 * 1024 * 1024; // giới hạn thân yêu cầu của Cloudflare là 100 MB
 
@@ -91,14 +91,26 @@ async function buildTree(tok, projId, reuse = {}) {
     if (reuse[k]) { await moveFolder(tok, reuse[k], FOLDERS[k], parent, projId); folders[k] = reuse[k]; }
     else folders[k] = await makeFolder(tok, FOLDERS[k], parent);
   }));
-  return { ...folders, _groups: gids };
+  return { ...folders, _groups: gids, _v: 2 };
 }
 
 async function projectFolders(api, tok, pid) {
   const pidQ = encodeURIComponent(pid);
   const get = async () => (await (await api(`project_drive?project_id=eq.${pidQ}&select=root_id,folders`)).json())[0];
   const had = await get();
-  if (had && had.folders["01.1"]) return had.folders;
+  if (had && had.folders["01.1"]) {
+    // Cấu trúc v2: nhóm 04 "Thanh toán CĐT", nhóm 05 "NCC - TP" (thêm 05.4) — đổi tên thư mục đã có, tạo thư mục còn thiếu, một lần
+    if (had.folders._v !== 2) {
+      const F = { ...had.folders }, G2 = F._groups || {};
+      const ren = (id, name) => id ? fetch(`${G}/drive/v3/files/${encodeURIComponent(id)}?fields=id`, { method: "PATCH", headers: { authorization: "Bearer " + tok, "content-type": "application/json" }, body: JSON.stringify({ name }) }) : null;
+      await Promise.all([ren(G2["04"], GROUPS["04"]), ren(G2["05"], GROUPS["05"]), ...["04.3", "05.1", "05.2", "05.3"].map(k => ren(F[k], FOLDERS[k]))]);
+      if (!F["05.4"] && G2["05"]) F["05.4"] = await makeFolder(tok, FOLDERS["05.4"], G2["05"]);
+      F._v = 2;
+      await api(`project_drive?project_id=eq.${pidQ}`, { method: "PATCH", body: JSON.stringify({ folders: F }) });
+      return F;
+    }
+    return had.folders;
+  }
   if (had) {
     // Dự án tạo theo cấu trúc cũ: chuyển một lần sang cấu trúc mới
     const reuse = {};
