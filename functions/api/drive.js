@@ -122,6 +122,39 @@ async function upload(request, api, tok, url) {
   return json({ id: row.id, name: row.name, folder: row.folder });
 }
 
+/* Đường dẫn tạm cho trình xem Office Online của Microsoft: ký HMAC, hết hạn sau 15 phút.
+   Microsoft tải file qua /api/office/<mã>/<tên file>; mã chứa id file Drive và hạn dùng nên không cần đăng nhập. */
+const OFFICE_TTL = 15 * 60;
+const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const fromB64u = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+async function hmacKey(env) {
+  return crypto.subtle.importKey("raw", new TextEncoder().encode("office-link:" + env.GOOGLE_CLIENT_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+}
+export async function signOffice(env, data) {
+  const body = b64u(new TextEncoder().encode(JSON.stringify(data)));
+  const sig = b64u(await crypto.subtle.sign("HMAC", await hmacKey(env), new TextEncoder().encode(body)));
+  return body + "." + sig;
+}
+export async function verifyOffice(env, token) {
+  const [body, sig] = String(token || "").split(".");
+  if (!body || !sig) return null;
+  let ok = false;
+  try { ok = await crypto.subtle.verify("HMAC", await hmacKey(env), fromB64u(sig), new TextEncoder().encode(body)); } catch { return null; }
+  if (!ok) return null;
+  const d = JSON.parse(new TextDecoder().decode(fromB64u(body)));
+  return d.e > Date.now() / 1000 ? d : null;
+}
+export { googleToken };
+
+async function officeLink(env, api, url, id) {
+  const r = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=name,drive_id,size`);
+  if (r.status === 401) return json({ error: "auth" }, 401);
+  const row = r.ok ? (await r.json())[0] : null;
+  if (!row) return json({ error: "not_found" }, 404); // không có quyền cũng trả về như không tồn tại
+  const token = await signOffice(env, { d: row.drive_id, e: Math.floor(Date.now() / 1000) + OFFICE_TTL });
+  return json({ url: `${url.origin}/api/office/${token}/${encodeURIComponent(row.name)}`, size: row.size });
+}
+
 async function download(api, tok, id) {
   const r = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=name,mime,drive_id`);
   if (r.status === 401) return json({ error: "auth" }, 401);
@@ -167,6 +200,7 @@ export async function onRequest({ request, env }) {
   try {
     if (action === "upload" && request.method === "POST") return await upload(request, api, tok, url);
     if (action === "download" && request.method === "GET") return await download(api, tok, url.searchParams.get("id") || "");
+    if (action === "office" && request.method === "GET") return await officeLink(env, api, url, url.searchParams.get("id") || "");
     if (action === "delete" && request.method === "DELETE") return await remove(api, tok, url.searchParams.get("id") || "");
     return json({ error: "bad_request" }, 400);
   } catch (e) {
