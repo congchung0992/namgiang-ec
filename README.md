@@ -91,6 +91,13 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - Khi lưu file vào 05.2, hộp rà file bắt buộc chọn **gói thầu** (theo sheet Gói thầu) và **hạng mục BOQ** hợp đồng áp dụng; chưa chọn thì không lưu. Web gợi ý gói (✨) theo tên file, nội dung file Word/Excel, mác/quy cách và nhà cung cấp đã chọn cho gói; hạng mục gợi ý theo tên hạng mục ghi trong file.
 - Liên kết lưu ở `p.hdl` (cùng phần tiến độ, chỉ huy trưởng cũng ghi được). Thư mục 05.2 hiện nhãn gói, hạng mục cho từng file; file chưa gắn có nút **Gắn gói thầu**. Sheet Gói thầu hiện hợp đồng đã có dưới tên từng gói.
 
+## Bảng so sánh giá → hợp đồng → thanh toán, kế hoạch giao thầu (tab Gói thầu, Kế hoạch giao thầu)
+- Mỗi gói thầu (vật tư hoặc thầu phụ – tổ đội) lập một **bảng so sánh giá** từ các báo giá đã ghép vào gói: từng dòng BOQ × từng đơn vị (đơn giá, thành tiền), giá BOQ CĐT, giá gốc, tổng, lời/lỗ so gốc, điều kiện thanh toán, giao hàng, file báo giá 05.1; chọn đơn vị và ghi lý do (bắt buộc khi không chọn đơn vị rẻ nhất).
+- Bảng đi luồng duyệt `ssg` (mặc định Giám đốc dự án → Tổng giám đốc, sửa ở Quản trị → Luồng duyệt); người duyệt đổi được đơn vị chọn. Duyệt xong: chốt đơn vị cho gói, áp giá vốn các dòng BOQ của gói, lưu Excel có chữ ký duyệt vào 05.1.
+- Hợp đồng NCC – TP (05.2) chỉ gắn được vào gói đã có bảng so sánh giá được duyệt; đề nghị thanh toán chỉ lập và gửi được khi chọn hợp đồng đã ký (tự điền tên đơn vị theo bảng so sánh giá).
+- **Kế hoạch giao thầu**: ngày cần = ngày bắt đầu sớm nhất của công việc trong gói trên tiến độ; ký hợp đồng trước 14 ngày (gói vật tư không muộn hơn ngày đặt hàng = ngày cần − thời gian giao hàng), bảng so sánh giá duyệt trước 21 ngày; trình mẫu vật tư CĐT/TVGS trước 21 ngày, CĐT duyệt trước 14 ngày; các mốc sửa được, ghi ngày đã trình / CĐT duyệt, cảnh báo quá hạn.
+- Máy chủ: `supabase/migrations/20261105_bang_so_sanh_gia.sql`.
+
 ## Bài học cho AI
 - Bảng `ai_lessons` (migration `20261105_ai_lessons.sql`): `kind = match` là cặp dòng báo giá ↔ dòng BOQ đúng/sai (web tự áp khi ghép); `kind = rule` là câu dặn (`q` = phạm vi `baogia | hopdong | thumuc | chat | all`, `l` = nội dung).
 - Web tự ghi bài học khi anh sửa ghép báo giá, đổi gói vật tư, sửa số đọc từ hợp đồng hoặc đợt thanh toán, xếp file khác thư mục gợi ý. Anh tự dặn thêm ở Quản trị → Bài học cho AI.
