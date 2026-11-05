@@ -314,6 +314,7 @@ body.scroll main{height:auto;display:block}
 .phead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end;margin-bottom:14px}
 .neg{color:#D3131B;font-weight:inherit}
 .kc .neg,.glass .neg,.ai .neg,.tip .neg,.msg.me .neg,.fd[aria-current="true"] .neg,.pill[aria-current="true"] .neg{color:#fff;background:rgba(225,20,27,.88);border-radius:.3em;padding:0 .2em}
+.ggc{box-shadow:inset 0 0 0 1.5px rgba(18,161,80,.35),0 10px 30px -18px rgba(18,161,80,.5)}.ggc .bh{align-items:center}
 .phd{display:flex;align-items:center;gap:12px;margin-bottom:10px;min-width:0}
 .pbk{width:40px;height:40px;flex:none;border:0;border-radius:50%;background:#fff;color:var(--ink2);display:grid;place-items:center;cursor:pointer;box-shadow:inset 0 0 0 1px var(--line);transition:transform .15s}.pbk:hover{color:var(--ink)}.pbk:active{transform:scale(.94)}
 .phm{min-width:0;flex:1}.pht{display:flex;align-items:center;gap:10px;min-width:0}
@@ -812,7 +813,7 @@ window.NGB=(function(){
   let saved={},savedDec={},timer=null,running=false,again=false,dirty=false,lastDb=null,onState=null,box=null;
   const ok=r=>{if(r.error){const e=new Error(r.error.message);e.code=r.error.code;throw e}return r.data};
   const conflict=()=>{const e=new Error("x");e.conflict=1;return e};
-  const toast=m=>{if(!box){box=document.createElement("div");box.setAttribute("role","alert");box.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:90vw;padding:10px 18px;border-radius:999px;background:#C0141B;color:#fff;font-size:13px;text-align:center;z-index:9999;box-shadow:0 8px 24px rgba(192,20,27,.3)";document.body.appendChild(box)}box.textContent=m||"";box.hidden=!m};
+  const toast=m=>{if(!box){box=document.createElement("div");box.setAttribute("role","alert");box.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:90vw;padding:10px 18px;border-radius:999px;background:#C0141B;color:#fff;font-size:13px;text-align:center;z-index:9999;box-shadow:0 8px 24px rgba(192,20,27,.3)";document.body.appendChild(box)}box.textContent=m||"";box.hidden=!m;clearTimeout(box._t);if(m)box._t=setTimeout(()=>{box.hidden=true},9000)};
   async function loadAll(){const c=need(),{data:{session}}=await c.auth.getSession();if(!session)throw new Error("Chưa đăng nhập");
     const [me,P,S,C,D]=await Promise.all([c.from("profiles").select("is_board").eq("id",session.user.id).maybeSingle(),c.from("projects").select("id,boq,version"),c.from("project_schedule").select("project_id,data,version"),c.from("project_cost").select("project_id,data,version"),c.from("decisions").select("item_id,status,at")]);
     const sm={},cm={};ok(S).forEach(x=>sm[x.project_id]=x);ok(C).forEach(x=>cm[x.project_id]=x);saved={};
@@ -1878,6 +1879,8 @@ function ggView(p){const R=ggP.res,rows=R.rows,ok=rows.filter(x=>x.m).length,cnt
   return `${backBtn("da-"+p.id+"-boq","Huỷ, quay lại BOQ & giá vốn")}
   <div class="vh"><div><h1>Đối chiếu giá gốc với BOQ hợp đồng</h1><p>${esc(ggP.file)} · ${esc(p.name)}</p></div></div>
   <div class="vgrid">
+  <section class="card span3 ggc"><div class="bh"><div><h3>Cập nhật giá vốn</h3><span class="sub">Ghi đơn giá vật tư, nhân công của ${n0(ok)} dòng ghép được vào giá vốn dự án · dòng không có giá gốc giữ nguyên${R.ex.length?" · chi phí ngoài BOQ tính vào hạng mục đã chọn":""}</span>${man?`<label class="rt" style="margin-top:8px;justify-content:flex-start"><input type="checkbox" id="ggkeep"${ggP.keep?" checked":""}> Giữ nguyên ${man} dòng anh đã nhập tay</label>`:""}</div>
+    <button class="pill" id="ggok" style="${sv("rev")}"><span class="dot">✓</span>Xác nhận và cập nhật giá vốn</button></div></section>
   ${kc("cost","Giá vốn theo giá gốc",ty(T),"tỷ",`Vật tư ${ty(TV)} · nhân công ${ty(TN)} tỷ · khối lượng lấy theo BOQ hợp đồng`)}
   ${kc(pct(rev-T,rev)>=10?"rev":"mat","Lãi gộp dự kiến",ty(rev-T),"tỷ",`Biên ${fm(pct(rev-T,rev))}% trên ${ty(rev)} tỷ doanh thu`)}
   ${kc(ok===rows.length?"rev":"proj","Dòng ghép được",n0(ok),"/ "+n0(rows.length),`${cnt("none")} không có giá gốc · ${cnt("kl")} lệch khối lượng · ${cnt("lo")} giá gốc cao hơn giá HĐ`)}
@@ -1885,8 +1888,6 @@ function ggView(p){const R=ggP.res,rows=R.rows,ok=rows.filter(x=>x.m).length,cnt
   ${exs}
   ${S?`<section class="card span3"><div class="bh"><div><h3>${S.h.code} · ${esc(S.h.name)}</h3><span class="sub">So từng dòng: khối lượng và đơn giá hợp đồng với giá gốc · thành tiền giá gốc = khối lượng hợp đồng × đơn giá gốc</span></div><div class="seg2"><button data-gf="all" aria-pressed="${fl==="all"}">Tất cả ${S.rs.length}</button><button data-gf="bad" aria-pressed="${fl==="bad"}">Cần xem ${S.bad}</button></div></div>
     <div class="tw bsw" style="margin-top:12px"><table class="t ggd"><colgroup><col span="3"><col span="2"><col span="4" class="cg-b"><col span="2" class="cg-c"><col></colgroup><thead><tr><th rowspan="2">Mã</th><th rowspan="2">Công việc</th><th rowspan="2">ĐVT</th><th colspan="2">Hợp đồng</th><th colspan="4" class="hg-b">Giá gốc</th><th colspan="2" class="hg-c">So sánh</th><th rowspan="2">Kiểm tra</th></tr><tr class="h2"><th>Khối lượng</th><th>Đơn giá (đ)</th><th class="hs-b">Khối lượng</th><th class="hs-b">Đơn giá VT (đ)</th><th class="hs-b">Đơn giá NC (đ)</th><th class="hs-b">Đơn giá tổng (đ)</th><th class="hs-c">Biên đơn giá</th><th class="hs-c">Thành tiền gốc (đ)</th></tr></thead><tbody>${drows||`<tr><td colspan="12" class="sub">Không có dòng cần xem.</td></tr>`}</tbody></table></div></section>`:""}
-  <section class="card span3"><div class="bh"><div><h3>Cập nhật giá vốn</h3><span class="sub">Ghi đơn giá vật tư, nhân công của ${n0(ok)} dòng ghép được vào giá vốn dự án · dòng không có giá gốc giữ nguyên${R.ex.length?" · chi phí ngoài BOQ tính vào hạng mục đã chọn":""}</span>${man?`<label class="rt" style="margin-top:8px;justify-content:flex-start"><input type="checkbox" id="ggkeep"${ggP.keep?" checked":""}> Giữ nguyên ${man} dòng anh đã nhập tay</label>`:""}</div>
-    <button class="pill" id="ggok" style="${sv("rev")}"><span class="dot">✓</span>Xác nhận và cập nhật giá vốn</button></div></section>
   </div>`}
 function ggApply(){const p=DB.projects.find(x=>x.id===ggP.pid);if(!p)return;const R=ggP.res;let n=0;
   R.rows.forEach(x=>{if(!x.m)return;const c=p.cost[x.l.code];if(ggP.keep&&c&&has(c)&&!c.src)return;p.cost[x.l.code]={v:x.v,n:x.n,...(c&&c.m!=null?{m:c.m}:{}),src:"g"};n++});
