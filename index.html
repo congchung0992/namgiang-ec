@@ -650,6 +650,8 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
 .msg.wait i{width:7px;height:7px;border-radius:50%;background:#B5B7C0;animation:cdot 1.1s infinite ease-in-out}
 .msg.wait i:nth-child(2){animation-delay:.15s}.msg.wait i:nth-child(3){animation-delay:.3s}
 @keyframes cdot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.kbt td{vertical-align:top}.kbt details summary{cursor:pointer;color:var(--muted);font-size:13px}.kbt details[open] summary{margin-bottom:4px}.kbt .kbcl{margin-top:6px;font-size:12.5px;color:var(--muted)}.kbt .lnk{background:none;border:0;padding:0;font:inherit;font-weight:600;color:#0A2486;cursor:pointer;text-align:left}.kbt .lnk:hover{text-decoration:underline}.kbadd td{background:#FAF7FF}
+.csrc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.csrc button{border:0;border-radius:999px;padding:5px 10px;background:#EEF1FD;color:#0A2486;font:500 12.5px "Be Vietnam Pro",sans-serif;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cmem{margin-top:8px;padding:10px 12px;border-radius:14px;background:#F6F0FF;box-shadow:inset 0 0 0 1px #E4D4FB;font-size:13.5px}.cmem .cma{display:flex;gap:6px;margin-top:8px}.cmem button{border:0;border-radius:999px;padding:6px 12px;font:600 12.5px "Be Vietnam Pro",sans-serif;cursor:pointer;background:#fff;box-shadow:inset 0 0 0 1px var(--line)}.cmem button.y{background:linear-gradient(135deg,#7C3AED,#C026D3);color:#fff;box-shadow:none}
 .cchips{display:flex;gap:6px;overflow-x:auto;padding:2px 18px 10px;scrollbar-width:none}
 .cchips::-webkit-scrollbar{display:none}
 .cchips button{flex:none;border:0;background:#E0E5FD;color:#1E2BC4;border-radius:99px;padding:6px 11px;font-size:14px;font-weight:500;white-space:nowrap;cursor:pointer}
@@ -1511,7 +1513,7 @@ const LD=(p,n)=>p&&p.leads&&p.leads[n]>0?p.leads[n]:LEAD(n);const LEAD=n=>/Kết
 
 /* ---------- Danh sách sheet ---------- */
 const SHEETS=[["home","Tổng quan"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
-const BSHEETS=[["home","Tổng quan"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán NCC – TP"],["hr","Nhân sự"]];
+const BSHEETS=[["home","Tổng quan"],["files","Thư mục dự án"],["bn","Bộ não dự án"],["boq","BOQ & Giá vốn"],["goi","Gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán NCC – TP"],["hr","Nhân sự"]];
 /* Tab Hồ sơ: file lưu ở Google Drive qua api/drive; bảng quyền này chỉ để gọn màn hình, máy chủ kiểm tra lại (supabase/schema.sql) */
 /* Thư mục hồ sơ: 6 nhóm lớn (DG), file lưu ở thư mục con (DF: mã, tên, gợi ý, vai trò được xem); máy chủ kiểm tra lại quyền */
 const DG=[["01","Pháp lý – Hợp đồng"],["02","Kỹ thuật – Tiến độ"],["03","Chất lượng – An toàn"],["04","Thanh toán CĐT"],["05","NCC – TP"],["06","Hiện trường – Văn bản"]];
@@ -2227,7 +2229,7 @@ function ctFlow(p,file){let w=document.getElementById("fview");if(w)w.remove();w
 /* File trong thư mục 01.3 để chọn đọc lại */
 function ctFilesLoad(){if(!cur||!document.getElementById("ctsel"))return;const p=DB.projects.find(x=>x.id===cur.id);if(!p||p._files13!==undefined)return;p._files13=[];
   FS.list(p.id).then(L=>{p._files13=L.map(x=>({...x,folder:nf(x.folder)})).filter(x=>x.folder==="01.3"&&ctOk(x.name)&&!x.wait);if(document.getElementById("ctsel"))keep(route)}).catch(()=>{})}
-function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="goi")return ssgRoute(p,sub)||pkView(p);if(s==="kh")return khView(p);if(s==="bcn")return bcView(p);if(s==="week")return weekView(p);if(s==="nt")return ntView(p,sub);if(s==="pyc")return pycView(p,sub);if(s==="tt")return ttView(p,sub);if(s==="dc")return dcView(p);const c=calc(p),mg=pct(c.gp,c.rev);
+function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="goi")return ssgRoute(p,sub)||pkView(p);if(s==="kh")return khView(p);if(s==="bn")return kbView(p);if(s==="bcn")return bcView(p);if(s==="week")return weekView(p);if(s==="nt")return ntView(p,sub);if(s==="pyc")return pycView(p,sub);if(s==="tt")return ttView(p,sub);if(s==="dc")return dcView(p);const c=calc(p),mg=pct(c.gp,c.rev);
   const k3=kc("proj","Giá trị hợp đồng",ty(c.rev),"tỷ",`Chưa VAT · hồ sơ ${esc(p.qcode||"")} ngày ${esc(p.date||"")}`)+kc("cost","Giá vốn dự thầu",ty(c.cost),"tỷ",`Vật tư ${ty(c.cv)} · nhân công ${ty(c.cn)} · máy ${ty(c.cm)} tỷ`,"gv")+kc(mg>=10?"rev":"mat","Lãi gộp dự kiến",ty(c.gp),"tỷ",`Biên lãi ${fm(mg)}% doanh thu`,"lg");
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
     return `<div class="vgrid">${k3}${WXBOX}
@@ -2556,7 +2558,7 @@ function localOld(){try{const d=STORE.load();return(d.projects||[]).filter(p=>!D
 function migCard(){const n=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().length:0;return n?card("Dữ liệu còn trên trình duyệt này",`Có ${n} dự án chưa đưa lên hệ thống · sau khi đưa lên, bản trên trình duyệt được giữ lại làm dự phòng`,`<button class="pill" id="mig" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Đưa lên hệ thống</button>`):""}
 /* Quyền trên giao diện: chỉ để gọn màn hình, máy chủ mới là nơi chặn thật (supabase/schema.sql) */
 const canOv=()=>!window.NGApp||NGApp.board||DB.projects.some(p=>p._role==="gd");
-const FIELD=["prog","kh","week","bcn","mat","pyc","tt","hr","files"],sheetsFor=b=>b&&b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS;
+const FIELD=["prog","kh","week","bcn","mat","pyc","tt","hr","files","bn"],sheetsFor=b=>b&&b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS;
 function projList(){const B=DB.projects,SP=canOv()?SAMPLES():[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":window.NGApp&&NGApp.board?"Chưa có dự án nào, anh tải BOQ để tạo dự án đầu tiên":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
   <div class="plist">
   ${!window.NGApp||NGApp.board?`<label class="card pc upl" id="drop"><input type="file" id="boqf" accept=".xlsx,.xls,.xlsm" hidden>
@@ -2849,7 +2851,7 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;subLay(view);dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad();if(/-(pyc|tt|dc|goi|kh|files)(-|$)/.test(location.hash)&&cur&&(PY.pid!==cur.id||!PY.list||Date.now()-(PY.at||0)>30000))pyLoad()}else{try{drawMap()}catch(e){console.error(e)}}
+  if(!isHome){view.innerHTML=html;subLay(view);dashZeros(view);bqApply();if(top==="quan-tri"&&admTab!=="mk")adminLoad();if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad();if(/-(pyc|tt|dc|goi|kh|files)(-|$)/.test(location.hash)&&cur&&(PY.pid!==cur.id||!PY.list||Date.now()-(PY.at||0)>30000))pyLoad();if(cur&&/^#?da-/.test(location.hash)&&!NGApp.guest)try{kbAuto(DB.projects.find(x=>x.id===cur.id)||cur)}catch(e){}}else{try{drawMap()}catch(e){console.error(e)}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -3676,6 +3678,89 @@ view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.targe
       SG=null;PY.list=[data,...PY.list.filter(y=>y.id!==data.id)];PY.msg=go?`Đã gửi ${data.no} · ${data.status==="pending"?"đang chờ "+((data.steps||[])[0]||{}).name:"đã duyệt"}`:"Đã lưu nháp "+data.no;if(data.status==="approved")ssgApply(p,data);location.hash="da-"+p.id+"-goi-"+data.id;R()}
     catch(er){PY.msg=pyErr(er);b.disabled=false;R()}}});}
 
+/* ---------- Bộ não dự án: mỗi file văn bản được đọc một lần, lưu bản chữ + tóm tắt trên máy chủ (kb_docs);
+   thông tin chốt của dự án (kb_facts) tự điền từ file, người có quyền xác nhận; trợ lý chat tra cứu theo đó và ghi nguồn.
+   Máy đang mở dự án tự đọc các file chưa đọc (kể cả file cũ), từng file một; máy chủ khoá từng file để hai máy không đọc trùng. */
+var KB={pid:null,docs:null,facts:null,files:null,busy:false,now:"",at:{},msg:"",edit:null,run:0};
+COL.bn=["#7C3AED","#C026D3","#F3E8FF","#6B21A8"];I.bn='<path d="M9.5 4.5a3 3 0 0 0-5 2.2 3 3 0 0 0-1 5.3 3.2 3.2 0 0 0 2.5 5 3 3 0 0 0 3.5 2.5V4.5Z"/><path d="M14.5 4.5a3 3 0 0 1 5 2.2 3 3 0 0 1 1 5.3 3.2 3.2 0 0 1-2.5 5 3 3 0 0 1-3.5 2.5V4.5Z"/><path d="M9.5 9h-2M14.5 9h2M9.5 14h-2.5M14.5 14H17"/>';
+const KB_KEYS="Chủ đầu tư|Tư vấn giám sát|Tên công trình|Địa điểm|Số hợp đồng với CĐT|Ngày ký hợp đồng với CĐT|Loại hợp đồng|Giá trị hợp đồng|Thuế VAT|Phạm vi công việc|Thời gian thực hiện|Ngày khởi công|Ngày hoàn thành|Tạm ứng|Thu hồi tạm ứng|Điều kiện thanh toán|Giữ lại khi thanh toán|Bảo lãnh thực hiện hợp đồng|Bảo hành|Phạt chậm tiến độ|Điều chỉnh khối lượng, đơn giá|Phát sinh|Bảo hiểm|Nghiệm thu|Giấy phép xây dựng|Phụ lục hợp đồng".split("|");
+/* File cần đọc: văn bản (PDF, Word, Excel, PowerPoint, chữ); bỏ bản vẽ thiết kế (02.1), nhật ký ảnh (06.1), ảnh, file quá 60 MB */
+const kbWant=f=>/\.(pdf|docx|xlsx|xlsm|xls|pptx|txt|csv)$/i.test(f.name)&&!/^(02\.1|06\.1)/.test(nf(f.folder))&&(+f.size||0)<=60*1048576&&!f.wait;
+const kbBoss=p=>!!(NGApp.board||["gd","qs"].includes(p._role));
+const kbShort=n=>String(n||"").replace(/^\d{8}_[^_]+_/,"");
+async function kbLoad(p){if(NGApp.guest)return;const sb=NGB.sb();try{const [D,F,L]=await Promise.all([sb.from("kb_docs").select("file_id,folder,name,status,kind,summary,src,err,at").eq("project_id",p.id),sb.from("kb_facts").select("*").eq("project_id",p.id).order("k"),NGB.drive.list(p.id)]);
+    if(D.error)throw D.error;if(F.error)throw F.error;KB.pid=p.id;KB.docs=D.data||[];KB.facts=F.data||[];KB.files=L||[];KB.msg=""}
+  catch(e){KB.pid=p.id;KB.docs=KB.docs||[];KB.facts=KB.facts||[];KB.files=KB.files||[];KB.msg=/kb_|relation|schema/i.test(String(e.message||e))?"Máy chủ chưa cập nhật phần Bộ não dự án":String(e.message||e)}
+  if(cur&&cur.id===p.id&&/-bn(-|$)/.test(location.hash))keep(route)}
+/* pdf.js đọc lớp chữ của PDF (PDF xuất từ Word/Excel); PDF scan thì gửi nguyên file cho Claude đọc */
+function needPJ(){return window.pdfjsLib?Promise.resolve():new Promise((ok,er)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";s.onload=()=>{try{pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"}catch(e){}ok()};s.onerror=er;document.head.appendChild(s)})}
+async function kbText(blob,name){const ext=(name.split(".").pop()||"").toLowerCase(),buf=await blob.arrayBuffer();
+  if(ext==="pdf"){let pages=0;try{await needPJ();const doc=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;pages=doc.numPages;let t="";for(let i=1;i<=pages&&t.length<400000;i++){const c=await (await doc.getPage(i)).getTextContent();t+=`\n[Trang ${i}]\n`+c.items.map(x=>x.str+(x.hasEOL?"\n":" ")).join("")}
+      if(t.replace(/\[Trang \d+\]|\s/g,"").length>=Math.max(300,pages*150))return{text:t.trim()}}catch(e){}
+    /* PDF scan: gửi tối đa ~10 MB (cắt bớt trang cuối nếu lớn) */
+    if(buf.byteLength<=10*1048576)return{doc:{mime:"application/pdf",data:b64(buf)}};
+    await needPL();const src=await PDFLib.PDFDocument.load(buf,{ignoreEncryption:true}),n=src.getPageCount();let k=Math.min(n,100),out=null;
+    while(k>=5){const d=await PDFLib.PDFDocument.create();(await d.copyPages(src,[...Array(k).keys()])).forEach(x=>d.addPage(x));out=await d.save();if(out.byteLength<=10*1048576)break;k=Math.floor(k*.6)}
+    if(!out||out.byteLength>10*1048576)throw new Error("File PDF scan quá lớn để đọc");return{doc:{mime:"application/pdf",data:b64(out)},cut:k<n?`đọc ${k}/${n} trang đầu`:""}}
+  if(/^(xlsx|xlsm|xls)$/.test(ext)){await needX();const wb=XLSX.read(buf,{type:"array"});return{text:wb.SheetNames.map(n=>"[Sheet "+n+"]\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false}).replace(/,{3,}/g,",,")).join("\n").slice(0,400000)}}
+  if(/^(docx|pptx)$/.test(ext)){await needX();const z=XLSX.CFB.read(new Uint8Array(buf),{type:"array"});return{text:z.FullPaths.filter(n=>/word\/document\.xml$|ppt\/slides\/slide\d+\.xml$/.test(n)).map(n=>xmlText(new TextDecoder().decode(new Uint8Array(XLSX.CFB.find(z,n).content)))).join("\n").replace(/\n{3,}/g,"\n\n").slice(0,400000)}}
+  return{text:new TextDecoder().decode(buf).slice(0,400000)}}
+/* Đọc lần lượt các file chưa đọc của dự án (gọi khi mở dự án, sau khi tải file lên, hoặc bấm Đọc lại) */
+async function kbRun(p,only){if(NGApp.guest||KB.busy)return;if(KB.pid!==p.id||!KB.files)await kbLoad(p);if(KB.pid!==p.id||/chưa cập nhật/.test(KB.msg))return;
+  const have=new Map((KB.docs||[]).map(d=>[d.file_id,d])),todo=(KB.files||[]).filter(f=>kbWant(f)&&(only?only.includes(f.id):!have.has(f.id)));if(!todo.length)return;
+  KB.busy=true;const run=++KB.run,R=()=>{if(cur&&cur.id===p.id&&/-bn(-|$)/.test(location.hash))keep(route)};
+  try{for(const f of todo){if(run!==KB.run||!cur||cur.id!==p.id)break;
+      const {data:ok,error}=await NGB.sb().rpc("kb_claim",{p_file:f.id,p_force:!!only});if(error)throw error;if(!ok)continue;
+      KB.now=f.name;R();
+      try{const blob=await NGB.drive.blob(f.id),x=await kbText(blob,f.name);const j=await NGB.ai({action:"digest",file:f.id,text:x.text||"",doc:x.doc||null});
+        KB.docs=[...KB.docs.filter(d=>d.file_id!==f.id),{file_id:f.id,folder:f.folder,name:f.name,status:"ok",kind:j.kind||"",summary:j.summary||"",src:x.text?"text":"notes",err:x.cut||"",at:new Date().toISOString()}];
+        if(j.facts)await kbLoad(p)}
+      catch(e){const m=String(e.message||e).slice(0,280);try{await NGB.sb().rpc("kb_mark",{p_file:f.id,p_status:"err",p_err:m})}catch(_){}
+        KB.docs=[...KB.docs.filter(d=>d.file_id!==f.id),{file_id:f.id,folder:f.folder,name:f.name,status:"err",kind:"",summary:"",err:m,at:new Date().toISOString()}];
+        if(/khoá Claude|hết tiền|Phiên đăng nhập/.test(m))break}}}
+  catch(e){KB.msg=String(e.message||e)}finally{KB.busy=false;KB.now="";R()}}
+function kbAuto(p){if(NGApp.guest||!p||!p.id)return;const t=KB.at[p.id]||0;if(Date.now()-t<120000)return;KB.at[p.id]=Date.now();kbLoad(p).then(()=>kbRun(p))}
+/* Sau khi tải file lên: đọc file mới */
+if(window.NGB&&NGB.drive&&!NGB.drive._kb){const up=NGB.drive.upload.bind(NGB.drive);NGB.drive.upload=async(...a)=>{const r=await up(...a);const p=DB.projects.find(x=>x.id===a[0]);if(p)setTimeout(()=>{KB.at[p.id]=0;KB.files=null;kbAuto(p)},2500);return r};NGB.drive._kb=1}
+/* Màn Bộ não dự án */
+function kbView(p){if(NGApp.guest)return`<div class="vgrid">${card("Bộ não dự án","Cần đăng nhập tài khoản thật",`<span class="sub">Chế độ thử không lưu lên máy chủ nên trợ lý chưa đọc được file.</span>`,"span3")}</div>`;
+  if(KB.pid!==p.id||!KB.docs){if(!KB.busy)kbLoad(p);return`<div class="vgrid"><section class="card span3"><span class="sub">Đang tải bộ não dự án…</span></section></div>`}
+  const W=(KB.files||[]).filter(kbWant),D=new Map(KB.docs.map(d=>[d.file_id,d])),ok=W.filter(f=>(D.get(f.id)||{}).status==="ok").length,er=W.filter(f=>(D.get(f.id)||{}).status==="err"),left=W.filter(f=>!D.has(f.id)||D.get(f.id).status==="busy").length;
+  const F=KB.facts||[],fa=F.filter(x=>x.status!=="ok").length,boss=kbBoss(p),fname=id=>{const f=(KB.files||[]).find(x=>x.id===id);return f?f.name:""};
+  const src=x=>x.file_id&&fname(x.file_id)?`<button class="back sm" style="margin:0" data-fv="${esc(x.file_id)}" data-n="${esc(fname(x.file_id))}" title="${esc(fname(x.file_id))}">📄 ${esc(kbShort(fname(x.file_id)).slice(0,34))}</button>`:`<small class="spec">${esc(x.src||"")}</small>`;
+  const E=KB.edit&&KB.edit.pid===p.id?KB.edit:null;
+  const rows=F.map(x=>E&&E.id===x.id?`<tr><td><b>${esc(x.k)}</b></td><td colspan="3"><textarea class="fi" data-kbv rows="3" style="width:100%">${esc(E.v)}</textarea></td><td class="tc" style="white-space:nowrap"><button class="back sm" style="margin:0" data-kbcancel="1">Huỷ</button> <button class="pill" data-kbsave="1" style="${sv("bn")};margin:0"><span class="dot">✓</span>Lưu</button></td></tr>`
+    :`<tr><td><b>${esc(x.k)}</b></td><td style="min-width:240px;white-space:pre-line">${esc(x.v)}${x.clause?`<details class="kbcl"><summary>Căn cứ</summary>${esc(x.clause)}</details>`:""}</td><td>${src(x)}</td><td class="tc">${x.status==="ok"?st("ok","Đã xác nhận")+`<small class="spec">${esc(x.by_name||"")} · ${fdt(x.at).slice(0,10)}</small>`:st("warn","Chưa xác nhận")+`<small class="spec">${esc(x.by_name||"")}</small>`}</td>
+      <td class="tc" style="white-space:nowrap">${x.status!=="ok"&&boss?`<button class="back sm" style="margin:0" data-kbok="${x.id}">Xác nhận</button> `:""}<button class="back sm" style="margin:0" data-kbed="${x.id}">Sửa</button>${boss?` <button class="back sm" style="margin:0" data-kbdel="${x.id}">Xoá</button>`:""}</td></tr>`).join("");
+  const add=`<tr class="kbadd"><td><input class="fi" list="kbkeys" data-kbnk placeholder="Mục (vd: Loại hợp đồng)" value="${esc((KB.nk||""))}"><datalist id="kbkeys">${KB_KEYS.filter(k=>!F.some(x=>x.k===k)).map(k=>`<option value="${esc(k)}">`).join("")}</datalist></td><td colspan="3"><input class="fi" data-kbnv placeholder="Nội dung" style="width:100%" value="${esc(KB.nv||"")}"></td><td class="tc"><button class="back sm" style="margin:0" data-kbadd="1">+ Thêm mục</button></td></tr>`;
+  const docs=[...W].sort((a,b)=>nf(a.folder).localeCompare(nf(b.folder))).map(f=>{const d=D.get(f.id);const s=!d?(KB.now===f.name?st("warn","Đang đọc…"):`<span class="sub">Chờ đọc</span>`):d.status==="ok"?st("ok","Đã đọc")+(d.src==="notes"?`<small class="spec">file scan · Claude ghi chép${d.err?" · "+esc(d.err):""}</small>`:""):d.status==="busy"?st("warn",KB.now===f.name?"Đang đọc…":"Máy khác đang đọc"):st("bad","Lỗi")+`<small class="spec">${esc(d.err||"")}</small>`;
+    return`<tr><td class="tc num">${esc(nf(f.folder))}</td><td style="min-width:200px"><button class="lnk" data-fv="${esc(f.id)}" data-n="${esc(f.name)}">${esc(kbShort(f.name))}</button>${d&&d.kind?`<small class="spec">${esc(d.kind)}</small>`:""}</td><td style="min-width:300px">${d&&d.summary?`<details class="kbsm"><summary>${esc(d.summary.split("\n")[0].replace(/^- /,"").slice(0,140))}</summary><div style="white-space:pre-line">${esc(d.summary)}</div></details>`:""}</td><td class="tc">${s}</td><td class="tc">${d&&d.status!=="busy"&&!KB.busy?`<button class="back sm" style="margin:0" data-kbre="${esc(f.id)}">Đọc lại</button>`:""}</td></tr>`}).join("");
+  return`<div class="vgrid">${kc("bn","Tài liệu đã đọc",ok,"/"+W.length+" file",KB.busy?"Đang đọc: "+esc(kbShort(KB.now).slice(0,40)):left?left+" file chờ đọc":"Đã đọc hết file văn bản")}${kc(fa?"mat":"prog","Hồ sơ dự án",F.length,"mục",fa?fa+" mục trợ lý tự đọc, chưa xác nhận":"Đã xác nhận đủ")}${kc(er.length?"cost":"rev","File lỗi",er.length,"file",er.length?"Bấm Đọc lại ở dòng lỗi":"Không có file lỗi")}
+  <section class="card span3"><div class="bh"><div><h3>Hồ sơ dự án</h3><span class="sub">Thông tin chốt của dự án: trợ lý tự điền khi đọc hợp đồng, phụ lục, pháp lý với chủ đầu tư; anh ghi thêm hoặc dặn trong khung chat · ${boss?"anh xác nhận để thành thông tin chính thức":"Giám đốc dự án, QS hoặc Ban giám đốc xác nhận"} · trợ lý trả lời theo bảng này trước, kèm nguồn</span></div></div>
+    ${KB.msg?`<div class="ctb" style="margin-top:12px">${esc(KB.msg)}</div>`:""}
+    <div class="tw" style="margin-top:12px"><table class="t kbt"><thead><tr><th>Mục</th><th>Nội dung</th><th>Nguồn</th><th>Trạng thái</th><th></th></tr></thead><tbody>${rows||`<tr><td colspan="5" class="sub">Chưa có mục nào${left?" · trợ lý đang đọc file, xong sẽ tự điền":""}.</td></tr>`}${add}</tbody></table></div></section>
+  <section class="card span3"><div class="bh"><div><h3>Tài liệu trợ lý đã đọc</h3><span class="sub">Mỗi file văn bản tải lên được đọc một lần và lưu bản chữ trên máy chủ (không mất khi tải lại trang) · PDF scan: Claude ghi chép các điều khoản chính · bỏ qua ảnh, bản vẽ thiết kế, nhật ký ảnh</span></div>${er.length&&!KB.busy?`<button class="back sm" style="margin:0" data-kbreall="1">Đọc lại ${er.length} file lỗi</button>`:""}</div>
+    <div class="tw" style="margin-top:12px"><table class="t kbt"><thead><tr><th>Thư mục</th><th>File</th><th>Tóm tắt</th><th>Trạng thái</th><th></th></tr></thead><tbody>${docs||`<tr><td colspan="5" class="sub">Chưa có file văn bản nào trong thư mục dự án.</td></tr>`}</tbody></table></div></section></div>`}
+/* Chat: dự án đang mở, mở file nguồn, ghi nhớ sau khi người dùng xác nhận */
+NG.pid=()=>cur&&/^#?da-/.test(location.hash)?cur.id:"";
+NG.open=(id,name)=>fileView(id,name);
+NG.remember=async x=>{const p=cur&&DB.projects.find(y=>y.id===cur.id);if(x.scope==="du_an"&&p){const {error}=await NGB.sb().rpc("kb_fact_set",{p_project:p.id,p_k:x.k,p_v:x.v,p_src:"Trò chuyện với trợ lý",p_confirm:kbBoss(p),p_clause:""});if(error)throw new Error(pyErr(error));KB.at[p.id]=0;if(KB.pid===p.id)kbLoad(p);return kbBoss(p)?"hồ sơ dự án (đã xác nhận)":"hồ sơ dự án (chờ xác nhận)"}
+  await NGB.addRule("all",(x.k?x.k+": ":"")+x.v);return"kiến thức chung của công ty"};
+{const P=()=>cur&&DB.projects.find(x=>x.id===cur.id),R=()=>keep(route);
+view.addEventListener("input",e=>{const t=e.target;if(t.dataset.kbv!=null&&KB.edit)KB.edit.v=t.value;if(t.dataset.kbnk!=null)KB.nk=t.value;if(t.dataset.kbnv!=null)KB.nv=t.value});
+view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.target.closest("[data-kbok],[data-kbed],[data-kbdel],[data-kbsave],[data-kbcancel],[data-kbadd],[data-kbre],[data-kbreall]");if(!b)return;const d=b.dataset,F=KB.facts||[],sb=NGB.sb();
+  const set=async(k,v,src,conf,clause)=>{const {error}=await sb.rpc("kb_fact_set",{p_project:p.id,p_k:k,p_v:v,p_src:src,p_confirm:conf,p_clause:clause});if(error)throw error};
+  try{
+    if(d.kbok){const x=F.find(y=>y.id===d.kbok);if(x)await set(x.k,x.v,"",true,null)}
+    else if(d.kbed){const x=F.find(y=>y.id===d.kbed);if(x)KB.edit={pid:p.id,id:x.id,v:x.v};R();return}
+    else if(d.kbcancel){KB.edit=null;R();return}
+    else if(d.kbsave&&KB.edit){const x=F.find(y=>y.id===KB.edit.id);if(x&&KB.edit.v.trim()&&KB.edit.v!==x.v)await set(x.k,KB.edit.v,"Sửa tay",kbBoss(p),null);KB.edit=null}
+    else if(d.kbdel){if(!b.dataset.ok){b.dataset.ok=1;b.textContent="Bấm lần nữa để xoá";b.style.color="#C0141B";return}const {error}=await sb.rpc("kb_fact_del",{p_id:d.kbdel});if(error)throw error}
+    else if(d.kbadd){const k=String(KB.nk||"").trim(),v=String(KB.nv||"").trim();if(!k||!v){KB.msg="Anh ghi cả mục và nội dung";R();return}await set(k,v,"Ghi tay",kbBoss(p),"");KB.nk="";KB.nv=""}
+    else if(d.kbre){kbRun(p,[d.kbre]);return}
+    else if(d.kbreall){kbRun(p,(KB.docs||[]).filter(x=>x.status==="err").map(x=>x.file_id));return}
+    KB.msg="";await kbLoad(p)}catch(er){KB.msg=pyErr(er);R()}});}
+
 NGBoot();
 })();
 /* ===== Toàn màn hình ===== */
@@ -3723,14 +3808,18 @@ fab.addEventListener("click",()=>open(box.hidden));
 document.getElementById("cx").addEventListener("click",()=>open(false));
 addEventListener("keydown",e=>{if(e.key==="Escape"&&!box.hidden)open(false)});
 function add(role,html){const d=document.createElement("div");d.className="msg "+role;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
-function hello(){add("bot",md("Chào anh. Em trả lời từ số liệu đang có trên web: giá trị hợp đồng, giá vốn, lãi gộp, tiến độ, vật tư cần đặt, dòng tiền.\nAnh hỏi tự nhiên, hoặc chọn một câu gợi ý bên dưới."))}
+function hello(){add("bot",md("Chào anh. Em trả lời từ số liệu trên web (giá trị hợp đồng, giá vốn, tiến độ, vật tư, dòng tiền) và từ **bộ não dự án**: hồ sơ dự án cùng các file hợp đồng, pháp lý, công văn đã tải lên, có ghi nguồn.\nAnh dặn em điều gì lâu dài (ví dụ \"hợp đồng này là đơn giá cố định\"), em sẽ hỏi lại rồi ghi nhớ."))}
 async function ask(q){q=q.trim();if(!q)return;open(true);add("me",esc(q));hist.push({role:"user",content:q});
-  const w=add("bot wait","<i></i><i></i><i></i>");let a=null;
+  const w=add("bot wait","<i></i><i></i><i></i>");let a=null,extra=null;
   if(api!==false){try{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),45000);
-      if(!window.NGB||NGApp.guest)throw 0;const j=await Promise.race([NGB.ai({action:"chat",messages:hist.slice(-12),context:window.NG?NG.context():{}}),new Promise((_,no)=>setTimeout(()=>no(new Error("cham")),60000))]);clearTimeout(t);if(j&&j.text){a=j.text;api=true}}catch(e){if(e&&e.code==="chua_ket_noi")api=false}}
+      if(!window.NGB||NGApp.guest)throw 0;const j=await Promise.race([NGB.ai({action:"chat",messages:hist.slice(-12),context:window.NG?NG.context():{},proj:window.NG&&NG.pid?NG.pid():""}),new Promise((_,no)=>setTimeout(()=>no(new Error("cham")),120000))]);clearTimeout(t);if(j&&j.text){a=j.text;api=true;extra=j}}catch(e){if(e&&e.code==="chua_ket_noi")api=false}}
   if(!a)a=window.NG?NG.answer(q):"Em chưa đọc được số liệu.";
-  stt.textContent=api?"Đã kết nối Claude":"Trả lời từ số liệu trên web · chưa có khoá Claude (Quản trị → Kết nối AI)";
-  w.className="msg bot";w.innerHTML=md(a);hist.push({role:"assistant",content:a});log.scrollTop=log.scrollHeight}
+  stt.textContent=api?"Đã kết nối Claude · có bộ não dự án":"Trả lời từ số liệu trên web · chưa có khoá Claude (Quản trị → Kết nối AI)";
+  w.className="msg bot";w.innerHTML=md(a);hist.push({role:"assistant",content:a});
+  if(extra&&(extra.sources||[]).length){const d=document.createElement("div");d.className="csrc";extra.sources.forEach((s,i)=>{const b=document.createElement("button");b.type="button";b.title="Mở "+s.name;b.textContent=(i+1)+". "+String(s.name).replace(/^\d{8}_[^_]+_/,"");b.onclick=()=>NG.open(s.id,s.name);d.appendChild(b)});w.appendChild(d)}
+  if(extra)(extra.remember||[]).forEach(x=>{const d=document.createElement("div");d.className="cmem";d.innerHTML=`Ghi vào ${x.scope==="du_an"?"hồ sơ dự án":"kiến thức chung của công ty"}: <b>${esc(x.k)}</b>${x.k?": ":""}${esc(x.v)}<div class="cma"><button class="y" type="button">Đúng, ghi lại</button><button type="button">Không</button></div>`;
+    const [y,n]=d.querySelectorAll("button");n.onclick=()=>{d.innerHTML="Đã bỏ qua, em không ghi."};y.onclick=async()=>{y.disabled=true;try{const where=await NG.remember(x);d.innerHTML="📝 Đã ghi nhớ vào "+esc(where)+"."}catch(e){y.disabled=false;d.querySelector(".cma").insertAdjacentHTML("beforebegin",`<div style="color:#C0141B;margin-top:6px">${esc(e.message||e)}</div>`)}};w.appendChild(d)});
+  log.scrollTop=log.scrollHeight}
 document.getElementById("cform").addEventListener("submit",e=>{e.preventDefault();const v=inp.value;inp.value="";ask(v)});
 document.getElementById("cchips").addEventListener("click",e=>{const b=e.target.closest("button");if(b)ask(b.textContent)});
 /* thẻ Trợ lý trên trang Tổng quan mở luôn khung chat */

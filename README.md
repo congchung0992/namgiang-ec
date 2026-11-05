@@ -98,6 +98,13 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - **Kế hoạch giao thầu**: ngày cần = ngày bắt đầu sớm nhất của công việc trong gói trên tiến độ; ký hợp đồng trước 14 ngày (gói vật tư không muộn hơn ngày đặt hàng = ngày cần − thời gian giao hàng), bảng so sánh giá duyệt trước 21 ngày; trình mẫu vật tư CĐT/TVGS trước 21 ngày, CĐT duyệt trước 14 ngày; các mốc sửa được, ghi ngày đã trình / CĐT duyệt, cảnh báo quá hạn.
 - Máy chủ: `supabase/migrations/20261105_bang_so_sanh_gia.sql`.
 
+## Bộ não dự án (tab Bộ não dự án, khung chat Trợ lý)
+- Mỗi file văn bản tải lên thư mục dự án (PDF, Word, Excel, PowerPoint; bỏ ảnh, bản vẽ 02.1, nhật ký 06.1) được đọc một lần và lưu **bản chữ + tóm tắt** trên máy chủ (bảng `kb_docs`), không mất khi tải lại trang. PDF có lớp chữ thì lấy chữ trực tiếp (pdf.js); PDF scan gửi Claude ghi chép điều khoản chính.
+- Máy đang mở dự án tự đọc các file chưa đọc, kể cả file cũ; máy chủ khoá từng file để hai máy không đọc trùng. File lỗi có nút Đọc lại.
+- **Hồ sơ dự án** (bảng `kb_facts`): trợ lý tự điền các mục chuẩn (loại hợp đồng, giá trị, tạm ứng, thanh toán, bảo hành, phạt…) từ hồ sơ với chủ đầu tư, kèm câu căn cứ và file nguồn; ghi "chưa xác nhận" cho tới khi GĐ dự án, QS hoặc Ban giám đốc xác nhận. Sửa, thêm, xoá được.
+- Trợ lý chat đọc hồ sơ dự án + danh mục tài liệu, tự mở bản chữ hoặc tìm theo từ khoá khi cần, ghi nguồn [1], [2] có nút mở file. Khi anh dặn điều gì lâu dài, trợ lý hỏi lại rồi mới ghi vào hồ sơ dự án hoặc kiến thức chung của công ty.
+- Máy chủ: `supabase/migrations/20261105_bo_nao_du_an.sql`, hàm `ai` (việc `digest`, `chat` có công cụ đọc tài liệu).
+
 ## Bài học cho AI
 - Bảng `ai_lessons` (migration `20261105_ai_lessons.sql`): `kind = match` là cặp dòng báo giá ↔ dòng BOQ đúng/sai (web tự áp khi ghép); `kind = rule` là câu dặn (`q` = phạm vi `baogia | hopdong | thumuc | chat | all`, `l` = nội dung).
 - Web tự ghi bài học khi anh sửa ghép báo giá, đổi gói vật tư, sửa số đọc từ hợp đồng hoặc đợt thanh toán, xếp file khác thư mục gợi ý. Anh tự dặn thêm ở Quản trị → Bài học cho AI.

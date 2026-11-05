@@ -61,9 +61,33 @@ const SYS_CHAT = `Bạn là "Trợ lý Nam Giang", trợ lý quản lý dự án
 Trả lời bằng tiếng Việt, ngắn gọn, đi thẳng vào số liệu. Số tiền viết kiểu Việt Nam (dấu chấm phân cách nghìn, dấu phẩy thập phân), dùng "tỷ" hoặc "triệu" cho dễ đọc; ngày dạng dd/mm/yyyy.
 Chỉ dựa vào dữ liệu trong phần NGỮ CẢNH. Nếu dữ liệu không có, nói rõ là chưa có và gợi ý cần nhập gì. Không bịa số.
 Nhắc khi con số dựa trên giả định (giá vốn ước tính, điều khoản thanh toán giả định, thời gian chờ vật tư mặc định).
-Có thể dùng gạch đầu dòng "- " và **in đậm**; không dùng bảng hay tiêu đề.`;
+Có thể dùng gạch đầu dòng "- " và **in đậm**; không dùng bảng hay tiêu đề.
+BỘ NÃO DỰ ÁN: ngoài số liệu, có HỒ SƠ DỰ ÁN (thông tin đã chốt; mục "chưa xác nhận" là trợ lý tự đọc từ file, nói rõ khi dùng) và DANH MỤC TÀI LIỆU (bản chữ các file đã tải lên, mã d1, d2…).
+- Câu hỏi về hợp đồng, điều khoản, pháp lý, tiến độ, công văn, biên bản: xem hồ sơ dự án trước; cần chi tiết hoặc trích dẫn thì gọi doc_read (đọc bản chữ một tài liệu) hoặc doc_search (tìm theo từ khoá trong mọi tài liệu).
+- Ghi nguồn ngay sau ý lấy từ tài liệu bằng mã trong ngoặc vuông, ví dụ [d3]; kèm số điều khoản nếu có. Không ghi mã tài liệu bạn chưa đọc.
+- Khi người dùng nói ra thông tin lâu dài chưa có hoặc khác hồ sơ (ví dụ "hợp đồng Ekochem là đơn giá cố định", "TVGS là công ty X", "công ty luôn giữ lại 5% bảo hành thầu phụ"), hoặc sửa câu trả lời của bạn: gọi ghi_nho rồi hỏi lại đúng một câu "Em ghi vào hồ sơ …: … – đúng không anh?". Không tự coi là đã ghi.`;
+const SYS_DIGEST = `Bạn là thư ký hồ sơ của một tổng thầu xây dựng Việt Nam (Nam Giang). Đọc một tài liệu của dự án và lập "bản chữ" để trợ lý tra cứu về sau.
+- kind: loại tài liệu ngắn gọn (ví dụ "Hợp đồng thi công với chủ đầu tư", "Phụ lục hợp đồng", "Tiến độ thi công", "Hợp đồng thầu phụ", "Báo giá nhà cung cấp", "Công văn", "Biên bản họp", "Hồ sơ thanh toán").
+- summary: tóm tắt 4–10 dòng, mỗi dòng bắt đầu "- ", nêu: số hiệu, ngày, các bên, phạm vi, giá trị, mốc thời gian, điều khoản quan trọng. Số tiền viết kiểu Việt Nam (1.250.000.000 đ), ngày dd/mm/yyyy.
+- notes: nếu đề bài có kèm "Nội dung chữ của file" thì để "". Nếu không (file scan/ảnh), ghi chép chi tiết nội dung để tra cứu thay bản gốc: giữ nguyên văn các điều khoản về giá trị, loại hợp đồng, khối lượng, đơn giá, điều chỉnh giá, tạm ứng, thanh toán, giữ lại, bảo lãnh, bảo hành, tiến độ, phạt, nghiệm thu, các bên ký; ghi số điều khoản. Tối đa khoảng 12.000 ký tự.
+- facts: chỉ lấy khi tài liệu là hồ sơ của DỰ ÁN với CHỦ ĐẦU TƯ (hợp đồng, phụ lục với CĐT, pháp lý dự án, hồ sơ thầu, tiến độ được duyệt). Hợp đồng/báo giá với thầu phụ, nhà cung cấp, tổ đội thì facts = []. Mỗi fact: k là đúng một tên trong danh sách sau (không tự đặt tên khác): ${"Chủ đầu tư|Tư vấn giám sát|Tên công trình|Địa điểm|Số hợp đồng với CĐT|Ngày ký hợp đồng với CĐT|Loại hợp đồng|Giá trị hợp đồng|Thuế VAT|Phạm vi công việc|Thời gian thực hiện|Ngày khởi công|Ngày hoàn thành|Tạm ứng|Thu hồi tạm ứng|Điều kiện thanh toán|Giữ lại khi thanh toán|Bảo lãnh thực hiện hợp đồng|Bảo hành|Phạt chậm tiến độ|Điều chỉnh khối lượng, đơn giá|Phát sinh|Bảo hiểm|Nghiệm thu|Giấy phép xây dựng|Phụ lục hợp đồng".split("|").join(", ")}; v là nội dung ngắn gọn, chính xác theo tài liệu; clause là câu nguyên văn làm căn cứ kèm số điều khoản. Loại hợp đồng ghi rõ: trọn gói / theo đơn giá cố định / theo đơn giá điều chỉnh / theo thời gian / kết hợp, và khối lượng có được tính lại theo thực tế không. Không đoán; điều gì tài liệu không ghi thì không đưa vào.`;
 
 /* ---------- Khuôn dữ liệu ---------- */
+const DIGEST = { type: "object", properties: { kind: { type: "string" }, summary: { type: "string" }, notes: { type: "string" },
+  facts: { type: "array", items: { type: "object", properties: { k: { type: "string" }, v: { type: "string" }, clause: { type: "string" } }, required: ["k", "v", "clause"] } } },
+  required: ["kind", "summary", "notes", "facts"] };
+const FACT_KEYS = new Set("Chủ đầu tư|Tư vấn giám sát|Tên công trình|Địa điểm|Số hợp đồng với CĐT|Ngày ký hợp đồng với CĐT|Loại hợp đồng|Giá trị hợp đồng|Thuế VAT|Phạm vi công việc|Thời gian thực hiện|Ngày khởi công|Ngày hoàn thành|Tạm ứng|Thu hồi tạm ứng|Điều kiện thanh toán|Giữ lại khi thanh toán|Bảo lãnh thực hiện hợp đồng|Bảo hành|Phạt chậm tiến độ|Điều chỉnh khối lượng, đơn giá|Phát sinh|Bảo hiểm|Nghiệm thu|Giấy phép xây dựng|Phụ lục hợp đồng".split("|"));
+const TOOLS = [
+  { name: "doc_read", description: "Đọc bản chữ của một tài liệu trong DANH MỤC TÀI LIỆU. Có tu_khoa thì chỉ trả các đoạn quanh từ khoá (nhanh hơn).", input_schema: { type: "object", properties: { doc: { type: "string", description: "Mã tài liệu, ví dụ d3" }, tu_khoa: { type: "string", description: "Từ khoá có dấu, ví dụ: tạm ứng, điều chỉnh giá. Để trống để đọc cả bài." } }, required: ["doc"] } },
+  { name: "doc_search", description: "Tìm một cụm từ (tiếng Việt có dấu) trong bản chữ mọi tài liệu được phép xem, trả về các đoạn có cụm từ đó.", input_schema: { type: "object", properties: { tu_khoa: { type: "string" } }, required: ["tu_khoa"] } },
+  { name: "ghi_nho", description: "Đề xuất ghi một thông tin lâu dài người dùng vừa nói (người dùng phải bấm xác nhận mới ghi). pham_vi du_an: ghi vào hồ sơ dự án đang mở (muc nên là một tên chuẩn như Loại hợp đồng, Tư vấn giám sát…); cong_ty: kiến thức chung của công ty.", input_schema: { type: "object", properties: { pham_vi: { type: "string", enum: ["du_an", "cong_ty"] }, muc: { type: "string" }, noi_dung: { type: "string" } }, required: ["pham_vi", "muc", "noi_dung"] } },
+];
+/* Các đoạn quanh từ khoá (không phân biệt hoa thường) */
+function around(body: string, kw: string, w = 700, max = 6) {
+  const B = body.toLowerCase(), K = kw.toLowerCase().trim(); const out: string[] = []; let i = 0, last = -1e9;
+  while (K && out.length < max && (i = B.indexOf(K, i)) >= 0) { if (i - last > w) { out.push("…" + body.slice(Math.max(0, i - w), i + K.length + w) + "…"); last = i; } i += K.length; }
+  return out;
+}
 /* Claude giới hạn số ô kiểu "hoặc null" trong khuôn: dùng kiểu thường, ô thiếu ghi "" (chữ) hoặc 0 (số) / -1 (chỉ số), máy chủ đổi lại thành null */
 const nul = (t: string) => ({ type: t });
 const blank = (o: any, keys: string[]) => { for (const k of keys) if (o && (o[k] === "" || o[k] === 0 || o[k] === -1)) o[k] = null; return o; };
@@ -238,6 +262,8 @@ Deno.serve(async (req) => {
   const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) return json({ error: "auth" }, 401);
   const { data: who, error: whoErr } = await admin.auth.getUser(token);
+  // Đọc theo quyền của người gọi (RLS): hồ sơ, bản chữ tài liệu
+  const uc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: "Bearer " + token } } });
   if (whoErr || !who?.user) return json({ error: "auth" }, 401);
   let b: any;
   try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
@@ -252,7 +278,7 @@ Deno.serve(async (req) => {
   const M = { model: "", in: 0, out: 0, err: "" }, t0 = Date.now();
   const env = { client: new Anthropic({ apiKey: key, timeout: 120000, maxRetries: 1 }), MODEL: MODELS.includes(keyCache.m) ? keyCache.m : MODELS[0], M };
   // Bài học anh Chung đã ghi (bảng ai_lessons, kind = rule; q = phạm vi, l = nội dung): gửi kèm mọi lượt gọi đúng phạm vi
-  const SC: any = { extract: "baogia", match: "baogia", match_lines: "baogia", contract: "hopdong", classify: "thumuc", chat: "chat" };
+  const SC: any = { extract: "baogia", match: "baogia", match_lines: "baogia", contract: "hopdong", classify: "thumuc", chat: "chat", digest: "hopdong" };
   try {
     const sc = SC[b.action];
     if (sc) {
@@ -260,6 +286,7 @@ Deno.serve(async (req) => {
       if (R && R.length) (env as any).R = "GHI NHỚ TỪ ANH CHUNG (các lần anh đã sửa hoặc dặn; ưu tiên làm theo khi phù hợp với tài liệu đang đọc):\n" + R.reverse().map((x: any) => "- " + String(x.l).slice(0, 400)).join("\n");
     }
   } catch (e) { console.error("rules", String(e).slice(0, 100)); }
+  (env as any).uc = uc; (env as any).admin = admin;
   const res = await run(b, env);
   try {
     await admin.from("ai_usage").insert({ user_id: who.user.id, provider: "claude", action: String(b.action || "").slice(0, 40), model: M.model || null, in_tok: M.in, out_tok: M.out, ms: Date.now() - t0, ok: res.status < 300, err: M.err || null, project_id: String(b.pid || b.project?.code || "").slice(0, 60) || null });
@@ -314,18 +341,82 @@ async function run(b: any, env: any): Promise<Response> {
       blank(data, ["contract_no", "sign_date", "value_before_vat", "value_with_vat", "vat_rate", "advance_percent", "advance_recovery", "retention_percent", "warranty_months", "payment_days", "payment_cycle", "start_date", "duration_days", "end_date", "penalty", "notes"]);
       return json({ ...data, model });
     }
+    if (b.action === "digest") {
+      const { data: f } = await env.uc.from("project_files").select("id,project_id,folder,name").eq("id", String(b.file || "")).maybeSingle();
+      if (!f) return json({ error: "khong_quyen" }, 403);
+      const text = typeof b.text === "string" ? b.text : "";
+      const content: any[] = [];
+      const fb = !text && b.doc && typeof b.doc.data === "string" ? fileBlock(String(b.doc.mime || ""), b.doc.data) : null;
+      if (fb) content.push(fb);
+      if (!fb && !text) return json({ error: "khong_doc_duoc" }, 422);
+      content.push({ type: "text", text: `Thư mục: ${f.folder}\nTên file: ${f.name}` + (text ? `\nNội dung chữ của file:\n${text.slice(0, 150000)}` : "") });
+      const { data, model } = await claude(env, { system: SYS_DIGEST, content, schema: DIGEST, effort: "low", maxTokens: 24000 });
+      const now = new Date().toISOString();
+      const { error: e1 } = await env.admin.from("kb_docs").upsert({ file_id: f.id, project_id: f.project_id, folder: f.folder, name: f.name, status: "ok", kind: String(data.kind || "").slice(0, 120), summary: String(data.summary || "").slice(0, 4000), body: text ? text.slice(0, 400000) : String(data.notes || "").slice(0, 60000), src: text ? "text" : "notes", err: "", model, at: now });
+      if (e1) throw new Error(e1.message);
+      const F = (data.facts || []).filter((x: any) => x && FACT_KEYS.has(String(x.k)) && String(x.v || "").trim());
+      let n = 0;
+      if (F.length) {
+        const { data: old } = await env.admin.from("kb_facts").select("k,status").eq("project_id", f.project_id);
+        const locked = new Set((old || []).filter((x: any) => x.status === "ok").map((x: any) => x.k));
+        const rows = F.filter((x: any) => !locked.has(x.k)).map((x: any) => ({ project_id: f.project_id, k: x.k, v: String(x.v).slice(0, 2000), clause: String(x.clause || "").slice(0, 2000), file_id: f.id, src: f.name, status: "auto", by_name: "Trợ lý đọc file", by: null, at: now }));
+        if (rows.length) { const { error: e2 } = await env.admin.from("kb_facts").upsert(rows, { onConflict: "project_id,k" }); if (e2) throw new Error(e2.message); n = rows.length; }
+      }
+      return json({ kind: data.kind, summary: data.summary, facts: n, model });
+    }
     if (b.action === "chat") {
       const msgs = (Array.isArray(b.messages) ? b.messages : []).filter((m: any) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string").slice(-12).map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) }));
       if (!msgs.length || msgs[0].role !== "user") return json({ error: "no_message" }, 400);
-      const ctx = JSON.stringify(b.context || {}).slice(0, 150000);
-      const r: any = { model: env.MODEL, max_tokens: 4000, system: SYS_CHAT + (env.R ? "\n\n" + env.R : "") + "\n\nNGỮ CẢNH (JSON số liệu hiện có trên web):\n" + ctx, messages: msgs, output_config: { effort: "low" } };
-      if (env.MODEL !== "claude-haiku-5-5") { r.betas = ["server-side-fallback-2026-07-01"]; r.fallbacks = "default"; }
-      let msg: any;
-      try { msg = await env.client.beta.messages.stream(r).finalMessage(); }
-      catch (e) { throw e instanceof Anthropic.AuthenticationError ? new AiErr("sai_khoa") : e instanceof Anthropic.RateLimitError ? new AiErr("het_luot") : e instanceof Anthropic.APIError && (e.status || 0) >= 500 ? new AiErr("qua_tai") : e; }
-      const u = msg.usage || {}; env.M.model = msg.model; env.M.in += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0); env.M.out += u.output_tokens || 0;
-      if (msg.stop_reason === "refusal") throw new AiErr("tu_choi");
-      return json({ text: (msg.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n").trim() });
+      const ctx = JSON.stringify(b.context || {}).slice(0, 150000), pid = String(b.proj || "");
+      // Hồ sơ dự án và danh mục tài liệu theo quyền người hỏi
+      let fq = env.uc.from("kb_facts").select("project_id,k,v,status,src").order("k").limit(400), dq = env.uc.from("kb_docs").select("file_id,project_id,folder,name,kind,summary").eq("status", "ok").order("folder").limit(250);
+      if (pid) { fq = fq.eq("project_id", pid); dq = dq.eq("project_id", pid); }
+      const [{ data: FA }, { data: DO }] = await Promise.all([fq, dq]);
+      const docs = (DO || []).map((d: any, i: number) => ({ ...d, code: "d" + (i + 1) })), byCode: any = Object.fromEntries(docs.map((d: any) => [d.code, d])), byFile: any = Object.fromEntries(docs.map((d: any) => [d.file_id, d]));
+      const hs = (FA || []).map((x: any) => `- ${pid ? "" : "[" + x.project_id + "] "}${x.k}: ${x.v}${x.status === "ok" ? "" : " (chưa xác nhận)"}${x.src ? " · nguồn: " + x.src : ""}`).join("\n") || "(chưa có)";
+      const dm = docs.map((d: any) => `${d.code} · ${pid ? "" : "[" + d.project_id + "] "}${d.folder} · ${d.name.replace(/^\d{8}_[^_]+_/, "")} · ${d.kind}\n${String(d.summary || "").slice(0, 700)}`).join("\n\n") || "(chưa có tài liệu nào được đọc)";
+      const system = SYS_CHAT + (env.R ? "\n\n" + env.R : "") + `\n\nHỒ SƠ DỰ ÁN${pid ? "" : " (mọi dự án; mã dự án trong ngoặc vuông)"}:\n${hs}\n\nDANH MỤC TÀI LIỆU:\n${dm}\n\nNGỮ CẢNH (JSON số liệu hiện có trên web):\n` + ctx;
+      const remember: any[] = [], conv: any[] = msgs.slice();
+      let text = "";
+      for (let round = 0; round < 6; round++) {
+        const r: any = { model: env.MODEL, max_tokens: 4000, system, messages: conv, tools: TOOLS, output_config: { effort: "low" } };
+        if (env.MODEL !== "claude-haiku-5-5") { r.betas = ["server-side-fallback-2026-07-01"]; r.fallbacks = "default"; }
+        let msg: any;
+        try { msg = await env.client.beta.messages.stream(r).finalMessage(); }
+        catch (e) { throw e instanceof Anthropic.AuthenticationError ? new AiErr("sai_khoa") : e instanceof Anthropic.RateLimitError ? new AiErr("het_luot") : e instanceof Anthropic.APIError && (e.status || 0) >= 500 ? new AiErr("qua_tai") : e; }
+        const u = msg.usage || {}; env.M.model = msg.model; env.M.in += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0); env.M.out += u.output_tokens || 0;
+        if (msg.stop_reason === "refusal") throw new AiErr("tu_choi");
+        text = (msg.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n").trim();
+        const calls = (msg.content || []).filter((c: any) => c.type === "tool_use");
+        if (!calls.length || msg.stop_reason !== "tool_use") break;
+        conv.push({ role: "assistant", content: msg.content });
+        const results: any[] = [];
+        for (const c of calls) {
+          let out = "";
+          try {
+            if (c.name === "doc_read") {
+              const d = byCode[String(c.input?.doc || "").trim()];
+              if (!d) out = "Không có tài liệu mã này.";
+              else { const { data: x } = await env.uc.from("kb_docs").select("body").eq("file_id", d.file_id).maybeSingle(); const body = String(x?.body || ""); const kw = String(c.input?.tu_khoa || "").trim();
+                const A = kw ? around(body, kw) : []; out = kw && A.length ? A.join("\n\n") : body.slice(0, 60000) || "(bản chữ trống)"; if (kw && !A.length) out = "Không thấy từ khoá; bản chữ (đầu bài):\n" + body.slice(0, 30000); }
+            } else if (c.name === "doc_search") {
+              const kw = String(c.input?.tu_khoa || "").trim().slice(0, 80);
+              if (kw.length < 2) out = "Từ khoá quá ngắn.";
+              else { let q = env.uc.from("kb_docs").select("file_id,body").eq("status", "ok").ilike("body", "%" + kw.replace(/[%_]/g, "") + "%").limit(8); if (pid) q = q.eq("project_id", pid);
+                const { data: H } = await q; out = (H || []).filter((h: any) => byFile[h.file_id]).map((h: any) => byFile[h.file_id].code + ":\n" + around(String(h.body), kw, 500, 3).join("\n")).join("\n\n") || "Không thấy cụm từ này trong tài liệu nào."; }
+            } else if (c.name === "ghi_nho") {
+              const x = { scope: c.input?.pham_vi === "cong_ty" || !pid ? "cong_ty" : "du_an", k: String(c.input?.muc || "").slice(0, 120), v: String(c.input?.noi_dung || "").slice(0, 1000) };
+              if (x.v) remember.push(x); out = "Đã đưa đề xuất lên màn hình, chờ người dùng bấm xác nhận.";
+            } else out = "Công cụ không có.";
+          } catch (e) { out = "Lỗi: " + String((e as Error)?.message || e).slice(0, 200); }
+          results.push({ type: "tool_result", tool_use_id: c.id, content: out });
+        }
+        conv.push({ role: "user", content: results });
+      }
+      // Mã tài liệu [d3] → số nguồn [1], kèm danh sách nguồn để web hiện nút mở file
+      const sources: any[] = [];
+      text = text.replace(/\[(d\d+)(?:\s*[,;]\s*(d\d+))*\]/g, (m) => m.replace(/d\d+/g, (code) => { const d = byCode[code]; if (!d) return ""; let i = sources.findIndex((s) => s.id === d.file_id); if (i < 0) { sources.push({ id: d.file_id, name: d.name }); i = sources.length - 1; } return String(i + 1); })).replace(/\[\s*[,;]?\s*\]/g, "");
+      return json({ text: text || "Em chưa trả lời được, anh hỏi lại giúp em.", sources, remember });
     }
     return json({ error: "bad_request" }, 400);
   } catch (e) {
