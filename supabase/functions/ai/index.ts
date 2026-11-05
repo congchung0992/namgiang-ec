@@ -64,7 +64,9 @@ Nhắc khi con số dựa trên giả định (giá vốn ước tính, điều 
 Có thể dùng gạch đầu dòng "- " và **in đậm**; không dùng bảng hay tiêu đề.`;
 
 /* ---------- Khuôn dữ liệu ---------- */
-const nul = (t: string) => ({ anyOf: [{ type: t }, { type: "null" }] });
+/* Claude giới hạn số ô kiểu "hoặc null" trong khuôn: dùng kiểu thường, ô thiếu ghi "" (chữ) hoặc 0 (số) / -1 (chỉ số), máy chủ đổi lại thành null */
+const nul = (t: string) => ({ type: t });
+const blank = (o: any, keys: string[]) => { for (const k of keys) if (o && (o[k] === "" || o[k] === 0 || o[k] === -1)) o[k] = null; return o; };
 const QUOTE = {
   type: "object",
   properties: {
@@ -96,7 +98,7 @@ Quy tắc:
 - vat_included = true nếu đơn giá đã gồm VAT; vat_rate = thuế suất % nếu có.
 - kind: ncc = cung cấp vật tư/thiết bị; thau_phu = thầu phụ thi công trọn gói (vật tư + nhân công); nhan_cong = tổ đội, khoán nhân công.
 - payment_days = số ngày được trả chậm sau khi giao hàng/nghiệm thu; advance_percent = % tạm ứng; delivery_days = số ngày giao hàng kể từ khi đặt (ước lượng nếu ghi tuần).
-- Ngày viết dd/mm/yyyy. Thiếu thông tin thì để null, không bịa.`;
+- Ngày viết dd/mm/yyyy. Thiếu thông tin thì ghi chuỗi rỗng "" (ô chữ) hoặc 0 (ô số), không bịa.`;
 
 const MATCH = {
   type: "object",
@@ -112,11 +114,11 @@ const MATCH = {
   },
   required: ["matches"]
 };
-const SYS_MATCH = `Bạn là QS của tổng thầu xây dựng. Ghép từng dòng báo giá với đúng MỘT dòng BOQ hợp đồng trong danh sách ứng viên của dòng đó (hoặc null nếu không dòng nào đúng).
+const SYS_MATCH = `Bạn là QS của tổng thầu xây dựng. Ghép từng dòng báo giá với đúng MỘT dòng BOQ hợp đồng trong danh sách ứng viên của dòng đó (code = "" nếu không dòng nào đúng).
 - So tên công việc/vật tư, quy cách (mác bê tông, đường kính thép, độ dày tôn, kích thước…), đơn vị. Khác quy cách quan trọng thì KHÔNG ghép.
 - Mã có dấu "|" là cả một nhóm công việc: chỉ chọn khi dòng báo giá là giá trọn gói cho cả nhóm đó.
 - factor = số đơn vị báo giá trong 1 đơn vị BOQ (ví dụ báo giá theo kg, BOQ theo tấn → 1000; báo giá theo tấn, BOQ theo kg → 0.001; cùng đơn vị → 1).
-- confidence từ 0 đến 1. reason: một câu ngắn tiếng Việt.`;
+- code = "" nếu không dòng nào đúng. confidence từ 0 đến 1. reason: một câu ngắn tiếng Việt.`;
 
 
 const MATCH_LINES = {
@@ -134,7 +136,7 @@ const MATCH_LINES = {
   required: ["matches"]
 };
 const SYS_MATCH_LINES = `Bạn là QS của tổng thầu xây dựng. Có một bảng báo giá (danh sách dòng giá, đánh số i) và các dòng BOQ hợp đồng.
-Với MỖI dòng BOQ, chọn dòng báo giá cung cấp đúng vật tư hoặc nhân công cho dòng đó (trả về chỉ số i), hoặc null nếu báo giá không có.
+Với MỖI dòng BOQ, chọn dòng báo giá cung cấp đúng vật tư hoặc nhân công cho dòng đó (trả về chỉ số i), hoặc i = -1 nếu báo giá không có.
 - Phải trùng loại và quy cách chính: mác bê tông (M100, M150, M200, M250, M300, M350… hoặc B15, B20…), đường kính và mác thép (D10, D16, CB300, CB400…), độ dày, kích thước, chủng loại. Khác mác hoặc quy cách thì KHÔNG chọn.
 - Một dòng báo giá được dùng cho nhiều dòng BOQ (ví dụ bê tông M300 cho móng, cột, dầm, sàn của mọi hạng mục).
 - Báo giá có nhiều lựa chọn cùng mác (ví dụ khác loại cát) thì chọn dòng thông dụng, rẻ hơn, trừ khi BOQ ghi rõ loại.
@@ -220,16 +222,20 @@ async function run(b: any, env: any): Promise<Response> {
       if (fb) content.push(fb);
       content.push({ type: "text", text: `Tên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung bảng tính:\n${b.text.slice(0, 400000)}` : "") });
       const { data, model } = await claude(env, { system: SYS_EXTRACT, content, schema: QUOTE, effort: "medium", maxTokens: 64000 });
+      blank(data, ["quote_no", "date", "scope", "vat_rate", "payment_terms", "payment_days", "advance_percent", "delivery_terms", "delivery_days", "validity"]);
+      (data.items || []).forEach((it: any) => blank(it, ["spec", "unit", "qty", "price_material", "price_labor", "price", "amount", "note"]));
       return json({ ...data, model });
     }
     if (b.action === "match") {
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 80);
       const { data, model } = await claude(env, { system: SYS_MATCH, content: JSON.stringify({ items }), schema: MATCH, maxTokens: 32000 });
+      (data.matches || []).forEach((m: any) => blank(m, ["code"]));
       return json({ ...data, model });
     }
     if (b.action === "match_lines") {
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 300), lines = (Array.isArray(b.lines) ? b.lines : []).slice(0, 80);
       const { data, model } = await claude(env, { system: SYS_MATCH_LINES, content: JSON.stringify({ bao_gia: items, boq: lines }), schema: MATCH_LINES, maxTokens: 32000 });
+      (data.matches || []).forEach((m: any) => { if (m && m.i === -1) m.i = null; });
       return json({ ...data, model });
     }
     if (b.action === "classify") {
