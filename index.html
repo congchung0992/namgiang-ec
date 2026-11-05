@@ -932,7 +932,7 @@ window.NGB=(function(){
       async upload(pid,folder,file){await this.call({action:"upload",project:pid,folder,name:file.name},{method:"POST",headers:{"content-type":file.type||"application/octet-stream"},body:file})},
       async blob(id){return (await this.call({action:"download",id},{method:"GET"})).blob()},
       async remove(id){await this.call({action:"delete",id},{method:"DELETE"})},
-      async classify(body){try{return await NGB.ai({action:"classify",...body})}catch(e){if(e.code!=="chua_ket_noi")throw e}const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
+      async classify(body){try{return await this.ai1({action:"classify",...body})}catch(e){if(e.code!=="chua_ket_noi")throw e}const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
         const r=await fetch("api/classify",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+session.access_token},body:JSON.stringify(body)});
         if(!r.ok)throw new Error("classify_"+r.status);return r.json()},
       /* Gemini chạy ở Supabase Edge Function "ai": khoá do Ban giám đốc dán ở màn Quản trị, trình duyệt không thấy khoá */
@@ -1409,7 +1409,7 @@ const FRULE=[["05.3",10,/thau phu|to doi|giao khoan|hop dong khoan|nhan khoan/],
   ["01.4",8,/bao lanh|bao hiem/],["04.1",6,/nghiem thu khoi luong|khoi luong hoan thanh|\bntkl\b|bang khoi luong/],["03.1",6,/nghiem thu|bien ban nghiem|\bbbnt\b/],["04.2",8,/phat sinh|\bvo\b|variation/],
   ["02.2",5,/tien do|schedule|ke hoach thi cong|bien phap|\bmpp\b|gantt/],["05.1",5,/bao gia ncc|nha cung cap|\bncc\b|don dat hang|\bpo\b|hop dong mua/],["05.2",6,/phieu nhap|phieu xuat|giao nhan/],
   ["01.2",5,/\bboq\b|du toan|bao gia|ho so thau|du thau|moi thau|chao gia|gia goc|tien luong/],["02.1",6,/ban ve|shop drawing|thiet ke|\bdwg\b|mat bang|mat cat/],["02.3",8,/hoan cong|ban giao|bao hanh/],
-  ["03.2",7,/thi nghiem|\bco\b|\bcq\b|chung chi|xuat xuong/],["03.3",7,/an toan|\batld\b|moi truong|huan luyen|su co/],["01.1",8,/giay phep|quyet dinh|tham duyet|khoi cong|phap ly|mat bang thi cong/],
+  ["03.2",7,/thi nghiem|\bco\b|\bcq\b|chung chi|xuat xuong/],["03.3",7,/an toan|\batld\b|moi truong|huan luyen|su co/],["01.1",8,/giay phep|quyet dinh|tham duyet|khoi cong|phap ly|mat bang thi cong|nang luc|ki su|ky su|\bkts\b|\bcht\b|chi huy truong|\bgd ?da\b|giam doc du an|\bcv\b|ly lich|bang cap|chung chi hanh nghe|nhan su chu chot/],
   ["06.1",6,/nhat ky/],["06.2",4,/bao cao tuan|bao cao thang|hien truong|\banh\b|photo|hinh anh/],["06.3",6,/cong van|bien ban hop|giao ban|thong bao/]];
 function guessFolder(name,text,img){const t=noAcc(name+" "+(text||"").slice(0,3000)).toLowerCase(),sc={};FRULE.forEach(([k,w,re])=>{const n=(t.match(new RegExp(re.source,"g"))||[]).length;if(n)sc[k]=(sc[k]||0)+w*Math.min(n,3)+(re.test(noAcc(name).toLowerCase())?4:0)});
   if(img)sc["06.2"]=(sc["06.2"]||0)+6;const K=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]),best=K[0];if(!best)return null;
@@ -1431,23 +1431,27 @@ async function peek(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),o={
     else if(/^(txt|csv)$/.test(ext))o.text=(await f.text()).slice(0,6000)}catch(e){}
   return o}
 async function suggest(p,f){const g=guessFolder(f.name);if(g&&g.strong)return g;const o=await peek(f);let v=null;
-  if(!NGApp.guest)try{v=await NGB.drive.classify({name:o.name,text:o.text,doc:o.doc,img:o.img,project:{code:p.code,name:p.name}});v.ai=1}catch(e){v=null}
+  if(!NGApp.guest)try{v=await Promise.race([NGB.drive.classify({name:o.name,text:o.text,doc:o.doc,img:o.img,project:{code:p.code,name:p.name}}),new Promise((_,no)=>setTimeout(()=>no(new Error("cham")),30000))]);v.ai=1}catch(e){v=null}
   return v||guessFolder(o.name,o.text,o.isImg)||{folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}}
 function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(wrap)wrap.remove();const base=n=>n.replace(/\.[^.]+$/,""),ext=n=>(n.match(/\.[^.]+$/)||[""])[0];
   wrap=document.createElement("div");wrap.id="fview";wrap.setAttribute("role","dialog");wrap.setAttribute("aria-label","Xếp file vào thư mục");
-  wrap.innerHTML=`<div class="fvb"><div class="fvh"><b>Rà nội dung ${files.length} file trước khi lưu</b><button class="back sm" style="margin:0" id="fvc">Huỷ</button></div><div class="fvc"><div class="fsl">${files.map((f,i)=>`<div class="fsr" data-i="${i}"><div class="on">${esc(f.name)} <span class="sub">· ${fmtSize(f.size)}</span></div><select aria-label="Thư mục" disabled>${DG.map(g=>{const o=F.filter(x=>x[0].startsWith(g[0]+"."));return o.length?`<optgroup label="${g[0]} ${esc(g[1])}">${o.map(x=>`<option value="${x[0]}">${x[0]} ${esc(x[1])}</option>`).join("")}</optgroup>`:""}).join("")}</select><input class="nm" aria-label="Tên file khi lưu" value="${esc(stdName(p.id,f.name))}"><div class="why">Đang đọc nội dung…</div></div>`).join("")}</div></div><div class="fsf"><span class="sub" id="fsm" style="flex:1;align-self:center"></span><button class="back" style="margin:0" id="fsok" disabled>Lưu vào thư mục đã chọn</button></div></div>`;
+  wrap.innerHTML=`<div class="fvb"><div class="fvh"><b>Rà nội dung ${files.length} file trước khi lưu</b><button class="back sm" style="margin:0" id="fvc">Huỷ</button></div><div class="fvc"><div class="fsl">${files.map((f,i)=>`<div class="fsr" data-i="${i}"><div class="on">${esc(f.name)} <span class="sub">· ${fmtSize(f.size)}</span></div><select aria-label="Thư mục">${DG.map(g=>{const o=F.filter(x=>x[0].startsWith(g[0]+"."));return o.length?`<optgroup label="${g[0]} ${esc(g[1])}">${o.map(x=>`<option value="${x[0]}">${x[0]} ${esc(x[1])}</option>`).join("")}</optgroup>`:""}).join("")}</select><input class="nm" aria-label="Tên file khi lưu" value="${esc(stdName(p.id,f.name))}"><div class="why">Đang đọc nội dung…</div></div>`).join("")}</div></div><div class="fsf"><span class="sub" id="fsm" style="flex:1;align-self:center">Đang đọc từng file để gợi ý thư mục · anh lưu được ngay, file chưa đọc xong sẽ vào thư mục đang chọn</span><button class="back" style="margin:0" id="fsok" disabled>Lưu vào thư mục đã chọn</button></div></div>`;
   document.body.appendChild(wrap);const rows=[...wrap.querySelectorAll(".fsr")],close=()=>wrap.remove();wrap.querySelector("#fvc").onclick=close;
-  let left=files.length;const okBtn=wrap.querySelector("#fsok");
-  files.forEach((f,i)=>suggest(p,f).then(v=>{const r=rows[i],sel=r.querySelector("select"),why=r.querySelector(".why"),nm=r.querySelector(".nm");
-    if(v.folder)v.folder=nf(v.folder);const ok=v.folder&&F.some(x=>x[0]===v.folder);sel.value=ok?v.folder:(F.some(x=>x[0]===here)?here:F[0][0]);sel.disabled=false;
+  let left=files.length,saving=false;const okBtn=wrap.querySelector("#fsok"),def=F.some(x=>x[0]===here)?here:F[0][0];
+  /* Chọn sẵn thư mục đang mở, anh lưu được ngay không phải chờ đọc xong; file tên rõ loại thì xếp ngay */
+  rows.forEach((r,i)=>{const sel=r.querySelector("select");sel.value=def;sel.onchange=()=>{r.dataset.man=1}});okBtn.disabled=false;
+  const Q=files.map((f,i)=>i),go=async()=>{while(Q.length){const i=Q.shift();const v=await suggest(p,files[i]).catch(()=>({folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}));show(i,v)}};
+  const show=(i,v)=>{const f=files[i];if(saving||!rows[i])return;{const r=rows[i],sel=r.querySelector("select"),why=r.querySelector(".why"),nm=r.querySelector(".nm");
+    if(v.folder)v.folder=nf(v.folder);const ok=v.folder&&F.some(x=>x[0]===v.folder);if(!r.dataset.man)sel.value=ok?v.folder:def;
     if(v.title&&GENERIC.test(noAcc(base(f.name)))&&nm.value===stdName(p.id,f.name))nm.value=stdName(p.id,v.title+ext(f.name));
     const fn=k=>{const x=F.find(y=>y[0]===k);return x?x[0]+" "+x[1]:k};
     why.textContent=(v.folder?(ok?"Gợi ý: "+fn(v.folder):"Gợi ý "+v.folder+" nhưng tài khoản này không có quyền thư mục đó")+" · ":"")+v.reason;
-    const dif=()=>{why.classList.toggle("dif",ok&&sel.value!==v.folder)};sel.onchange=dif;
+    const dif=()=>{r.dataset.man=1;why.classList.toggle("dif",ok&&sel.value!==v.folder)};sel.onchange=dif;
     if(ok&&here&&v.folder!==here){why.textContent+=` · Anh đang mở mục ${fn(here)}`;why.classList.add("dif")}
-    if(--left===0){okBtn.disabled=false;wrap.querySelector("#fsm").textContent="Anh kiểm tra thư mục và tên file rồi bấm Lưu"}}));
+    if(--left===0)wrap.querySelector("#fsm").textContent="Anh kiểm tra thư mục và tên file rồi bấm Lưu"}};
+  go();go();
   /* Lưu 3 file một lượt cho nhanh; từng dòng hiện trạng thái, file lỗi giữ lại để anh lưu lại */
-  okBtn.onclick=async()=>{okBtn.disabled=true;const fs=wrap.querySelector("#fsm");fs.style.color="";let n=0,w=0,last=null,err=null,k=0,done=0;const todo=files.map((f,i)=>i).filter(i=>rows[i]),tot=todo.length;
+  okBtn.onclick=async()=>{okBtn.disabled=true;saving=true;const fs=wrap.querySelector("#fsm");fs.style.color="";let n=0,w=0,last=null,err=null,k=0,done=0;const todo=files.map((f,i)=>i).filter(i=>rows[i]),tot=todo.length;
     rows.forEach(r=>{if(r)r.querySelectorAll("select,input").forEach(x=>x.disabled=true)});
     const one=async i=>{const f=files[i],r=rows[i],why=r.querySelector(".why"),folder=r.querySelector("select").value;let nm=r.querySelector(".nm").value.trim()||f.name;if(!/\.[A-Za-z0-9]{1,8}$/.test(nm))nm+=ext(f.name);
       why.classList.remove("dif");why.textContent="⏳ Đang lưu…";

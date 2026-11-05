@@ -45,13 +45,13 @@ const upperSchema = (s: any): any => {
 };
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
 /* Supabase cắt hàm sau ~150 giây: giữ tổng thời gian dưới 120 giây, mẫu nào quá tải thì chuyển ngay sang mẫu khác */
-async function gemini(env: any, { system, parts, schema, kind = "flash" }: any) {
-  const C = await candidates(env, kind), end = Date.now() + 120000;
+async function gemini(env: any, { system, parts, schema, kind = "flash", budget = 120000 }: any) {
+  const C = await candidates(env, kind), end = Date.now() + budget;
   if (!C.length) throw new Error("gemini_no_model");
   let last = "gemini_unknown";
   for (let ci = 0; ci < C.length; ci++) {
     const model = C[ci], isLast = ci === C.length - 1;
-    if (end - Date.now() < 15000) break;
+    if (end - Date.now() < Math.min(15000, budget / 3)) break;
     const call = (gen: any) => fetch(`${GA}/models/${model}:generateContent`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": env.KEY },
@@ -263,7 +263,7 @@ Deno.serve(async (req) => {
       else if (b.img && /^image\/(jpeg|png|gif|webp)$/.test(b.img.media_type) && typeof b.img.data === "string") parts.push({ inline_data: { mime_type: b.img.media_type, data: b.img.data } });
       const proj = b.project && typeof b.project === "object" ? `${String(b.project.code || "").slice(0, 40)} ${String(b.project.name || "").slice(0, 200)}` : "";
       parts.push({ text: `Dự án: ${proj}\nTên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung trích từ file:\n${b.text.slice(0, 8000)}` : "") });
-      const { data: v } = await gemini(env, { system: SYS_CLASSIFY, parts, schema: CLASSIFY, kind: "flash" });
+      const { data: v } = await gemini(env, { system: SYS_CLASSIFY, parts, schema: CLASSIFY, kind: "flash", budget: 25000 });
       if (!FOLDERS[v.folder]) return json({ error: "khong_doc_duoc" }, 422);
       return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120) });
     }
