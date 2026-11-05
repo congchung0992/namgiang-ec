@@ -3705,14 +3705,17 @@ async function kbLoad(p){if(NGApp.guest)return;const sb=NGB.sb();try{const [D,F,
   if(cur&&cur.id===p.id&&/-bn(-|$)/.test(location.hash))keep(route)}
 /* pdf.js đọc lớp chữ của PDF (PDF xuất từ Word/Excel); PDF scan thì gửi nguyên file cho Claude đọc */
 function needPJ(){return window.pdfjsLib?Promise.resolve():new Promise((ok,er)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";s.onload=()=>{try{pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"}catch(e){}ok()};s.onerror=er;document.head.appendChild(s)})}
-async function kbText(blob,name){const ext=(name.split(".").pop()||"").toLowerCase(),buf=await blob.arrayBuffer();
+async function kbText(blob,name,fid){const ext=(name.split(".").pop()||"").toLowerCase(),buf=await blob.arrayBuffer();
   if(ext==="pdf"){let pages=0;try{await needPJ();const doc=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;pages=doc.numPages;let t="";for(let i=1;i<=pages&&t.length<400000;i++){const c=await (await doc.getPage(i)).getTextContent();t+=`\n[Trang ${i}]\n`+c.items.map(x=>x.str+(x.hasEOL?"\n":" ")).join("")}
       if(t.replace(/\[Trang \d+\]|\s/g,"").length>=Math.max(300,pages*150))return{text:t.trim()}}catch(e){}
-    /* PDF scan: gửi tối đa ~10 MB (cắt bớt trang cuối nếu lớn) */
-    if(buf.byteLength<=10*1048576)return{doc:{mime:"application/pdf",data:b64(buf)}};
-    await needPL();const src=await PDFLib.PDFDocument.load(buf,{ignoreEncryption:true}),n=src.getPageCount();let k=Math.min(n,100),out=null;
-    while(k>=5){const d=await PDFLib.PDFDocument.create();(await d.copyPages(src,[...Array(k).keys()])).forEach(x=>d.addPage(x));out=await d.save();if(out.byteLength<=10*1048576)break;k=Math.floor(k*.6)}
-    if(!out||out.byteLength>10*1048576)throw new Error("File PDF scan quá lớn để đọc");return{doc:{mime:"application/pdf",data:b64(out)},cut:k<n?`đọc ${k}/${n} trang đầu`:""}}
+    /* PDF scan: chép nguyên văn từng cụm 3 trang (Claude đọc ảnh trang), ghép lại thành bản chữ đầy đủ */
+    await needPL();const src=await PDFLib.PDFDocument.load(buf,{ignoreEncryption:true}),n=src.getPageCount(),N=Math.min(n,300);let out="";
+    for(let a=0;a<N;){let k=Math.min(3,N-a),bytes=null;
+      while(k>=1){const d=await PDFLib.PDFDocument.create();(await d.copyPages(src,[...Array(k).keys()].map(i=>a+i))).forEach(x=>d.addPage(x));bytes=await d.save();if(bytes.byteLength<=9*1048576||k===1)break;k=Math.max(1,Math.floor(k/2))}
+      if(bytes.byteLength>9*1048576)throw new Error("Trang "+(a+1)+" quá nặng để đọc");
+      if(KB.prog)KB.prog(a,N);let j=null;for(let t=0;t<2&&!j;t++){try{j=await NGB.ai({action:"ocr",file:fid,doc:{mime:"application/pdf",data:b64(bytes)},from:a+1,pages:k})}catch(e){if(t)throw e}}
+      out+=(out?"\n":"")+String(j.text||"").trim();a+=k}
+    return{text:out.slice(0,400000),ocr:1,cut:N<n?`chép ${N}/${n} trang đầu`:""}}
   if(/^(xlsx|xlsm|xls)$/.test(ext)){await needX();const wb=XLSX.read(buf,{type:"array"});return{text:wb.SheetNames.map(n=>"[Sheet "+n+"]\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false}).replace(/,{3,}/g,",,")).join("\n").slice(0,400000)}}
   if(/^(docx|pptx)$/.test(ext)){await needX();const z=XLSX.CFB.read(new Uint8Array(buf),{type:"array"});return{text:z.FullPaths.filter(n=>/word\/document\.xml$|ppt\/slides\/slide\d+\.xml$/.test(n)).map(n=>xmlText(new TextDecoder().decode(new Uint8Array(XLSX.CFB.find(z,n).content)))).join("\n").replace(/\n{3,}/g,"\n\n").slice(0,400000)}}
   return{text:new TextDecoder().decode(buf).slice(0,400000)}}
@@ -3720,14 +3723,14 @@ async function kbText(blob,name){const ext=(name.split(".").pop()||"").toLowerCa
 /* Đọc lần lượt các file chưa đọc của một dự án; chạy ngầm, không cần đang mở dự án đó (mở web là đọc) */
 async function kbRun(p,only){if(NGApp.guest||KB.busy)return;const sb=NGB.sb(),mine=()=>KB.pid===p.id,R=()=>{if(cur&&cur.id===p.id&&/-bn(-|$)/.test(location.hash))keep(route)};
   let docs,files;try{const [D,L]=await Promise.all([sb.from("kb_docs").select("file_id,folder,name,status,kind,summary,src,err,at").eq("project_id",p.id),NGB.drive.list(p.id)]);if(D.error)throw D.error;docs=D.data||[];files=L||[]}catch(e){if(mine())KB.msg=String(e.message||e);return}
-  const have=new Map(docs.map(d=>[d.file_id,d])),todo=files.filter(f=>kbWant(f)&&(only?only.includes(f.id):!have.has(f.id)));if(!todo.length)return;
+  const have=new Map(docs.map(d=>[d.file_id,d])),todo=files.filter(f=>kbWant(f)&&(only?only.includes(f.id):!have.has(f.id)||(have.get(f.id).status==="ok"&&have.get(f.id).src==="notes")));if(!todo.length)return;
   KB.busy=true;const run=++KB.run;let left=todo.length;
   const put=d=>{if(mine()&&KB.docs)KB.docs=[...KB.docs.filter(x=>x.file_id!==d.file_id),d]};
   try{for(const f of todo){if(run!==KB.run)break;
-      const {data:ok,error}=await sb.rpc("kb_claim",{p_file:f.id,p_force:!!only});if(error)throw error;if(!ok){left--;continue}
+      const {data:ok,error}=await sb.rpc("kb_claim",{p_file:f.id,p_force:!!only||(have.get(f.id)||{}).src==="notes"});if(error)throw error;if(!ok){left--;continue}
       KB.now=f.name;KB.nowp=p.id;KB.left=left;R();
-      try{const blob=await NGB.drive.blob(f.id),x=await kbText(blob,f.name);const j=await NGB.ai({action:"digest",file:f.id,text:x.text||"",doc:x.doc||null});
-        put({file_id:f.id,folder:f.folder,name:f.name,status:"ok",kind:j.kind||"",summary:j.summary||"",src:x.text?"text":"notes",err:x.cut||"",at:new Date().toISOString()});if(j.facts&&mine())await kbLoad(p)}
+      try{KB.prog=(a,N)=>{KB.nowp2=`trang ${a+1}/${N}`;R()};const blob=await NGB.drive.blob(f.id),x=await kbText(blob,f.name,f.id);KB.nowp2="";const j=await NGB.ai({action:"digest",file:f.id,text:x.text||"",doc:x.doc||null,src:x.ocr?"ocr":""});
+        put({file_id:f.id,folder:f.folder,name:f.name,status:"ok",kind:j.kind||"",summary:j.summary||"",src:x.ocr?"ocr":x.text?"text":"notes",err:x.cut||"",at:new Date().toISOString()});if(j.facts&&mine())await kbLoad(p)}
       catch(e){const m=String(e.message||e).slice(0,280);try{await sb.rpc("kb_mark",{p_file:f.id,p_status:"err",p_err:m})}catch(_){}
         put({file_id:f.id,folder:f.folder,name:f.name,status:"err",kind:"",summary:"",err:m,at:new Date().toISOString()});if(/khoá Claude|hết tiền|Phiên đăng nhập/.test(m))break}
       left--}}
@@ -3749,13 +3752,13 @@ function kbView(p){if(NGApp.guest)return`<div class="vgrid">${card("Bộ não d�
     :`<tr><td><b>${esc(x.k)}</b></td><td style="min-width:240px;white-space:pre-line">${esc(x.v)}${x.clause?`<details class="kbcl"><summary>Căn cứ</summary>${esc(x.clause)}</details>`:""}</td><td>${src(x)}</td><td class="tc">${x.status==="ok"?st("ok","Đã xác nhận")+`<small class="spec">${esc(x.by_name||"")} · ${fdt(x.at).slice(0,10)}</small>`:st("warn","Chưa xác nhận")+`<small class="spec">${esc(x.by_name||"")}</small>`}</td>
       <td class="tc" style="white-space:nowrap">${x.status!=="ok"&&boss?`<button class="back sm" style="margin:0" data-kbok="${x.id}">Xác nhận</button> `:""}<button class="back sm" style="margin:0" data-kbed="${x.id}">Sửa</button>${boss?` <button class="back sm" style="margin:0" data-kbdel="${x.id}">Xoá</button>`:""}</td></tr>`).join("");
   const add=`<tr class="kbadd"><td><input class="fi" list="kbkeys" data-kbnk placeholder="Mục (vd: Loại hợp đồng)" value="${esc((KB.nk||""))}"><datalist id="kbkeys">${KB_KEYS.filter(k=>!F.some(x=>x.k===k)).map(k=>`<option value="${esc(k)}">`).join("")}</datalist></td><td colspan="3"><input class="fi" data-kbnv placeholder="Nội dung" style="width:100%" value="${esc(KB.nv||"")}"></td><td class="tc"><button class="back sm" style="margin:0" data-kbadd="1">+ Thêm mục</button></td></tr>`;
-  const docs=[...W].sort((a,b)=>nf(a.folder).localeCompare(nf(b.folder))).map(f=>{const d=D.get(f.id);const s=!d?(KB.now===f.name?st("warn","Đang đọc…"):`<span class="sub">Chờ đọc</span>`):d.status==="ok"?st("ok","Đã đọc")+(d.src==="notes"?`<small class="spec">file scan · Claude ghi chép${d.err?" · "+esc(d.err):""}</small>`:""):d.status==="busy"?st("warn",KB.now===f.name?"Đang đọc…":"Máy khác đang đọc"):st("bad","Lỗi")+`<small class="spec">${esc(d.err||"")}</small>`;
+  const docs=[...W].sort((a,b)=>nf(a.folder).localeCompare(nf(b.folder))).map(f=>{const d=D.get(f.id);const s=!d?(KB.now===f.name?st("warn","Đang đọc…"):`<span class="sub">Chờ đọc</span>`):d.status==="ok"?st("ok","Đã đọc")+(d.src==="notes"?`<small class="spec">bản ghi chép cũ · sẽ chép lại nguyên văn</small>`:d.src==="ocr"?`<small class="spec">file scan · đã chép nguyên văn${d.err?" · "+esc(d.err):""}</small>`:"")+`<button class="lkb0" data-kbdl="${esc(f.id)}">⬇ Bản chữ</button>`:d.status==="busy"?st("warn",KB.now===f.name?"Đang đọc…":"Máy khác đang đọc"):st("bad","Lỗi")+`<small class="spec">${esc(d.err||"")}</small>`;
     return`<tr><td class="tc num">${esc(nf(f.folder))}</td><td style="min-width:200px"><button class="lnk" data-fv="${esc(f.id)}" data-n="${esc(f.name)}">${esc(kbShort(f.name))}</button> <button class="lkb0" data-lk="f:${esc(f.id)}">🔗</button>${d&&d.kind?`<small class="spec">${esc(d.kind)}</small>`:""}</td><td style="min-width:300px">${d&&d.summary?`<details class="kbsm"><summary>${esc(d.summary.split("\n")[0].replace(/^- /,"").slice(0,140))}</summary><div style="white-space:pre-line">${esc(d.summary)}</div></details>`:""}</td><td class="tc">${s}</td><td class="tc">${d&&d.status!=="busy"&&!KB.busy?`<button class="back sm" style="margin:0" data-kbre="${esc(f.id)}">Đọc lại</button>`:""}</td></tr>`}).join("");
-  return`<div class="vgrid">${kc("bn","Tài liệu đã đọc",ok,"/"+W.length+" file",KB.busy?"Đang đọc: "+esc(kbShort(KB.now).slice(0,40)):left?left+" file chờ đọc":"Đã đọc hết file văn bản")}${kc(fa?"mat":"prog","Hồ sơ dự án",F.length,"mục",fa?fa+" mục trợ lý tự đọc, chưa xác nhận":"Đã xác nhận đủ")}${kc(er.length?"cost":"rev","File lỗi",er.length,"file",er.length?"Bấm Đọc lại ở dòng lỗi":"Không có file lỗi")}
+  return`<div class="vgrid">${kc("bn","Tài liệu đã đọc",ok,"/"+W.length+" file",KB.busy?"Đang đọc: "+esc(kbShort(KB.now).slice(0,40))+(KB.nowp2?" · "+KB.nowp2:""):left?left+" file chờ đọc":"Đã đọc hết file văn bản")}${kc(fa?"mat":"prog","Hồ sơ dự án",F.length,"mục",fa?fa+" mục trợ lý tự đọc, chưa xác nhận":"Đã xác nhận đủ")}${kc(er.length?"cost":"rev","File lỗi",er.length,"file",er.length?"Bấm Đọc lại ở dòng lỗi":"Không có file lỗi")}
   <section class="card span3"><div class="bh"><div><h3>Hồ sơ dự án</h3><span class="sub">Thông tin chốt của dự án: trợ lý tự điền khi đọc hợp đồng, phụ lục, pháp lý với chủ đầu tư; anh ghi thêm hoặc dặn trong khung chat · ${boss?"anh xác nhận để thành thông tin chính thức":"Giám đốc dự án, QS hoặc Ban giám đốc xác nhận"} · trợ lý trả lời theo bảng này trước, kèm nguồn</span></div></div>
     ${KB.msg?`<div class="ctb" style="margin-top:12px">${esc(KB.msg)}</div>`:""}
     <div class="tw" style="margin-top:12px"><table class="t kbt"><thead><tr><th>Mục</th><th>Nội dung</th><th>Nguồn</th><th>Trạng thái</th><th></th></tr></thead><tbody>${rows||`<tr><td colspan="5" class="sub">Chưa có mục nào${left?" · trợ lý đang đọc file, xong sẽ tự điền":""}.</td></tr>`}${add}</tbody></table></div></section>
-  <section class="card span3"><div class="bh"><div><h3>Tài liệu trợ lý đã đọc</h3><span class="sub">Mỗi file văn bản tải lên được đọc một lần và lưu bản chữ trên máy chủ (không mất khi tải lại trang) · PDF scan: Claude ghi chép các điều khoản chính · bỏ qua ảnh, bản vẽ thiết kế, nhật ký ảnh</span></div>${er.length&&!KB.busy?`<button class="back sm" style="margin:0" data-kbreall="1">Đọc lại ${er.length} file lỗi</button>`:""}</div>
+  <section class="card span3"><div class="bh"><div><h3>Tài liệu trợ lý đã đọc</h3><span class="sub">Mỗi file văn bản tải lên được đọc một lần và lưu bản chữ nguyên văn trên máy chủ (không mất khi tải lại trang) · PDF scan: Claude chép nguyên văn từng trang · bấm ⬇ Bản chữ để tải file chữ · bỏ qua ảnh, bản vẽ thiết kế, nhật ký ảnh</span></div>${er.length&&!KB.busy?`<button class="back sm" style="margin:0" data-kbreall="1">Đọc lại ${er.length} file lỗi</button>`:""}</div>
     <div class="tw" style="margin-top:12px"><table class="t kbt"><thead><tr><th>Thư mục</th><th>File</th><th>Tóm tắt</th><th>Trạng thái</th><th></th></tr></thead><tbody>${docs||`<tr><td colspan="5" class="sub">Chưa có file văn bản nào trong thư mục dự án.</td></tr>`}</tbody></table></div></section></div>`}
 /* Chat: dự án đang mở, mở file nguồn, ghi nhớ sau khi người dùng xác nhận */
 NG.pid=()=>cur&&/^#?da-/.test(location.hash)?cur.id:"";
@@ -3764,7 +3767,7 @@ NG.remember=async x=>{const p=cur&&DB.projects.find(y=>y.id===cur.id);if(x.scope
   await NGB.addRule("all",(x.k?x.k+": ":"")+x.v);return"kiến thức chung của công ty"};
 {const P=()=>cur&&DB.projects.find(x=>x.id===cur.id),R=()=>keep(route);
 view.addEventListener("input",e=>{const t=e.target;if(t.dataset.kbv!=null&&KB.edit)KB.edit.v=t.value;if(t.dataset.kbnk!=null)KB.nk=t.value;if(t.dataset.kbnv!=null)KB.nv=t.value});
-view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.target.closest("[data-kbok],[data-kbed],[data-kbdel],[data-kbsave],[data-kbcancel],[data-kbadd],[data-kbre],[data-kbreall]");if(!b)return;const d=b.dataset,F=KB.facts||[],sb=NGB.sb();
+view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.target.closest("[data-kbok],[data-kbed],[data-kbdel],[data-kbsave],[data-kbcancel],[data-kbadd],[data-kbre],[data-kbreall],[data-kbdl]");if(!b)return;const d=b.dataset,F=KB.facts||[],sb=NGB.sb();
   const set=async(k,v,src,conf,clause)=>{const {error}=await sb.rpc("kb_fact_set",{p_project:p.id,p_k:k,p_v:v,p_src:src,p_confirm:conf,p_clause:clause});if(error)throw error};
   try{
     if(d.kbok){const x=F.find(y=>y.id===d.kbok);if(x)await set(x.k,x.v,"",true,null)}
@@ -3774,6 +3777,7 @@ view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.targe
     else if(d.kbdel){if(!b.dataset.ok){b.dataset.ok=1;b.textContent="Bấm lần nữa để xoá";b.style.color="#C0141B";return}const {error}=await sb.rpc("kb_fact_del",{p_id:d.kbdel});if(error)throw error}
     else if(d.kbadd){const k=String(KB.nk||"").trim(),v=String(KB.nv||"").trim();if(!k||!v){KB.msg="Anh ghi cả mục và nội dung";R();return}await set(k,v,"Ghi tay",kbBoss(p),"");KB.nk="";KB.nv=""}
     else if(d.kbre){kbRun(p,[d.kbre]);return}
+    else if(d.kbdl){const {data:x,error}=await sb.from("kb_docs").select("name,body,src,summary").eq("file_id",d.kbdl).maybeSingle();if(error)throw error;if(!x||!x.body){KB.msg="File này chưa có bản chữ";R();return}const nm=kbShort(x.name).replace(/\.[a-z0-9]+$/i,"");saveBlob(new Blob(["Tệp: "+x.name+"\nCách lấy chữ: "+(x.src==="ocr"?"Claude chép nguyên văn từ bản scan":x.src==="text"?"lấy thẳng chữ trong file":"ghi chép tóm lược")+"\n\nTÓM TẮT\n"+(x.summary||"")+"\n\nBẢN CHỮ\n"+x.body],{type:"text/plain;charset=utf-8"}),nm+"_ban_chu.txt");return}
     else if(d.kbreall){kbRun(p,(KB.docs||[]).filter(x=>x.status==="err").map(x=>x.file_id));return}
     KB.msg="";await kbLoad(p)}catch(er){KB.msg=pyErr(er);R()}});}
 

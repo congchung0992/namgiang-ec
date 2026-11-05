@@ -64,8 +64,15 @@ Nhắc khi con số dựa trên giả định (giá vốn ước tính, điều 
 Có thể dùng gạch đầu dòng "- " và **in đậm**; không dùng bảng hay tiêu đề.
 BỘ NÃO DỰ ÁN: ngoài số liệu, có HỒ SƠ DỰ ÁN (thông tin đã chốt; mục "chưa xác nhận" là trợ lý tự đọc từ file, nói rõ khi dùng) và DANH MỤC TÀI LIỆU (bản chữ các file đã tải lên, mã d1, d2…).
 - Câu hỏi về hợp đồng, điều khoản, pháp lý, tiến độ, công văn, biên bản: xem hồ sơ dự án trước; cần chi tiết hoặc trích dẫn thì gọi doc_read (đọc bản chữ một tài liệu) hoặc doc_search (tìm theo từ khoá trong mọi tài liệu).
+- Bản chữ ghi "(nguyên văn)" là chép đủ từng chữ của file: khi được hỏi trích, chép đúng nguyên văn đoạn đó (đặt trong ngoặc kép, ghi số điều và [Trang N] nếu có), không tóm tắt, không nói là không trích được. Bản chữ "(ghi chép)" chỉ là tóm lược: nói rõ khi dùng.
 - Ghi nguồn ngay sau ý lấy từ tài liệu bằng mã trong ngoặc vuông, ví dụ [d3]; kèm số điều khoản nếu có. Không ghi mã tài liệu bạn chưa đọc.
 - Khi người dùng nói ra thông tin lâu dài chưa có hoặc khác hồ sơ (ví dụ "hợp đồng Ekochem là đơn giá cố định", "TVGS là công ty X", "công ty luôn giữ lại 5% bảo hành thầu phụ"), hoặc sửa câu trả lời của bạn: gọi ghi_nho rồi hỏi lại đúng một câu "Em ghi vào hồ sơ …: … – đúng không anh?". Không tự coi là đã ghi.`;
+const SYS_OCR = `Bạn chép lại NGUYÊN VĂN toàn bộ chữ trên các trang tài liệu scan được gửi (hợp đồng, phụ lục, văn bản pháp lý của dự án xây dựng Việt Nam).
+- Chép đủ từng chữ, đúng thứ tự, giữ nguyên số điều, khoản, mục, số liệu, dấu câu, chữ in hoa; không tóm tắt, không diễn giải, không sửa câu chữ, không bỏ đoạn nào.
+- Mở đầu mỗi trang bằng một dòng "[Trang N]" (N là số trang trong cả tài liệu, được cho ở đề bài). Giữ xuống dòng theo đoạn.
+- Bảng: mỗi dòng bảng một dòng, các ô cách nhau bằng " | ".
+- Chữ không đọc được thì ghi [không rõ]. Con dấu, chữ ký ghi [dấu], [chữ ký] kèm tên in bên dưới nếu có.
+- Chỉ trả về phần chữ đã chép, không thêm lời nào khác.`;
 const SYS_DIGEST = `Bạn là thư ký hồ sơ của một tổng thầu xây dựng Việt Nam (Nam Giang). Đọc một tài liệu của dự án và lập "bản chữ" để trợ lý tra cứu về sau.
 - kind: loại tài liệu ngắn gọn (ví dụ "Hợp đồng thi công với chủ đầu tư", "Phụ lục hợp đồng", "Tiến độ thi công", "Hợp đồng thầu phụ", "Báo giá nhà cung cấp", "Công văn", "Biên bản họp", "Hồ sơ thanh toán").
 - summary: tóm tắt 4–10 dòng, mỗi dòng bắt đầu "- ", nêu: số hiệu, ngày, các bên, phạm vi, giá trị, mốc thời gian, điều khoản quan trọng. Số tiền viết kiểu Việt Nam (1.250.000.000 đ), ngày dd/mm/yyyy.
@@ -278,7 +285,7 @@ Deno.serve(async (req) => {
   const M = { model: "", in: 0, out: 0, err: "" }, t0 = Date.now();
   const env = { client: new Anthropic({ apiKey: key, timeout: 120000, maxRetries: 1 }), MODEL: MODELS.includes(keyCache.m) ? keyCache.m : MODELS[0], M };
   // Bài học anh Chung đã ghi (bảng ai_lessons, kind = rule; q = phạm vi, l = nội dung): gửi kèm mọi lượt gọi đúng phạm vi
-  const SC: any = { extract: "baogia", match: "baogia", match_lines: "baogia", contract: "hopdong", classify: "thumuc", chat: "chat", digest: "hopdong" };
+  const SC: any = { ocr: "", extract: "baogia", match: "baogia", match_lines: "baogia", contract: "hopdong", classify: "thumuc", chat: "chat", digest: "hopdong" };
   try {
     const sc = SC[b.action];
     if (sc) {
@@ -341,6 +348,15 @@ async function run(b: any, env: any): Promise<Response> {
       blank(data, ["contract_no", "sign_date", "value_before_vat", "value_with_vat", "vat_rate", "advance_percent", "advance_recovery", "retention_percent", "warranty_months", "payment_days", "payment_cycle", "start_date", "duration_days", "end_date", "penalty", "notes"]);
       return json({ ...data, model });
     }
+    if (b.action === "ocr") {
+      const { data: f } = await env.uc.from("project_files").select("id,name").eq("id", String(b.file || "")).maybeSingle();
+      if (!f) return json({ error: "khong_quyen" }, 403);
+      const fb = b.doc && typeof b.doc.data === "string" ? fileBlock("application/pdf", b.doc.data) : null;
+      if (!fb) return json({ error: "khong_doc_duoc" }, 422);
+      const from = Math.max(1, Number(b.from) || 1), n = Math.max(1, Number(b.pages) || 1);
+      const { text } = await claude(env, { system: SYS_OCR, content: [fb, { type: "text", text: `File: ${f.name}\nCác trang gửi kèm là trang ${from} đến ${from + n - 1} của tài liệu. Chép nguyên văn.` }], effort: "low", maxTokens: 32000 });
+      return json({ text });
+    }
     if (b.action === "digest") {
       const { data: f } = await env.uc.from("project_files").select("id,project_id,folder,name").eq("id", String(b.file || "")).maybeSingle();
       if (!f) return json({ error: "khong_quyen" }, 403);
@@ -352,7 +368,7 @@ async function run(b: any, env: any): Promise<Response> {
       content.push({ type: "text", text: `Thư mục: ${f.folder}\nTên file: ${f.name}` + (text ? `\nNội dung chữ của file:\n${text.slice(0, 150000)}` : "") });
       const { data, model } = await claude(env, { system: SYS_DIGEST, content, schema: DIGEST, effort: "low", maxTokens: 24000 });
       const now = new Date().toISOString();
-      const { error: e1 } = await env.admin.from("kb_docs").upsert({ file_id: f.id, project_id: f.project_id, folder: f.folder, name: f.name, status: "ok", kind: String(data.kind || "").slice(0, 120), summary: String(data.summary || "").slice(0, 4000), body: text ? text.slice(0, 400000) : String(data.notes || "").slice(0, 60000), src: text ? "text" : "notes", err: "", model, at: now });
+      const { error: e1 } = await env.admin.from("kb_docs").upsert({ file_id: f.id, project_id: f.project_id, folder: f.folder, name: f.name, status: "ok", kind: String(data.kind || "").slice(0, 120), summary: String(data.summary || "").slice(0, 4000), body: text ? text.slice(0, 400000) : String(data.notes || "").slice(0, 60000), src: text ? (b.src === "ocr" ? "ocr" : "text") : "notes", err: "", model, at: now });
       if (e1) throw new Error(e1.message);
       const F = (data.facts || []).filter((x: any) => x && FACT_KEYS.has(String(x.k)) && String(x.v || "").trim());
       let n = 0;
@@ -369,12 +385,12 @@ async function run(b: any, env: any): Promise<Response> {
       if (!msgs.length || msgs[0].role !== "user") return json({ error: "no_message" }, 400);
       const ctx = JSON.stringify(b.context || {}).slice(0, 150000), pid = String(b.proj || "");
       // Hồ sơ dự án và danh mục tài liệu theo quyền người hỏi
-      let fq = env.uc.from("kb_facts").select("project_id,k,v,status,src").order("k").limit(400), dq = env.uc.from("kb_docs").select("file_id,project_id,folder,name,kind,summary").eq("status", "ok").order("folder").limit(250);
+      let fq = env.uc.from("kb_facts").select("project_id,k,v,status,src").order("k").limit(400), dq = env.uc.from("kb_docs").select("file_id,project_id,folder,name,kind,summary,src").eq("status", "ok").order("folder").limit(250);
       if (pid) { fq = fq.eq("project_id", pid); dq = dq.eq("project_id", pid); }
       const [{ data: FA }, { data: DO }] = await Promise.all([fq, dq]);
       const docs = (DO || []).map((d: any, i: number) => ({ ...d, code: "d" + (i + 1) })), byCode: any = Object.fromEntries(docs.map((d: any) => [d.code, d])), byFile: any = Object.fromEntries(docs.map((d: any) => [d.file_id, d]));
       const hs = (FA || []).map((x: any) => `- ${pid ? "" : "[" + x.project_id + "] "}${x.k}: ${x.v}${x.status === "ok" ? "" : " (chưa xác nhận)"}${x.src ? " · nguồn: " + x.src : ""}`).join("\n") || "(chưa có)";
-      const dm = docs.map((d: any) => `${d.code} · ${pid ? "" : "[" + d.project_id + "] "}${d.folder} · ${d.name.replace(/^\d{8}_[^_]+_/, "")} · ${d.kind}\n${String(d.summary || "").slice(0, 700)}`).join("\n\n") || "(chưa có tài liệu nào được đọc)";
+      const dm = docs.map((d: any) => `${d.code} · ${pid ? "" : "[" + d.project_id + "] "}${d.folder} · ${d.name.replace(/^\d{8}_[^_]+_/, "")} · ${d.kind} · ${d.src === "notes" ? "(ghi chép)" : "(nguyên văn)"}\n${String(d.summary || "").slice(0, 700)}`).join("\n\n") || "(chưa có tài liệu nào được đọc)";
       const system = SYS_CHAT + (env.R ? "\n\n" + env.R : "") + `\n\nHỒ SƠ DỰ ÁN${pid ? "" : " (mọi dự án; mã dự án trong ngoặc vuông)"}:\n${hs}\n\nDANH MỤC TÀI LIỆU:\n${dm}\n\nNGỮ CẢNH (JSON số liệu hiện có trên web):\n` + ctx;
       const remember: any[] = [], conv: any[] = msgs.slice();
       let text = "";
@@ -398,7 +414,7 @@ async function run(b: any, env: any): Promise<Response> {
               const d = byCode[String(c.input?.doc || "").trim()];
               if (!d) out = "Không có tài liệu mã này.";
               else { const { data: x } = await env.uc.from("kb_docs").select("body").eq("file_id", d.file_id).maybeSingle(); const body = String(x?.body || ""); const kw = String(c.input?.tu_khoa || "").trim();
-                const A = kw ? around(body, kw) : []; out = kw && A.length ? A.join("\n\n") : body.slice(0, 60000) || "(bản chữ trống)"; if (kw && !A.length) out = "Không thấy từ khoá; bản chữ (đầu bài):\n" + body.slice(0, 30000); }
+                const A = kw ? around(body, kw) : []; out = kw && A.length ? A.join("\n\n") : body.slice(0, 90000) || "(bản chữ trống)"; if (kw && !A.length) out = "Không thấy từ khoá; bản chữ (đầu bài):\n" + body.slice(0, 30000); }
             } else if (c.name === "doc_search") {
               const kw = String(c.input?.tu_khoa || "").trim().slice(0, 80);
               if (kw.length < 2) out = "Từ khoá quá ngắn.";
