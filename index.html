@@ -304,7 +304,7 @@ body.scroll main{height:auto;display:block}
 .vh h1{margin:0;font-size:clamp(24px,2.4vw,32px);font-weight:600;letter-spacing:-.02em;line-height:1.15}
 .vh p{margin:4px 0 0;color:var(--muted);font-size:13px}
 .back{display:inline-flex;align-items:center;gap:6px;border:0;background:#fff;border-radius:99px;padding:8px 14px 8px 10px;font-size:13px;font-weight:500;color:var(--ink2);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:12px}
-.back:hover{color:var(--ink)}
+
 .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .pc{text-align:left;border:0;cursor:pointer;display:flex;flex-direction:column;gap:14px;transition:transform .2s,box-shadow .2s}
 .pc:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 18px 36px -24px rgba(20,20,60,.45)}
@@ -421,7 +421,18 @@ table.bt{min-width:1180px}
 @media (max-width:760px){.dc{grid-template-columns:minmax(0,1fr) auto}.dc .tag{grid-column:1 / -1}.dc .da{grid-column:1 / -1;justify-content:flex-start}}
 .wt td{vertical-align:top}
 .t tr.wcons td{background:rgba(253,235,211,.35)}
-.back.sm{padding:5px 10px;font-size:12px;margin:6px 0 0}
+.back.sm{padding:7px 14px;font-size:13px;margin:6px 0 0}
+/* Màu nút theo việc nút làm (gắn tự động theo chữ trên nút, xem btnTone): xem/mở xanh dương, tải/lưu xanh lá, sửa/đặt lại cam, xoá/khoá đỏ, đóng/huỷ xám, còn lại xanh navy nhạt */
+.back{min-height:36px;padding:8px 16px 8px 12px;font-size:13.5px;font-weight:600;background:#EEF1FB;color:#0A2486;box-shadow:inset 0 0 0 1px rgba(10,36,134,.12);transition:background .15s,box-shadow .15s,color .15s,transform .1s;cursor:pointer}
+.back.sm{min-height:32px}
+.back:hover{background:#E1E7FA;color:#0A2486}
+.back[data-tone="view"]{background:#E8F0FF;color:#1D4ED8;box-shadow:inset 0 0 0 1px rgba(29,78,216,.18)}.back[data-tone="view"]:hover{background:#D7E5FF}
+.back[data-tone="save"]{background:#E5F6EC;color:#0E7A3F;box-shadow:inset 0 0 0 1px rgba(18,161,80,.22)}.back[data-tone="save"]:hover{background:#D3EFDF}
+.back[data-tone="edit"]{background:#FFF1E2;color:#B45309;box-shadow:inset 0 0 0 1px rgba(240,138,36,.25)}.back[data-tone="edit"]:hover{background:#FFE5CA}
+.back[data-tone="danger"]{background:#FDECEC;color:#C0141B;box-shadow:inset 0 0 0 1px rgba(225,20,27,.2)}.back[data-tone="danger"]:hover{background:#FADADB}
+.back[data-tone="quiet"]{background:#F1F2F5;color:#4B5163;box-shadow:inset 0 0 0 1px #E2E4EA}.back[data-tone="quiet"]:hover{background:#E6E8EE}
+.back[data-ok]{background:#E1141B!important;color:#fff!important;box-shadow:0 6px 14px -6px rgba(225,20,27,.6)!important}
+.back[disabled]{opacity:.5;cursor:not-allowed}
 .seg2{display:inline-flex;background:#fff;border-radius:99px;padding:3px;box-shadow:inset 0 0 0 1px var(--line)}
 .seg2 button{border:0;background:transparent;border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap}
 .seg2 button[data-wa="done"][aria-pressed="true"]{background:#12A150;color:#fff}
@@ -810,6 +821,11 @@ window.pn=s=>s[0]==="-"||s[0]==="−"?(/[1-9]/.test(s)?NEGM+"("+s.slice(1)+")":s
   let q=[],busy=false;new MutationObserver(M=>{M.forEach(m=>{if(m.type==="characterData")q.push(m.target);else m.addedNodes.forEach(x=>q.push(x))});
     if(!busy){busy=true;requestAnimationFrame(()=>{const Q=q;q=[];busy=false;Q.forEach(x=>{if(x.isConnected)scan(x)})})}}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
   addEventListener("DOMContentLoaded",()=>scan(document.body))})();
+/* Gắn màu cho nút .back theo chữ trên nút; chạy lại mỗi khi trang vẽ thêm nút */
+(()=>{const T=[["danger",/^(xoá|xóa|gỡ|khoá|khóa|bỏ quyền|từ chối)/i],["quiet",/^(đóng|huỷ|hủy|để sau|bỏ qua)/i],["save",/(tải về|tải file|tải lên|lưu|đã gỡ vướng|xác nhận|chốt)/i],["edit",/^(đặt lại|đổi|sửa|thử lại|tạo ngẫu nhiên|đề xuất lại|làm lại|hoàn tác|↶|↷)/i],["view",/^(xem|mở|⛶|toàn màn hình|☀|tìm|tất cả)/i]];
+  const tone=root=>{(root.querySelectorAll?root:document).querySelectorAll(".back:not([data-tone]),.back[data-tone='auto']").forEach(b=>{const t=b.textContent.trim().replace(/^[‹›]\s*/,"");const m=T.find(x=>x[1].test(t));b.dataset.tone=m?m[0]:"base"});if(root.matches&&root.matches(".back:not([data-tone])"))tone(root.parentNode)};
+  let busy=false;new MutationObserver(()=>{if(busy)return;busy=true;requestAnimationFrame(()=>{busy=false;tone(document)})}).observe(document.documentElement,{childList:true,subtree:true});
+  addEventListener("DOMContentLoaded",()=>tone(document))})();
 /* ===== Máy chủ Supabase: đăng nhập và lưu số liệu =====
    Khoá công khai được phép nằm trong mã web; quyền xem, sửa do phân quyền trên máy chủ quyết định (supabase/schema.sql). */
 window.NGB=(function(){
