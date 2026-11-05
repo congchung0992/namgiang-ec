@@ -591,13 +591,15 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
   background:linear-gradient(90deg,#4E6BFF,#8B5CF6 55%,#F17AB5);box-shadow:0 16px 36px -14px rgba(78,107,255,.7);display:flex;align-items:center;overflow:hidden}
 #intro.ready .lg,#intro.s3 .lg{opacity:1;transform:none}
 .lg .lab{position:absolute;inset:0;border:0;background:transparent;color:#fff;font:600 15px var(--f);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:opacity .3s}
-#intro.s3 .lg,#intro.s4 .lg{width:min(460px,88vw);background:#fff;box-shadow:0 20px 50px -20px rgba(40,40,120,.45),inset 0 0 0 1px rgba(255,255,255,.9)}
+#intro.s3 .lg,#intro.s4 .lg{width:min(460px,88vw);height:112px;border-radius:26px;background:#fff;box-shadow:0 20px 50px -20px rgba(40,40,120,.45),inset 0 0 0 1px rgba(255,255,255,.9)}
 #intro.s3 .lg .lab{opacity:0;pointer-events:none}
 .lg form{position:absolute;inset:0;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 22px;opacity:0;pointer-events:none;transition:opacity .4s .35s}
 #intro.s3 .lg form{opacity:1;pointer-events:auto}
 .lg input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:500 15px var(--f);color:#1B2463}
 .lg input::placeholder{color:#8C90AE;font-weight:400}
-.lg .send{width:44px;height:44px;border-radius:50%;border:0;flex:none;background:linear-gradient(135deg,#4E6BFF,#8B5CF6);color:#fff;display:grid;place-items:center;box-shadow:0 6px 14px -6px rgba(78,107,255,.8)}
+.lgin{flex:1;min-width:0;display:flex;flex-direction:column}.lgin input{flex:none;height:48px;width:100%}.lgin input+input{border-top:1px solid #E6E7F0!important}
+#intro .steps{display:none}
+.lg .send{width:52px;height:52px;border-radius:50%;border:0;flex:none;background:linear-gradient(135deg,#4E6BFF,#8B5CF6);color:#fff;display:grid;place-items:center;box-shadow:0 6px 14px -6px rgba(78,107,255,.8)}
 .lg.shake{animation:shake .4s}
 @keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
 .hint{font-size:12.5px;color:rgba(27,36,99,.75);min-height:1.4em;opacity:0;transition:opacity .4s .5s}
@@ -664,9 +666,9 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
     <h1 id="typed" aria-live="polite"></h1>
     <div class="lg" id="lg">
       <button class="lab" id="start" type="button">Đăng nhập <span aria-hidden="true">→</span></button>
-      <form id="lgf" autocomplete="off" novalidate>
-        <input id="lgi" type="text" placeholder="Tên đăng nhập" aria-label="Tên đăng nhập hoặc email">
-        <button class="send" aria-label="Tiếp tục"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <form id="lgf" novalidate>
+        <div class="lgin"><input id="lgi" type="text" placeholder="Tên đăng nhập" aria-label="Tên đăng nhập hoặc email" autocomplete="username" autocapitalize="none" spellcheck="false"><input id="lgp" type="password" placeholder="Mật khẩu" aria-label="Mật khẩu" autocomplete="current-password"></div>
+        <button class="send" aria-label="Đăng nhập"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       </form>
     </div>
     <div class="steps"><i class="on" id="st1"></i><i id="st2"></i></div>
@@ -923,24 +925,25 @@ document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.clo
     const tick=()=>{i++;const s=full.slice(0,i);typed.innerHTML=s.replace("\n","<br>")+'<span class="car"></span>';
       if(i<full.length)later(tick,full[i-1]==="\n"?260:42);else later(()=>intro.classList.add("ready"),250)};
     if(reduce){typed.innerHTML=L1+"<br>"+L2;intro.classList.add("ready");return}tick()}
-  function start(){{const L=document.getElementById("lmlogo");if(L)L.replaceWith(L.cloneNode(true))}intro.className="s1";shell.classList.add("pre");typed.innerHTML="";step=1;inp.value="";inp.type="text";
-    inp.placeholder="Tên đăng nhập";st1.className="on";st2.className="";hint.textContent="Đăng nhập bằng tài khoản được cấp";
+  function start(){{const L=document.getElementById("lmlogo");if(L)L.replaceWith(L.cloneNode(true))}intro.className="s1";shell.classList.add("pre");typed.innerHTML="";step=1;inp.value="";pwi.value="";hint.textContent="Đăng nhập bằng tài khoản được cấp";
     later(()=>{intro.className="s2";later(type,500)},2300)}
-  const lg=document.getElementById("lg"),inp=document.getElementById("lgi"),hint=document.getElementById("hint"),st1=document.getElementById("st1"),st2=document.getElementById("st2");let step=1;
+  const lg=document.getElementById("lg"),inp=document.getElementById("lgi"),pwi=document.getElementById("lgp"),hint=document.getElementById("hint"),st1=document.getElementById("st1"),st2=document.getElementById("st2");let step=1;
   /* Bấm Đăng nhập lúc nào cũng mở ô đăng nhập, kể cả khi hiệu ứng mở đầu chưa chạy xong */
   const openLogin=()=>{timers.forEach(clearTimeout);timers=[];typed.innerHTML=L1+"<br>"+L2;intro.className="ready s3";later(()=>inp.focus(),700)};
   document.getElementById("start").addEventListener("click",openLogin);
   intro.addEventListener("click",e=>{if(!intro.classList.contains("s3")&&!e.target.closest("#start"))openLogin()});
   intro.addEventListener("keydown",e=>{if(e.key==="Enter"&&!intro.classList.contains("s3")){e.preventDefault();openLogin()}});
-  document.getElementById("lgf").addEventListener("submit",e=>{e.preventDefault();
-    if(!inp.value.trim()){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent=step===1?"Anh nhập tên đăng nhập trước nhé":"Anh nhập mật khẩu để vào hệ thống";return}
-    if(step===1&&!/^[^\s@]+(@[^\s@]+)?$/.test(inp.value.trim())){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent="Tên đăng nhập chưa đúng, anh kiểm tra lại";return}
-    if(step===1){{const v=inp.value.trim().toLowerCase();loginEmail=v.includes("@")?v:v+"@namgiang-ec.pages.dev"}step=2;inp.value="";inp.type="password";inp.placeholder="Mật khẩu";st2.className="on";hint.textContent="Bước 2/2 · nhấn Enter để vào";inp.focus();return}
-    doLogin(inp.value)});
+  /* Tên đăng nhập và mật khẩu cùng một ô: Enter ở ô tên thì sang ô mật khẩu, Enter ở ô mật khẩu thì vào */
+  const bad=m=>{lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");hint.textContent=m};
+  document.getElementById("lgf").addEventListener("submit",e=>{e.preventDefault();const v=inp.value.trim().toLowerCase();
+    if(!v){bad("Anh nhập tên đăng nhập trước nhé");inp.focus();return}
+    if(!/^[^\s@]+(@[^\s@]+)?$/.test(v)){bad("Tên đăng nhập chưa đúng, anh kiểm tra lại");inp.focus();return}
+    if(!pwi.value){if(document.activeElement===inp){pwi.focus();return}bad("Anh nhập mật khẩu để vào hệ thống");pwi.focus();return}
+    loginEmail=v.includes("@")?v:v+"@namgiang-ec.pages.dev";doLogin(pwi.value)});
   let loginEmail="",busy=false;
   async function doLogin(pw){if(busy)return;busy=true;hint.textContent="Đang đăng nhập…";
     try{await NGB.signIn(loginEmail,pw);await NGApp.sync();enter()}
-    catch(er){lg.classList.remove("shake");void lg.offsetWidth;lg.classList.add("shake");inp.value="";hint.textContent=er.message||"Không đăng nhập được"}
+    catch(er){bad(er.message||"Không đăng nhập được");pwi.value="";pwi.focus()}
     finally{busy=false}}
   function enter(){timers.forEach(clearTimeout);timers=[];
     const W=innerWidth/2,H=innerHeight/2;intro.querySelectorAll(".wg").forEach(w=>{const r=w.getBoundingClientRect();w.style.setProperty("--cx",(W-r.left-r.width/2)+"px");w.style.setProperty("--cy",(H-r.top-r.height/2)+"px")});
