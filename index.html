@@ -64,6 +64,7 @@ table.xl{border-collapse:collapse;table-layout:fixed;font:12.5px/1.35 Calibri,"B
 .wxd .rl{font-weight:600;color:var(--muted)}.wxd .rl.ok{color:#12A150}.wxd .rl.warn{color:#B25E00}.wxd.far{opacity:.78}
 .wxt{margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:13px}
 @media (max-width:760px){.wxg{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:96px;overflow-x:auto;padding-bottom:4px}}
+.admk{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.admk .fi{flex:1;min-width:240px;max-width:520px}
 .admf{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:12px;align-items:end}.admf .fl{margin:0}
 @media (max-width:900px){.admf{grid-template-columns:1fr}}
 #fview .fsl{padding:14px 16px;width:100%;display:flex;flex-direction:column;gap:10px}
@@ -899,6 +900,8 @@ window.NGB=(function(){
     signOut:async()=>{if(sb)await sb.auth.signOut()},
     loadAll,
     admin:{
+      async secrets(){return ok(await need().rpc("app_secret_status"))||[]},
+      async setSecret(name,value){ok(await need().rpc("set_app_secret",{sname:name,svalue:value}))},
       /* Tạo, khoá, đặt lại mật khẩu tài khoản: chạy ở Supabase Edge Function admin-users, máy chủ kiểm tra quyền Ban giám đốc */
       async users(body){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");
         let r;try{r=await fetch(SB_URL+"/functions/v1/admin-users",{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,authorization:"Bearer "+session.access_token},body:JSON.stringify(body)})}catch(e){throw new Error("Không kết nối được máy chủ, anh kiểm tra mạng")}
@@ -922,12 +925,14 @@ window.NGB=(function(){
       async upload(pid,folder,file){await this.call({action:"upload",project:pid,folder,name:file.name},{method:"POST",headers:{"content-type":file.type||"application/octet-stream"},body:file})},
       async blob(id){return (await this.call({action:"download",id},{method:"GET"})).blob()},
       async remove(id){await this.call({action:"delete",id},{method:"DELETE"})},
-      async classify(body){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
+      async classify(body){try{return await NGB.ai({action:"classify",...body})}catch(e){if(e.code!=="chua_ket_noi")throw e}const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
         const r=await fetch("api/classify",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+session.access_token},body:JSON.stringify(body)});
         if(!r.ok)throw new Error("classify_"+r.status);return r.json()},
-      async ai(body){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");let r;
-        try{r=await fetch("api/quote",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+session.access_token},body:JSON.stringify(body)})}catch(e){throw Object.assign(new Error("Mất kết nối tới máy chủ"),{code:"net"})}
-        let j={};try{j=await r.json()}catch(e){}if(r.ok)return j;throw Object.assign(new Error({chua_ket_noi:"Chưa có khoá Gemini trên máy chủ",auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",ai_error:"Gemini đang lỗi hoặc quá tải, anh thử lại sau ít phút"}[j.error]||"Máy chủ đang lỗi"),{code:j.error||"server"})},
+      /* Gemini chạy ở Supabase Edge Function "ai": khoá do Ban giám đốc dán ở màn Quản trị, trình duyệt không thấy khoá */
+      async ai(body){const {data:{session}}=await need().auth.getSession();if(!session)throw Object.assign(new Error("Phiên đăng nhập đã hết, anh đăng nhập lại"),{code:"auth"});let r;
+        try{r=await fetch(SB_URL+"/functions/v1/ai",{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,authorization:"Bearer "+session.access_token},body:JSON.stringify(body)})}catch(e){throw Object.assign(new Error("Mất kết nối tới máy chủ"),{code:"net"})}
+        let j={};try{j=await r.json()}catch(e){}if(r.ok)return j;
+        throw Object.assign(new Error({chua_ket_noi:"Chưa có khoá Gemini · Ban giám đốc dán khoá ở màn Quản trị",sai_khoa:"Khoá Gemini không đúng hoặc đã bị thu hồi · kiểm tra lại ở màn Quản trị",het_luot:"Gemini báo hết lượt dùng (khoá miễn phí giới hạn mỗi ngày) · thử lại sau hoặc bật tính phí ở Google AI Studio",auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",ai_error:"Gemini đang lỗi hoặc quá tải, anh thử lại sau ít phút"}[j.error]||"Máy chủ đang lỗi"),{code:j.error||"server"})},
       async geocode(q){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
         const r=await fetch("api/geocode?q="+encodeURIComponent(q),{headers:{authorization:"Bearer "+session.access_token}});if(!r.ok)throw new Error("geocode_"+r.status);return r.json()}
     },
@@ -2001,8 +2006,11 @@ async function adminLoad(msg){const box=document.getElementById("adm");if(!box)r
   try{const A=NGB.admin,P=await A.people();if(!DB.projects.some(p=>p.id===admPid))admPid=DB.projects[0]?DB.projects[0].id:"";const M=admPid?await A.members(admPid):[],nm=id=>{const x=P.find(y=>y.id===id);return x?(x.full_name?x.full_name+" · ":"")+String(x.email||"").replace("@namgiang-ec.pages.dev",""):id},free=P.filter(x=>!M.some(m=>m.user_id===x.id));
     if(!document.getElementById("adm"))return;
     let U=[];try{U=(await A.users({action:"list"})).users||[]}catch(e){U=null;msg=msg||e.message}
+    let SS=[];try{SS=await A.secrets()}catch(e){}const gk=SS.find(x=>x.name==="gemini");
     const ux=id=>U&&U.find(u=>u.id===id)||{},short=e=>String(e||"").replace("@"+LOGIN_DOMAIN,""),dt=v=>v?fd(new Date(v)):"Chưa đăng nhập";
-    box.innerHTML=(msg?`<section class="card span3" style="color:${/^Đã /.test(msg)?"#12A150":"#C0141B"};font-size:13px">${esc(msg)}</section>`:"")+card("Tạo tài khoản mới","Người dùng đăng nhập bằng tên đăng nhập và mật khẩu này · tài khoản mới chưa xem được dự án nào cho tới khi được phân công ở dưới",`<form id="admnew" class="admf" autocomplete="off">
+    box.innerHTML=(msg?`<section class="card span3" style="color:${/^Đã /.test(msg)?"#12A150":"#C0141B"};font-size:13px">${esc(msg)}</section>`:"")+card("Kết nối AI (Gemini)","Dùng để đọc báo giá, ghép với BOQ và gợi ý thư mục khi tải file · khoá chỉ máy chủ đọc được, trên web chỉ hiện 4 ký tự cuối",`<div class="pvh" style="gap:10px;flex-wrap:wrap;align-items:center">${gk?st("ok","Đã có khoá ····"+esc(gk.tail))+`<span class="sub">cập nhật ${fd(new Date(gk.updated_at))}</span>`:st("warn","Chưa có khoá")}</div>
+      <div class="admk"><input class="fi" id="admkey" type="password" autocomplete="off" spellcheck="false" placeholder="${gk?"Dán khoá mới để thay":"Dán khoá Gemini, bắt đầu bằng AIza…"}"><button class="back sm" style="margin:0" id="admks" data-tone="save">Lưu khoá</button>${gk?`<button class="back sm" style="margin:0" id="admkt">Kiểm tra kết nối</button><button class="back sm" style="margin:0" id="admkd">Xoá khoá</button>`:""}</div>
+      <div class="sub" id="admkm" style="margin-top:8px">Lấy khoá: mở <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> → Create API key → chép và dán vào ô trên.</div>`,"span3")+card("Tạo tài khoản mới","Người dùng đăng nhập bằng tên đăng nhập và mật khẩu này · tài khoản mới chưa xem được dự án nào cho tới khi được phân công ở dưới",`<form id="admnew" class="admf" autocomplete="off">
       <label class="fl"><span>Họ tên</span><input class="fi" name="full_name" placeholder="Nguyễn Văn An" required></label>
       <label class="fl"><span>Tên đăng nhập</span><input class="fi" name="username" placeholder="an.nguyen" required pattern="[A-Za-z0-9._\-]{3,40}" title="3–40 ký tự: chữ không dấu, số, dấu chấm, gạch ngang"></label>
       <label class="fl"><span>Mật khẩu</span><div style="display:flex;gap:6px"><input class="fi" name="password" required minlength="8" style="flex:1;min-width:0"><button type="button" class="back sm" style="margin:0" id="admgen">Tạo ngẫu nhiên</button></div></label>
@@ -2282,6 +2290,12 @@ view.addEventListener("submit",async e=>{const f=e.target;if(f.id!=="admnew")ret
     await adminLoad(`Đã tạo tài khoản ${d.full_name}: tên đăng nhập ${r.email.replace("@"+LOGIN_DOMAIN,"")} · mật khẩu ${d.password} · anh gửi cho người dùng, rồi phân công dự án ở dưới`)}
   catch(er){btn.disabled=false;const m=document.getElementById("admm")||f.insertAdjacentElement("afterend",Object.assign(document.createElement("div"),{id:"admm",className:"sub"}));m.style.cssText="color:#C0141B;margin-top:10px";m.textContent=er.message}});
 view.addEventListener("click",async e=>{const t=e.target,A=NGB.admin;
+  const km=t=>{const m=document.getElementById("admkm");if(m){m.textContent=t[0];m.style.color=t[1]?"#C0141B":"#0E7A3F"}};
+  const ping=async()=>{try{const r=await NGB.ai({action:"ping"});km([`Kết nối Gemini được · đọc báo giá dùng ${r.pro} · ghép dòng, gợi ý thư mục dùng ${r.flash}`])}catch(er){km([er.message,1])}};
+  if(t.closest("#admks")){const i=document.getElementById("admkey"),v=(i.value||"").trim();if(!/^[A-Za-z0-9_\-]{20,}$/.test(v)){km(["Khoá chưa đúng dạng, anh dán lại (khoá Gemini thường bắt đầu bằng AIza)",1]);return}
+    t.closest("#admks").disabled=true;try{await A.setSecret("gemini",v);i.value="";await adminLoad();await ping()}catch(er){km(["Chưa lưu được: "+er.message,1]);t.closest("#admks").disabled=false}return}
+  if(t.closest("#admkt")){km(["Đang kiểm tra…"]);await ping();return}
+  const kd=t.closest("#admkd");if(kd){if(!kd.dataset.ok){kd.dataset.ok=1;kd.textContent="Bấm lần nữa để xoá khoá";return}try{await A.setSecret("gemini","");await adminLoad("Đã xoá khoá Gemini")}catch(er){km([er.message,1])}return}
   if(t.closest("#admgen")){const i=document.querySelector('#admnew [name="password"]');i.value=genPw();return}
   const row=t.closest("tr[data-au]");if(!row)return;const uid=row.dataset.au,name=row.cells[0].textContent;
   if(t.closest("[data-ap]")){const pw=genPw();if(!t.dataset.ok){t.dataset.ok=1;t.textContent="Bấm lần nữa để đặt lại";return}

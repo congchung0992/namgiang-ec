@@ -59,7 +59,7 @@ manifest.webmanifest    Cho phép "Thêm vào màn hình chính" trên điện t
 Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở lần tải file đầu tiên: thư mục cũ được đổi tên và đưa vào nhóm mới, file giữ nguyên.
 
 ## Báo giá nhà cung cấp, thầu phụ, tổ đội (tab Báo giá)
-- `functions/api/quote.js` gọi Gemini (biến bí mật `GEMINI_API_KEY` trên Cloudflare, lấy ở aistudio.google.com/apikey). Máy chủ tự chọn mẫu Gemini mới nhất đang có (bản "pro" để đọc báo giá, bản "flash" để ghép dòng); muốn cố định thì đặt `GEMINI_MODEL_PRO`, `GEMINI_MODEL`.
+- Gemini chạy ở Supabase Edge Function `supabase/functions/ai` (đọc báo giá, ghép dòng, gợi ý thư mục, kiểm tra khoá). **Khoá Gemini dán ở màn Quản trị → Kết nối AI**: lưu trong bảng `app_secrets` (migration `20261105_app_secrets.sql`), trình duyệt không đọc được, chỉ Edge Function đọc bằng khoá service role; web chỉ hiện 4 ký tự cuối. Biến môi trường `GEMINI_API_KEY` của Edge Function (nếu đặt) được ưu tiên. `functions/api/quote.js` là bản cũ chạy trên Cloudflare, không còn được web gọi. Máy chủ tự chọn mẫu Gemini mới nhất đang có (bản "pro" để đọc báo giá, bản "flash" để ghép dòng); muốn cố định thì đặt `GEMINI_MODEL_PRO`, `GEMINI_MODEL`.
 - Đọc: Excel (chữ từ mọi sheet đang hiện), PDF, ảnh chụp → tên nhà cung cấp, từng dòng (tên, quy cách, ĐVT, khối lượng, đơn giá VT/NC/gộp), VAT, thanh toán, giao hàng. Chưa có khoá thì Excel đọc theo cách đọc BOQ, PDF/ảnh chưa đọc được.
 - Ghép: dòng giống hẳn thì tự ghép; còn lại Gemini chọn trong 6 dòng BOQ ứng viên (có cả nhóm công việc cho giá trọn gói) và trả hệ số quy đổi đơn vị. Anh xem lại trước khi lưu.
 - So sánh: đơn giá quy về đơn vị BOQ, chưa VAT; nhà cung cấp so phần vật tư, tổ đội so phần nhân công, thầu phụ so cả đơn giá.
