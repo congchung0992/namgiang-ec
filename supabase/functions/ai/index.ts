@@ -87,6 +87,8 @@ async function gemini(env: any, { system, parts, schema, kind = "flash", budget 
       const j = await r.json();
       const text = ((j.candidates || [])[0]?.content?.parts || []).map((p: any) => p.text || "").join("").trim();
       if (!text) { last = "gemini_empty_" + ((j.candidates || [])[0]?.finishReason || "none"); continue; }
+      const u = j.usageMetadata || {};
+      if (env.M) { env.M.model = model; env.M.in += u.promptTokenCount || 0; env.M.out += (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0); }
       try { return { data: JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "")), model }; } catch { last = "gemini_badjson"; continue; }
     }
     if (!r.bodyUsed) console.error("gemini", model, r.status, (await r.text()).replace(/\s+/g, " ").slice(0, 300));
@@ -232,7 +234,16 @@ Deno.serve(async (req) => {
     else { const { data } = await admin.from("app_secrets").select("value").eq("name", "gemini").maybeSingle(); key = data?.value || ""; keyCache = { v: key, at: Date.now() }; models = null; }
   }
   if (!key) return json({ error: "chua_ket_noi" }, 503);
-  const env = { KEY: key, PRO: Deno.env.get("GEMINI_MODEL_PRO") || "", FLASH: Deno.env.get("GEMINI_MODEL") || "" };
+  // Đo lường: mỗi lượt gọi ghi một dòng vào ai_usage (việc, mẫu, token, thời gian, lỗi)
+  const M = { model: "", in: 0, out: 0, err: "" }, t0 = Date.now();
+  const env = { KEY: key, PRO: Deno.env.get("GEMINI_MODEL_PRO") || "", FLASH: Deno.env.get("GEMINI_MODEL") || "", M };
+  const res = await run(b, env);
+  try {
+    await admin.from("ai_usage").insert({ user_id: who.user.id, provider: "gemini", action: String(b.action || "").slice(0, 40), model: M.model || null, in_tok: M.in, out_tok: M.out, ms: Date.now() - t0, ok: res.status < 300, err: M.err || null, project_id: String(b.pid || b.project?.code || "").slice(0, 60) || null });
+  } catch (e) { console.error("ai_usage", String(e).slice(0, 100)); }
+  return res;
+});
+async function run(b: any, env: any): Promise<Response> {
   try {
     if (b.action === "ping") {
       // Thử gọi thật một câu ngắn để biết khoá có lượt dùng không
@@ -270,10 +281,10 @@ Deno.serve(async (req) => {
     return json({ error: "bad_request" }, 400);
   } catch (e) {
     const m = String((e as Error)?.message || "");
-    console.error("ai", m);
+    console.error("ai", m); env.M.err = m.slice(0, 120);
     if (/gemini_(400|401|403)\b/.test(m) || /gemini_models_(400|401|403)/.test(m)) return json({ error: "sai_khoa" }, 502);
     if (/gemini_(503|500)\b/.test(m)) return json({ error: "qua_tai" }, 502);
     if (/gemini_429/.test(m)) return json({ error: "het_luot" }, 502);
     return json({ error: "ai_error", detail: m.slice(0, 100) }, 502);
   }
-});
+}
