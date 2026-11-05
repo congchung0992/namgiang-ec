@@ -10,6 +10,10 @@
 <link rel="apple-touch-icon" href="img/mark.png">
 <link rel="manifest" href="manifest.webmanifest">
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}.fdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:14px}
+.fsubs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fsubs button{border:0;background:#F3F4FA;color:var(--ink2);border-radius:12px;padding:9px 14px;font:500 13.5px var(--f);cursor:pointer;box-shadow:inset 0 0 0 1px #E3E5F2;display:inline-flex;align-items:center;gap:6px}
+.fsubs button b{font-weight:600;color:#0A2486}.fsubs button i{font-style:normal;font-size:11.5px;font-weight:600;background:#0A2486;color:#fff;border-radius:99px;padding:1px 7px}
+.fsubs button[aria-selected="true"]{background:linear-gradient(135deg,#0A2486,#4E6BFF);color:#fff;box-shadow:0 8px 18px -10px rgba(10,36,134,.7)}.fsubs button[aria-selected="true"] b{color:#fff}.fsubs button[aria-selected="true"] i{background:#fff;color:#0A2486}
 .fd{display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:0;border-radius:18px;padding:12px 14px;box-shadow:inset 0 0 0 1px var(--line);cursor:pointer;color:var(--ink);font:inherit;transition:transform .15s,box-shadow .15s}
 .fd:hover{box-shadow:inset 0 0 0 1px #0A2486}.fd:active{transform:scale(.98)}
 .fd[aria-current="true"]{background:linear-gradient(135deg,#0A2486,#4E6BFF);color:#fff;box-shadow:0 10px 22px -12px rgba(10,36,134,.8)}
@@ -424,7 +428,7 @@ table.bt{min-width:1180px}
 .back.sm{padding:7px 14px;font-size:13px;margin:6px 0 0}
 /* Màu nút theo việc nút làm (gắn tự động theo chữ trên nút, xem btnTone): xem/mở xanh dương, tải/lưu xanh lá, sửa/đặt lại cam, xoá/khoá đỏ, đóng/huỷ xám, còn lại xanh navy nhạt */
 .back{min-height:36px;padding:8px 16px 8px 12px;font-size:13.5px;font-weight:600;background:#EEF1FB;color:#0A2486;box-shadow:inset 0 0 0 1px rgba(10,36,134,.12);transition:background .15s,box-shadow .15s,color .15s,transform .1s;cursor:pointer}
-.back.sm{min-height:32px}
+.back.sm{min-height:32px}.back{white-space:nowrap}
 .back:hover{background:#E1E7FA;color:#0A2486}
 .back[data-tone="view"]{background:#E8F0FF;color:#1D4ED8;box-shadow:inset 0 0 0 1px rgba(29,78,216,.18)}.back[data-tone="view"]:hover{background:#D7E5FF}
 .back[data-tone="save"]{background:#E5F6EC;color:#0E7A3F;box-shadow:inset 0 0 0 1px rgba(18,161,80,.22)}.back[data-tone="save"]:hover{background:#D3EFDF}
@@ -1308,12 +1312,22 @@ const LEAD=n=>/Kết cấu thép/.test(n)?30:/Thiết bị/.test(n)?45:/Cửa/.t
 const SHEETS=[["home","Tổng quan"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
 const BSHEETS=[["home","Tổng quan"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["mat","Vật liệu"],["hr","Nhân sự"]];
 /* Tab Hồ sơ: file lưu ở Google Drive qua api/drive; bảng quyền này chỉ để gọn màn hình, máy chủ kiểm tra lại (supabase/schema.sql) */
-const DF=[["01","Hồ sơ thầu","BOQ gốc, báo giá",["gd","qs"]],["02","Hợp đồng, phụ lục","Hợp đồng chủ đầu tư",["gd","qs","kt"]],["03","Tiến độ","Tiến độ được duyệt",["gd","qs","cht"]],["04","Nghiệm thu khối lượng","Biên bản, bảng khối lượng",["gd","qs","kt","cht"]],["05","Thanh toán, công nợ","Hồ sơ thanh toán đợt",["gd","qs","kt"]],["06","Vật tư","Báo giá nhà cung cấp, phiếu nhập",["gd","qs","kt"]],["07","Thầu phụ, tổ đội","Hợp đồng khoán, thầu phụ",["gd","qs","kt"]],["08","Nhật ký, ảnh","Nhật ký công trường, ảnh hiện trường",["gd","qs","kt","cht"]]];
+/* Thư mục hồ sơ: 6 nhóm lớn (DG), file lưu ở thư mục con (DF: mã, tên, gợi ý, vai trò được xem); máy chủ kiểm tra lại quyền */
+const DG=[["01","Pháp lý – Hợp đồng"],["02","Kỹ thuật – Tiến độ"],["03","Chất lượng – An toàn"],["04","Khối lượng – Thanh toán"],["05","Vật tư – Thầu phụ"],["06","Hiện trường – Văn bản"]];
+const A4=["gd","qs","kt","cht"],QK=["gd","qs","kt"],QC=["gd","qs","cht"];
+const DF=[["01.1","Pháp lý dự án","Giấy phép xây dựng, quyết định phê duyệt, thẩm duyệt PCCC, thông báo khởi công, bàn giao mặt bằng",A4],["01.2","Hồ sơ thầu","Hồ sơ mời thầu, dự thầu, BOQ gốc, giá gốc, báo giá",["gd","qs"]],["01.3","Hợp đồng – phụ lục","Hợp đồng và phụ lục với chủ đầu tư",QK],["01.4","Bảo lãnh – bảo hiểm","Bảo lãnh thực hiện, tạm ứng, bảo hành; bảo hiểm công trình",QK],
+  ["02.1","Bản vẽ thiết kế","Thiết kế được duyệt, bản vẽ thi công, thay đổi thiết kế",A4],["02.2","Tiến độ – biện pháp","Tiến độ, kế hoạch tuần/tháng, biện pháp thi công",QC],["02.3","Hoàn công – bàn giao","Bản vẽ hoàn công, hồ sơ hoàn thành, bàn giao, bảo hành",QC],
+  ["03.1","Nghiệm thu kỹ thuật","Nghiệm thu vật liệu đầu vào, công việc, giai đoạn",QC],["03.2","Thí nghiệm – CO/CQ","Kết quả thí nghiệm, chứng chỉ xuất xưởng, xuất xứ",QC],["03.3","An toàn – môi trường","Kế hoạch an toàn, huấn luyện, kiểm tra, sự cố",QC],
+  ["04.1","Nghiệm thu khối lượng","Biên bản, bảng khối lượng hoàn thành",A4],["04.2","Phát sinh","Phát sinh tăng giảm, công văn xác nhận",QK],["04.3","Thanh toán – công nợ","Hồ sơ thanh toán đợt, hoá đơn, đối chiếu công nợ",QK],
+  ["05.1","Báo giá – đặt hàng","Báo giá nhà cung cấp, đơn hàng, hợp đồng mua",QK],["05.2","Nhập xuất vật tư","Phiếu nhập, xuất, giao nhận",A4],["05.3","Thầu phụ – tổ đội","Hợp đồng khoán, thầu phụ, nghiệm thu thanh toán thầu phụ",QK],
+  ["06.1","Nhật ký thi công","Nhật ký công trường",A4],["06.2","Báo cáo – ảnh","Báo cáo tuần/tháng, ảnh hiện trường",A4],["06.3","Công văn – biên bản họp","Công văn đi/đến, biên bản họp giao ban",A4]];
+/* Mã thư mục cũ (8 thư mục) đổi sang thư mục con mới */
+const OLDF={"01":"01.2","02":"01.3","03":"02.2","04":"04.1","05":"04.3","06":"05.1","07":"05.3","08":"06.2"},nf=f=>OLDF[f]||f;
 const fmtSize=b=>b==null?"-":b<1048576?fm(b/1024,0)+" KB":fm(b/1048576,1)+" MB";
 const LOCALF={open(){return new Promise((ok,er)=>{const q=indexedDB.open("ngic-files",1);q.onupgradeneeded=()=>q.result.createObjectStore("files",{keyPath:"id"});q.onsuccess=()=>ok(q.result);q.onerror=()=>er(q.error)})},
   async tx(mode,fn){const db=await this.open();return new Promise((ok,er)=>{const t=db.transaction("files",mode),q=fn(t.objectStore("files"));t.oncomplete=()=>{db.close();ok(q&&q.result)};t.onerror=t.onabort=()=>{db.close();er(t.error||new Error("Không lưu được file trong trình duyệt"))}})},
   async all(){return await this.tx("readonly",o=>o.getAll())||[]},
-  async list(pid){return (await this.all()).filter(x=>x.project_id===pid).sort((a,b)=>a.at<b.at?1:-1).map(({blob,...x})=>x)},
+  async list(pid){return (await this.all()).filter(x=>x.project_id===pid).sort((a,b)=>a.at<b.at?1:-1).map(({blob,...x})=>({...x,folder:nf(x.folder)}))},
   async put(pid,folder,file){const id="f"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);await this.tx("readwrite",o=>o.put({id,project_id:pid,folder,name:file.name,size:file.size,at:new Date().toISOString(),blob:file}))},
   async get(id){return (await this.tx("readonly",o=>o.get(id)))},
   async del(id){await this.tx("readwrite",o=>o.delete(id))},
@@ -1331,7 +1345,7 @@ const named=(pid,f)=>new File([f],stdName(pid,f.name),{type:f.type||"application
 /* File chưa lên được Drive (mất mạng, chưa kết nối) thì giữ trên trình duyệt, lần sau vào web tự đưa lên */
 async function flushLocal(){if(NGApp.guest||!NGApp.drive)return{done:0,left:0};let done=0,left=0;
   for(const f of await LOCALF.all().catch(()=>[])){if(!DB.projects.some(p=>p.id===f.project_id))continue;
-    try{await NGB.drive.upload(f.project_id,f.folder,named(f.project_id,new File([f.blob],f.name,{type:f.blob.type})));await LOCALF.del(f.id);done++}catch(e){left++}}
+    try{await NGB.drive.upload(f.project_id,nf(f.folder),named(f.project_id,new File([f.blob],f.name,{type:f.blob.type})));await LOCALF.del(f.id);done++}catch(e){left++}}
   return{done,left}}
 const LQ="loc:";
 const FS={list:async pid=>{if(NGApp.guest)return LOCALF.list(pid);const [D,L]=await Promise.all([NGB.drive.list(pid),LOCALF.list(pid).catch(()=>[])]);return [...L.map(x=>({...x,id:LQ+x.id,wait:1})),...D]},
@@ -1349,11 +1363,14 @@ async function keepFile(pid,folder,file,label){const f=named(pid,file);if(NGApp.
     setTimeout(()=>flushLocal().then(r=>{if(r.done){NGB.warn("");if(document.getElementById("fls"))filesLoad()}}).catch(()=>{}),20000)}
   if(cur&&cur.id===pid&&document.getElementById("fls"))filesLoad()}
 /* Rà nội dung file trước khi lưu: đọc file, gợi ý thư mục (Claude trên máy chủ, không được thì đoán theo tên và chữ trong file), anh xác nhận rồi mới lưu */
-const FRULE=[["07",10,/thau phu|to doi|giao khoan|hop dong khoan|nhan khoan/],["02",6,/hop dong|phu luc|contract|\bhd\b|hdtc|hdkt/],["05",6,/thanh toan|cong no|hoa don|invoice|bao lanh|tam ung|uy nhiem chi|de nghi tt|\bdntt\b|quyet toan/],
-  ["04",6,/nghiem thu|bien ban|\bbbnt\b|khoi luong hoan thanh|\bntkl\b/],["03",5,/tien do|schedule|ke hoach thi cong|\bmpp\b|gantt/],["06",5,/vat tu|vat lieu|phieu nhap|phieu xuat|giao nhan|don dat hang|nha cung cap|\bncc\b|xi mang|thep|be tong|cat da/],
-  ["01",5,/\bboq\b|du toan|bao gia|ho so thau|du thau|moi thau|chao gia|ban ve|tien luong/],["08",4,/nhat ky|hien truong|\banh\b|photo|hinh anh/]];
+const FRULE=[["05.3",10,/thau phu|to doi|giao khoan|hop dong khoan|nhan khoan/],["01.3",6,/hop dong|phu luc|contract|\bhd\b|hdtc|hdkt/],["04.3",6,/thanh toan|cong no|hoa don|invoice|tam ung|uy nhiem chi|de nghi tt|\bdntt\b|quyet toan/],
+  ["01.4",8,/bao lanh|bao hiem/],["04.1",6,/nghiem thu khoi luong|khoi luong hoan thanh|\bntkl\b|bang khoi luong/],["03.1",6,/nghiem thu|bien ban nghiem|\bbbnt\b/],["04.2",8,/phat sinh|\bvo\b|variation/],
+  ["02.2",5,/tien do|schedule|ke hoach thi cong|bien phap|\bmpp\b|gantt/],["05.1",5,/bao gia ncc|nha cung cap|\bncc\b|don dat hang|\bpo\b|hop dong mua/],["05.2",6,/phieu nhap|phieu xuat|giao nhan/],
+  ["01.2",5,/\bboq\b|du toan|bao gia|ho so thau|du thau|moi thau|chao gia|gia goc|tien luong/],["02.1",6,/ban ve|shop drawing|thiet ke|\bdwg\b|mat bang|mat cat/],["02.3",8,/hoan cong|ban giao|bao hanh/],
+  ["03.2",7,/thi nghiem|\bco\b|\bcq\b|chung chi|xuat xuong/],["03.3",7,/an toan|\batld\b|moi truong|huan luyen|su co/],["01.1",8,/giay phep|quyet dinh|tham duyet|khoi cong|phap ly|mat bang thi cong/],
+  ["06.1",6,/nhat ky/],["06.2",4,/bao cao tuan|bao cao thang|hien truong|\banh\b|photo|hinh anh/],["06.3",6,/cong van|bien ban hop|giao ban|thong bao/]];
 function guessFolder(name,text,img){const t=noAcc(name+" "+(text||"").slice(0,3000)).toLowerCase(),sc={};FRULE.forEach(([k,w,re])=>{const n=(t.match(new RegExp(re.source,"g"))||[]).length;if(n)sc[k]=(sc[k]||0)+w*Math.min(n,3)+(re.test(noAcc(name).toLowerCase())?4:0)});
-  if(img)sc["08"]=(sc["08"]||0)+6;const K=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]),best=K[0];if(!best)return null;
+  if(img)sc["06.2"]=(sc["06.2"]||0)+6;const K=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]),best=K[0];if(!best)return null;
   const nm=noAcc(name).toLowerCase(),hit=FRULE.find(r=>r[0]===best)[2].test(nm);
   return{folder:best,strong:hit&&sc[best]>=12&&sc[best]-(sc[K[1]]||0)>=6,reason:text||img?"Hệ thống đoán theo tên và chữ trong file, chưa đọc bằng Claude":"Tên file đã rõ loại hồ sơ"}}
 const GENERIC=/^(img|dsc|dcim|pxl|scan|scanned|document|doc|untitled|new|file|photo|image|screenshot|zalo|cam|anh|tai lieu|z)?[\s_\-\d().]*$/i;
@@ -1376,11 +1393,11 @@ async function suggest(p,f){const g=guessFolder(f.name);if(g&&g.strong)return g;
   return v||guessFolder(o.name,o.text,o.isImg)||{folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}}
 function sortFiles(p,files,here,F){let wrap=document.getElementById("fview");if(wrap)wrap.remove();const base=n=>n.replace(/\.[^.]+$/,""),ext=n=>(n.match(/\.[^.]+$/)||[""])[0];
   wrap=document.createElement("div");wrap.id="fview";wrap.setAttribute("role","dialog");wrap.setAttribute("aria-label","Xếp file vào thư mục");
-  wrap.innerHTML=`<div class="fvb"><div class="fvh"><b>Rà nội dung ${files.length} file trước khi lưu</b><button class="back sm" style="margin:0" id="fvc">Huỷ</button></div><div class="fvc"><div class="fsl">${files.map((f,i)=>`<div class="fsr" data-i="${i}"><div class="on">${esc(f.name)} <span class="sub">· ${fmtSize(f.size)}</span></div><select aria-label="Thư mục" disabled>${F.map(x=>`<option value="${x[0]}">${x[0]} ${esc(x[1])}</option>`).join("")}</select><input class="nm" aria-label="Tên file khi lưu" value="${esc(stdName(p.id,f.name))}"><div class="why">Đang đọc nội dung…</div></div>`).join("")}</div></div><div class="fsf"><span class="sub" id="fsm" style="flex:1;align-self:center"></span><button class="back" style="margin:0" id="fsok" disabled>Lưu vào thư mục đã chọn</button></div></div>`;
+  wrap.innerHTML=`<div class="fvb"><div class="fvh"><b>Rà nội dung ${files.length} file trước khi lưu</b><button class="back sm" style="margin:0" id="fvc">Huỷ</button></div><div class="fvc"><div class="fsl">${files.map((f,i)=>`<div class="fsr" data-i="${i}"><div class="on">${esc(f.name)} <span class="sub">· ${fmtSize(f.size)}</span></div><select aria-label="Thư mục" disabled>${DG.map(g=>{const o=F.filter(x=>x[0].startsWith(g[0]+"."));return o.length?`<optgroup label="${g[0]} ${esc(g[1])}">${o.map(x=>`<option value="${x[0]}">${x[0]} ${esc(x[1])}</option>`).join("")}</optgroup>`:""}).join("")}</select><input class="nm" aria-label="Tên file khi lưu" value="${esc(stdName(p.id,f.name))}"><div class="why">Đang đọc nội dung…</div></div>`).join("")}</div></div><div class="fsf"><span class="sub" id="fsm" style="flex:1;align-self:center"></span><button class="back" style="margin:0" id="fsok" disabled>Lưu vào thư mục đã chọn</button></div></div>`;
   document.body.appendChild(wrap);const rows=[...wrap.querySelectorAll(".fsr")],close=()=>wrap.remove();wrap.querySelector("#fvc").onclick=close;
   let left=files.length;const okBtn=wrap.querySelector("#fsok");
   files.forEach((f,i)=>suggest(p,f).then(v=>{const r=rows[i],sel=r.querySelector("select"),why=r.querySelector(".why"),nm=r.querySelector(".nm");
-    const ok=v.folder&&F.some(x=>x[0]===v.folder);sel.value=ok?v.folder:(F.some(x=>x[0]===here)?here:F[0][0]);sel.disabled=false;
+    if(v.folder)v.folder=nf(v.folder);const ok=v.folder&&F.some(x=>x[0]===v.folder);sel.value=ok?v.folder:(F.some(x=>x[0]===here)?here:F[0][0]);sel.disabled=false;
     if(v.title&&GENERIC.test(noAcc(base(f.name)))&&nm.value===stdName(p.id,f.name))nm.value=stdName(p.id,v.title+ext(f.name));
     const fn=k=>{const x=F.find(y=>y[0]===k);return x?x[0]+" "+x[1]:k};
     why.textContent=(v.folder?(ok?"Gợi ý: "+fn(v.folder):"Gợi ý "+v.folder+" nhưng tài khoản này không có quyền thư mục đó")+" · ":"")+v.reason;
@@ -1454,12 +1471,17 @@ document.addEventListener("click",e=>{if(!e.target.closest("#wxp")||!cur)return;
     const g=m?{lat:+(+m[1]).toFixed(4),lon:+(+m[2]).toFixed(4),name:"Toạ độ anh chọn",acc:"toạ độ"}:await gmFind(v)||await osmFind(v).catch(()=>null)||await wxFind(q[0],q[1]).catch(()=>null)||(q[1]?await wxFind(q[1]).catch(()=>null):null);
     if(!g){inp.value="";inp.placeholder="Không tìm thấy, anh thử tên khác";return}g.manual=1;g.loc=p.loc;wxSet(p.id,g);wxLoad()}});
 const filesView=()=>`<div class="sub" id="flmsg" style="min-height:18px;margin-bottom:8px"></div><div class="vgrid" id="fls"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`;
-let flSel=null;
+let flSel=null,flTop=null;
 async function filesLoad(){const box=document.getElementById("fls"),p=cur;if(!box||!p)return;
-  try{const L=await FS.list(p.id);if(!document.getElementById("fls")||cur!==p)return;const G=NGApp.guest,on=true,canDel=G||NGApp.board||p._role==="gd",F=DF.filter(f=>NGApp.board||f[3].includes(p._role));
-    if(!F.some(f=>f[0]===flSel))flSel=F.length?F[0][0]:null;const C=F.find(f=>f[0]===flSel),R=L.filter(x=>x.folder===flSel);
-    box.innerHTML=card("Thư mục dự án",G?"Chế độ thử · file tạm lưu trên trình duyệt này, đăng nhập rồi sẽ đưa lên Google Drive của công ty":NGApp.drive?"Bộ hồ sơ của dự án, lưu trên Google Drive của công ty · bấm vào thư mục để xem hoặc tải về":(NGB.drive.reason==="google_auth"?"Khoá Google Drive đã hết hạn nên chưa lưu lên Drive được · file tải lên tạm giữ trên trình duyệt này, tự đưa lên khi khoá được tạo lại":"Chưa kết nối Google Drive · file tải lên tạm giữ trên trình duyệt này, tự đưa lên khi kết nối"),`<div class="fdg">${F.map(f=>{const n=L.filter(x=>x.folder===f[0]).length;return`<button class="fd" data-fsel="${f[0]}" aria-current="${f[0]===flSel}">${ic("files",1.8)}<span><b>${f[0]} ${f[1]}</b><small>${n?n+" file":"Chưa có file"}</small></span></button>`}).join("")}</div>${on&&F.length?`<div style="margin-top:14px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file lên · hệ thống đọc và gợi ý thư mục</label></div>`:""}`,"span3")+
-    (C?card(`${C[0]} ${C[1]}`,C[2],`${R.length?`<div class="tw"><table class="t ftb"><thead><tr><th>Tên file</th><th class="r">Dung lượng</th><th>Ngày tải lên</th><th></th></tr></thead><tbody>${R.map(x=>`<tr><td class="fn">${esc(x.name)}${x.wait?' <small class="mau">Chờ đưa lên Drive</small>':""}</td><td class="r">${fmtSize(x.size)}</td><td class="num">${fd(new Date(x.at))}</td><td><div class="fla"><button class="back sm" style="margin:0" data-fv="${esc(x.id)}" data-n="${esc(x.name)}">Xem</button><button class="back sm" style="margin:0" data-fd="${esc(x.id)}" data-n="${esc(x.name)}">Tải về</button>${canDel?`<button class="back sm" style="margin:0" data-fx="${esc(x.id)}">Xoá</button>`:""}</div></td></tr>`).join("")}</tbody></table></div>`:`<span class="sub">${C[0]==="01"&&p.file?`Chưa có file BOQ gốc (${esc(p.file)}). Dự án tạo trước khi nối Google Drive nên file chưa được lưu, anh tải file đó lên đây.`:"Thư mục này chưa có file."}</span>`}${on?`<div style="margin-top:12px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="${C[0]}" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file lên</label><div class="sub" style="margin-top:8px">Tên file tự đặt theo dạng NămThángNgày_Mã dự án_tên không dấu, ví dụ ${esc(stdName(p.id,"Biên bản nghiệm thu.pdf"))}</div></div>`:""}`,"span3"):"")}
+  try{const L=(await FS.list(p.id)).map(x=>({...x,folder:nf(x.folder)}));if(!document.getElementById("fls")||cur!==p)return;const G=NGApp.guest,on=true,canDel=G||NGApp.board||p._role==="gd",F=DF.filter(f=>NGApp.board||f[3].includes(p._role));
+    const Gs=DG.filter(g=>F.some(f=>f[0].startsWith(g[0]+"."))),cnt=k=>L.filter(x=>x.folder===k||x.folder.startsWith(k+".")).length;
+    if(flSel&&F.some(f=>f[0]===flSel))flTop=flSel.slice(0,2);if(!Gs.some(g=>g[0]===flTop))flTop=Gs.length?Gs[0][0]:null;
+    const subs=F.filter(f=>f[0].startsWith(flTop+"."));if(!flSel||!subs.some(f=>f[0]===flSel))flSel=((subs.find(f=>cnt(f[0]))||subs[0])||[])[0]||null;
+    const C=F.find(f=>f[0]===flSel),R=L.filter(x=>x.folder===flSel),G0=DG.find(g=>g[0]===flTop);
+    box.innerHTML=card("Thư mục dự án",G?"Chế độ thử · file tạm lưu trên trình duyệt này":NGApp.drive?"Bộ hồ sơ của dự án, lưu trên Google Drive của công ty · 6 nhóm, bấm vào nhóm để xem thư mục con":(NGB.drive.reason==="google_auth"?"Khoá Google Drive đã hết hạn nên chưa lưu lên Drive được · file tải lên tạm giữ trên trình duyệt này, tự đưa lên khi khoá được tạo lại":"Chưa kết nối Google Drive · file tải lên tạm giữ trên trình duyệt này, tự đưa lên khi kết nối"),
+      `<div class="fdg">${Gs.map(g=>{const n=cnt(g[0]),k=F.filter(f=>f[0].startsWith(g[0]+".")).length;return`<button class="fd" data-ftop="${g[0]}" aria-current="${g[0]===flTop}">${ic("files",1.8)}<span><b>${g[0]} ${g[1]}</b><small>${n?n+" file · ":""}${k} thư mục con</small></span></button>`}).join("")}</div>${on&&F.length?`<div style="margin-top:14px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file lên · hệ thống đọc và gợi ý thư mục</label></div>`:""}`,"span3")+
+    (G0?`<section class="card span3"><h3>${G0[0]} ${G0[1]}</h3><div class="fsubs" role="tablist">${subs.map(f=>{const n=cnt(f[0]);return`<button role="tab" data-fsel="${f[0]}" aria-selected="${f[0]===flSel}"><b>${f[0]}</b> ${esc(f[1])}${n?` <i>${n}</i>`:""}</button>`}).join("")}</div>
+      ${C?`<div class="sub" style="margin:12px 0 10px">${esc(C[2])}</div>${R.length?`<div class="tw"><table class="t ftb"><thead><tr><th>Tên file</th><th class="r">Dung lượng</th><th>Ngày tải lên</th><th></th></tr></thead><tbody>${R.map(x=>`<tr><td class="fn">${esc(x.name)}${x.wait?' <small class="mau">Chờ đưa lên Drive</small>':""}</td><td class="r">${fmtSize(x.size)}</td><td class="num">${fd(new Date(x.at))}</td><td><div class="fla"><button class="back sm" style="margin:0" data-fv="${esc(x.id)}" data-n="${esc(x.name)}">Xem</button><button class="back sm" style="margin:0" data-fd="${esc(x.id)}" data-n="${esc(x.name)}">Tải về</button>${canDel?`<button class="back sm" style="margin:0" data-fx="${esc(x.id)}">Xoá</button>`:""}</div></td></tr>`).join("")}</tbody></table></div>`:`<span class="sub">${C[0]==="01.2"&&p.file?`Chưa có file BOQ gốc (${esc(p.file)}). Anh tải file đó lên đây.`:"Thư mục này chưa có file."}</span>`}${on?`<div style="margin-top:12px"><label class="pill" style="${sv("files")};cursor:pointer"><input type="file" data-fu="${C[0]}" multiple hidden><span class="dot">${ic("up",2)}</span>Tải file vào ${C[0]} ${esc(C[1])}</label><div class="sub" style="margin-top:8px">Tên file tự đặt theo dạng NămThángNgày_Mã dự án_tên không dấu, ví dụ ${esc(stdName(p.id,"Biên bản nghiệm thu.pdf"))}</div></div>`:""}`:""}</section>`:"")}
   catch(e){const b=document.getElementById("fls");if(b)b.innerHTML=`<section class="card span3" style="font-size:13px"><span style="color:#C0141B">${/fetch|network|Load failed/i.test(e.message)?"Mất kết nối tới máy chủ, có thể mạng đang chập chờn.":"Không tải được danh sách hồ sơ: "+esc(e.message)}</span> <button class="back sm" style="margin:0 0 0 8px" id="flre">Thử lại</button></section>`}}
 const flMsg=(m,bad)=>{const x=document.getElementById("flmsg");if(x){x.textContent=m||"";x.style.color=bad?"#C0141B":""}};
 const saveBlob=(b,name)=>{const u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000)};
@@ -1699,7 +1721,7 @@ function createFromPending(){const {r,form}=pending;if(!(Math.abs(r.check-r.info
   const p={id,code,name:form.name.trim()||"Dự án mới",cdt:form.cdt.trim(),loc:form.loc.trim(),qcode:form.qcode.trim(),date:form.date.trim(),file:pending.file,value:r.info.value,rounded:r.info.rounded||null,ratio:85,cost:{},created:new Date().toISOString(),hms:r.hms};
   if(old>=0){const m=boqMerge(oldP,r.hms),n={...oldP,...p,id:oldP.id,code:form.code.trim()||oldP.code,ratio:oldP.ratio,created:oldP.created,updated:new Date().toISOString(),cost:m.cost};["sched","weeks","xcost"].forEach(k=>{if(m[k])n[k]=m[k];else delete n[k]});GU.u=[];GU.r=[];GU.pid=null;DB.projects[old]=n;p.id=n.id}else DB.projects.unshift(p);
   const blob=pending.blob;persist();pending=null;location.hash="da-"+p.id;
-  if(blob){const ext=(blob.name.match(/\.\w+$/)||[".xlsx"])[0];keepFile(p.id,"01",new File([blob],"BOQ "+(p.qcode||blob.name.replace(/\.\w+$/,""))+ext,{type:blob.type}),"File BOQ gốc").catch(()=>{})}}
+  if(blob){const ext=(blob.name.match(/\.\w+$/)||[".xlsx"])[0];keepFile(p.id,"01.2",new File([blob],"BOQ "+(p.qcode||blob.name.replace(/\.\w+$/,""))+ext,{type:blob.type}),"File BOQ gốc").catch(()=>{})}}
 
 function projView(p,s,sub){const b=p.boq?DB.projects.find(x=>x.id===p.id):null,L=p.boq?sheetsFor(b):SHEETS;
   /* Đầu trang dự án gọn một khối: nút quay lại, mã, tên, trạng thái cùng một dòng; thông tin phụ một dòng nhỏ */
@@ -1949,7 +1971,7 @@ function ggApply(){const p=DB.projects.find(x=>x.id===ggP.pid);if(!p)return;cons
   p.xcost={};R.ex.forEach(x=>{const a=ggP.assign[x.g.sheet];if(a){const o=p.xcost[a]||(p.xcost[a]={v:0,n:0,src:[]});x.g.lines.forEach(l=>{if(l.vl!=null||l.nc!=null){o.v+=l.vl||0;o.n+=l.nc||0}else o.v+=l.total||0});o.src.push(x.g.sheet)}});
   p.gg={file:ggP.file,date:fd(new Date()),n};const id=p.id,blob=ggP.blob;ggP=null;persist();
   /* Lưu luôn file giá gốc vào mục 01 Hồ sơ thầu của Thư mục dự án */
-  if(blob)keepFile(id,"01",blob,"File giá gốc").catch(()=>{});location.hash="da-"+id+"-boq";route()}
+  if(blob)keepFile(id,"01.2",blob,"File giá gốc").catch(()=>{});location.hash="da-"+id+"-boq";route()}
 view.addEventListener("click",e=>{if(!ggP)return;const t=e.target;let b;
   if(t.closest("#ggok")){ggApply();return}
   if(b=t.closest("tr[data-gv]")){ggP.sel=+b.dataset.gv;ggP.flt="all";ggRe();const d=view.querySelector("table.ggd");if(d)d.closest(".card").scrollIntoView({behavior:"smooth",block:"start"});return}
@@ -2075,6 +2097,7 @@ view.addEventListener("change",e=>{const t=e.target;if(t.dataset.fu===undefined|
     .catch(()=>flMsg("Không đọc được file. Nếu file đang mở trong Excel/Word, anh đóng file rồi chọn lại.",true))});
 view.addEventListener("click",e=>{if(e.target.closest("#flre"))filesLoad()});
 view.addEventListener("click",async e=>{const sel=e.target.closest("[data-fsel]"),v=e.target.closest("[data-fv]"),d=e.target.closest("[data-fd]"),x=e.target.closest("[data-fx]");
+  const tp=e.target.closest("[data-ftop]");if(tp){flTop=tp.dataset.ftop;flSel=null;flMsg("");await filesLoad();return}
   if(sel){flSel=sel.dataset.fsel;flMsg("");await filesLoad();return}
   if(v){flMsg("");fileView(v.dataset.fv,v.dataset.n);return}
   if(d){flMsg("Đang tải về "+d.dataset.n);try{saveBlob(await FS.blob(d.dataset.fd),d.dataset.n);flMsg("")}catch(er){flMsg(er.message,true)}return}

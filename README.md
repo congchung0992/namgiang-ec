@@ -46,3 +46,14 @@ manifest.webmanifest    Cho phép "Thêm vào màn hình chính" trên điện t
 ## Xem file Excel, Word, PowerPoint
 - Mở bằng trình xem Office Online của Microsoft (`view.officeapps.live.com`). `api/drive?action=office` tạo đường dẫn tạm `/api/office/<mã>/<tên file>`, ký HMAC (khoá suy ra từ `GOOGLE_CLIENT_SECRET`), hết hạn sau 15 phút. Microsoft tải file qua đường dẫn này khi hiển thị.
 - File Excel trên 5 MB, Word/PowerPoint trên 10 MB, hoặc file chưa lên Drive thì xem bằng bản đơn giản do web tự vẽ; có nút "Xem bản đơn giản" để chuyển.
+
+## Thư mục hồ sơ dự án
+6 nhóm, file lưu ở thư mục con (mã `01.1` … `06.3`, quyền theo vai trò trong `supabase/migrations/20261105_thu_muc_6_nhom.sql`):
+- 01 Pháp lý – Hợp đồng: 01.1 Pháp lý dự án · 01.2 Hồ sơ thầu · 01.3 Hợp đồng – phụ lục · 01.4 Bảo lãnh – bảo hiểm
+- 02 Kỹ thuật – Tiến độ: 02.1 Bản vẽ thiết kế · 02.2 Tiến độ – biện pháp · 02.3 Hoàn công – bàn giao
+- 03 Chất lượng – An toàn: 03.1 Nghiệm thu kỹ thuật · 03.2 Thí nghiệm – CO/CQ · 03.3 An toàn – môi trường
+- 04 Khối lượng – Thanh toán: 04.1 Nghiệm thu khối lượng · 04.2 Phát sinh · 04.3 Thanh toán – công nợ
+- 05 Vật tư – Thầu phụ: 05.1 Báo giá – đặt hàng · 05.2 Nhập xuất vật tư · 05.3 Thầu phụ – tổ đội
+- 06 Hiện trường – Văn bản: 06.1 Nhật ký thi công · 06.2 Báo cáo – ảnh · 06.3 Công văn – biên bản họp
+
+Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở lần tải file đầu tiên: thư mục cũ được đổi tên và đưa vào nhóm mới, file giữ nguyên.
