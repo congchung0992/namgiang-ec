@@ -42,3 +42,7 @@ manifest.webmanifest    Cho phép "Thêm vào màn hình chính" trên điện t
 ## Thời tiết công trường
 - Dự báo lấy từ Open-Meteo (mô hình ECMWF, đối chiếu GFS), không cần khoá.
 - Vị trí công trường tra bằng Google Maps qua `functions/api/geocode.js`, biến bí mật `GOOGLE_MAPS_KEY` trên Cloudflare (Google Cloud → bật **Geocoding API** → tạo API key, giới hạn chỉ dùng Geocoding API). Chưa đặt khoá thì web tìm bằng OpenStreetMap.
+
+## Xem file Excel, Word, PowerPoint
+- Mở bằng trình xem Office Online của Microsoft (`view.officeapps.live.com`). `api/drive?action=office` tạo đường dẫn tạm `/api/office/<mã>/<tên file>`, ký HMAC (khoá suy ra từ `GOOGLE_CLIENT_SECRET`), hết hạn sau 15 phút. Microsoft tải file qua đường dẫn này khi hiển thị.
+- File Excel trên 5 MB, Word/PowerPoint trên 10 MB, hoặc file chưa lên Drive thì xem bằng bản đơn giản do web tự vẽ; có nút "Xem bản đơn giản" để chuyển.
