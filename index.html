@@ -42,7 +42,7 @@
 .bcp{table-layout:fixed}.bcp td{padding:3px 6px!important;vertical-align:middle}.bcp th{padding:6px!important;white-space:normal!important;line-height:1.2}.bcp .fi{width:100%;padding:5px 7px;box-sizing:border-box;border-color:transparent;background:#F6F7FB}.bcp .fi:focus,.bct:focus{background:#fff;border-color:#B9C2E6}
 .bct{width:100%;resize:none;font:inherit;min-height:32px;box-sizing:border-box;field-sizing:content;line-height:1.4}.bcpc{display:flex;align-items:center;gap:3px}
 .bcx{border:0;background:#FDECEC;color:#C0141B;font-size:20px;font-weight:600;line-height:1;cursor:pointer;width:30px;height:30px;border-radius:8px;flex:none;display:inline-flex;align-items:center;justify-content:center;padding:0}.bcx:hover{background:#C0141B;color:#fff}.bca{margin:8px 0 0!important}.bcd{display:flex;gap:8px;align-items:center;margin-bottom:4px}.bcd .fi{flex:1;padding:5px 8px;background:#F6F7FB;border-color:transparent}
-.bcg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bcf{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:10px;background:#F3F4F8;border:1px dashed #C9CCD8}.bcf.on{border-style:solid}
+.bcg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bcf{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:10px;background:#F3F4F8;border:1px dashed #C9CCD8}.bcf.on{border-style:solid;background:#fff}
 .bcf img{position:absolute;max-width:none!important;user-select:none;touch-action:none;cursor:grab}.bce{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);cursor:pointer;font-size:14px}.bce span{font-size:28px;line-height:1}
 .bcb{position:absolute;right:6px;top:6px;display:flex;gap:4px}.bcb>*{width:30px;height:30px;border-radius:8px;border:0;background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
 input[type="date"]{min-width:132px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='3'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:30px!important}
@@ -170,7 +170,10 @@ button{cursor:pointer}
 main{padding-block:16px 32px;min-width:0}
 /* thanh trên */
 .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;padding:4px 2px}
+.pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:0 1 auto;min-width:0;padding:4px 2px}
+.tlogo{flex:1 1 0;display:flex;justify-content:center;align-items:center;min-width:0;overflow:hidden}.tlogo img{height:62px;width:auto;max-width:100%;object-fit:contain;display:block;filter:drop-shadow(0 4px 10px rgba(10,36,134,.12))}
+@media (max-width:1180px){.tlogo{display:none}}
+@media (min-width:1181px){.top{flex-wrap:nowrap}.top .pills{flex:0 0 auto}.top .search{flex:0 2 280px;min-width:120px}.top .round,.top .tav{flex:none}}
 .pill{display:inline-flex;align-items:center;gap:8px;background:var(--t);border:0;border-radius:99px;padding:7px 15px 7px 7px;font-size:15px;font-weight:600;white-space:nowrap;color:var(--cd);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);transition:transform .15s,box-shadow .2s,background .2s}
 .pill:hover{transform:translateY(-1px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 6px 14px -8px var(--c)}
 .pill[aria-current="true"]{background:linear-gradient(135deg,var(--c),var(--c2));color:#fff;box-shadow:0 8px 18px -8px var(--c),inset 0 1px 0 rgba(255,255,255,.35)}
@@ -823,13 +826,13 @@ table.ggh{min-width:1180px}table.ggd{min-width:1300px}.ggd thead th{position:sti
     </div>
     <div class="top">
       <div class="pills" id="pills"></div>
+      <div class="tlogo" aria-hidden="true"><img src="img/logo-top.png" alt=""></div>
       <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" placeholder="Tìm công trình, vật tư, nhân sự"></label>
       <button class="round" id="fs" aria-label="Xem toàn màn hình" title="Xem toàn màn hình"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
       <button class="round" aria-label="Thông báo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15zM10 20a2 2 0 004 0"/></svg><span class="badge"></span></button>
       <button class="round" aria-label="Cài đặt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 00-2-1.2L14 3h-4l-.6 2.6a7 7 0 00-2 1.2l-2.3-.9-2 3.4 2 1.5a7 7 0 000 2.4l-2 1.5 2 3.4 2.3-.9a7 7 0 002 1.2L10 21h4l.6-2.6a7 7 0 002-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></button>
       <button class="round" title="Đăng xuất" aria-label="Đăng xuất" onclick="showIntro()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg></button>
       <div class="avatar tav" title="Nguyễn Văn Chung">C</div>
-      <div class="mark tmk"><img src="img/mark.png" alt="Nam Giang"></div>
     </div>
 
     <div class="grid">
@@ -1954,7 +1957,7 @@ function bcView(p){const B=bcCur(p),d=B.d,saved=d.at?`Đã lưu PDF lúc ${new D
   const res=(k,h,u)=>`<div class="bcq"><div class="bcqh"><b>${h}</b><span>Tổng <b data-bctot="${k}">${n0(d[k].reduce((a,r)=>a+(+r[1]||0),0))}</b> ${u}</span></div><div class="bcqg">${d[k].map((r,i)=>`<div class="bcqi">${inp(k+"."+i+".0",r[0],"bqn","Tên")}${inp(k+"."+i+".1",r[1],"bqv","0","number")}<button type="button" class="bcx" data-bcdel="${k}.${i}" title="Xoá">×</button></div>`).join("")}<button type="button" class="bcqa" data-bcadd="${k}">+ Thêm</button></div></div>`;
   const plan=(k,ph)=>`<table class="t bcp"><colgroup><col style="width:40px"><col><col style="width:96px"><col style="width:165px"><col style="width:30%"><col style="width:46px"></colgroup><thead><tr><th>STT</th><th>Nội dung thi công</th><th>${ph}</th><th>Hoàn thành dự kiến</th><th>Ghi chú</th><th></th></tr></thead><tbody>${d[k].map((r,i)=>`<tr><td class="tc">${i+1}</td><td>${ta(k+"."+i+".n",r.n,"Nội dung công việc")}</td><td><div class="bcpc">${inp(k+"."+i+".p",r.p,"r","0","number")}<span>%</span></div></td><td>${inp(k+"."+i+".t",r.t,"","","date")}</td><td>${ta(k+"."+i+".g",r.g,"Ghi chú")}</td><td><button type="button" class="bcx" data-bcdel="${k}.${i}" title="Xoá dòng">×</button></td></tr>`).join("")}</tbody></table>
     <div class="bh" style="margin-top:6px;gap:8px;justify-content:flex-start"><button type="button" class="bcqa" data-bcadd="${k}">+ Thêm dòng</button>${k==="mai"?`<button type="button" class="bcqa" id="bccp">Chép từ kế hoạch hôm nay</button>`:""}</div>`;
-  const frames=[...Array(d.ns||6).keys()].map(i=>`<div class="bcf" data-bcf="${i}">${bcFrameHtml(i)}</div>`).join("");
+  const frames=[...Array(d.ns||6).keys()].map(i=>`<div class="bcf${BC&&BC.imgs[i]?" on":""}" data-bcf="${i}">${bcFrameHtml(i)}</div>`).join("");
   const days=Object.keys(p.bcn||{}).sort().reverse().slice(0,30);
   return`<div class="vgrid bcv">${card("Báo cáo ngày",`Mẫu báo cáo ngày Nam Giang · chủ đầu tư, nhà thầu, dự án tự điền · bấm Lưu để tạo file PDF và lưu vào 06.1 Nhật ký thi công`,`
     <div class="bch"><img src="img/logo-bcn.png" alt="Nam Giang"><div><b>BÁO CÁO NGÀY</b><span>Chủ đầu tư: <b>${esc(p.cdt||"")}</b></span><span>Nhà thầu thi công: <b>Công ty CP Đầu tư và Xây lắp Nam Giang</b></span><span>Dự án: <b>${esc(p.name||"")}</b></span></div></div>
@@ -1966,17 +1969,19 @@ function bcView(p){const B=bcCur(p),d=B.d,saved=d.at?`Đã lưu PDF lúc ${new D
     ${card("b) Kế hoạch thi công ngày mai","",plan("mai","Tiến độ dự kiến"),"span3")}
     ${card("c) Đề nghị / đề xuất chủ đầu tư · d) Kết luận","",`${d.dx.map((x,i)=>`<div class="bcd"><span>${String(i+1).padStart(2,"0")}.</span>${inp("dx."+i,x,"","Đề nghị, đề xuất với chủ đầu tư")}<button type="button" class="bcx" data-bcdel="dx.${i}">×</button></div>`).join("")}<button type="button" class="bcqa" data-bcadd="dx">+ Thêm đề nghị</button>
       <div style="margin-top:12px"><b style="font-size:14px">Kết luận</b>${ta("kl",d.kl,"Ví dụ: Nhà thầu đang triển khai công tác tạm, chuẩn bị nhân lực đúng tiến độ đề ra")}</div>`,"span3")}
-    ${card("Hình ảnh thi công","Bấm vào khung (hoặc kéo thả ảnh vào) để chọn ảnh · kéo ảnh để căn vào khung · lăn chuột hoặc bấm + − để phóng to, thu nhỏ · ảnh chỉ nằm trong file PDF khi lưu",`<div class="bcg">${frames}</div><div class="bh" style="margin-top:10px"><button type="button" class="back sm bca" id="bcmore">+ Thêm 2 khung ảnh</button>${(d.ns||6)>2?`<button type="button" class="back sm bca" id="bcless">− Bớt 2 khung</button>`:""}</div>`,"span3")}
+    ${card("Hình ảnh thi công","Bấm vào khung (hoặc kéo thả ảnh vào) để chọn ảnh · kéo ảnh để căn vào khung · lăn chuột hoặc bấm + − để phóng to, thu nhỏ · ảnh chỉ nằm trong file PDF khi lưu",`<div class="bh" style="margin-bottom:10px;justify-content:flex-start"><label class="pill" style="${sv("bcn")};cursor:pointer"><input type="file" accept="image/*" multiple id="bcmany" hidden><span class="dot">↑</span>Tải nhiều ảnh một lúc</label><span class="sub" id="bcmn">Chọn hoặc kéo thả nhiều ảnh, web điền lần lượt vào các khung trống, thiếu khung thì tự thêm</span></div><div class="bcg">${frames}</div><div class="bh" style="margin-top:10px"><button type="button" class="back sm bca" id="bcmore">+ Thêm 2 khung ảnh</button>${(d.ns||6)>2?`<button type="button" class="back sm bca" id="bcless">− Bớt 2 khung</button>`:""}</div>`,"span3")}
   </div>`}
-function bcFrameHtml(i){const m=BC&&BC.imgs[i];if(!m)return`<label class="bce"><input type="file" accept="image/*" data-bcimg="${i}" hidden><span>＋</span>Chọn ảnh ${i+1}</label>`;
+function bcFrameHtml(i){const m=BC&&BC.imgs[i];if(!m)return`<label class="bce"><input type="file" accept="image/*" multiple data-bcimg="${i}" hidden><span>＋</span>Chọn ảnh ${i+1}</label>`;
   return`<img src="${m.src}" alt="Ảnh ${i+1}" draggable="false" data-bcpan="${i}"><div class="bcb"><button type="button" data-bcz="${i}|1" title="Phóng to">+</button><button type="button" data-bcz="${i}|-1" title="Thu nhỏ">−</button><label title="Đổi ảnh"><input type="file" accept="image/*" data-bcimg="${i}" hidden>⟳</label><button type="button" data-bcrm="${i}" title="Bỏ ảnh">×</button></div>`}
 /* Đặt ảnh theo tâm (cx, cy từ 0 đến 1) và độ phóng z, luôn phủ kín khung */
+const bcZmin=(m,W,H)=>Math.min(W/m.iw,H/m.ih)/Math.max(W/m.iw,H/m.ih);
+const bcZoom=(i,k)=>{const f=document.querySelector(`[data-bcf="${i}"]`),m=BC&&BC.imgs[i];if(!f||!m)return;m.z=Math.max(bcZmin(m,f.clientWidth,f.clientHeight),Math.min(5,m.z*k));bcPlace(i)};
 function bcGeo(m,W,H){const s=Math.max(W/m.iw,H/m.ih)*m.z,dw=m.iw*s,dh=m.ih*s;return{dw,dh,x:(W-dw)*m.cx,y:(H-dh)*m.cy}}
 function bcPlace(i){const f=document.querySelector(`[data-bcf="${i}"]`),m=BC&&BC.imgs[i];if(!f||!m)return;const im=f.querySelector("img");if(!im)return;const W=f.clientWidth,H=f.clientHeight,g=bcGeo(m,W,H);Object.assign(im.style,{width:g.dw+"px",height:g.dh+"px",left:g.x+"px",top:g.y+"px"})}
 function bcDraw(i){const f=document.querySelector(`[data-bcf="${i}"]`);if(!f)return;f.innerHTML=bcFrameHtml(i);f.classList.toggle("on",!!BC.imgs[i]);const im=f.querySelector("img");if(im){if(im.complete)bcPlace(i);else im.onload=()=>bcPlace(i)}}
 async function bcLoad(i,file){if(!file||!/^image\//.test(file.type))return;const bm=await createImageBitmap(file).catch(()=>null);if(!bm)return;const k=Math.min(1,2000/Math.max(bm.width,bm.height)),c=document.createElement("canvas");c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext("2d").drawImage(bm,0,0,c.width,c.height);
   BC.imgs[i]={src:c.toDataURL("image/jpeg",.9),iw:c.width,ih:c.height,cx:.5,cy:.5,z:1};bcDraw(i)}
-function bcCrop(m,OW,OH){return new Promise(ok=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=OW;c.height=OH;const g=bcGeo(m,OW,OH);c.getContext("2d").drawImage(im,g.x,g.y,g.dw,g.dh);ok(c.toDataURL("image/jpeg",.88))};im.src=m.src})}
+function bcCrop(m,OW,OH){return new Promise(ok=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=OW;c.height=OH;const g=bcGeo(m,OW,OH),cx=c.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,OW,OH);cx.drawImage(im,g.x,g.y,g.dw,g.dh);ok(c.toDataURL("image/jpeg",.88))};im.src=m.src})}
 const needJS=(u,ok)=>ok()?Promise.resolve():new Promise((r,e)=>{const s=document.createElement("script");s.src=u;s.onload=r;s.onerror=()=>e(new Error("Không tải được bộ tạo PDF, anh kiểm tra mạng"));document.head.appendChild(s)});
 /* Tạo PDF A4 theo mẫu: trang báo cáo (BCN) và các trang ảnh (HA), 6 ảnh một trang */
 async function bcPdf(p){await needJS("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",()=>window.html2canvas);await needJS("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",()=>window.jspdf);
@@ -3056,25 +3061,33 @@ view.addEventListener("input",e=>{const t=e.target,p=P();if(!p||!BC||t.dataset.b
   const k=t.dataset.bc.split(".")[0];if(k==="nl"||k==="mm"){const b=view.querySelector(`[data-bctot="${k}"]`);if(b)b.textContent=n0(BC.d[k].reduce((a,r)=>a+(+r[1]||0),0))}bcKeep(p)});
 view.addEventListener("change",e=>{const t=e.target,p=P();if(!p||!BC)return;
   if(t.id==="bcdate"||t.id==="bcday"){if(!t.value)return;if(BC.imgs.some(Boolean)&&!confirm("Ảnh đã chọn chưa lưu PDF sẽ mất khi đổi ngày. Đổi ngày?")){t.value=BC.date;return}BC={pid:p.id,date:t.value,imgs:[]};qRe();return}
-  if(t.dataset.bcimg!==undefined&&t.files&&t.files[0]){bcLoad(+t.dataset.bcimg,t.files[0]);t.value=""}});
+  if(t.id==="bcmany"&&t.files&&t.files.length){bcMany(p,[...t.files],0);t.value="";return}
+  if(t.dataset.bcimg!==undefined&&t.files&&t.files[0]){const F=[...t.files];if(F.length>1)bcMany(p,F,+t.dataset.bcimg,true);else bcLoad(+t.dataset.bcimg,F[0]);t.value=""}});
 view.addEventListener("click",async e=>{const t=e.target,p=P();if(!p||!BC)return;const d=BC.d;let b;
   if(b=t.closest("[data-bcadd]")){const k=b.dataset.bcadd;d[k].push(k==="nl"||k==="mm"?["",0]:k==="dx"?"":{n:"",p:"",t:"",g:""});bcKeep(p);qRe();return}
   if(b=t.closest("[data-bcdel]")){const [k,i]=b.dataset.bcdel.split(".");d[k].splice(+i,1);bcKeep(p);qRe();return}
   if(t.closest("#bccp")){d.mai=JSON.parse(JSON.stringify(d.nay));bcKeep(p);qRe();return}
   if(t.closest("#bcmore")){d.ns=(d.ns||6)+2;bcKeep(p);qRe();return}
   if(t.closest("#bcless")){d.ns=Math.max(2,(d.ns||6)-2);BC.imgs.length=Math.min(BC.imgs.length,d.ns);bcKeep(p);qRe();return}
-  if(b=t.closest("[data-bcz]")){const [i,s]=b.dataset.bcz.split("|"),m=BC.imgs[+i];if(m){m.z=Math.max(1,Math.min(5,m.z*(s==="1"?1.15:1/1.15)));bcPlace(+i)}return}
+  if(b=t.closest("[data-bcz]")){const [i,s]=b.dataset.bcz.split("|"),m=BC.imgs[+i];if(m)bcZoom(+i,s==="1"?1.15:1/1.15);return}
   if(b=t.closest("[data-bcrm]")){BC.imgs[+b.dataset.bcrm]=null;bcDraw(+b.dataset.bcrm);return}
   if(b=t.closest("#bcsave")){if(b.disabled)return;const msg=view.querySelector("#bcmsg");b.disabled=true;msg.style.color="";msg.textContent="⏳ Đang tạo file PDF…";
     try{const f=await bcPdf(p);msg.textContent="⏳ Đang lưu vào 06.1 Nhật ký thi công…";await keepFile(p.id,"06.1",f,"Báo cáo ngày");d.at=Date.now();bcKeep(p);
       const u=URL.createObjectURL(f);msg.innerHTML=`✓ Đã lưu <b>${esc(stdName(p.id,f.name))}</b> vào 06.1 Nhật ký thi công · <a href="${u}" download="${esc(stdName(p.id,f.name))}">Tải về máy</a>`}
     catch(er){msg.style.color="#C0141B";msg.textContent="✗ "+(er.message||"Chưa lưu được, anh thử lại")}finally{b.disabled=false}return}});
 view.addEventListener("dragover",e=>{if(e.target.closest(".bcf"))e.preventDefault()});
-view.addEventListener("drop",e=>{const f=e.target.closest(".bcf");if(!f||!BC)return;e.preventDefault();const x=e.dataTransfer.files&&e.dataTransfer.files[0];if(x)bcLoad(+f.dataset.bcf,x)});
-view.addEventListener("wheel",e=>{const f=e.target.closest(".bcf.on");if(!f||!BC)return;const i=+f.dataset.bcf,m=BC.imgs[i];if(!m)return;e.preventDefault();m.z=Math.max(1,Math.min(5,m.z*(e.deltaY<0?1.08:1/1.08)));bcPlace(i)},{passive:false});
+view.addEventListener("drop",e=>{const f=e.target.closest(".bcf"),p=P();if(!f||!BC||!p)return;e.preventDefault();const F=[...(e.dataTransfer.files||[])].filter(x=>/^image\//.test(x.type));if(F.length>1)bcMany(p,F,+f.dataset.bcf,true);else if(F[0])bcLoad(+f.dataset.bcf,F[0])});
+/* Điền nhiều ảnh: ảnh đầu vào khung được chọn (nếu có), các ảnh sau vào khung trống kế tiếp; thiếu khung thì thêm 2 khung một lần */
+async function bcMany(p,F,from,first){F=F.filter(x=>/^image\//.test(x.type));if(!F.length)return;const d=BC.d,slots=[];let i=from;
+  if(first){slots.push(i);i++}
+  while(slots.length<F.length){if(!BC.imgs[i]&&!slots.includes(i))slots.push(i);i++}
+  const need=Math.max(...slots)+1;if(need>(d.ns||6)){d.ns=Math.ceil(need/2)*2;bcKeep(p);qRe()}
+  const m=view.querySelector("#bcmn");for(let k=0;k<F.length;k++){if(m)m.textContent=`Đang đưa ảnh ${k+1}/${F.length} vào khung…`;await bcLoad(slots[k],F[k])}
+  if(m)m.textContent=`Đã đưa ${F.length} ảnh vào khung ${slots[0]+1}–${slots[slots.length-1]+1} · kéo, phóng to, thu nhỏ từng ảnh nếu cần`}
+view.addEventListener("wheel",e=>{const f=e.target.closest(".bcf.on");if(!f||!BC)return;const i=+f.dataset.bcf,m=BC.imgs[i];if(!m)return;e.preventDefault();bcZoom(i,e.deltaY<0?1.08:1/1.08)},{passive:false});
 view.addEventListener("pointerdown",e=>{const im=e.target.closest("[data-bcpan]");if(!im||!BC)return;const i=+im.dataset.bcpan,m=BC.imgs[i],f=im.parentNode;if(!m)return;e.preventDefault();im.setPointerCapture(e.pointerId);
   const W=f.clientWidth,H=f.clientHeight,g0=bcGeo(m,W,H),x0=e.clientX,y0=e.clientY;im.style.cursor="grabbing";
-  const mv=ev=>{const g=bcGeo(m,W,H),nx=g0.x+ev.clientX-x0,ny=g0.y+ev.clientY-y0;if(W-g.dw<0)m.cx=Math.max(0,Math.min(1,nx/(W-g.dw)));if(H-g.dh<0)m.cy=Math.max(0,Math.min(1,ny/(H-g.dh)));bcPlace(i)};
+  const mv=ev=>{const g=bcGeo(m,W,H),nx=g0.x+ev.clientX-x0,ny=g0.y+ev.clientY-y0;if(Math.abs(W-g.dw)>1)m.cx=Math.max(0,Math.min(1,nx/(W-g.dw)));if(Math.abs(H-g.dh)>1)m.cy=Math.max(0,Math.min(1,ny/(H-g.dh)));bcPlace(i)};
   const up=()=>{im.removeEventListener("pointermove",mv);im.removeEventListener("pointerup",up);im.style.cursor=""};im.addEventListener("pointermove",mv);im.addEventListener("pointerup",up)})}
 /* Chọn nhiều file để xoá hoặc tải về một lượt: ô chọn trước file, trước ngày, và Chọn tất cả */
 {const upd=()=>{const B=[...view.querySelectorAll("[data-fck]")],on=B.filter(b=>b.checked),n=view.querySelector("#fckn"),a=view.querySelector("#fckall");if(!n)return;
