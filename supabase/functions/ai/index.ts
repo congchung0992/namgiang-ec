@@ -141,6 +141,30 @@ const SYS_MATCH = `Bạn là QS của tổng thầu xây dựng. Ghép từng d�
 - confidence từ 0 đến 1. reason: một câu ngắn tiếng Việt.`;
 
 
+const MATCH_LINES = {
+  type: "object",
+  properties: {
+    matches: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { code: { type: "string" }, i: nul("integer"), factor: { type: "number" }, confidence: { type: "number" }, reason: { type: "string" } },
+        required: ["code", "i", "factor", "confidence", "reason"]
+      }
+    }
+  },
+  required: ["matches"]
+};
+const SYS_MATCH_LINES = `Bạn là QS của tổng thầu xây dựng. Có một bảng báo giá (danh sách dòng giá, đánh số i) và các dòng BOQ hợp đồng.
+Với MỖI dòng BOQ, chọn dòng báo giá cung cấp đúng vật tư hoặc nhân công cho dòng đó (trả về chỉ số i), hoặc null nếu báo giá không có.
+- Phải trùng loại và quy cách chính: mác bê tông (M100, M150, M200, M250, M300, M350… hoặc B15, B20…), đường kính và mác thép (D10, D16, CB300, CB400…), độ dày, kích thước, chủng loại. Khác mác hoặc quy cách thì KHÔNG chọn.
+- Một dòng báo giá được dùng cho nhiều dòng BOQ (ví dụ bê tông M300 cho móng, cột, dầm, sàn của mọi hạng mục).
+- Báo giá có nhiều lựa chọn cùng mác (ví dụ khác loại cát) thì chọn dòng thông dụng, rẻ hơn, trừ khi BOQ ghi rõ loại.
+- goi_y là các chỉ số dòng báo giá gợi ý theo tên, chỉ để tham khảo.
+- factor = số đơn vị báo giá trong 1 đơn vị BOQ (kg → tấn: 1000; tấn → kg: 0.001; cùng đơn vị: 1).
+- confidence từ 0 đến 1. reason: một câu ngắn tiếng Việt.
+Trả về đủ mọi dòng BOQ được gửi, giữ nguyên code.`;
+
 const FOLDERS: any = {
   "01.1": "Pháp lý dự án: giấy phép xây dựng, quyết định phê duyệt, thẩm duyệt PCCC, thông báo khởi công, bàn giao mặt bằng, hồ sơ năng lực",
   "01.2": "Hồ sơ thầu: hồ sơ mời thầu, hồ sơ dự thầu, BOQ, dự toán, giá gốc, báo giá cho chủ đầu tư",
@@ -215,6 +239,11 @@ Deno.serve(async (req) => {
     if (b.action === "match") {
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 80);
       const { data, model } = await gemini(env, { system: SYS_MATCH, parts: [{ text: JSON.stringify({ items }) }], schema: MATCH, kind: "flash" });
+      return json({ ...data, model });
+    }
+    if (b.action === "match_lines") {
+      const items = (Array.isArray(b.items) ? b.items : []).slice(0, 300), lines = (Array.isArray(b.lines) ? b.lines : []).slice(0, 80);
+      const { data, model } = await gemini(env, { system: SYS_MATCH_LINES, parts: [{ text: JSON.stringify({ bao_gia: items, boq: lines }) }], schema: MATCH_LINES, kind: "flash" });
       return json({ ...data, model });
     }
     if (b.action === "classify") {
