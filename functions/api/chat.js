@@ -32,6 +32,6 @@ export async function onRequestPost({ request, env }) {
   if (!r.ok) return json({ error: "claude_" + r.status }, 502);
   const j = await r.json();
   const text = (j.content || []).filter(c => c.type === "text").map(c => c.text).join("\n").trim();
-  return json({ text });
+  return json({ text, usage: { model: j.model || (env.CLAUDE_MODEL || "claude-sonnet-5-5"), in: (j.usage && (j.usage.input_tokens + (j.usage.cache_read_input_tokens || 0) + (j.usage.cache_creation_input_tokens || 0))) || 0, out: (j.usage && j.usage.output_tokens) || 0 } });
 }
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8" } });

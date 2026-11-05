@@ -100,5 +100,5 @@ export async function onRequestPost({ request, env }) {
   let v;
   try { v = JSON.parse(out); } catch { return json({ error: "khong_doc_duoc" }, 422); }
   if (!FOLDERS[v.folder]) return json({ error: "khong_doc_duoc" }, 422);
-  return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120) });
+  return json({ folder: v.folder, reason: String(v.reason || "").slice(0, 300), title: String(v.title || "").slice(0, 120), usage: { model: j.model || (env.CLASSIFY_MODEL || "claude-haiku-5-5"), in: (j.usage && (j.usage.input_tokens + (j.usage.cache_read_input_tokens || 0) + (j.usage.cache_creation_input_tokens || 0))) || 0, out: (j.usage && j.usage.output_tokens) || 0 } });
 }

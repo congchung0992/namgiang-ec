@@ -910,6 +910,9 @@ window.NGB=(function(){
     session:async()=>sb?(await sb.auth.getSession()).data.session:null,
     async signIn(email,pw){const {error}=await need().auth.signInWithPassword({email,password:pw});if(error)throw new Error(/invalid login/i.test(error.message)?"Sai tên đăng nhập hoặc mật khẩu":"Không đăng nhập được, anh kiểm tra mạng rồi thử lại")},
     signOut:async()=>{if(sb)await sb.auth.signOut()},
+    /* Đo lường AI: ghi lượt gọi Claude (qua Cloudflare) vào bảng ai_usage; lượt Gemini do máy chủ tự ghi */
+    async logAI(row){try{if(!sb)return;const {data:{session}}=await sb.auth.getSession();if(!session)return;await sb.from("ai_usage").insert({...row,user_id:session.user.id,project_id:row.project_id||window.NG_PID||null})}catch(e){}},
+    async aiUsage(days){const since=new Date(Date.now()-days*864e5).toISOString();const {data,error}=await need().from("ai_usage").select("*").gte("at",since).order("at",{ascending:false}).limit(5000);if(error)throw new Error(error.message);return data||[]},
     /* Đổi mật khẩu của chính mình: kiểm tra mật khẩu cũ trước rồi mới đổi */
     async changePw(old,pw){const c=need(),{data:{session}}=await c.auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");
       const {error:e1}=await c.auth.signInWithPassword({email:session.user.email,password:old});if(e1)throw new Error(/invalid login/i.test(e1.message)?"Mật khẩu hiện tại không đúng":"Không kiểm tra được mật khẩu, anh thử lại");
@@ -942,12 +945,12 @@ window.NGB=(function(){
       async blob(id){return (await this.call({action:"download",id},{method:"GET"})).blob()},
       async remove(id){await this.call({action:"delete",id},{method:"DELETE"})},
       async classify(body){try{return await this.ai1({action:"classify",...body})}catch(e){if(e.code!=="chua_ket_noi")throw e}const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
-        const r=await fetch("api/classify",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+session.access_token},body:JSON.stringify(body)});
-        if(!r.ok)throw new Error("classify_"+r.status);return r.json()},
+        const t0=Date.now(),r=await fetch("api/classify",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+session.access_token},body:JSON.stringify(body)});
+        if(!r.ok){NGB.logAI({provider:"claude",action:"classify",ok:false,err:"http_"+r.status,ms:Date.now()-t0});throw new Error("classify_"+r.status)}const j=await r.json();if(j.usage)NGB.logAI({provider:"claude",action:"classify",model:j.usage.model,in_tok:j.usage.in,out_tok:j.usage.out,ms:Date.now()-t0,ok:true});return j},
       /* Gemini chạy ở Supabase Edge Function "ai": khoá do Ban giám đốc dán ở màn Quản trị, trình duyệt không thấy khoá */
       /* Google quá tải hoặc máy chủ quá giờ: tự thử lại 1 lần sau 15 giây rồi mới báo anh */
       async ai(body){for(let k=0;;k++){try{return await this.ai1(body)}catch(e){if(k>=1||!/^(qua_tai|timeout|net)$/.test(e.code))throw e;await new Promise(r=>setTimeout(r,15000))}}},
-      async ai1(body){const {data:{session}}=await need().auth.getSession();if(!session)throw Object.assign(new Error("Phiên đăng nhập đã hết, anh đăng nhập lại"),{code:"auth"});let r;
+      async ai1(body){body={pid:window.NG_PID||"",...body};const {data:{session}}=await need().auth.getSession();if(!session)throw Object.assign(new Error("Phiên đăng nhập đã hết, anh đăng nhập lại"),{code:"auth"});let r;
         try{r=await fetch(SB_URL+"/functions/v1/ai",{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,authorization:"Bearer "+session.access_token},body:JSON.stringify(body)})}catch(e){throw Object.assign(new Error("Mất kết nối tới máy chủ"),{code:"net"})}
         let j={};try{j=await r.json()}catch(e){}if(r.ok)return j;if(!j.error&&[502,503,504,546].includes(r.status))j.error="timeout";
         throw Object.assign(new Error({timeout:"Google Gemini trả lời quá chậm (khoá miễn phí đang bị Google xếp sau) · anh tải lại file này sau ít phút",chua_ket_noi:"Chưa có khoá Gemini · Ban giám đốc dán khoá ở màn Quản trị",sai_khoa:"Khoá Gemini không đúng hoặc đã bị thu hồi · kiểm tra lại ở màn Quản trị",het_luot:"Gemini báo hết lượt dùng (khoá miễn phí giới hạn mỗi ngày) · thử lại sau hoặc bật tính phí ở Google AI Studio",auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",qua_tai:"Máy chủ Google Gemini đang quá tải (lỗi phía Google, thường hết sau vài phút) · anh bấm tải lại file này sau ít phút",ai_error:"Gemini đang lỗi hoặc quá tải, anh thử lại sau ít phút"}[j.error]||"Máy chủ đang lỗi"),{code:j.error||"server"})},
@@ -2114,10 +2117,34 @@ const pwCard=()=>card("Đổi mật khẩu của tôi","Nhập mật khẩu đan
   <label class="fl"><span>Mật khẩu mới</span><input class="fi" type="password" name="pw" required minlength="8" autocomplete="new-password"></label>
   <label class="fl"><span>Nhập lại mật khẩu mới</span><input class="fi" type="password" name="pw2" required minlength="8" autocomplete="new-password"></label>
   <div><button class="pill" style="${sv("hr")}"><span class="dot">${ic("hr",2)}</span>Đổi mật khẩu</button></div></form><div class="sub" id="pwmsg" style="margin-top:10px"></div>`,"span3");
-const adminView=t=>{const bd=window.NGApp&&NGApp.board;if(!bd)t="mk";admTab=t;return`<div class="vh"><div><h1>${bd?"Quản trị":"Tài khoản của tôi"}</h1><p>${t==="ai"?"Kết nối trí tuệ nhân tạo dùng để đọc báo giá và xếp hồ sơ":t==="mk"?"Đổi mật khẩu đăng nhập của anh/chị":"Tài khoản và phân công theo dự án · tài khoản mới chưa có quyền gì cho tới khi được phân công"}</p></div></div>${bd?`<div class="sheets" role="tablist">${pill("hr","Tài khoản & phân công","quan-tri",t==="tk")}${pill("rep","Kết nối AI","quan-tri-ai",t==="ai")}${pill("inbox","Đổi mật khẩu","quan-tri-mk",t==="mk")}</div>`:""}<div class="vgrid" id="adm">${t==="mk"?pwCard():`<section class="card span3"><span class="sub">Đang tải…</span></section>`}</div>`};
+const adminView=t=>{const bd=window.NGApp&&NGApp.board;if(!bd)t="mk";admTab=t;return`<div class="vh"><div><h1>${bd?"Quản trị":"Tài khoản của tôi"}</h1><p>${t==="ai"?"Kết nối trí tuệ nhân tạo dùng để đọc báo giá và xếp hồ sơ":t==="do"?"Mỗi lần web gọi AI (Gemini, Claude) được ghi lại: việc gì, mẫu nào, bao nhiêu token, mất bao lâu, chi phí ước tính":t==="mk"?"Đổi mật khẩu đăng nhập của anh/chị":"Tài khoản và phân công theo dự án · tài khoản mới chưa có quyền gì cho tới khi được phân công"}</p></div></div>${bd?`<div class="sheets" role="tablist">${pill("hr","Tài khoản & phân công","quan-tri",t==="tk")}${pill("rep","Kết nối AI","quan-tri-ai",t==="ai")}${pill("rev","Đo lường AI","quan-tri-do",t==="do")}${pill("inbox","Đổi mật khẩu","quan-tri-mk",t==="mk")}</div>`:""}<div class="vgrid" id="adm">${t==="mk"?pwCard():`<section class="card span3"><span class="sub">Đang tải…</span></section>`}</div>`};
 const LOGIN_DOMAIN="namgiang-ec.pages.dev";
 const genPw=()=>{const c="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=crypto.getRandomValues(new Uint32Array(10));return [...a].map(x=>c[x%c.length]).join("")};
-async function adminLoad(msg){const box=document.getElementById("adm");if(!box)return;
+/* ---------- Đo lường AI: đọc bảng ai_usage, gom theo tác vụ, mẫu, ngày ---------- */
+let aiDays=30;
+const AIJOB={extract:"Đọc báo giá",match_lines:"Ghép báo giá với BOQ",match:"Ghép báo giá thầu phụ",classify:"Gợi ý thư mục khi tải file",chat:"Trợ lý chat",ping:"Kiểm tra kết nối khoá"};
+/* Giá tham khảo USD / 1 triệu token (vào, ra) theo dòng mẫu, chỉ để ước tính; khoá miễn phí thực tế chưa mất tiền */
+const AIPRICE=[[/flash-lite|lite/,.1,.4],[/flash/,.5,3],[/gemini.*pro/,2,12],[/haiku/,1,5],[/sonnet/,3,15],[/opus/,5,25]],USDVND=26000;
+const aiCost=r=>{const m=String(r.model||"");const p=AIPRICE.find(x=>x[0].test(m));return p?((r.in_tok||0)*p[1]+(r.out_tok||0)*p[2])/1e6*USDVND:0};
+async function aiLogLoad(){const box=document.getElementById("adm");if(!box)return;box.innerHTML=`<section class="card span3"><span class="sub">Đang tải số liệu…</span></section>`;
+  let R=[],P=[];try{R=await NGB.aiUsage(aiDays)}catch(e){box.innerHTML=`<section class="card span3" style="color:#C0141B;font-size:13px">Không tải được: ${esc(e.message)}</section>`;return}try{P=await NGB.admin.people()}catch(e){}
+  if(!document.getElementById("adm")||admTab!=="do")return;
+  const who=id=>{const x=P.find(y=>y.id===id);return x?(x.full_name||String(x.email||"").replace("@"+LOGIN_DOMAIN,"")):"–"},sec=ms=>ms==null?"-":fm(ms/1000,1)+" giây";
+  const agg=keyf=>{const M=new Map();R.forEach(r=>{const k=keyf(r);const o=M.get(k)||{k,n:0,ok:0,bad:0,in:0,out:0,ms:0,msn:0,cost:0,prov:new Set()};o.n++;r.ok?o.ok++:o.bad++;o.in+=r.in_tok||0;o.out+=r.out_tok||0;if(r.ms!=null){o.ms+=r.ms;o.msn++}o.cost+=aiCost(r);o.prov.add(r.provider);M.set(k,o)});return[...M.values()].sort((a,b)=>b.n-a.n)};
+  const T=agg(()=>"all")[0]||{n:0,ok:0,bad:0,in:0,out:0,ms:0,msn:0,cost:0};
+  const tbl=(head,rows,lab)=>`<div class="tw"><table class="t"><thead><tr><th>${head}</th><th>Nguồn</th><th>Số lượt</th><th>Thành công</th><th>Lỗi</th><th>Token vào</th><th>Token ra</th><th>Thời gian TB</th><th>Chi phí ước tính (đ)</th><th>Đ / lượt</th></tr></thead><tbody>${rows.map(o=>`<tr><td>${lab(o.k)}</td><td>${[...o.prov].map(x=>x==="claude"?"Claude":"Gemini").join(", ")}</td><td class="r">${n0(o.n)}</td><td class="r">${n0(o.ok)} <span class="sub">(${fm(pct(o.ok,o.n),0)}%)</span></td><td class="r"${o.bad?' style="color:#C0141B"':""}>${n0(o.bad)}</td><td class="r">${n0(o.in)}</td><td class="r">${n0(o.out)}</td><td class="r">${o.msn?sec(o.ms/o.msn):"-"}</td><td class="r"><b>${n0(o.cost)}</b></td><td class="r">${o.n?n0(o.cost/o.n):"-"}</td></tr>`).join("")||`<tr><td colspan="10" class="sub">Chưa có lượt gọi nào trong khoảng này.</td></tr>`}</tbody>${rows.length?`<tfoot><tr><td><b>Tổng cộng</b></td><td></td><td class="r"><b>${n0(T.n)}</b></td><td class="r"><b>${n0(T.ok)}</b></td><td class="r"><b>${n0(T.bad)}</b></td><td class="r"><b>${n0(T.in)}</b></td><td class="r"><b>${n0(T.out)}</b></td><td class="r"><b>${T.msn?sec(T.ms/T.msn):"-"}</b></td><td class="r"><b>${n0(T.cost)}</b></td><td class="r"><b>${T.n?n0(T.cost/T.n):"-"}</b></td></tr></tfoot>`:""}</table></div>`;
+  const day=r=>fd(new Date(r.at)),errs=agg(r=>r.ok?null:(r.err||"lỗi")).filter(o=>o.k),last=R.slice(0,60);
+  const errVN=e=>/503|qua_tai|timeout/.test(e)?"Google quá tải / quá giờ":/429|het_luot/.test(e)?"Hết lượt miễn phí":/40[013]|sai_khoa/.test(e)?"Khoá sai":e;
+  box.innerHTML=`<section class="card span3"><div class="bh"><div><h3>Tổng quan ${aiDays} ngày gần nhất</h3><span class="sub">Chi phí là ước tính theo giá niêm yết (đổi 1 USD ≈ ${n0(USDVND)} đ) · khoá Gemini miễn phí thực tế chưa mất tiền, con số cho biết nếu bật tính phí thì tốn khoảng bao nhiêu</span></div>
+    <div class="fla">${[7,30,90].map(d=>`<button type="button" class="hmc${d===aiDays?" on":""}" data-aid="${d}">${d} ngày</button>`).join("")}<button type="button" class="back sm" style="margin:0" id="aire">Tải lại</button></div></div>
+    <div class="bks"><div class="bk"><span><i style="background:#2D3CE6"></i>Số lượt gọi</span><b class="num">${n0(T.n)}</b><em>${n0(T.bad)} lượt lỗi · thành công ${fm(pct(T.ok,T.n||1),0)}%</em></div><div class="bk"><span><i style="background:#C21FC9"></i>Token</span><b class="num">${n0(T.in+T.out)}</b><em>vào ${n0(T.in)} · ra ${n0(T.out)}</em></div><div class="bk"><span><i style="background:#F08A24"></i>Thời gian trung bình</span><b class="num">${T.msn?sec(T.ms/T.msn):"-"}</b><em>mỗi lượt, tính cả lúc Google quá tải</em></div><div class="bk"><span><i style="background:#12A150"></i>Chi phí ước tính</span><b class="num">${n0(T.cost)} đ</b><em>${T.n?n0(T.cost/T.n)+" đ mỗi lượt":"-"}</em></div></div></section>`+
+    card("Theo tác vụ","Mỗi việc web nhờ AI làm",tbl("Tác vụ",agg(r=>r.action),k=>esc(AIJOB[k]||k)),"span3")+
+    card("Theo mẫu AI","Mẫu Gemini/Claude thực sự trả lời · trống là lượt lỗi chưa mẫu nào trả lời",tbl("Mẫu",agg(r=>r.model||"(không mẫu nào trả lời)"),k=>`<span class="num">${esc(k)}</span>`),"span3")+
+    card("Theo ngày","",tbl("Ngày",agg(day),k=>esc(k)),"span3")+
+    (errs.length?card("Lỗi hay gặp","",`<div class="tw"><table class="t"><thead><tr><th>Lỗi</th><th>Diễn giải</th><th>Số lượt</th></tr></thead><tbody>${errs.map(o=>`<tr><td class="num">${esc(o.k)}</td><td>${esc(errVN(o.k))}</td><td class="r">${n0(o.n)}</td></tr>`).join("")}</tbody></table></div>`,"span3"):"")+
+    card("60 lượt gần nhất","",`<div class="tw"><table class="t"><thead><tr><th>Thời điểm</th><th>Người dùng</th><th>Dự án</th><th>Tác vụ</th><th>Mẫu</th><th>Token vào</th><th>Token ra</th><th>Thời gian</th><th>Chi phí (đ)</th><th>Kết quả</th></tr></thead><tbody>${last.map(r=>{const d=new Date(r.at);return`<tr><td class="num">${fd(d)} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}</td><td>${esc(who(r.user_id))}</td><td>${esc(r.project_id||"-")}</td><td>${esc(AIJOB[r.action]||r.action)}</td><td class="num">${esc(r.model||"-")}</td><td class="r">${n0(r.in_tok)}</td><td class="r">${n0(r.out_tok)}</td><td class="r">${sec(r.ms)}</td><td class="r">${n0(aiCost(r))}</td><td>${r.ok?st("ok","Thành công"):st("bad",errVN(r.err||"Lỗi"))}</td></tr>`}).join("")||`<tr><td colspan="10" class="sub">Chưa có lượt nào.</td></tr>`}</tbody></table></div>`,"span3");
+  dashZeros(box)}
+async function adminLoad(msg){const box=document.getElementById("adm");if(!box)return;if(admTab==="do")return aiLogLoad();
   try{const A=NGB.admin,P=await A.people();if(!DB.projects.some(p=>p.id===admPid))admPid=DB.projects[0]?DB.projects[0].id:"";const M=admPid?await A.members(admPid):[],nm=id=>{const x=P.find(y=>y.id===id);return x?(x.full_name?x.full_name+" · ":"")+String(x.email||"").replace("@namgiang-ec.pages.dev",""):id},free=P.filter(x=>!M.some(m=>m.user_id===x.id));
     if(!document.getElementById("adm"))return;
     let U=[];try{U=(await A.users({action:"list"})).users||[]}catch(e){U=null;msg=msg||e.message}
@@ -2144,8 +2171,8 @@ function route(){let h=(location.hash||"#tong-quan").slice(1);if(!canOv()&&["ban
   else if(h==="bao-cao"){top="bao-cao";html=report()}
   else if(h==="ban-tin"){top="ban-tin";html=brief()}
   else if(h==="duyet"){top="duyet";html=inbox()}
-  else if(/^quan-tri(-ai|-mk)?$/.test(h)&&window.NGApp&&!NGApp.guest){top="quan-tri";html=adminView(h==="quan-tri-ai"?"ai":h==="quan-tri-mk"?"mk":"tk")}
-  else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){top="du-an";const L=p.boq?sheetsFor(DB.projects.find(x=>x.id===id)):SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:L[0][0],sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
+  else if(/^quan-tri(-ai|-mk|-do)?$/.test(h)&&window.NGApp&&!NGApp.guest){top="quan-tri";html=adminView(h==="quan-tri-ai"?"ai":h==="quan-tri-mk"?"mk":h==="quan-tri-do"?"do":"tk")}
+  else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){window.NG_PID=p.code||id;top="du-an";const L=p.boq?sheetsFor(DB.projects.find(x=>x.id===id)):SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:L[0][0],sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
   if(!html&&!canOv()){top="du-an";html=projList()}
   {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
@@ -2433,6 +2460,8 @@ view.addEventListener("click",async e=>{const t=e.target,A=NGB.admin;
     t.closest("#admks").disabled=true;try{await A.setSecret("gemini",v);i.value="";await adminLoad();await ping()}catch(er){km(["Chưa lưu được: "+er.message,1]);t.closest("#admks").disabled=false}return}
   if(t.closest("#admkt")){km(["Đang kiểm tra…"]);await ping();return}
   const kd=t.closest("#admkd");if(kd){if(!kd.dataset.ok){kd.dataset.ok=1;kd.textContent="Bấm lần nữa để xoá khoá";return}try{await A.setSecret("gemini","");await adminLoad("Đã xoá khoá Gemini")}catch(er){km([er.message,1])}return}
+  const ad=t.closest("[data-aid]");if(ad){aiDays=+ad.dataset.aid;aiLogLoad();return}
+  if(t.closest("#aire")){aiLogLoad();return}
   if(t.closest("#admgen")){const i=document.querySelector('#admnew [name="password"]');i.value=genPw();return}
   const row=t.closest("tr[data-au]");if(!row)return;const uid=row.dataset.au,name=row.cells[0].textContent;
   if(t.closest("[data-ap]")){const pw=genPw();if(!t.dataset.ok){t.dataset.ok=1;t.textContent="Bấm lần nữa để đặt lại";return}
@@ -2501,8 +2530,8 @@ function hello(){add("bot",md("Chào anh. Em trả lời từ số liệu đang 
 async function ask(q){q=q.trim();if(!q)return;open(true);add("me",esc(q));hist.push({role:"user",content:q});
   const w=add("bot wait","<i></i><i></i><i></i>");let a=null;
   if(api!==false){try{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),45000);
-      const r=await fetch("api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({messages:hist.slice(-12),context:window.NG?NG.context():{}}),signal:ctl.signal});clearTimeout(t);
-      if(r.ok){const j=await r.json();if(j.text){a=j.text;api=true}}else if(r.status===404||r.status===405||r.status===503)api=false}catch(e){if(api===null)api=false}}
+      const t0=Date.now(),r=await fetch("api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({messages:hist.slice(-12),context:window.NG?NG.context():{}}),signal:ctl.signal});clearTimeout(t);
+      if(r.ok){const j=await r.json();if(j.text){a=j.text;api=true}if(j.usage&&window.NGB)NGB.logAI({provider:"claude",action:"chat",model:j.usage.model,in_tok:j.usage.in,out_tok:j.usage.out,ms:Date.now()-t0,ok:true})}else if(r.status!==503&&r.status!==404&&r.status!==405&&window.NGB)NGB.logAI({provider:"claude",action:"chat",ok:false,err:"http_"+r.status,ms:Date.now()-t0});else if(r.status===404||r.status===405||r.status===503)api=false}catch(e){if(api===null)api=false}}
   if(!a)a=window.NG?NG.answer(q):"Em chưa đọc được số liệu.";
   stt.textContent=api?"Đã kết nối Claude":"Trả lời từ số liệu trên web · chưa kết nối Claude";
   w.className="msg bot";w.innerHTML=md(a);hist.push({role:"assistant",content:a});log.scrollTop=log.scrollHeight}
