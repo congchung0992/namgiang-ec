@@ -57,3 +57,11 @@ manifest.webmanifest    Cho phép "Thêm vào màn hình chính" trên điện t
 - 06 Hiện trường – Văn bản: 06.1 Nhật ký thi công · 06.2 Báo cáo – ảnh · 06.3 Công văn – biên bản họp
 
 Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở lần tải file đầu tiên: thư mục cũ được đổi tên và đưa vào nhóm mới, file giữ nguyên.
+
+## Báo giá nhà cung cấp, thầu phụ, tổ đội (tab Báo giá)
+- `functions/api/quote.js` gọi Gemini (biến bí mật `GEMINI_API_KEY` trên Cloudflare, lấy ở aistudio.google.com/apikey). Máy chủ tự chọn mẫu Gemini mới nhất đang có (bản "pro" để đọc báo giá, bản "flash" để ghép dòng); muốn cố định thì đặt `GEMINI_MODEL_PRO`, `GEMINI_MODEL`.
+- Đọc: Excel (chữ từ mọi sheet đang hiện), PDF, ảnh chụp → tên nhà cung cấp, từng dòng (tên, quy cách, ĐVT, khối lượng, đơn giá VT/NC/gộp), VAT, thanh toán, giao hàng. Chưa có khoá thì Excel đọc theo cách đọc BOQ, PDF/ảnh chưa đọc được.
+- Ghép: dòng giống hẳn thì tự ghép; còn lại Gemini chọn trong 6 dòng BOQ ứng viên (có cả nhóm công việc cho giá trọn gói) và trả hệ số quy đổi đơn vị. Anh xem lại trước khi lưu.
+- So sánh: đơn giá quy về đơn vị BOQ, chưa VAT; nhà cung cấp so phần vật tư, tổ đội so phần nhân công, thầu phụ so cả đơn giá.
+- Chọn → gửi Hộp quyết định → duyệt thì ghi giá vốn (nguồn `q:<id>`), thời gian giao hàng (kế hoạch đặt vật tư) và số ngày trả nhà cung cấp (dòng tiền).
+- Gợi ý thư mục khi tải file cũng dùng Gemini nếu có `GEMINI_API_KEY`.
