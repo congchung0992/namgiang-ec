@@ -1315,7 +1315,9 @@ const FS={list:async pid=>{if(NGApp.guest)return LOCALF.list(pid);const [D,L]=aw
 /* Lưu file kèm dự án (BOQ gốc...): đặt tên chuẩn, lên Drive được thì lên, không thì giữ lại để tự đưa lên sau */
 async function keepFile(pid,folder,file,label){const f=named(pid,file);if(NGApp.guest)return LOCALF.put(pid,folder,f);
   try{if(!NGApp.drive||!await NGB.saveNow(DB))throw 0;await NGB.drive.upload(pid,folder,f)}
-  catch(e){await LOCALF.put(pid,folder,f).catch(()=>{});NGB.warn(label+" chưa lên được Google Drive, đang giữ trên trình duyệt này và sẽ tự đưa lên khi kết nối lại.")}
+  catch(e){await LOCALF.put(pid,folder,f).catch(()=>{});NGB.warn(label+" chưa lên được Google Drive, đang giữ trên trình duyệt này và sẽ tự thử lại.");
+    /* Thử đưa lên lại sau 20 giây, không cần chờ lần vào web sau */
+    setTimeout(()=>flushLocal().then(r=>{if(r.done){NGB.warn("");if(document.getElementById("fls"))filesLoad()}}).catch(()=>{}),20000)}
   if(cur&&cur.id===pid&&document.getElementById("fls"))filesLoad()}
 /* Rà nội dung file trước khi lưu: đọc file, gợi ý thư mục (Claude trên máy chủ, không được thì đoán theo tên và chữ trong file), anh xác nhận rồi mới lưu */
 const FRULE=[["07",10,/thau phu|to doi|giao khoan|hop dong khoan|nhan khoan/],["02",6,/hop dong|phu luc|contract|\bhd\b|hdtc|hdkt/],["05",6,/thanh toan|cong no|hoa don|invoice|bao lanh|tam ung|uy nhiem chi|de nghi tt|\bdntt\b|quyet toan/],
@@ -1588,7 +1590,7 @@ const sc=(s,brand)=>{if(!isUp(s))return s;const b=(brand||"").split(/\s+/).filte
 let pending=null;
 function needX(){return window.XLSX?Promise.resolve():new Promise((ok,er)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=ok;s.onerror=()=>er(new Error("Không tải được bộ đọc Excel, kiểm tra kết nối mạng"));document.head.appendChild(s)})}
 async function readBOQ(f){const m=document.getElementById("upmsg");if(m)m.textContent="Đang đọc "+f.name+"…";
-  try{await needX();const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const r=BOQ.parse(wb,XLSX);
+  try{await needX();const buf=await f.arrayBuffer();f=new File([buf],f.name,{type:f.type});const wb=XLSX.read(buf,{type:"array"});const r=BOQ.parse(wb,XLSX);
     if(!r.hms.length||!r.count)throw new Error("Không tìm thấy bảng khối lượng trong file này");
     const i=r.info,brand=(i.client||"").replace(/^.*?(TNHH|CỔ PHẦN|CP|JSC)\s*/i,"");
     pending={file:f.name,blob:f,wb,opt:{cols:{},match:{}},sel:null,r,form:{name:sc(i.name||f.name.replace(/\.\w+$/,""),brand),code:"",cdt:tc(i.client||""),loc:tc(i.loc||""),qcode:i.code||"",date:i.date||""}};
@@ -1838,8 +1840,9 @@ let ggP=null;
 const tw_=s=>BOQ.nz(s).replace(/[^a-z0-9 ]/g," ").split(" ").filter(w=>w.length>1);
 const simW=(a,b)=>{const A=tw_(a),B=tw_(b);if(!A.length||!B.length)return 0;let k=0;A.forEach(w=>{if(B.includes(w))k++});return k/Math.max(A.length,B.length)};
 async function readGG(f){const m=document.getElementById("ggmsg");if(m)m.textContent="Đang đọc "+f.name+"…";
-  try{await needX();const wb=XLSX.read(await f.arrayBuffer(),{type:"array"}),r=BOQ.parse(wb,XLSX);if(!r.count)throw new Error("Không tìm thấy bảng đơn giá trong file này");
-    ggP={pid:cur.id,file:f.name,blob:f,r,assign:{},sel:null,flt:"all",keep:false};ggRe(1)}
+  try{await needX();const buf=await f.arrayBuffer(),wb=XLSX.read(buf,{type:"array"}),r=BOQ.parse(wb,XLSX);if(!r.count)throw new Error("Không tìm thấy bảng đơn giá trong file này");
+    /* Giữ bản sao nội dung file trong bộ nhớ: lúc lưu không phải đọc lại ổ đĩa (file đang mở trong Excel sẽ đọc lỗi) */
+    ggP={pid:cur.id,file:f.name,blob:new File([buf],f.name,{type:f.type}),r,assign:{},sel:null,flt:"all",keep:false};ggRe(1)}
   catch(e){if(m){m.textContent=e.message||"Không đọc được file";m.style.color="#C0141B"}}}
 function ggMatch(p,r){const N=BOQ.nz,used=new Set(),G=r.hms,hmN=p.hms.map(h=>N(h.name));
   const sumLike=g=>g.lines.length&&g.lines.filter(l=>hmN.some(n=>n===N(l.name)||simW(n,l.name)>=.6)).length>=g.lines.length*.5;
@@ -2011,7 +2014,9 @@ window.NG={
   return"Câu này em chưa trả lời được bằng số liệu sẵn có. Khi web được kết nối Claude, em sẽ hiểu và trả lời câu hỏi tự do.\nAnh có thể hỏi về: **giá trị hợp đồng, lãi gộp, hạng mục, tiến độ, vật tư cần đặt, dòng tiền**."}};
 view.addEventListener("change",e=>{const t=e.target;if(t.dataset.fu===undefined||!cur)return;const files=[...t.files],p=cur;t.value="";if(!files.length)return;
   const big=files.find(f=>f.size>95*1048576);if(big){flMsg(big.name+": file quá lớn, tối đa 95 MB",true);return}
-  sortFiles(p,files,t.dataset.fu,DF.filter(f=>NGApp.board||f[3].includes(p._role)))});
+  /* Chép nội dung file vào bộ nhớ ngay khi chọn để lúc bấm Lưu không phụ thuộc file gốc trên máy */
+  Promise.all(files.map(f=>f.arrayBuffer().then(b=>new File([b],f.name,{type:f.type,lastModified:f.lastModified})))).then(F=>sortFiles(p,F,t.dataset.fu,DF.filter(f=>NGApp.board||f[3].includes(p._role))))
+    .catch(()=>flMsg("Không đọc được file. Nếu file đang mở trong Excel/Word, anh đóng file rồi chọn lại.",true))});
 view.addEventListener("click",async e=>{const sel=e.target.closest("[data-fsel]"),v=e.target.closest("[data-fv]"),d=e.target.closest("[data-fd]"),x=e.target.closest("[data-fx]");
   if(sel){flSel=sel.dataset.fsel;flMsg("");await filesLoad();return}
   if(v){flMsg("");fileView(v.dataset.fv,v.dataset.n);return}
