@@ -2187,7 +2187,7 @@ function pkBuild(p){const O=p.pk||{},MV=O.mv||{},NM=O.nm||{},G={v:new Map(),n:ne
     /* Dòng BOQ chỉ có thành tiền (không chia vật liệu, nhân công): giao thầu phụ trọn gói theo hạng mục */
     const tron=uv==null&&un==null,wh=pkWhole(h,l),hs0=!wh&&pkSid(h,l),hs=hs0&&pkMd(p,hs0)==="tron"?hs0:null;const parts=tron||wh?[["n",(l.total||0)/q,(cc.v||0)+(cc.n||0)]]:[["v",uv||0,cc.v],["n",un||0,cc.n]];
     parts.forEach(([t,cu,gv])=>{if(!(cu>0||gv>0))return;let key,name;
-      if(MV[l.code+"|"+t]){key=MV[l.code+"|"+t];name=key.split("|").slice(1).join("|")}
+      if(MV[l.code+"|"+t]){key=MV[l.code+"|"+t];name=key.includes("|")?key.split("|").slice(1).join("|"):key.slice(2)}
       else{name=hs?hs+PKLD:wh||pkAuto(h,l,t,tron);key=t+":"+name}
       const put=(key,name,cu,gv,pt)=>{const M=G[t];if(!M.has(key))M.set(key,{key,t,name:NM[key]||name,auto:name,lines:[],units:new Set(),kl:0,tg:0,tb:0});const g=M.get(key);
         g.lines.push({c:l.code,l,h,q,cu,gv,pt,bv:wh&&!tron?((uv||0)/(((uv||0)+(un||0))||1)):null});g.units.add(pt?pt.unit:(l.unit||""));g.kl+=pt?pt.dm*q:q;g.tg+=gv;g.tb+=cu*q};
