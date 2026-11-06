@@ -4052,12 +4052,22 @@ const admRole=cv=>{const t=noAcc(cv).toLowerCase().replace(/\s+/g," ").trim();
   if(/^(tong giam doc|tgd)\b/.test(t))return"tgd";if(/^(gdda|giam doc du an|gd du an|qs tong)\b/.test(t))return"gd";if(/^(kttc|ktth|ke toan tong hop)\b/.test(t))return"kt";
   if(/^(ktvt|ke toan vat tu)\b/.test(t))return"ktvt";if(/^(hcns|hanh chinh nhan su)\b/.test(t))return"hcns";if(/^(cht|chi huy truong)\b/.test(t))return"cht";return""};
 const admUser=n=>{const w=noAcc(n).toLowerCase().replace(/[^a-z\s]/g," ").split(/\s+/).filter(Boolean);if(!w.length)return"";const last=w.pop();return last+w.map(x=>x[0]).join("")};
-const admProj=cv=>{const m=noAcc(cv).toLowerCase().match(/\bda\s+(.+)$/);if(!m)return null;const k=m[1].replace(/[^a-z0-9]+/g," ").trim();if(!k)return null;return DB.projects.find(p=>noAcc((p.name||"")+" "+(p.code||"")).toLowerCase().replace(/[^a-z0-9]+/g," ").includes(k))||{miss:m[1].trim().toUpperCase()}};
+const admProj=cv=>{const t=noAcc(cv).toLowerCase(),M=[...t.matchAll(/\b(?:da|du an)\s+(?=((?:[a-z0-9]+\s?){1,3}))/g)];if(!M.length)return null;const N=p=>noAcc((p.name||"")+" "+(p.code||"")).toLowerCase().replace(/[^a-z0-9]+/g," ");let miss="";
+  for(const m of M){const W=m[1].replace(/[^a-z0-9]+/g," ").trim().split(" ").filter(w=>w&&!/^(vi|la|chua|cua|tai)$/.test(w));if(!W.length)continue;if(!miss)miss=W[0];for(let n=Math.min(3,W.length);n>=1;n--){const k=W.slice(0,n).join(" ");if(k.length<3)continue;const f=DB.projects.find(p=>N(p).includes(k));if(f)return f}}
+  const L=M[M.length-1][1].replace(/[^a-z0-9]+/g," ").trim().split(" ").filter(Boolean);return{miss:(L[0]||miss).toUpperCase()}};
+/* Đọc danh sách dán vào: chấp nhận Excel (STT · Họ tên · Chức vụ), bảng chép từ tin nhắn (Họ tên · Tên đăng nhập · Vai trò), một người bị xuống dòng giữa các cột */
+const admIsUser=c=>/^[a-z][a-z0-9._-]{2,39}$/.test(c)&&!/\s/.test(c);
+const admIsName=c=>{const w=c.trim().split(/\s+/);return w.length>=2&&w.length<=6&&!admRole(c)&&!/\d/.test(c)&&w.every(x=>/^[A-Z]/.test(noAcc(x)))};
+function admParse(txt){const out=[];let cur=null;const push=()=>{if(cur&&cur.name&&(cur.cv||cur.role!==undefined))out.push(cur);cur=null};
+  txt.split(/\r?\n/).forEach(line=>{const C=line.split(/\t|\s{2,}|\|/).map(x=>x.trim()).filter(x=>x&&!/^[-:]+$/.test(x)&&!/^\d+$/.test(x));if(!C.length)return;
+    if(C.some(c=>/^(ho va ten|ho ten|stt|chuc vu|ten dang nhap|vai tro)$/i.test(noAcc(c))))return;
+    C.forEach(c=>{if(admIsName(c)){push();cur={name:c};return}if(!cur)return;if(admIsUser(c)&&!cur.u){cur.u=c;return}if(!cur.cv){cur.cv=c}else cur.cv+=" "+c});
+  });push();return out}
 function admBulkRows(P){const ex=new Set((P||[]).map(x=>String(x.email||"").replace("@"+LOGIN_DOMAIN,"").toLowerCase())),exN=new Set((P||[]).map(x=>noAcc(x.full_name||"").toLowerCase().trim()).filter(Boolean)),seen=new Set();
-  return ADMB.txt.split(/\r?\n/).map(l=>l.split(/\t|\s{2,}|\|/).map(x=>x.trim()).filter(Boolean)).filter(c=>c.length>=2).map(c=>{if(/^\d+$/.test(c[0]))c.shift();const name=c[0],cv=c[1]||"",role=admRole(cv);let u=admUser(name);
-    const pj=role==="cht"?admProj(cv):null;let why="";if(!name||/^(ho va ten|stt)/i.test(noAcc(name)))return null;
-    if(!role)why="Chức vụ chưa có vai trò trên web";else if(exN.has(noAcc(name).toLowerCase().trim()))why="Đã có tài khoản";else if(ex.has(u)){u=u+"2";if(ex.has(u))why="Trùng tên đăng nhập"}
-    if(!why&&seen.has(u))why="Trùng trong danh sách";seen.add(u);return{name,cv,role,u,pj,why}}).filter(Boolean)}
+  return admParse(ADMB.txt).map(c=>{const name=c.name,cv=c.cv||"",role=admRole(cv);let u=c.u||admUser(name);
+    const pj=role==="cht"?admProj(cv):null;let why="";
+    if(!role)why=cv?"Chức vụ chưa có vai trò trên web":"Thiếu chức vụ";else if(exN.has(noAcc(name).toLowerCase().trim()))why="Đã có tài khoản";else if(ex.has(u)){if(c.u)why="Tên đăng nhập đã có";else{u=u+"2";if(ex.has(u))why="Trùng tên đăng nhập"}}
+    if(!why&&seen.has(u))why="Trùng trong danh sách";seen.add(u);return{name,cv,role,u,pj,why}})}
 function admBulkPrev(P){const L=admBulkRows(P);if(!L.length)return`<span class="sub">Dán danh sách để xem trước.</span>`;const ok=L.filter(x=>!x.why),pwOk=(ADMB.pw||"").length>=8;
   return`<div class="tw"><table class="t"><thead><tr><th>Họ và tên</th><th>Chức vụ</th><th>Tên đăng nhập</th><th>Vai trò trên web</th><th>Kết quả</th></tr></thead><tbody>${L.map(x=>{const r=ADMB.res[x.u];return`<tr><td>${esc(x.name)}</td><td>${esc(x.cv)}</td><td class="num">${x.why?"-":esc(x.u)}</td><td>${x.role?esc(x.role==="cht"?"Chỉ huy trưởng"+(x.pj?x.pj.miss?` · dự án “${x.pj.miss}” chưa có trên web`:" · "+(x.pj.code||"")+" "+x.pj.name:" · chưa phân dự án"):crName(x.role)):"-"}</td><td>${r?(r.ok?st("ok",r.ok):st("bad",r.err)):x.why?`<span class="sub">Bỏ qua · ${esc(x.why)}</span>`:st("warn","Sẽ tạo")}</td></tr>`}).join("")}</tbody></table></div>
     <div class="pvh" style="margin-top:12px;gap:10px;align-items:center"><button class="pill" id="admbgo" style="${sv("hr")}"${!ok.length||!pwOk||ADMB.busy?" disabled":""}><span class="dot">${ic("hr",2)}</span>${ADMB.busy?"Đang tạo…":"Tạo "+ok.length+" tài khoản"}</button><span class="sub">${pwOk?"":"Nhập mật khẩu chung từ 8 ký tự"}</span></div>`}
