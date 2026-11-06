@@ -559,7 +559,7 @@ table.t{border:1px solid #D9DDE8;border-radius:14px;overflow:clip;background:rgb
 .t col.cg-a{background:rgba(252,233,207,.22)}.t col.cg-b{background:rgba(230,217,251,.2)}.t col.cg-c{background:rgba(219,242,226,.25)}
 .bsr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}.bsr .fi{flex:0 1 420px;min-width:0}.bsr .sub{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 /* Phiếu yêu cầu vật tư */
-.pyh{display:flex;gap:18px;align-items:center;background:#fff;border-radius:16px;padding:14px 18px;margin-top:12px;box-shadow:inset 0 0 0 1px var(--line)}.pyh img{width:118px;height:auto;flex:none}.pyht{flex:1;min-width:0}.pyht h2{margin:0 0 8px;font-size:21px;font-weight:600;color:#2F5597;text-align:center}
+.pyh{display:flex;gap:18px;align-items:center;background:#fff;border-radius:16px;padding:14px 18px;margin-top:12px;box-shadow:inset 0 0 0 1px var(--line)}.pyh img{width:118px;height:auto;flex:none}.pyht{flex:1;min-width:0}.pyht h2{margin:0 0 12px;font-size:23px;font-weight:700;letter-spacing:.09em;color:#0A2486;text-align:center;display:flex;align-items:center;justify-content:center;gap:16px}.pyht h2::before,.pyht h2::after{content:"";flex:0 1 110px;height:3px;border-radius:3px;background:linear-gradient(90deg,rgba(45,60,230,0),#2D3CE6)}.pyht h2::after{background:linear-gradient(90deg,#2D3CE6,rgba(45,60,230,0))}.pyht h2 small{display:block;font-size:12px;font-weight:500;letter-spacing:.02em;color:var(--muted)}
 .pyg{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px 12px;align-items:center;font-size:15px}.pyg>span{color:var(--muted);font-size:14px}.pyg .fi{min-width:0;width:100%}
 .pyt .fi{min-width:0;width:100%;padding:6px 8px}.pyt .fi.r{text-align:right}.pyt .fi.tc{text-align:center}.pyt td{padding:6px}
 .pych b{font-weight:600;color:var(--ink)}.pych i{font-style:normal;margin:0 6px;color:var(--muted)}.pych small{color:var(--muted);margin-left:4px}
@@ -3361,16 +3361,28 @@ const pyDl=p=>{const S=new Set();try{mats(p).forEach(m=>S.add(m.n))}catch(e){}p.
 function pyHead(p,r,ed){const no=ed?`<input class="fi" data-pye="no" value="${esc(r.no||"")}" placeholder="Tự đánh số" style="min-width:0;width:130px">`:`<b>${esc(r.no)}</b>`;
   return`<div class="pyh"><img src="img/logo-bcn.png" alt="Nam Giang"><div class="pyht"><h2>ĐỀ XUẤT VẬT TƯ</h2><div class="pyg"><span>Dự án</span><b>${esc(p.name||"")}</b><span>Số hiệu</span>${no}<span>Địa chỉ</span><b>${esc(p.loc||"")}</b><span>Ngày</span><b>${fdt(r.created_at||new Date()).slice(0,10)}</b>
     <span>Nội dung</span>${ed?`<input class="fi" data-pye="title" value="${esc(r.title||"")}" placeholder="Ví dụ: Vật tư làm cổng, hàng rào tạm">`:`<b>${esc(r.title||"")}</b>`}<span>Cần hàng</span>${ed?`<input class="fi" type="date" data-pye="need_date" value="${esc(r.need_date||"")}" style="min-width:0;width:160px">`:`<b>${r.need_date?fdi(r.need_date):"-"}</b>`}</div></div></div>`}
-function pyItems(r,mode){const it=r.items||[],tot=pyTot(it),ed=mode==="edit",pr=mode==="price"||ed;
+/* Nhà cung cấp cho một dòng vật tư: tìm gói vật tư khớp tên → các báo giá chào gói đó → đơn giá theo dòng BOQ giống tên nhất (đổi kg ↔ tấn khi khác đơn vị) */
+function pyGoi(p,name){try{const VG=pkBuild(p).v.map(g=>({g,K:qKey(g.name),W:hdTok(g.name)})),t=" "+hdTok(name).join(" ")+" ",K=qKey(name);let best=null,bs=0;
+  VG.forEach(o=>{const hit=o.W.filter(w=>t.includes(" "+w+" ")).length/Math.max(1,o.W.length);let s=hit;if(o.K.size){let k=0;o.K.forEach(x=>{if(K.has(x))k++});s+=k?.5*k/o.K.size:-.3}if(s>bs){bs=s;best=o.g}});return bs>=.6?best:null}catch(e){return null}}
+function pyOffers(p,it){const g=pyGoi(p,it.n||"");if(!g)return{g:null,L:[]};const T=hdTok(it.n||""),un=u=>BOQ.nz(u||"").replace(/[^a-z0-9]/g,""),iu=un(it.u);
+  const cv=(v,lu)=>{const a=un(lu);if(!iu||!a||iu===a)return v;if(a==="tan"&&iu==="kg")return v/1000;if(a==="kg"&&iu==="tan")return v*1000;if(a==="m3"&&iu==="m3")return v;return v};
+  const L=pkOffers(p,g).map(o=>{let bl=null,bsc=-1;g.lines.forEach(x=>{const v=pkPrice(o.q,x.c,"v");if(v==null)return;const sc=hdTok((x.l.name||"")+" "+(x.l.spec||"")).filter(w=>T.includes(w)).length;if(sc>bsc){bsc=sc;bl={x,v}}});
+    return bl?{qid:o.q.id,vendor:o.q.vendor,p:Math.round(cv(bl.v,bl.x.l.unit)),code:bl.x.c,win:0}:null}).filter(Boolean);
+  const ok=(PY.list||[]).find(r=>r.kind==="ssg"&&r.status==="approved"&&(r.data||{}).key===g.key),w=ok&&ssgV(ok);if(w)L.forEach(o=>{if(o.qid===w.qid)o.win=1});
+  L.sort((a,b)=>(b.win-a.win)||(a.p-b.p));return{g,L}}
+function pyNcc(p,x,i,mode){if(mode!=="price")return x.v?`<b>${esc(x.v)}</b>${x.qcode?`<small class="spec">giá theo báo giá · dòng ${esc(x.qcode)}</small>`:""}`:mode==="edit"?`<span class="sub">Kế toán chọn</span>`:"-";
+  const O=pyOffers(p,x),min=O.L.length?Math.min(...O.L.map(o=>o.p)):0,has=O.L.some(o=>o.qid===x.qid);
+  return`<select class="fi sel pyv" data-pyv="${i}" style="min-width:210px"><option value="">— Chọn nhà cung cấp —</option>${O.L.map(o=>`<option value="${esc(o.qid)}"${o.qid===x.qid?" selected":""}>${esc(o.vendor)} · ${n0(o.p)} đ${o.win?" · trúng thầu":o.p===min&&O.L.length>1?" · rẻ nhất":""}</option>`).join("")}${x.v&&!has&&x.qid!=="_"?`<option value="${esc(x.qid||"")}" selected>${esc(x.v)}</option>`:""}<option value="_"${x.qid==="_"?" selected":""}>Khác (gõ tên, tự ghi giá)</option></select>${x.qid==="_"?`<input class="fi" data-pyi="${i}|v" value="${esc(x.v||"")}" placeholder="Tên nhà cung cấp" style="margin-top:6px">`:""}<small class="spec">${O.g?(O.L.length?"Gói "+esc(O.g.name)+" · "+O.L.length+" báo giá":"Gói "+esc(O.g.name)+" · chưa có báo giá"):"Chưa khớp gói vật tư nào trong BOQ"}</small>`}
+function pyItems(r,mode,p){const it=r.items||[],tot=pyTot(it),ed=mode==="edit",pr=mode==="price";
   const c=(i,k,v,cls="",ph="")=>`<input class="fi ${cls}" data-pyi="${i}|${k}" value="${esc(v==null?"":v)}" placeholder="${ph}"${k==="n"?' list="pydl"':""}>`;
-  return`<div class="tw" style="margin-top:12px"><table class="t pyt"><thead><tr><th>No.</th><th>Tên vật tư/ thiết bị</th><th>Đơn vị</th><th>Đề xuất</th><th>Đơn giá (đ)</th><th>Thành tiền (đ)</th><th>Màu sắc</th><th>Ghi chú</th>${ed?"<th></th>":""}</tr></thead><tbody>${it.map((x,i)=>`<tr><td class="tc">${i+1}</td>
+  return`<div class="tw" style="margin-top:12px"><table class="t pyt"><thead><tr><th>No.</th><th>Tên vật tư/ thiết bị</th><th>Đơn vị</th><th>Đề xuất</th><th>Nhà cung cấp</th><th>Đơn giá (đ)</th><th>Thành tiền (đ)</th><th>Ghi chú</th>${ed?"<th></th>":""}</tr></thead><tbody>${it.map((x,i)=>`<tr><td class="tc">${i+1}</td>
     <td style="min-width:240px">${ed?c(i,"n",x.n,"","Tên vật tư, quy cách"):esc(x.n)}</td><td class="tc">${ed?c(i,"u",x.u,"tc",""):esc(x.u||"")}</td><td class="r">${ed?c(i,"q",x.q!=null&&x.q!==""?nq(x.q):"","r","0"):nq(x.q)}</td>
-    <td class="r">${pr?c(i,"p",x.p?n0(x.p):"","r","-"):x.p?n0(x.p):"-"}</td><td class="r">${n0((+x.q||0)*(+x.p||0))}</td><td>${ed?c(i,"c",x.c):esc(x.c||"")}</td><td>${ed?c(i,"g",x.g):esc(x.g||"")}</td>${ed?`<td class="tc"><button class="back sm ico del" data-pyrm="${i}" aria-label="Xoá dòng">×</button></td>`:""}</tr>`).join("")||`<tr><td colspan="${ed?9:8}" class="sub">Chưa có dòng vật tư.</td></tr>`}</tbody>
-    ${tot?`<tfoot><tr><td colspan="5">Tổng cộng (chưa VAT)</td><td class="r">${n0(tot)}</td><td colspan="${ed?3:2}"></td></tr></tfoot>`:""}</table></div>`}
+    <td style="min-width:200px">${p?pyNcc(p,x,i,mode):esc(x.v||"")}</td><td class="r">${pr?c(i,"p",x.p?n0(x.p):"","r","-"):x.p?n0(x.p):"-"}</td><td class="r">${n0((+x.q||0)*(+x.p||0))}</td><td>${ed?c(i,"g",x.g):esc([x.c?"Màu "+x.c:"",x.g||""].filter(Boolean).join(" · "))}</td>${ed?`<td class="tc"><button class="back sm ico del" data-pyrm="${i}" aria-label="Xoá dòng">×</button></td>`:""}</tr>`).join("")||`<tr><td colspan="${ed?9:8}" class="sub">Chưa có dòng vật tư.</td></tr>`}</tbody>
+    ${tot?`<tfoot><tr><td colspan="6">Tổng cộng (chưa VAT)</td><td class="r">${n0(tot)}</td><td colspan="${ed?2:1}"></td></tr></tfoot>`:""}</table></div>`}
 function pyForm(p){const r=PY.edit;
   return `<div class="vgrid"><section class="card span3"><div class="bh"><div><h3>${r.id&&!r.isNew?"Sửa phiếu "+esc(r.no):"Lập phiếu yêu cầu vật tư"}</h3><span class="sub">Gõ tên vật tư (có gợi ý từ BOQ) hoặc tải file Excel theo mẫu Đề xuất vật tư · Lưu nháp để làm tiếp sau · Gửi duyệt thì phiếu đi qua: ${pyChain(((WFC||{}).pyc||{}).steps)}</span></div>
     <label class="pill" style="${sv("files")};cursor:pointer"><input type="file" id="pyxf" accept=".xlsx,.xls,.xlsm" hidden><span class="dot">↑</span>Tải từ file Excel</label></div>
-    ${pyHead(p,r,1)}${pyItems(r,"edit")}
+    ${pyHead(p,r,1)}${pyItems(r,"edit",p)}
     <div class="bh" style="margin-top:12px"><button class="back" data-pyadd="1">+ Thêm dòng</button><span class="sub" id="pymsg" style="color:#C0141B">${esc(PY.msg||"")}</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="back" data-pycancel="1">Huỷ</button><button class="back" data-pysave="0">Lưu nháp</button><button class="pill" data-pysave="1" style="${sv("rev")}"><span class="dot">✓</span>Gửi duyệt</button></div></div></section></div>${pyDl(p)}`}
 /* Phần dùng chung của mọi loại phiếu: các bước duyệt, nút thao tác, lịch sử */
@@ -3385,7 +3397,7 @@ function pyActs(p,r){const s=pyStep(r),mine=pyMine(p,r),acts=[];
 const pyLog=r=>`<section class="card span3"><h3>Lịch sử phiếu</h3>${ms((r.log||[]).slice().reverse().map(a=>[a.act==="return"||a.act==="cancel"?"#E1141B":a.act==="approve"?"#12A150":"#2D3CE6",`${fdt(a.at)} · ${a.name||""} · ${{create:"Lập phiếu",submit:"Gửi duyệt",approve:"Duyệt",return:"Trả về",cancel:"Huỷ phiếu"}[a.act]||a.act}${a.step?" ("+a.step+")":""}`,a.note||""]))}</section>`;
 function pyDetail(p,r){const s=pyStep(r),mine=pyMine(p,r),L=r.log||[],pe=mine&&s&&s.price;if(pe&&PY.priceId!==r.id){PY.price=JSON.parse(JSON.stringify(r.items||[]));PY.priceId=r.id}const sub=L.find(a=>a.act==="submit");
   return `<div class="vgrid"><section class="card span3"><div class="bh"><div><h3>Phiếu ${esc(r.no)} · ${pySt(r)}</h3><span class="sub">Lập bởi ${esc(r.created_name||"")} · ${fdt(r.created_at)}${sub?" · gửi duyệt "+fdt(sub.at):""}</span></div><div style="display:flex;gap:8px"><button class="back sm" data-go="da-${p.id}-pyc">‹ Danh sách</button><button class="back sm" data-lk="pyc:${r.id}">🔗 Liên quan</button><button class="back sm" data-pyx="1">Tải Excel</button></div></div>
-    ${pyFlow(r)}${pyHead(p,r,0)}${pe?pyItems({...r,items:PY.price},"price"):pyItems(r,"view")}
+    ${pyFlow(r)}${pyHead(p,r,0)}${pe?pyItems({...r,items:PY.price},"price",p):pyItems(r,"view",p)}
     ${PY.msg?`<div class="sub" style="margin-top:8px;color:${/^Đã/.test(PY.msg)?"#0B6B34":"#C0141B"}">${esc(PY.msg)}</div>`:""}${pyActs(p,r)}</section>${pyLog(r)}</div>`}
 /* Đọc file Excel theo mẫu Đề xuất vật tư: dòng tiêu đề có "Tên vật tư", lấy đến hết dòng có tên */
 async function pyReadX(f){await needX();const wb=XLSX.read(await f.arrayBuffer(),{type:"array"}),N=BOQ.nz,num=BOQ.num,out=[];
@@ -3394,23 +3406,23 @@ async function pyReadX(f){await needX();const wb=XLSX.read(await f.arrayBuffer()
     const c={n:col(/ten vat tu|vat tu|thiet bi|noi dung/),u:col(/don vi|dvt/),q:col(/de xuat|so luong|khoi luong|sl\b/),p:col(/don gia/),c:col(/mau/),g:col(/ghi chu/)};
     for(let i=h+1;i<a.length;i++){const r=a[i]||[],nm=String(r[c.n]==null?"":r[c.n]).replace(/\s+/g," ").trim();if(!nm){if(out.length&&(r||[]).every(x=>x===""||x==null))continue;continue}
       if(/nguoi de xuat|ke toan|phe duyet/.test(N(nm)))break;const q=c.q>=0?num(r[c.q]):null;if(q==null&&!String(r[c.u]||"").trim())continue;
-      out.push({n:nm,u:String(c.u>=0?r[c.u]:"").trim(),q:q==null?"":Math.round(q*100)/100,p:c.p>=0?num(r[c.p])||"":"",c:c.c>=0?String(r[c.c]||"").trim():"",g:c.g>=0?String(r[c.g]||"").trim():""})}});
+      out.push({n:nm,u:String(c.u>=0?r[c.u]:"").trim(),q:q==null?"":Math.round(q*100)/100,p:c.p>=0?num(r[c.p])||"":"",g:[c.c>=0&&String(r[c.c]||"").trim()?"Màu "+String(r[c.c]).trim():"",c.g>=0?String(r[c.g]||"").trim():""].filter(Boolean).join(" · ")})}});
   return out}
 /* Xuất Excel theo mẫu Đề xuất vật tư của công ty, chữ ký ghi tên và ngày duyệt từng bước */
 async function pyExcel(p,r){await needXJ();const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("De xuat vat tu",{pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}});
   const F="Times New Roman",BD={style:"thin",color:{argb:"FF000000"}},box={top:BD,left:BD,bottom:BD,right:BD},GRN="FF92D050";
-  ws.columns=[{width:7},{width:36},{width:10},{width:12},{width:15},{width:17},{width:14},{width:24}];
+  ws.columns=[{width:7},{width:36},{width:10},{width:12},{width:24},{width:15},{width:17},{width:24}];
   try{const b=await (await fetch("img/logo-bcn.png")).arrayBuffer();const id=wb.addImage({buffer:b,extension:"png"});ws.addImage(id,{tl:{col:0.6,row:0.3},ext:{width:150,height:96}})}catch(e){}
   ws.mergeCells("A1:B4");ws.mergeCells("C1:H1");const t=ws.getCell("C1");t.value="ĐỀ XUẤT VẬT TƯ";t.font={name:F,size:16,bold:true,color:{argb:"FF2F5597"}};t.alignment={horizontal:"center",vertical:"middle"};ws.getRow(1).height=30;
   const kv=(row,a,b,c,d)=>{ws.getCell("C"+row).value=a;ws.mergeCells(`D${row}:E${row}`);ws.getCell("D"+row).value=b;ws.getCell("F"+row).value=c;ws.mergeCells(`G${row}:H${row}`);ws.getCell("G"+row).value=d;
     ["C","D","E","F","G","H"].forEach(k=>{const cl=ws.getCell(k+row);cl.border=box;cl.font={name:F,size:11,bold:k==="C"};cl.alignment={vertical:"middle",horizontal:k==="G"?"center":k==="C"?"center":"left",wrapText:true}})};
   kv(2,"Dự Án",p.name||"","Số hiệu :",r.no);kv(3,"Địa Chỉ",p.loc||"","Ngày/ Tháng / Năm",fdt(r.created_at).slice(0,10));kv(4,"Nội dung",r.title||"","Cần hàng",r.need_date?fdi(r.need_date):"");
   for(let i=1;i<=4;i++){ws.getCell("A"+i).border=box}
-  const H=["No.","Tên vật tư/ thiết bị","Đơn vị","Đề xuất","Đơn Giá","Thành tiền","Màu sắc","Ghi Chú"],hr=ws.getRow(6);hr.values=H;hr.height=22;
+  const H=["No.","Tên vật tư/ thiết bị","Đơn vị","Đề xuất","Nhà cung cấp","Đơn Giá","Thành tiền","Ghi Chú"],hr=ws.getRow(6);hr.values=H;hr.height=22;
   H.forEach((_,j)=>{const cl=hr.getCell(j+1);cl.font={name:F,size:11,bold:true};cl.fill={type:"pattern",pattern:"solid",fgColor:{argb:GRN}};cl.border=box;cl.alignment={horizontal:"center",vertical:"middle"}});
-  let row=7;(r.items||[]).forEach((x,i)=>{const R=ws.getRow(row);R.values=[i+1,x.n,x.u||"",+x.q||0,x.p?+x.p:null,x.p?Math.round((+x.q||0)*(+x.p||0)):null,x.c||"",x.g||""];R.height=24;
-    for(let j=1;j<=8;j++){const cl=R.getCell(j);cl.font={name:F,size:11,italic:j===8};cl.border=box;cl.alignment={vertical:"middle",wrapText:j===2||j===8,horizontal:j===2?"left":"center"};if(j===4)cl.numFmt='#,##0.##;-#,##0.##;"-"';if(j===5||j===6){cl.numFmt='#,##0;-#,##0;"-"';cl.alignment={vertical:"middle",horizontal:"right"}}}row++});
-  const tot=pyTot(r.items);if(tot){ws.mergeCells(`A${row}:E${row}`);const a=ws.getCell("A"+row);a.value="Tổng cộng (chưa VAT)";a.font={name:F,size:11,bold:true};a.alignment={horizontal:"center"};const v=ws.getCell("F"+row);v.value=Math.round(tot);v.numFmt="#,##0";v.font={name:F,size:11,bold:true};for(let j=1;j<=8;j++)ws.getRow(row).getCell(j).border=box;row++}
+  let row=7;(r.items||[]).forEach((x,i)=>{const R=ws.getRow(row);R.values=[i+1,x.n,x.u||"",+x.q||0,x.v||"",x.p?+x.p:null,x.p?Math.round((+x.q||0)*(+x.p||0)):null,[x.c?"Màu "+x.c:"",x.g||""].filter(Boolean).join(" · ")];R.height=24;
+    for(let j=1;j<=8;j++){const cl=R.getCell(j);cl.font={name:F,size:11,italic:j===8};cl.border=box;cl.alignment={vertical:"middle",wrapText:j===2||j===5||j===8,horizontal:j===2||j===5?"left":"center"};if(j===4)cl.numFmt='#,##0.##;-#,##0.##;"-"';if(j===6||j===7){cl.numFmt='#,##0;-#,##0;"-"';cl.alignment={vertical:"middle",horizontal:"right"}}}row++});
+  const tot=pyTot(r.items);if(tot){ws.mergeCells(`A${row}:F${row}`);const a=ws.getCell("A"+row);a.value="Tổng cộng (chưa VAT)";a.font={name:F,size:11,bold:true};a.alignment={horizontal:"center"};const v=ws.getCell("G"+row);v.value=Math.round(tot);v.numFmt="#,##0";v.font={name:F,size:11,bold:true};for(let j=1;j<=8;j++)ws.getRow(row).getCell(j).border=box;row++}
   row+=2;const L=r.log||[],sub=L.find(a=>a.act==="submit"),sig=[["Người đề xuất",r.created_name||"",sub?fdt(sub.at):""],...(r.steps||[]).map(s=>{const a=[...L].reverse().find(x=>x.act==="approve"&&x.step===s.name);return[s.name,a&&r.status!=="returned"?a.name:"",a&&r.status!=="returned"?"Đã duyệt "+fdt(a.at):""]})];
   const cols=sig.length<=1?[[1,8]]:sig.map((_,i)=>{const w=8/sig.length,a=Math.round(i*w)+1,b=Math.round((i+1)*w);return[a,Math.max(a,b)]});
   sig.forEach((s,i)=>{const [a,b]=cols[i];[[0,s[0],true,false],[1,s[2],false,true],[4,s[1],true,false]].forEach(([o,v,bo,it])=>{const rr=row+o;if(b>a)ws.mergeCells(rr,a,rr,b);const cl=ws.getCell(rr,a);cl.value=v;cl.font={name:F,size:11,bold:bo,italic:it||o===0};cl.alignment={horizontal:"center",wrapText:true}})});
@@ -3473,11 +3485,13 @@ view.addEventListener("click",async e=>{const b=e.target.closest("[data-wfadd],[
 view.addEventListener("input",e=>{const t=e.target;if(t.id==="pynote")PY.note=t.value});
 view.addEventListener("change",async e=>{const t=e.target,p=P();if(!p)return;
   if(PY.edit&&t.dataset.pye){PY.edit[t.dataset.pye]=t.value;return}
+  if(t.dataset.pyv!=null&&PY.price){const x=PY.price[+t.dataset.pyv];if(!x)return;const v=t.value;if(!v){delete x.qid;x.v="";x.qcode="";R();return}if(v==="_"){x.qid="_";x.v="";x.qcode="";R();return}
+    const o=pyOffers(p,x).L.find(y=>y.qid===v);x.qid=v;if(o){x.v=o.vendor;x.p=o.p;x.qcode=o.code}R();return}
   if(t.dataset.pyi){const [i,k]=t.dataset.pyi.split("|"),L=PY.edit?PY.edit.items:PY.price;if(!L||!L[+i])return;let v=t.value;if(k==="q"||k==="p"){v=parseVN(v);v=v==null?"":v}L[+i][k]=v;R();return}
   if(t.id==="pyxf"&&t.files[0]&&PY.edit){const f=t.files[0];t.value="";try{const L=await pyReadX(f);if(!L.length){PY.msg="Không thấy bảng vật tư trong file (cần cột Tên vật tư và Đơn vị)";R();return}PY.edit.items=[...PY.edit.items.filter(x=>x.n),...L];PY.msg="";R()}catch(er){PY.msg="Chưa đọc được file: "+(er.message||er);R()}}});
 view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.target.closest("[data-pynew],[data-pyadd],[data-pyrm],[data-pycancel],[data-pysave],[data-pyact],[data-pyedit],[data-pydel],[data-pycx],[data-pyx]");if(!b)return;const d=b.dataset,sub=location.hash.split("-")[3],r=PY.list&&PY.list.find(x=>x.id===sub);
-  if(d.pynew){PY.edit={pid:p.id,isNew:1,id:"py"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),no:"",title:"",need_date:"",items:[{n:"",u:"",q:"",p:"",c:"",g:""}]};PY.msg="";R();return}
-  if(d.pyadd&&PY.edit){PY.edit.items.push({n:"",u:"",q:"",p:"",c:"",g:""});R();return}
+  if(d.pynew){PY.edit={pid:p.id,isNew:1,id:"py"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),no:"",title:"",need_date:"",items:[{n:"",u:"",q:"",p:"",g:""}]};PY.msg="";R();return}
+  if(d.pyadd&&PY.edit){PY.edit.items.push({n:"",u:"",q:"",p:"",g:""});R();return}
   if(d.pyrm!=null&&PY.edit){PY.edit.items.splice(+d.pyrm,1);R();return}
   if(d.pycancel){PY.edit=null;PY.msg="";R();return}
   if(d.pysave&&PY.edit){const x=PY.edit,items=x.items.filter(y=>String(y.n||"").trim()).map(y=>({n:y.n.trim(),u:y.u||"",q:+y.q||0,p:+y.p||0,c:y.c||"",g:y.g||""})),go=d.pysave==="1";
