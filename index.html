@@ -2048,6 +2048,7 @@ const PKME=[[/xi bet|xit xi|chau rua|voi chau|tieu nam|binh nong lanh|guong soi|
   [/^(tdt?|tu dien|tu dong luc|tu chieu sang)\b/,"Tủ điện"],[/^(den|bong den)\b|cot den|downlight|dowlight/,"Đèn chiếu sáng"],[/cong tac|o cam/,"Thiết bị điện (công tắc, ổ cắm)"]];
 const pkTrade=(h,l,t,zn)=>{if(/\bcoc\b/.test(zn)&&!/\bcu\b/.test(zn))return null;if(/van chuyen hang hoa|chi phi van chuyen/.test(zn)&&/ket cau thep/.test(BOQ.nz((l.g1||"")+" "+(h.grp||"")+" "+(h.part||""))))return t==="n"?"Kết cấu thép":"Kết cấu thép gia công";const r=PKTR.find(x=>x[0].test(zn));return r?(t==="n"?r[2]:r[1]):null};
 function pkAuto(h,l,t,tron){const z=BOQ.nz((l.name||"")+" "+(l.spec||"")),zn=BOQ.nz(l.name||"").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim(),mep=PKMEP(h);
+  if(/\brobot\b|may ep coc|van chuyen (may|thiet bi) ep coc/.test(zn))return"Ép cọc, khoan cọc";/* vận chuyển, vận hành robot ép cọc thuộc gói ép cọc */
   if(tron)return(typeof BQ_MM!=="undefined"&&BQ_MM.test(zn)?"MMTB trọn gói · ":"Trọn gói · ")+PKHN(h);
   const mtc=/^(chi phi |van chuyen )?(robot|may phat|xe (cau|nang|lu|xuc)|cau truc|cau tu hanh|may (ep|cau|xuc|dao|lu|dam))/.test(zn);
   if(mep&&t==="v"&&!mtc){const r=PKME.find(x=>x[0].test(zn));if(r)return r[1]}
