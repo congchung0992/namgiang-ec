@@ -176,7 +176,8 @@ table.xl{border-collapse:collapse;table-layout:fixed;font:15px/1.35 Calibri,Aria
 .gtdm th:nth-child(5){width:92px}
 .gtdm th:nth-child(6),.gtdm th:nth-child(7),.gtdm th:nth-child(8){width:112px}
 .gtdm th:nth-child(9){width:270px}.gtdm th:nth-child(10){width:160px}.gtdm th:nth-child(11){width:190px}
-.gtdm td .gtty{white-space:normal}.gtdm tr.gtct td{background:#F4F6FB}.gtdm tr.gtsum td{background:#EEF6EE}.gtt .gtss{width:130px;max-width:150px}.gtdm td:nth-child(11) .st{white-space:normal;text-align:left}.gtsrc{color:#7C3AED!important}.gtun{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted)}.gtun select{min-width:0;max-width:170px;padding:3px 8px;font-size:12px}.gtt th{white-space:normal}</style>
+.gtdm td .gtty{white-space:normal}.gtdm tr.gtct td{background:#F4F6FB}.gtdm tr.gtsum td{background:#EEF6EE}.gtt .gtss{width:130px;max-width:150px}.gtdm td:nth-child(11) .st{white-space:normal;text-align:left}.gtsrc{color:#7C3AED!important}.gtpn{cursor:pointer}.gtpn .gtpe{font-style:normal;color:var(--muted);font-size:12px;opacity:.6}.gtpn:hover .gtpe{opacity:1;color:#2563EB}
+.gtun{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted)}.gtun select{min-width:0;max-width:170px;padding:3px 8px;font-size:12px}.gtt th{white-space:normal}</style>
 
 
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -4577,7 +4578,9 @@ document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matche
   /* phần thuộc gói trọn gói: gán cả gói theo phạm vi (cả vật tư và thi công) */
   ks.forEach(k=>{if(v)un[k]=v;else delete un[k]});p.pk={...(p.pk||{}),un};if(cur!==p)cur.pk=p.pk;persist();gtRe(p)});
 /* Tên phần tách (anh chốt 06/11/2026): ghi rõ vật tư gì, nhân công làm việc gì, để sau cộng theo gói ra khối lượng từng loại */
-const gtPartLab=r=>{const mac=((r.ln0+" "+r.sp).match(/\b[MB]\s?\d{2,3}\b/i)||[""])[0].replace(/\s/,"").toUpperCase();
+/* Tên anh đặt cho phần tách (p.pk.pn, khoá = tên dòng BOQ|quy cách|v hoặc n, dùng chung cho dòng cùng tên ở mọi hạng mục); bấm vào tên để sửa */
+const gtPartLab=r=>{const pn=((cur&&cur.pk)||{}).pn||{},own=pn[r.pnk];return`<span class="gtpn" data-gtpn="${esc(r.pnk)}" title="Bấm để đặt tên vật tư / nhân công">${own?`${/^(vật tư|nhân công)/i.test(own)?"":(r.t==="v"?"Vật tư: ":"Nhân công: ")}<b>${esc(own)}</b>`:gtPartLab0(r)} <i class="gtpe">✎</i></span>`};
+const gtPartLab0=r=>{const mac=((r.ln0+" "+r.sp).match(/\b[MB]\s?\d{2,3}\b/i)||[""])[0].replace(/\s/,"").toUpperCase();
   return(r.t==="v"?`Vật tư <b>${esc(String(r.bn).replace(/\s*\(vật tư\)/i,""))}</b>${mac?" "+esc(mac):""}${r.sp?` · ${esc(r.sp)}`:""}`:`Nhân công <b>${esc(r.bn)}</b>: ${esc(r.ln0)}`)};
 function gtDm(p,D,today){const M=new Map(),SCM=gtScMap(p);let T0=null;try{T0=timeline(p).st}catch(e){}const SC=(p.sched&&p.sched.t)||{};
   const col=ty=>ty==="vt"?"vt":ty==="mm"?"mm":"nc",z=()=>({vt:0,mm:0,nc:0});
@@ -4587,7 +4590,7 @@ function gtDm(p,D,today){const M=new Map(),SCM=gtScMap(p);let T0=null;try{T0=tim
     /* công tác BOQ (cùng tên, quy cách, đơn vị) và các phần tách ra của nó */
     const rt=x.pt&&x.pt.ratio,cb=rt?{k:x.pt.k,n:x.pt.name,src:x.l.name}:null,ck=(cb?cb.k:BOQ.nz(x.l.name)+"|"+BOQ.nz(x.l.spec||""))+"|"+BOQ.nz(x.l.unit||"");if(!m.C.has(ck))m.C.set(ck,{ck,n:cb?cb.n:x.l.name,src:cb?cb.src:"",sp:cb?"":x.l.spec||"",u:x.l.unit||"",lc:new Set(),q:0,qs:new Map(),c:z(),v:0,hm:new Set(),R:new Map()});
     const c=m.C.get(ck);if(!c.sc)c.sc=SCM.k.get(o.g.key)||(o.g.parts||[]).map(g=>SCM.k.get(g.key)).find(Boolean)||(SCM.he.has(pkSid(x.h,x.l))?pkSid(x.h,x.l):"");if(!c.lc.has(x.h.code+x.l.code)){c.lc.add(x.h.code+x.l.code);const vk=BOQ.nz(x.l.name);c.qs.set(vk,(c.qs.get(vk)||0)+(rt?x.pt.dm*x.q:x.q));if(rt)c.rt=1;c.q=Math.max(...c.qs.values())}add(c.c);c.v+=v;c.hm.add(x.h.code);
-    const rk=o.g.key+"|"+(x.t||"")+"|"+(x.pt?x.pt.k:"")+"|"+BOQ.nz(x.l.name);if(!c.R.has(rk))c.R.set(rk,{o,t:x.t||o.g.t,pt:rt?null:x.pt,q:0,u:x.pt?x.pt.unit:(x.l.unit||""),v:0,ln:cb&&!rt?x.l.name:"",c:z(),bv:x.bv,ln0:x.l.name,sp:x.l.spec||"",bn:((o.g.parts||[o.g]).find(g=>g.lines.some(y=>y.c===x.c&&(y.t||g.t)===(x.t||o.g.t)))||o.g).name});const r=c.R.get(rk);r.q+=x.pt?x.pt.dm*x.q:x.q;r.v+=v;add(r.c)}));
+    const rk=o.g.key+"|"+(x.t||"")+"|"+(x.pt?x.pt.k:"")+"|"+BOQ.nz(x.l.name);if(!c.R.has(rk))c.R.set(rk,{o,t:x.t||o.g.t,pt:rt?null:x.pt,q:0,u:x.pt?x.pt.unit:(x.l.unit||""),v:0,ln:cb&&!rt?x.l.name:"",c:z(),bv:x.bv,ln0:x.l.name,sp:x.l.spec||"",pnk:String(x.l.name||"").trim()+"|"+String(x.l.spec||"").trim()+"|"+(x.t||o.g.t),bn:((o.g.parts||[o.g]).find(g=>g.lines.some(y=>y.c===x.c&&(y.t||g.t)===(x.t||o.g.t)))||o.g).name});const r=c.R.get(rk);r.q+=x.pt?x.pt.dm*x.q:x.q;r.v+=v;add(r.c)}));
   const L=[...M.values()].sort((a,b)=>a.gt-b.gt||a.s0-b.s0||a.mep-b.mep||b.v-a.v);
   const T=(q,u)=>u==="kg"&&q>=1000?[q/1000,"tấn"]:[q,u];
   const money=(cc,bold)=>["vt","nc"].map(k=>`<td class="r num">${cc[k]?(bold?`<b>${n0(cc[k])}</b>`:n0(cc[k])):"-"}</td>`).join(""),
@@ -4923,6 +4926,9 @@ document.addEventListener("change",async e=>{const s=e.target;if(!s.matches||!s.
   document.addEventListener("drop",async e=>{if(!D)return;const t=e.target.closest&&e.target.closest(".frow[data-fsel]");clr();if(!t||!can(t.dataset.fsel))return;e.preventDefault();
     const to=t.dataset.fsel,L=D.items;D=null;let ok=0,bad=[];for(const x of L){flMsg(`Đang chuyển ${ok+bad.length+1}/${L.length} file sang ${to}…`);try{await NGB.drive.move(x.id,to,to==="06.2"&&x.img?x.at:"");ok++}catch(er){bad.push(er.message||er)}}
     const p=DB.projects.find(x=>x.id===cur.id);if(p)p._f05=undefined;await filesLoad();flMsg(bad.length?`Đã chuyển ${ok}/${L.length} file · lỗi: ${bad[0]}`:`Đã chuyển ${ok} file sang ${to}`,!!bad.length)})})();
+
+document.addEventListener("click",e=>{const b=e.target.closest("[data-gtpn]");if(!b||!cur)return;e.stopPropagation();const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;const k=b.dataset.gtpn,pn={...((p.pk||{}).pn||{})},t=k.endsWith("|v")?"vật tư":"nhân công";
+  const v=prompt(`Tên ${t} cho dòng "${k.split("|")[0]}" (để trống = tên tự động)`,pn[k]||"");if(v===null)return;if(v.trim())pn[k]=v.trim();else delete pn[k];p.pk={...(p.pk||{}),pn};if(cur!==p)cur.pk=p.pk;persist();gtRe(p)},true);
 NGBoot();
 })();
 /* ===== Toàn màn hình ===== */
