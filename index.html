@@ -3153,7 +3153,9 @@ view.addEventListener("change",e=>{const t=e.target;
 view.addEventListener("change",e=>{const t=e.target;if(!cur)return;
   if(t.id==="sdate"){const d=pd(t.value);if(d){gSave();cur.sched.start=fd(d);cur.sched.auto=0;persist();keep(route)}else t.value=cur.sched.start}
   if(t.dataset.term){const v=parseVN(t.value);if(v!=null&&v>=0&&v<=(t.dataset.term==="pay"||t.dataset.term==="cost"?365:100)){cur.terms[t.dataset.term]=v;persist();keep(route)}else t.value=fm(cur.terms[t.dataset.term],0)}});
-const keep=f=>{window.NOANIM=1;setTimeout(()=>window.NOANIM=0,50);const y=scrollY,g=document.getElementById("gw"),x=g?g.scrollLeft:0;f();scrollTo(0,y);const g2=document.getElementById("gw");if(g2)g2.scrollLeft=x};
+const keep=f=>{window.NOANIM=1;setTimeout(()=>window.NOANIM=0,50);const y=scrollY,g=document.getElementById("gw"),x=g?g.scrollLeft:0,TW=[...document.querySelectorAll("#view .tw")].map(e=>[e.scrollTop,e.scrollLeft]);f();scrollTo(0,y);const g2=document.getElementById("gw");if(g2)g2.scrollLeft=x;
+  /* giữ vị trí cuộn trong các bảng có khung cuộn riêng khi vẽ lại (bấm Trọn gói / Tách không nhảy lên đầu bảng) */
+  const T2=[...document.querySelectorAll("#view .tw")];if(T2.length===TW.length)T2.forEach((e,i)=>{if(TW[i][0])e.scrollTop=TW[i][0];if(TW[i][1])e.scrollLeft=TW[i][1]})};
 view.addEventListener("click",e=>{const r=e.target.closest("#repro");if(!r||!cur)return;if(r.dataset.ok){gSave();propose(cur);persist();keep(route)}else{r.dataset.ok=1;r.textContent="Bấm lần nữa để đề xuất lại";r.style.color="#C0141B"}});
 /* ===== Đối chiếu file giá gốc với BOQ hợp đồng ===== */
 let ggP=null;
@@ -4640,10 +4642,12 @@ document.addEventListener("click",e=>{const r=e.target.closest("tr[data-ptk]");i
   const c=document.getElementById("ptc");if(!c)return;const tw=c.querySelector(".tw"),y=tw?tw.scrollTop:0,w=document.createElement("div");w.innerHTML=ptView(p);c.replaceWith(w.querySelector("#ptc"));const t2=document.querySelector("#ptc .tw");if(t2)t2.scrollTop=y});
 
 document.addEventListener("toggle",e=>{if(e.target.matches&&e.target.matches("details[data-gtmdo]"))GT.mdo=e.target.open},true);
+/* Vẽ lại bảng giao thầu tại chỗ, giữ vị trí cuộn của bảng và trang (bấm Trọn gói / Tách không nhảy lên đầu) */
+function gtRe(p){const c=document.getElementById("gtc");if(!c)return;const y=scrollY,S=[...c.querySelectorAll(".tw")].map(e=>[e.scrollTop,e.scrollLeft]);const w=document.createElement("div");w.innerHTML=gtView(p);const n=w.querySelector("#gtc");c.replaceWith(n);const T=[...n.querySelectorAll(".tw")];if(T.length===S.length)T.forEach((e,i)=>{e.scrollTop=S[i][0];e.scrollLeft=S[i][1]});scrollTo(0,y)}
 document.addEventListener("click",e=>{const b=e.target.closest("button[data-gtmd]");if(!b||b.disabled)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const id=b.dataset.gtmd,m=b.dataset.m,md={...((p.pk||{}).md||{})};
-  if(m===pkMdDef(id))delete md[id];else md[id]=m;p.pk={...(p.pk||{}),md};if(cur!==p)cur.pk=p.pk;GT.mdo=true;persist();const c=document.getElementById("gtc");if(c){const w=document.createElement("div");w.innerHTML=gtView(p);c.replaceWith(w.querySelector("#gtc"))}});
+  if(m===pkMdDef(id))delete md[id];else md[id]=m;p.pk={...(p.pk||{}),md};if(cur!==p)cur.pk=p.pk;GT.mdo=true;persist();gtRe(p)});
 document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("input[data-pkms]"))return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const v=parseVN(t.value);
-  if(v==null||v<0||v>100){t.value=fm((p.pk||{}).ms!=null?p.pk.ms:PKMS,0);return}p.pk={...(p.pk||{}),ms:v};if(cur!==p)cur.pk=p.pk;persist();const c=document.getElementById("gtc");if(c){const w=document.createElement("div");w.innerHTML=gtView(p);c.replaceWith(w.querySelector("#gtc"))}});
+  if(v==null||v<0||v>100){t.value=fm((p.pk||{}).ms!=null?p.pk.ms:PKMS,0);return}p.pk={...(p.pk||{}),ms:v};if(cur!==p)cur.pk=p.pk;persist();gtRe(p)});
 /* ---------- Ô tìm kiếm đầu trang: tìm trong tab đang mở, mỗi tab nhớ từ khoá riêng ---------- */
 var TQ={};
 const tsKey=()=>{const h=(location.hash||"#tong-quan").slice(1),m=h.match(/^(da-[^-]+-[^-]+)/);return m?m[1]:h};
@@ -4654,7 +4658,7 @@ function tsDom(v){const W=BOQ.nz(v||"").split(/\s+/).filter(Boolean);let n=0,t=0
 function tsSync(){const q=document.getElementById("q");if(!q)return;const k=tsKey(),v=TQ[k]||"";q.placeholder="Tìm trong "+tsName();if(q.value!==v)q.value=v;
   if(/-goi$/.test(k))GT.q=v;else if(v)tsDom(v)}
 {let tm=null;document.addEventListener("input",e=>{if(e.target.id!=="q")return;const k=tsKey(),v=e.target.value;TQ[k]=v;clearTimeout(tm);
-  tm=setTimeout(()=>{if(/-goi$/.test(k)){GT.q=v;const p=cur&&DB.projects.find(x=>x.id===cur.id),c=document.getElementById("gtc");if(p&&c){const w=document.createElement("div");w.innerHTML=gtView(p);c.replaceWith(w.querySelector("#gtc"))}}else tsDom(v)},200)})}
+  tm=setTimeout(()=>{if(/-goi$/.test(k)){GT.q=v;const p=cur&&DB.projects.find(x=>x.id===cur.id),c=document.getElementById("gtc");if(p&&c)gtRe(p)}else tsDom(v)},200)})}
 
 /* ---------- Xem như người dùng khác (Admin, Ban giám đốc): kiểm tra menu, quyền, nút của từng vai trò hoặc từng tài khoản ----------
    Chỉ đổi cách hiển thị trên máy này; mọi lệnh ghi bị chặn (xem roClient); thoát ra tải lại số liệu thật. Không đăng nhập thay ai. */
