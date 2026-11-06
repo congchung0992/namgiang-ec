@@ -88,3 +88,23 @@ update public.workflows set steps = (select jsonb_agg(case
     when s->>'role' = 'qs' then jsonb_set(jsonb_set(s, '{role}', '"gd"'), '{name}', '"GDDA - QS tổng duyệt"')
     when s->>'role' = 'board' and s->>'name' = 'Giám đốc phê duyệt' then jsonb_set(s, '{name}', '"Tổng giám đốc phê duyệt"')
     else s end order by i) from jsonb_array_elements(steps) with ordinality as t(s, i));
+
+-- Bổ sung vai trò Admin (quản trị hệ thống): quyền như Ban giám đốc (is_board), hiển thị riêng
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles add constraint profiles_role_check check (role is null or role in ('admin','tgd','gd','kt','ktvt','hcns'));
+create or replace function public.set_user_role(uid uuid, r text)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.is_board() then raise exception 'Khong co quyen' using errcode = '42501'; end if;
+  r := nullif(btrim(coalesce(r, '')), '');
+  if r is not null and r not in ('admin','tgd','gd','kt','ktvt','hcns') then raise exception 'bad_role'; end if;
+  if uid = auth.uid() and coalesce(r, '') not in ('tgd','admin') then raise exception 'Khong the tu bo quyen cua chinh minh'; end if;
+  update public.profiles set role = r, is_board = (r in ('tgd','admin')) where id = uid;
+end $$;
+create or replace function public.set_board(uid uuid, val boolean)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.is_board() then raise exception 'Khong co quyen' using errcode = '42501'; end if;
+  if uid = auth.uid() and not val then raise exception 'Khong the tu bo quyen cua chinh minh'; end if;
+  update public.profiles set is_board = val, role = case when val and coalesce(role,'') not in ('tgd','admin') then 'tgd' when not val and role in ('tgd','admin') then null else role end where id = uid;
+end $$;
