@@ -48,7 +48,9 @@ body.sfull .top,body.sfull .phd,body.sfull .sheets,body.sfull .note{display:none
 body.sfull #view{padding-top:0}body.sfull main{padding-top:6px!important}
 body.sfull .sgsub{position:sticky;top:0;z-index:30;padding:4px 240px 4px 4px;margin:0 0 6px;background:rgba(236,236,238,.92);backdrop-filter:blur(6px)}
 #sfx{display:none;position:fixed;top:8px;right:16px;z-index:45;border:0;border-radius:999px;padding:8px 14px;background:#fff;color:#0A2486;font:600 12px/1 Arial,sans-serif;box-shadow:0 6px 18px -8px rgba(16,24,64,.45);cursor:pointer}
-body.sfull:not(.edmode) #sfx{display:block}
+body.sfull:not(.edmode) #sfx{display:none}
+.sfx2{display:none;margin-left:auto;align-self:center;border:0;border-radius:999px;padding:7px 14px;background:#E1141B;color:#fff;font:600 12px/1 Arial,sans-serif;box-shadow:0 6px 16px -8px rgba(225,20,27,.7);cursor:pointer}.sfx2:hover{background:#C0111A}body.sfull .sfx2{display:inline-flex}
+body.sfull .sgsub{padding-right:4px!important}
 body.edmode .top,body.edmode .phd,body.edmode .sheets,body.edmode .sgsub,body.edmode .note{display:none!important}
 body.edmode #view>*:not(:has(.edfull)):not(.edfull),body.edmode .vgrid>*:not(:has(.edfull)):not(.edfull),body.edmode :has(>.edfull)>*:not(.edfull){display:none!important}
 body.edmode .edfull{grid-column:1/-1;margin:0 0 96px;border-radius:20px}body.edmode #view{padding-top:8px}
@@ -566,6 +568,7 @@ table.bt{min-width:1180px}
 .back.sm{min-height:32px}.back{white-space:nowrap}
 .back:hover{background:#E1E7FA;color:#0A2486}
 .back[data-tone="view"]{background:#E8F0FF;color:#1D4ED8;box-shadow:inset 0 0 0 1px rgba(29,78,216,.18)}.back[data-tone="view"]:hover{background:#D7E5FF}
+button[data-gtx],button[data-ntx],button[data-pyx],button[data-bqsx],[data-tone="xl"]{background:#1D7A45!important;color:#fff!important;box-shadow:0 6px 14px -8px rgba(29,122,69,.7)!important}button[data-gtx]:hover,button[data-ntx]:hover,button[data-pyx]:hover,button[data-bqsx]:hover{background:#166437!important}
 .back[data-tone="save"]{background:#E5F6EC;color:#0E7A3F;box-shadow:inset 0 0 0 1px rgba(18,161,80,.22)}.back[data-tone="save"]:hover{background:#D3EFDF}
 .back[data-tone="edit"]{background:#FFF1E2;color:#B45309;box-shadow:inset 0 0 0 1px rgba(240,138,36,.25)}.back[data-tone="edit"]:hover{background:#FFE5CA}
 .back[data-tone="danger"]{background:#FDECEC;color:#C0141B;box-shadow:inset 0 0 0 1px rgba(225,20,27,.2)}.back[data-tone="danger"]:hover{background:#FADADB}
@@ -597,6 +600,8 @@ table.bt{min-width:1560px}table.hmt{min-width:1000px}
 @media (max-width:760px){.bks{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* Bảng: viền ngang, viền dọc, tiêu đề có màu */
 table.t{border:1px solid #AEB6CB;border-radius:14px;overflow:clip;background:rgba(255,255,255,.55)}
+/* Tiêu đề bảng dính khi cuộn vẫn giữ viền trên (viền bảng cuộn mất nên vẽ viền trên bằng bóng của chính ô tiêu đề) */
+table.t:has(> thead){border-top:0}table.t > thead > tr:first-child > th{box-shadow:inset 0 1px 0 #AEB6CB}table.t > thead > tr:first-child > th:first-child{border-top-left-radius:14px}table.t > thead > tr:first-child > th:last-child{border-top-right-radius:14px}
 .t th,.t td{border-bottom:1px solid #C3C9D8;border-right:1px solid #C3C9D8}
 .t th:last-child,.t td:last-child{border-right:0}
 .t thead th{background:#E3E8FB;color:#0A2486;font-weight:600;font-size:15px;text-align:center!important;vertical-align:middle;padding:10px;border-bottom:1px solid #A9B6E6;border-right-color:#B7C2EC;white-space:nowrap}
@@ -2915,7 +2920,7 @@ function projView(p,s,sub){const b=p.boq?DB.projects.find(x=>x.id===p.id):null,L
     <div class="phx">${meta.map(x=>x[0]==="📍"?`<a class="gloc" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(x[1])}" target="_blank" rel="noopener" title="Mở vị trí trên Google Maps · ${esc(x[1])}">${GPIN0}<b>${esc(x[1])}</b></a>`:`<span title="${esc(x[1])}">${esc(x[0])+": "}<b>${esc(x[1])}</b></span>`).join("")}</div></div></div>
   ${b?(()=>{const has=k=>L.some(x=>x[0]===k),G=SGRP.map(g=>[g[0],g[1],g[2].filter(has)]).filter(g=>g[2].length),cg=G.find(g=>g[2].includes(s)),go=k=>"da-"+p.id+(k==="home"?"":"-"+k),nm=k=>(L.find(x=>x[0]===k)||[0,k])[1];
     return`<div class="sheets grp" role="tablist">${G.map(g=>pill(g[0],g[1],go(g[0]===(cg&&cg[0])?s:(SGL[g[0]]&&g[2].includes(SGL[g[0]])?SGL[g[0]]:g[2][0])),g===cg)).join("")}</div>
-    ${cg&&cg[2].length>1?`<div class="sgsub" role="tablist">${cg[2].map(k=>`<button class="sgt${k===s?" on":""}" data-go="${go(k)}" style="${sv(k)}">${esc(nm(k))}</button>`).join("")}</div>`:""}`})():`<div class="sheets" role="tablist">${L.map(x=>pill(x[0],x[1],"da-"+p.id+(x[0]==="home"?"":"-"+x[0]),x[0]===s)).join("")}</div>`}
+    ${cg&&cg[2].length>1?`<div class="sgsub" role="tablist">${cg[2].map(k=>`<button class="sgt${k===s?" on":""}" data-go="${go(k)}" style="${sv(k)}">${esc(nm(k))}</button>`).join("")}<button type="button" class="sfx2" data-sfx>✕ Thoát toàn màn hình (Esc)</button></div>`:""}`})():`<div class="sheets" role="tablist">${L.map(x=>pill(x[0],x[1],"da-"+p.id+(x[0]==="home"?"":"-"+x[0]),x[0]===s)).join("")}</div>`}
   ${b?(SGRP.forEach(g=>{if(g[2].includes(s))SGL[g[0]]=s}),bsheet(b,s,sub)):sheet(p,s)}`}
 /* Nhóm sheet ở thanh bên (anh chốt 06/11/2026): 6 nhóm, bấm nhóm mở sheet xem gần nhất của nhóm; trong nhóm chọn sheet ở hàng tab trên nội dung */
 const SGRP=[["home","Tổng quan",["home"]],["files","Hồ sơ",["files","lk"]],["goi","Giá vốn & giao thầu",["boq","goi","kh","bg"]],["rev","Doanh thu – CĐT",["rev","nt","cl","dc"]],["cost","Chi phí – NTP/NCC",["cost","pyc","tt","mat"]],["prog","Hiện trường",["prog","week","bcn","hr"]]],SGL={};
@@ -4867,7 +4872,7 @@ view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.targe
 
 /* Bấm thẻ con của nhóm sheet (BOQ & Giá vốn, Phân tách gói thầu…) thì mở toàn màn hình, Esc hoặc nút góc phải để thoát (anh chốt 06/11/2026) */
 (()=>{const x=document.createElement("button");x.id="sfx";x.type="button";x.textContent="✕ Thoát toàn màn hình (Esc)";document.body.appendChild(x);
-  const off=()=>document.body.classList.remove("sfull");x.addEventListener("click",off);
+  const off=()=>document.body.classList.remove("sfull");x.addEventListener("click",off);document.addEventListener("click",e=>{if(e.target.closest("[data-sfx]"))off()});
   document.addEventListener("click",e=>{if(e.target.closest(".sgsub .sgt")){document.body.classList.add("sfull");scrollTo(0,0)}},true);
   addEventListener("keydown",e=>{if(e.key!=="Escape"||!document.body.classList.contains("sfull")||document.body.classList.contains("edmode"))return;if(document.getElementById("fview")||document.getElementById("lkp"))return;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){a.blur();return}off()});
   addEventListener("hashchange",()=>{if(!/^#da-/.test(location.hash)||!document.querySelector(".sgsub"))off()})})();
