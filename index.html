@@ -105,7 +105,10 @@ input[type="date"]::-webkit-calendar-picker-indicator{display:none}
 .frow:hover{background:#F3F5FC}.frow[aria-current="true"]{background:linear-gradient(135deg,#0A2486,#4E6BFF);color:#fff;box-shadow:0 8px 18px -10px rgba(10,36,134,.7)}
 .frow[aria-current="true"] svg,.frow[aria-current="true"] .frn b,.frow[aria-current="true"] .chv{color:#fff}.frow[aria-current="true"] .fcn{background:#fff;color:#0A2486}
 .fchf{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:-8px -8px 6px;padding:12px 14px;background:#FAFBFE}
-.fchf b{display:block;font-size:15px;color:var(--ink)}.fchf small{display:block;font-weight:400;color:var(--muted);margin-top:2px;font-size:15px}
+.fchf b{display:block;font-size:15px;font-weight:600;letter-spacing:normal;color:var(--ink)}
+.fchf small{letter-spacing:normal}
+/* Máy tính kéo thả để chuyển file nên ẩn nút Chuyển; điện thoại không kéo thả được thì vẫn giữ nút */
+@media(min-width:761px){button[data-fmv]{display:none!important}}.fchf small{display:block;font-weight:400;color:var(--muted);margin-top:2px;font-size:15px}
 .ffile{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px}.ffile:hover{background:#F6F7FB}
 .fty{flex:none;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;background:var(--c)}
 .ffn{flex:1;min-width:0}.ffn b{display:block;font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ffn small{font-size:13px;color:var(--muted)}
