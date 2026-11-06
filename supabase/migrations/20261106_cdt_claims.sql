@@ -22,3 +22,6 @@ create policy claims_update on public.cdt_claims for update to authenticated usi
 create policy claims_delete on public.cdt_claims for delete to authenticated using (public.can_claim(project_id));
 create or replace function public.cdt_claims_touch() returns trigger language plpgsql set search_path to '' as $$ begin new.updated_at = now(); return new; end $$;
 create trigger cdt_claims_touch before update on public.cdt_claims for each row execute function public.cdt_claims_touch();
+
+-- Đổi tên file theo chuẩn (nút "Đổi tên file theo chuẩn" ở thư mục 05.2): cho GĐ dự án, QS, Kế toán tổng hợp, Ban giám đốc sửa tên file
+create policy files_update on public.project_files for update to authenticated using (public.has_role(project_id, array['gd','qs','kt'])) with check (public.has_role(project_id, array['gd','qs','kt']));

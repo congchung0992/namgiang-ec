@@ -253,6 +253,22 @@ async function remove(api, tok, id) {
   return json({ ok: true, trashed: t.ok });
 }
 
+// Đổi tên file (tên chuẩn hợp đồng…): kiểm quyền sửa ở bảng project_files trước (RLS), rồi đổi tên trên Drive; Drive lỗi thì trả lại tên cũ
+async function rename(api, tok, id, name) {
+  name = cleanName(name);
+  if (!id || !name) return json({ error: "bad_request" }, 400);
+  const r0 = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=name,drive_id`);
+  if (r0.status === 401) return json({ error: "auth" }, 401);
+  const old = r0.ok ? (await r0.json())[0] : null;
+  if (!old) return json({ error: "not_found" }, 404);
+  const r = await api(`project_files?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify({ name }) });
+  const row = r.ok ? (await r.json())[0] : null;
+  if (!row) return json({ error: "forbidden" }, 403);
+  const g = await fetch(`${G}/drive/v3/files/${encodeURIComponent(old.drive_id)}?fields=id`, { method: "PATCH", headers: { authorization: "Bearer " + await tok(), "content-type": "application/json" }, body: JSON.stringify({ name }) });
+  if (!g.ok) { await api(`project_files?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ name: old.name }) }); throw new Error("google_rename_" + g.status); }
+  return json({ ok: true, name, old: old.name });
+}
+
 export async function onRequest({ request, env }) {
   const url = new URL(request.url), action = url.searchParams.get("action") || "";
   const connected = !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN);
@@ -273,6 +289,7 @@ export async function onRequest({ request, env }) {
     if (action === "upload" && request.method === "POST") return await upload(request, api, tok, url);
     if (action === "download" && request.method === "GET") return await download(api, tok, url.searchParams.get("id") || "");
     if (action === "office" && request.method === "GET") return await officeLink(env, api, url, url.searchParams.get("id") || "");
+    if (action === "rename" && request.method === "POST") { const b = await request.json().catch(() => ({})); return await rename(api, tok, String(b.id || ""), String(b.name || "")); }
     if (action === "delete" && request.method === "DELETE") return await remove(api, tok, url.searchParams.get("id") || "");
     return json({ error: "bad_request" }, 400);
   } catch (e) {
