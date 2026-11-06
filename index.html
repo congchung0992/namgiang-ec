@@ -35,6 +35,7 @@
 .qt2 [data-vb]{border-left:2px solid #C9CCD8!important}.qt2 th.hg-c[data-v]{border-left:2px solid #fff}
 .pkt .pkn{min-width:200px;font-weight:600;padding:5px 8px;margin-bottom:2px}.pkt .sel{min-width:150px;max-width:200px;padding:5px 8px}.pkt .pkmv{min-width:140px;font-size:13px;color:var(--muted)}
 .bch{display:flex;gap:16px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 16px;background:#fff}.bch img{height:58px}.bch>div{display:flex;flex-direction:column;gap:2px;font-size:15px}.bch>div>b{font-size:22px;letter-spacing:.02em}
+.gtmd{margin-top:12px;border:1px solid #C3C9D8;border-radius:18px;padding:10px 14px;background:#F7F8FC}.gtmd summary{cursor:pointer;font-size:15px}.gtmd h4{margin:12px 0 6px}.gtmg{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:8px}.gtmr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:1px solid #C3C9D8;border-radius:14px;background:#fff}.gtmr .spec{display:block}.gtsg{display:flex;gap:4px;flex:none}.gtsg .lkfb{margin:0}.gtmd>.sub{display:block;margin-top:8px}
 .fi.req{border-color:#E1141B!important;background:#FFF5F5}
 .bcbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:12px}.bcbar label{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--muted)}.bcbar .fi{width:auto;min-width:150px;padding:7px 10px}.bcbar #bcsave{margin-left:auto}
 .bc2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.bc2{grid-template-columns:1fr}}
@@ -2114,18 +2115,18 @@ const PKMS=50;
 function pkBuild(p){const O=p.pk||{},MV=O.mv||{},NM=O.nm||{},G={v:new Map(),n:new Map()};
   p.hms.forEach(h=>h.lines.forEach(l=>{const q=l.qty||0;if(!q||!l.code)return;const cc=lineCost(p,l);let uv=l.uVL!=null?l.uVL:l.vl!=null?l.vl/q:null,un=l.uNC!=null?l.uNC:l.nc!=null?l.nc/q:null;
     /* Dòng BOQ chỉ có thành tiền (không chia vật liệu, nhân công): giao thầu phụ trọn gói theo hạng mục */
-    const tron=uv==null&&un==null,wh=pkWhole(h,l);const parts=tron||wh?[["n",(l.total||0)/q,(cc.v||0)+(cc.n||0)]]:[["v",uv||0,cc.v],["n",un||0,cc.n]];
+    const tron=uv==null&&un==null,wh=pkWhole(h,l),hs0=!wh&&pkSid(h,l),hs=hs0&&pkMd(p,hs0)==="tron"?hs0:null;const parts=tron||wh?[["n",(l.total||0)/q,(cc.v||0)+(cc.n||0)]]:[["v",uv||0,cc.v],["n",un||0,cc.n]];
     parts.forEach(([t,cu,gv])=>{if(!(cu>0||gv>0))return;let key,name;
       if(MV[l.code+"|"+t]){key=MV[l.code+"|"+t];name=key.split("|").slice(1).join("|")}
-      else{name=wh||pkAuto(h,l,t,tron);key=t+":"+name}
+      else{name=hs?hs+PKLD:wh||pkAuto(h,l,t,tron);key=t+":"+name}
       const put=(key,name,cu,gv,pt)=>{const M=G[t];if(!M.has(key))M.set(key,{key,t,name:NM[key]||name,auto:name,lines:[],units:new Set(),kl:0,tg:0,tb:0});const g=M.get(key);
         g.lines.push({c:l.code,l,h,q,cu,gv,pt,bv:wh&&!tron?((uv||0)/(((uv||0)+(un||0))||1)):null});g.units.add(pt?pt.unit:(l.unit||""));g.kl+=pt?pt.dm*q:q;g.tg+=gv;g.tb+=cu*q};
       /* Vật tư của công tác tổng hợp (xây, trát, láng, lát, ốp, sơn): tách gạch, xi măng, cát, sơn theo định mức, giá trị chia theo giá tham khảo */
       /* "Thép và bản mã đầu cọc, mũi cọc": mũi cọc do nhà thầu cọc làm (vật tư theo gói Cọc bê tông, nhân công theo gói Ép cọc); bản mã đầu cọc tổng thầu mua thép + tổ đội hàn. BOQ không tách khối lượng: chia theo tỷ lệ mũi cọc (sửa được, mặc định PKMS%) */
-      if(!tron&&!wh&&!MV[l.code+"|"+t]&&/ban ma/.test(BOQ.nz(l.name))&&/mui coc/.test(BOQ.nz(l.name))){const sm=Math.min(100,Math.max(0,O.ms!=null?O.ms:PKMS))/100;
+      if(!tron&&!wh&&!hs&&!MV[l.code+"|"+t]&&/ban ma/.test(BOQ.nz(l.name))&&/mui coc/.test(BOQ.nz(l.name))){const sm=Math.min(100,Math.max(0,O.ms!=null?O.ms:PKMS))/100;
         [[sm,"mui"],[1-sm,"bm"]].forEach(([sh,k])=>{if(sh<=0)return;const nm=t==="v"?(k==="mui"?"Cọc bê tông":"Thép bản mã đầu cọc"):(k==="mui"?"Ép cọc, khoan cọc":"Hàn bản mã đầu cọc");
           put(t+":"+nm,nm,cu*sh,(gv||0)*sh,{k:"mb:"+k,name:k==="mui"?"Thép mũi cọc":"Thép bản mã đầu cọc",unit:l.unit||"Tấn",goi:nm,dm:sh,code:["chiếm "+fm(sh*100,0)+"% khối lượng dòng BOQ"+(O.ms!=null?"":" (giả định)")],ratio:1})});return}
-      const C=t==="v"&&!tron&&!wh&&!MV[l.code+"|v"]?ptSplit(l):null;
+      const C=t==="v"&&!tron&&!wh&&!hs&&!MV[l.code+"|v"]?ptSplit(l):null;
       if(C)C.forEach(c=>put("v:"+c.goi,c.goi,cu*c.sh,(gv||0)*c.sh,c));else put(key,name,cu,gv,null)})}));
   const S=["v","n"].map(t=>[...G[t].values()].sort((a,b)=>b.tg-a.tg));
   S.forEach(L=>L.forEach(g=>{g.unit=g.units.size===1?[...g.units][0]:"";g.lines.sort((a,b)=>a.c.localeCompare(b.c,"vi",{numeric:true}))}));return{v:S[0],n:S[1]}}
@@ -2135,15 +2136,32 @@ function pkBuild(p){const O=p.pk||{},MV=O.mv||{},NM=O.nm||{},G={v:new Map(),n:ne
 /* Quy tắc anh chốt từ gói cọc (06/11/2026): gói giao thầu theo ĐƠN VỊ THỰC NHẬN VIỆC. Hạng mục mà nhà thầu chuyên ngành vừa cấp vật tư vừa thi công thì gộp vật tư + thi công
    thành một gói; tổng thầu tự mua vật tư + tổ đội làm (bê tông, cốt thép, cốp pha, xây, trát, ốp lát, sơn, đào đắp, cơ điện) thì để riêng. Gói chỉ có 1 phần thì giữ nguyên.
    Bỏ gộp một gói mặc định: p.pk.gp[tên]=null */
-const PKCN=" · cung cấp + thi công",PKGP={"Cọc bê tông · cung cấp + ép cọc":["v:Cọc bê tông","n:Ép cọc, khoan cọc"],"Cọc tre · cung cấp + đóng cọc":["v:Cọc tre","n:Máy thi công · đóng cọc"],
-  "Kết cấu thép · gia công + lắp dựng":["v:Kết cấu thép gia công","v:Tôn sàn deck, đinh chống cắt","n:Kết cấu thép"],"Mái, bao che · cung cấp + lợp":["v:Tôn lợp, bao che","n:Lợp mái, bao che"],
-  ["Trần, vách thạch cao"+PKCN]:["v:Trần, vách thạch cao","n:Trần, vách"],["Chống thấm"+PKCN]:["v:Vật liệu chống thấm","n:Chống thấm"]};
-["Cửa nhôm kính, vách kính","Cửa cuốn","Cửa thép chống cháy","Cửa đi, cửa sổ khác (gỗ, nhựa…)","Sàn tăng cứng","Cây xanh, cỏ","Hàng rào","Cổng tự động","Vách vệ sinh compact, bàn đá lavabo","Biển hiệu, chữ"].forEach(n=>PKGP[n+PKCN]=["v:"+n,"n:"+n]);
-function pkList(p,P){P=P||pkBuild(p);const A=[...P.v,...P.n],TG={};A.forEach(g=>{const m=g.key.match(/^n:(?:MMTB )?[Tt]rọn gói · (.+)$/);if(m)(TG[m[1]+" · trọn gói (thiết bị + thi công)"]=TG[m[1]+" · trọn gói (thiết bị + thi công)"]||[]).push(g.key)});
-  const GP={...PKGP,...TG,...((p.pk||{}).gp||{})},used=new Set(),M=[];
+const PKCN=" · cung cấp + thi công",PKLD=" · cung cấp + lắp đặt";
+/* Phạm vi giao thầu (anh chốt 06/11/2026): mỗi phạm vi chọn "Trọn gói" (một đơn vị cung cấp + thi công, gộp các gói vật tư, nhân công thành một gói) hoặc "Tách" (vật tư, nhân công giao riêng).
+   Chọn trên sheet Phân tách gói thầu, lưu p.pk.md {phạm vi: "tron"|"tach"}. Xây dựng: [phạm vi, các gói gộp khi trọn gói, mặc định]; cơ điện: theo hệ của hạng mục (pkSid) */
+const PKSC=[["Cọc bê tông · cung cấp + ép cọc",["v:Cọc bê tông","n:Ép cọc, khoan cọc"],"tron"],["Cọc tre · cung cấp + đóng cọc",["v:Cọc tre","n:Máy thi công · đóng cọc"],"tron"],
+  ["Thép bản mã đầu cọc · cung cấp + hàn",["v:Thép bản mã đầu cọc","n:Hàn bản mã đầu cọc"],"tach"],["Đào, đắp, san lấp"+PKCN,["v:Cát, đá, đất san lấp","n:Đào, đắp, san lấp"],"tach"],
+  ["Bê tông"+PKCN,["v:Bê tông thương phẩm","n:Bê tông"],"tach"],["Cốt thép"+PKCN,["v:Thép cốt bê tông","n:Cốt thép"],"tach"],["Cốp pha"+PKCN,["v:Cốp pha (vật tư)","n:Cốp pha"],"tach"],
+  ["Kết cấu thép · gia công + lắp dựng",["v:Kết cấu thép gia công","v:Tôn sàn deck, đinh chống cắt","n:Kết cấu thép"],"tron"],["Mái, bao che · cung cấp + lợp",["v:Tôn lợp, bao che","n:Lợp mái, bao che"],"tron"],
+  ["Ốp lát"+PKCN,["v:Gạch ốp lát","v:Đá ốp lát","n:Ốp lát"],"tach"],["Sơn"+PKCN,["v:Sơn","n:Sơn, bả"],"tach"],
+  ["Trần, vách thạch cao"+PKCN,["v:Trần, vách thạch cao","n:Trần, vách"],"tron"],["Chống thấm"+PKCN,["v:Vật liệu chống thấm","n:Chống thấm"],"tron"],
+  ...["Cửa nhôm kính, vách kính","Cửa cuốn","Cửa thép chống cháy","Cửa đi, cửa sổ khác (gỗ, nhựa…)","Sàn tăng cứng","Cây xanh, cỏ","Hàng rào","Cổng tự động","Vách vệ sinh compact, bàn đá lavabo","Biển hiệu, chữ"].map(n=>[n+PKCN,["v:"+n,"n:"+n],"tron"])];
+const PKMTC=/^(chi phi |van chuyen )?(robot|may phat|xe (cau|nang|lu|xuc)|cau truc|cau tu hanh|may (ep|cau|xuc|dao|lu|dam))/;
+/* Hệ cơ điện của một dòng BOQ: tên hệ theo hạng mục (PCCC, Điện, Nước, TBA…), tách riêng tăng áp hút khói và điện nhẹ; máy thi công không tính */
+function pkSid(h,l){if(!PKMEP(h)||/^B/i.test(h.code||"")||/^chi phi/.test(BOQ.nz(PKHN(h))))return null;const zn=BOQ.nz(l.name||"").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();if(PKMTC.test(zn))return null;const d=dmName(h,l);return PKHN(h)+(/Tăng áp|Điện nhẹ/.test(d)?" · "+d:"")}
+const pkMdDef=id=>{const x=PKSC.find(s=>s[0]===id);return x?x[2]:/^(dien|nuoc|pccc|cap|thoat|chieu sang|chong set)/.test(BOQ.nz(id))?"tach":"tron"};
+const pkMd=(p,id)=>(((p.pk||{}).md||{})[id])||pkMdDef(id);
+function pkList(p,P){P=P||pkBuild(p);const A=[...P.v,...P.n],GP={};PKSC.forEach(([id,ks])=>{if(pkMd(p,id)==="tron")GP[id]=ks});
+  A.forEach(g=>{if(g.key.endsWith(PKLD)){const n=g.key.slice(2);(GP[n]=GP[n]||[]).push(g.key)}});Object.assign(GP,(p.pk||{}).gp||{});const used=new Set(),M=[];
   Object.entries(GP).forEach(([name,ks])=>{const parts=(ks||[]).map(k=>A.find(g=>g.key===k)).filter(Boolean);if(parts.length<2||parts.some(g=>used.has(g.key)))return;parts.forEach(g=>used.add(g.key));
     M.push({key:"g:"+name,t:"g",name,auto:name,parts,lines:parts.flatMap(g=>g.lines.map(x=>({...x,t:g.t}))).sort((a,b)=>a.c.localeCompare(b.c,"vi",{numeric:true})||(a.t==="v"?0:1)-(b.t==="v"?0:1)),units:new Set(),unit:"",kl:0,tg:parts.reduce((a,g)=>a+g.tg,0),tb:parts.reduce((a,g)=>a+g.tb,0)})});
   return[...A.filter(g=>!used.has(g.key)),...M]}
+/* Danh sách phạm vi có trong dự án để chọn trọn gói / tách: giá trị BOQ, khoá khi gói liên quan đã có so sánh giá hoặc hợp đồng */
+function pkScopes(p){const P=pkBuild(p),A=[...P.v,...P.n],by=new Map(A.map(g=>[g.key,g])),S=[],SS=(PY.pid===p.id&&PY.list||[]).filter(y=>y.kind==="ssg"&&y.status!=="cancelled").map(y=>(y.data||{}).key),HK=(p.hdl||[]).flatMap(h=>h.pk.map(k=>k.key));
+  const lock=K=>HK.some(k=>K.includes(k))?"đã có hợp đồng":SS.some(k=>K.includes(k))?"đã có so sánh giá":"";
+  PKSC.forEach(([id,ks])=>{const pr=ks.map(k=>by.get(k)).filter(Boolean);if(!pr.some(g=>g.t==="v")||!pr.some(g=>g.t==="n"))return;S.push({id,k:"xd",n:id.split(" · ")[0],v:pr.reduce((a,g)=>a+g.tb,0),m:pkMd(p,id),lock:lock(["g:"+id,...ks])})});
+  const H=new Map();p.hms.forEach(h=>h.lines.forEach(l=>{if(!l.code||!l.qty)return;const id=pkSid(h,l);if(id)H.set(id,(H.get(id)||0)+(l.total||0))}));
+  [...H].sort((a,b)=>b[1]-a[1]).forEach(([id,v])=>S.push({id,k:"he",n:id,v,m:pkMd(p,id),lock:lock(["g:"+id+PKLD,"v:"+id+PKLD,"n:"+id+PKLD,"n:Lắp đặt · "+id])}));return S}
 const pkKeys=g=>g&&g.parts?[g.key,...g.parts.map(x=>x.key)]:g?[g.key]:[],pkHd=(p,g)=>{const K=pkKeys(g);return(p.hdl||[]).filter(h=>h.pk.some(k=>K.includes(k.key)))},PKTL={v:"Vật tư",n:"Thi công",g:"Cung cấp + thi công"};
 function pkOffers(p,g){return(p.quotes||[]).filter(q=>(g.t==="g"?["thau_phu","ncc","nhan_cong"]:PKT[g.t][2]).includes(q.kind)).map(q=>{let n=0,tn=0,tg=0;g.lines.forEach(x=>{const v=pkPrice(q,x.c,x.t||g.t,x.pt&&x.pt.k);if(v==null)return;n++;tn+=v*(x.pt&&x.pt.ratio?x.q*x.pt.dm:x.q);tg+=x.gv});return{q,n,tn,tg,full:n===g.lines.length}}).filter(o=>o.n)}
 function pkView(p){const P=pkBuild(p),sel=p.pksel||{},neg=v=>v<0?' style="color:#C0141B"':"",pc=(a,b)=>b?(a<0?"("+fm(-a/b*100,1)+"%)":fm(a/b*100,1)+"%"):"-";let all={tg:0,tb:0,tn:0,tgs:0};
@@ -4417,11 +4435,16 @@ function gtView(p){const {D,today}=gtRows(p),f=D.R.filter(o=>(!GT.st||o.s===GT.s
   const chip=(k,l,n,v,on,attr)=>`<button class="lkfb${on?" on":""}" ${attr}="${k}">${l} · ${n}${v!=null?` <small>${fm(v/1e9,2)} tỷ</small>`:""}</button>`,tb=v=>fm(v/1e9,2)+" tỷ";
   return`<div class="vgrid"><section class="card span3" id="gtc"><div class="bh"><div><h3>Danh mục gói thầu cần giao</h3><span class="sub">Mỗi đầu mục BOQ tách thành phần giao thầu; tiền chia 2 cột vật tư, nhân công đúng như BOQ; vật tư của xây, trát, láng, lát, ốp, sơn tách tiếp ra gạch, xi măng, cát, gạch ốp lát, sơn theo định mức TT 38/2026 PL VII kèm khối lượng cần mua, giá trị chia theo giá tham khảo, phần cùng loại gom thành một gói để một đơn vị chào cả gói · đầu mục xếp theo tiến độ thi công, công tác, gói trong đầu mục xếp theo tên A B C · bấm một đầu mục để xem từng công tác BOQ tách vật tư, MMTB, nhân công; bấm một công tác để xem phần tách ra (gạch, xi măng, cát, nhân công…); cuối mỗi đầu mục là phần cộng dồn theo gói để mua, so sánh giá · ngày cần và hạn lấy từ tiến độ (sheet Kế hoạch giao thầu)</span></div><button class="back sm" data-gtx>Xuất Excel</button></div>
     <div class="bqk"><span>Tổng <b class="num">${D.R.length}</b> gói · <b class="num">${tb(sum(D.R))}</b></span><span>Đã ký hợp đồng <b class="num">${done.length}</b> gói · <b class="num">${tb(sum(done))}</b></span><span>Còn phải giao <b class="num">${todo.length}</b> gói · <b class="num">${tb(sum(todo))}</b></span>${late.length?`<span style="color:var(--bad,#C62828)">Quá hạn so sánh giá <b class="num">${late.length}</b> gói</span>`:""}${soon.length?`<span>Hạn so sánh giá trong 14 ngày <b class="num">${soon.length}</b> gói</span>`:""}${D.loaded?"":`<span class="sub">Đang tải báo giá, hạn…</span>`}</div>
-    
+    ${gtMode(p)}
     ${GT.by==="dm"?`<div class="lkf" style="margin-top:12px"><span class="sub" style="align-self:center">Nhóm:</span><button class="lkfb" data-gtlv="1">1 · Đầu mục</button><button class="lkfb" data-gtlv="2">2 · Công tác</button><button class="lkfb" data-gtlv="3">3 · Phần tách (vật tư, nhân công)</button></div><div class="tw" style="margin-top:8px;max-height:75vh;overflow:auto"><table class="t bqs gtt gtdm"><thead><tr><th></th><th>STT</th><th>Đầu mục · công tác · phần giao</th><th>ĐVT</th><th>Khối lượng</th><th>Vật tư (đ)</th><th>Nhân công (đ)</th><th>Tổng (đ)</th><th>Gói giao thầu · tình hình</th><th>Hạn so sánh giá</th></tr></thead><tbody>${gtDm(p,D,today)||`<tr><td colspan="10" class="sub">Không có đầu mục, công tác hay gói nào khớp "${esc(GT.q)}".</td></tr>`}</tbody><tfoot><tr><td colspan="5">Tổng</td>${(()=>{const t={vt:0,mm:0,nc:0};D.R.forEach(o=>o.g.lines.forEach(x=>{const v=x.cu*x.q;if(x.bv!=null){t.vt+=v*x.bv;t.nc+=v*(1-x.bv)}else t[o.g.t==="v"?"vt":"nc"]+=v}));return["vt","nc"].map(k=>`<td class="r num">${n0(t[k])}</td>`).join("")})()}<td class="r num">${n0(sum(D.R))}</td><td colspan="2"></td></tr></tfoot></table></div>`:`<div class="lkf" style="margin-top:12px">${chip("","Tất cả trạng thái",D.R.filter(o=>!GT.ty||o.ty===GT.ty).length,sum(D.R.filter(o=>!GT.ty||o.ty===GT.ty)),!GT.st,"data-gtst")}${Object.keys(GTS).map(k=>chip(k,GTS[k][0],cnt(k).length,sum(cnt(k)),GT.st===k,"data-gtst")).join("")}</div>
     <div class="lkf" style="margin-top:6px">${chip("","Mọi loại",D.R.filter(o=>!GT.st||o.s===GT.st).length,null,!GT.ty,"data-gtty")}${Object.keys(GTYL).map(k=>chip(k,GTYL[k][0],cty(k).length,sum(cty(k)),GT.ty===k,"data-gtty")).join("")}</div>
     <div class="tw" style="margin-top:12px;max-height:70vh;overflow:auto"><table class="t bqs gtt"><thead><tr><th></th><th>Gói giao thầu</th><th>Thi công ở hạng mục</th><th>Giá trị BOQ (đ)</th><th>Báo giá đã có</th><th>Ngày cần</th><th>Hạn so sánh giá</th><th>So sánh giá</th><th>Trạng thái</th></tr></thead>
     <tbody>${rows||`<tr><td colspan="9" class="sub">Không có gói nào.</td></tr>`}</tbody><tfoot><tr><td colspan="3">${f.length} gói</td><td class="r num">${n0(sum(f))}</td><td colspan="5"></td></tr></tfoot></table></div>`}</section></div>`}
+/* Chọn cách giao thầu từng phạm vi: trọn gói (cung cấp + thi công) hoặc tách vật tư – nhân công; gói tự tạo lại theo lựa chọn */
+function gtMode(p){const S=pkScopes(p);if(!S.length)return"";const T=S.filter(s=>s.m==="tron").length,row=s=>`<div class="gtmr"><div><b>${esc(s.n)}</b><small class="spec">${fm(s.v/1e9,2)} tỷ${s.lock?" · "+s.lock+", không đổi được":""}</small></div><div class="gtsg">${[["tron","Trọn gói"],["tach","Tách VT – NC"]].map(([m,l])=>`<button class="lkfb${s.m===m?" on":""}" data-gtmd="${esc(s.id)}" data-m="${m}"${s.lock?" disabled":""}>${l}</button>`).join("")}</div></div>`;
+  return`<details class="gtmd" data-gtmdo${GT.mdo?" open":""}><summary><b>Cách giao thầu</b> · ${T} phạm vi giao trọn gói (một đơn vị cung cấp + thi công), ${S.length-T} phạm vi tách gói vật tư, gói nhân công riêng · bấm để chọn lại</summary>
+    <h4>Xây dựng</h4><div class="gtmg">${S.filter(s=>s.k==="xd").map(row).join("")}</div>${S.some(s=>s.k==="he")?`<h4>Cơ điện, PCCC, trạm (theo hệ)</h4><div class="gtmg">${S.filter(s=>s.k==="he").map(row).join("")}</div>`:""}
+    <span class="sub">Trọn gói: vật tư, thiết bị và thi công của phạm vi gộp thành một gói để một đơn vị chào giá, ký hợp đồng · Tách: vật tư gom theo loại (nhà cung cấp), nhân công theo tổ đội · máy thi công, thuê máy luôn giao riêng</span></details>`}
 async function gtExcel(p){await needXJ();const {D}=gtRows(p),wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Danh muc goi thau"),F="Times New Roman",BD={style:"thin",color:{argb:"FF999999"}},box={top:BD,left:BD,bottom:BD,right:BD};
   ws.columns=[{width:6},{width:40},{width:20},{width:18},{width:46},{width:12},{width:13},{width:13},{width:10},{width:40},{width:26}];
   ws.mergeCells("A1:K1");const t=ws.getCell("A1");t.value="DANH MỤC GÓI THẦU CẦN GIAO · "+(p.code||"")+" "+(p.name||"");t.font={name:F,size:14,bold:true,color:{argb:"FF0A2486"}};t.alignment={horizontal:"center"};
@@ -4480,6 +4503,9 @@ function ptView(p){const D=ptData(p);if(!D.L.length)return"";const vl=D.L.reduce
 document.addEventListener("click",e=>{const r=e.target.closest("tr[data-ptk]");if(!r)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const k=r.dataset.ptk;PT.open.has(k)?PT.open.delete(k):PT.open.add(k);
   const c=document.getElementById("ptc");if(!c)return;const tw=c.querySelector(".tw"),y=tw?tw.scrollTop:0,w=document.createElement("div");w.innerHTML=ptView(p);c.replaceWith(w.querySelector("#ptc"));const t2=document.querySelector("#ptc .tw");if(t2)t2.scrollTop=y});
 
+document.addEventListener("toggle",e=>{if(e.target.matches&&e.target.matches("details[data-gtmdo]"))GT.mdo=e.target.open},true);
+document.addEventListener("click",e=>{const b=e.target.closest("button[data-gtmd]");if(!b||b.disabled)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const id=b.dataset.gtmd,m=b.dataset.m,md={...((p.pk||{}).md||{})};
+  if(m===pkMdDef(id))delete md[id];else md[id]=m;p.pk={...(p.pk||{}),md};if(cur!==p)cur.pk=p.pk;GT.mdo=true;persist();const c=document.getElementById("gtc");if(c){const w=document.createElement("div");w.innerHTML=gtView(p);c.replaceWith(w.querySelector("#gtc"))}});
 document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("input[data-pkms]"))return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const v=parseVN(t.value);
   if(v==null||v<0||v>100){t.value=fm((p.pk||{}).ms!=null?p.pk.ms:PKMS,0);return}p.pk={...(p.pk||{}),ms:v};if(cur!==p)cur.pk=p.pk;persist();const c=document.getElementById("gtc");if(c){const w=document.createElement("div");w.innerHTML=gtView(p);c.replaceWith(w.querySelector("#gtc"))}});
 /* ---------- Ô tìm kiếm đầu trang: tìm trong tab đang mở, mỗi tab nhớ từ khoá riêng ---------- */
