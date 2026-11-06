@@ -157,9 +157,11 @@ async function dayFolder(api, tok, pid, folders, folder, sub) {
 }
 
 async function upload(request, api, tok, url) {
-  // folder có thể kèm thư mục ngày: "06.2/2026-10-31" (ảnh hiện trường xếp theo ngày chụp)
-  const [f0 = "", sub0 = ""] = (url.searchParams.get("folder") || "").split("/");
-  const pid = url.searchParams.get("project") || "", folder = OLD[f0] || f0, sub = /^\d{4}-\d{2}-\d{2}$/.test(sub0) ? sub0 : "", name = cleanName(url.searchParams.get("name"));
+  // folder có thể kèm thư mục con: thư mục ngày "06.2/2026-10-31" (ảnh hiện trường xếp theo ngày chụp)
+  // hoặc thư mục gói thầu trong 05.1 Báo giá: "05.1/Cọc bê tông · cung cấp + ép cọc" (báo giá tải từ sheet Báo giá)
+  const fp = url.searchParams.get("folder") || "", cut = fp.indexOf("/"), f0 = cut < 0 ? fp : fp.slice(0, cut), sub0 = cut < 0 ? "" : fp.slice(cut + 1).trim();
+  const pid = url.searchParams.get("project") || "", folder = OLD[f0] || f0, name = cleanName(url.searchParams.get("name"));
+  const sub = /^\d{4}-\d{2}-\d{2}$/.test(sub0) ? sub0 : folder === "05.1" && sub0 && sub0.length <= 100 && !/[\/\\\u0000-\u001f]/.test(sub0) ? sub0 : "";
   if (!pid || !FOLDERS[folder] || !name) return json({ error: "bad_request" }, 400);
   const size = Number(request.headers.get("content-length") || 0);
   if (!size) return json({ error: "empty" }, 400);
@@ -184,8 +186,11 @@ async function upload(request, api, tok, url) {
     method: "POST", headers: { prefer: "return=representation" },
     body: JSON.stringify({ project_id: pid, folder, name, drive_id: file.id, mime, size, ...(sub ? { sub } : {}) })
   });
-  if (!ins.ok) { await trash(accessToken, file.id); throw new Error("record_" + ins.status); }
-  const row = (await ins.json())[0];
+  let ok = ins;
+  // Cơ sở dữ liệu cũ chỉ nhận thư mục ngày: lưu bản ghi không kèm thư mục con (file trên Drive vẫn nằm trong thư mục gói)
+  if (!ok.ok && sub && !/^\d{4}-/.test(sub)) ok = await api("project_files", { method: "POST", headers: { prefer: "return=representation" }, body: JSON.stringify({ project_id: pid, folder, name, drive_id: file.id, mime, size }) });
+  if (!ok.ok) { await trash(accessToken, file.id); throw new Error("record_" + ok.status); }
+  const row = (await ok.json())[0];
   return json({ id: row.id, name: row.name, folder: row.folder, sub: row.sub || null });
 }
 
