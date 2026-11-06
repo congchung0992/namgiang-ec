@@ -124,3 +124,9 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 
 ## Quản trị · Bản chữ tài liệu (`#quan-tri-bc`)
 Thống kê mỗi dự án: tổng file, file không cần đọc (ảnh, bản vẽ), file văn bản, đã có bản chữ (kèm số bản scan đã chép nguyên văn), chờ tóm tắt, chờ chép scan, chưa tách, lỗi. Có danh sách file cần chú ý (nút Xử lý lại) và các đợt chạy máy chủ gần đây.
+
+## Phân quyền (từ 06/11/2026)
+- Vai trò toàn công ty (`profiles.role`, áp cho mọi dự án): Tổng giám đốc (`tgd`, trùng `is_board`), GDDA - QS tổng (`gd`), Kế toán tổng hợp (`kt`), Kế toán vật tư (`ktvt`), Hành chính nhân sự (`hcns`).
+- Mỗi công trường chỉ phân Chỉ huy trưởng (`project_members.role = 'cht'`).
+- `project_role(dự án)` = `cht` nếu được phân ở công trường đó, không thì vai trò công ty. HCNS xem dự án, tiến độ, hồ sơ; không xem giá vốn, phiếu tiền.
+- Đổi vai trò: Quản trị → Tài khoản & vai trò (RPC `set_user_role`). Migration `20261106_vai_tro_cong_ty.sql`.
