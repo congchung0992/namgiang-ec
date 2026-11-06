@@ -126,6 +126,7 @@ Quy tắc:
 - Số viết kiểu Việt Nam: dấu chấm phân cách nghìn, dấu phẩy thập phân (1.234.567,5 = 1234567.5). Ghi số thuần, không đơn vị tiền.
 - price_material = đơn giá vật tư, price_labor = đơn giá nhân công nếu báo giá tách riêng; price = đơn giá gộp nếu chỉ có một đơn giá. amount = thành tiền dòng.
 - Giữ nguyên tên, quy cách (mác, kích thước, xuất xứ), đơn vị như trong báo giá.
+- Một dòng có NHIỀU CỘT đơn giá theo phương án (ví dụ theo loại cát: cát vàng 100% / 50% cát vàng + 50% cát Trung Hà / cát Trung Hà + cát nghiền; hoặc bơm sàn / bơm cột vách): tách MỖI cột thành một dòng riêng, ghi phương án trong ngoặc ở cuối tên, ví dụ "Bê tông M300 (12±2) (cát vàng 100%)". Không dồn giá của cột khác vào ghi chú.
 - vat_included = true nếu đơn giá đã gồm VAT; vat_rate = thuế suất % nếu có.
 - kind: ncc = cung cấp vật tư/thiết bị; thau_phu = thầu phụ thi công trọn gói (vật tư + nhân công); nhan_cong = tổ đội, khoán nhân công.
 - payment_days = số ngày được trả chậm sau khi giao hàng/nghiệm thu; advance_percent = % tạm ứng; delivery_days = số ngày giao hàng kể từ khi đặt (ước lượng nếu ghi tuần).
@@ -170,7 +171,8 @@ const SYS_MATCH_LINES = `Bạn là QS của tổng thầu xây dựng. Có một
 Với MỖI dòng BOQ, chọn dòng báo giá cung cấp đúng vật tư hoặc nhân công cho dòng đó (trả về chỉ số i), hoặc i = -1 nếu báo giá không có.
 - Phải trùng loại và quy cách chính: mác bê tông (M100, M150, M200, M250, M300, M350… hoặc B15, B20…), đường kính và mác thép (D10, D16, CB300, CB400…), độ dày, kích thước, chủng loại. Khác mác hoặc quy cách thì KHÔNG chọn.
 - Một dòng báo giá được dùng cho nhiều dòng BOQ (ví dụ bê tông M300 cho móng, cột, dầm, sàn của mọi hạng mục).
-- Báo giá có nhiều lựa chọn cùng mác (ví dụ khác loại cát) thì chọn dòng thông dụng, rẻ hơn, trừ khi BOQ ghi rõ loại.
+- Cùng mác có nhiều phương án vật liệu (ví dụ loại cát): BOQ ghi rõ loại (ví dụ cát vàng) thì chọn đúng phương án đó; BOQ ghi "cát thường" hoặc không ghi loại thì chọn phương án RẺ NHẤT không phải cát vàng (cát Trung Hà, cát nghiền, cát nhân tạo…), để mọi nhà cung cấp được so trên cùng một chuẩn.
+- Đơn vị tính khác loại hẳn (m³ với cái, bộ, ca…) thì KHÔNG chọn.
 - goi_y là các chỉ số dòng báo giá gợi ý theo tên, chỉ để tham khảo.
 - factor = số đơn vị báo giá trong 1 đơn vị BOQ (kg → tấn: 1000; tấn → kg: 0.001; cùng đơn vị: 1).
 - confidence từ 0 đến 1. reason: một câu ngắn tiếng Việt.
