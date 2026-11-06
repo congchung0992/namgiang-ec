@@ -2055,7 +2055,9 @@ function pkPrice(q,c,t,k){for(const it of q.items||[]){for(const l of qL(it)){if
 const PKMEP=h=>/co dien|pccc/.test(BOQ.nz((h.grp||"")+" "+(h.part||"")))||/^(dien|nuoc|pccc|tba|tram|xlnt|thi cong pccc)/.test(BOQ.nz(h.name||""));
 const PKHN=h=>{let t=String(h.name||h.code).replace(/\(.*?\)/g,"").trim();const w=t.split(/\s+/);if(/^(thi cong|hang muc)$/.test(BOQ.nz(w.slice(0,2).join(" "))))t=w.slice(2).join(" ");return tcase(t).replace(/\b(pccc|tba|xlnt|nvp|tmb|cdt)\b/gi,x=>x.toUpperCase()).replace(/(\d)\s*kva\b/gi,"$1kVA").replace(/(\d)m3/gi,"$1m³")};
 /* Phân gói theo chuyên môn của đơn vị nhận thầu (ưu tiên trước cách gom theo nhóm BOQ): [mẫu tên, gói vật tư, gói nhân công] */
-const PKTR=[[/^(trong co|co nhat|cay xanh|dat mau)/,"Cây xanh, cỏ","Cây xanh, cỏ"],
+const PKTR=[[/^tuong xay|^xay\b/,"Gạch xây","Xây"],[/son gia da/,"Sơn","Sơn, bả"],[/gia co tran|khung (xuong )?tran|xuong tran/,"Trần, vách thạch cao","Trần, vách"],
+  [/son (sat )?thep|son chong gi|son ket cau/,"Kết cấu thép gia công","Kết cấu thép"],[/^chu (inox|noi|mica)|bien (hieu|ten|chu|bang)|\blogo\b/,"Biển hiệu, chữ","Biển hiệu, chữ"],
+  [/^(trong co|co nhat|cay xanh|dat mau)/,"Cây xanh, cỏ","Cây xanh, cỏ"],
   [/^(cat den|cat san lap|cat dap|cat lot|cap phoi|da dam|da hoc|dat dap|dat dam|dat (k|chon)|lap dat( dam chat)?$|lap dat,)/,"Cát, đá, đất san lấp","Đào, đắp, san lấp"],
   [/nilong|nilon|nylon/,"Vật tư phụ (nilon lót, keo chèn khe)","Bê tông"],[/^(cat mach|xoa nen|danh bong)/,"Vật tư phụ (nilon lót, keo chèn khe)","Bê tông"],
   [/hardener|tang cung/,"Sàn tăng cứng","Sàn tăng cứng"],[/gian giao/,"Giàn giáo (thuê)","Xây"],
@@ -2084,18 +2086,21 @@ function pkAuto(h,l,t,tron){const z=BOQ.nz((l.name||"")+" "+(l.spec||"")),zn=BOQ
   if(/\brobot\b|may ep coc|van chuyen (may|thiet bi) ep coc/.test(zn))return"Ép cọc, khoan cọc";/* vận chuyển, vận hành robot ép cọc thuộc gói ép cọc */
   if(tron)return(typeof BQ_MM!=="undefined"&&BQ_MM.test(zn)?"MMTB trọn gói · ":"Trọn gói · ")+PKHN(h);
   const mtc=/^(chi phi |van chuyen )?(robot|may phat|xe (cau|nang|lu|xuc)|cau truc|cau tu hanh|may (ep|cau|xuc|dao|lu|dam))/.test(zn);
-  if(mep&&t==="v"&&!mtc){const r=PKME.find(x=>x[0].test(zn));if(r)return r[1]}
+  const rn=String(l.name||"").toLowerCase().normalize("NFC").trim();/* BOQ.nz bỏ dấu nên "cấp"="cáp", "công tác"="công tắc": các loại dễ nhầm xét trên chữ có dấu */
+  if(mep&&t==="v"&&!mtc){const r=PKME.find(x=>x[0].test(zn)&&(x[1]!=="Thiết bị điện (công tắc, ổ cắm)"||/^(công tắc|ổ cắm)/.test(rn)));if(r)return r[1]}
   if(!mep&&!mtc){const k=pkTrade(h,l,t,zn);if(k&&!(t==="v"&&typeof BQ_MM!=="undefined"&&BQ_MM.test(zn)))return k}
   if(t==="n"){if(mtc)return"Máy thi công · vận chuyển, vận hành";if(mep){const d=dmName(h,l);return"Lắp đặt · "+PKHN(h)+(/Tăng áp|Điện nhẹ/.test(d)?" · "+d:"")}const w=PKW.find(r=>r[1].test(z));return w?w[0]:"Khác · "+tcase(l.g1||h.name)}
   if(typeof BQ_MM!=="undefined"&&BQ_MM.test(zn))return mtc?"Máy thi công":"MMTB · "+PKHN(h);
   if(/\bcoc\b|mui coc|ban ma dau coc/.test(z)&&!/coc (tiep dia|bao hieu|moc)|tiep dia/.test(z))return/\bcoc tre\b/.test(z)?"Cọc tre":"Cọc bê tông";
-  const u=BOQ.nz(l.unit||"").replace(/[^a-z0-9]/g,""),r=MR.find(m=>m[1].test(z)&&(!m[2]||m[2].test(u)));
+  if(/^[ốô]ng\b/.test(rn)&&!/^[ốô]ng gió/.test(rn))return"Ống";
+  const u=BOQ.nz(l.unit||"").replace(/[^a-z0-9]/g,""),r=MR.find(m=>m[1].test(z)&&(!m[2]||m[2].test(u))&&!(m[0]==="Cáp điện"&&!/cáp|^dây/.test(rn))&&!(m[0]==="Ống"&&/^[ốô]ng gió/.test(rn)));
   if(r&&r[0]!=="Thiết bị (bơm, tủ, máy)")return r[0]==="Bê tông"?"Bê tông thương phẩm":r[0];
   return mep&&dmName(h,l)==="Thiết bị vệ sinh"?"Thiết bị vệ sinh":"Vật tư · "+(mep?PKHN(h)+" · "+dmName(h,l):tcase(l.g1||h.name))}
 /* Dòng giao cả dòng (vật tư + nhân công) cho một đơn vị: thuê máy, dịch vụ đi kèm gói ép cọc (anh chốt 06/11/2026) */
 function pkWhole(h,l){const zn=BOQ.nz(l.name||"").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
   if(/\brobot\b|may ep coc/.test(zn))return"Ép cọc, khoan cọc";
   if(/^dong coc/.test(zn))return"Máy thi công · đóng cọc";
+  if(/\bcu\b.*(larsen|lasel|lars)|ep cu\b/.test(zn))return"Ép cừ Larsen (thuê cừ, ép, nhổ)";
   if(/^(chi phi )?may phat( dien)?\b/.test(zn)&&!PKMEP(h))return"Ép cọc, khoan cọc";
   if(/xe nang|xe cau|cau tu hanh|thue may/.test(zn))return"Máy thi công (xe nâng, xe cẩu)";return null}
 /* Giá tham khảo (đ, chưa VAT) chỉ để chia giá trị vật tư BOQ của một dòng cho các vật tư thành phần; không dùng làm giá vốn */
@@ -2126,8 +2131,15 @@ function pkBuild(p){const O=p.pk||{},MV=O.mv||{},NM=O.nm||{},G={v:new Map(),n:ne
 /* Các báo giá đã có cho một gói: số dòng phủ được, thành tiền */
 /* Gói gộp cung cấp + thi công: một nhà thầu vừa cấp vật tư vừa thi công (cọc bê tông: nhà thầu cọc cung cấp cọc, mũi cọc và ép).
    Gói gộp gồm gói vật tư và gói thi công; so sánh giá, hợp đồng, theo dõi làm chung một gói. Mặc định PKGP, thêm hoặc sửa ở p.pk.gp {tên gói:[key vật tư, key thi công]} */
-const PKGP={"Cọc bê tông · cung cấp + ép cọc":["v:Cọc bê tông","n:Ép cọc, khoan cọc"]};
-function pkList(p,P){P=P||pkBuild(p);const A=[...P.v,...P.n],GP={...PKGP,...((p.pk||{}).gp||{})},used=new Set(),M=[];
+/* Quy tắc anh chốt từ gói cọc (06/11/2026): gói giao thầu theo ĐƠN VỊ THỰC NHẬN VIỆC. Hạng mục mà nhà thầu chuyên ngành vừa cấp vật tư vừa thi công thì gộp vật tư + thi công
+   thành một gói; tổng thầu tự mua vật tư + tổ đội làm (bê tông, cốt thép, cốp pha, xây, trát, ốp lát, sơn, đào đắp, cơ điện) thì để riêng. Gói chỉ có 1 phần thì giữ nguyên.
+   Bỏ gộp một gói mặc định: p.pk.gp[tên]=null */
+const PKCN=" · cung cấp + thi công",PKGP={"Cọc bê tông · cung cấp + ép cọc":["v:Cọc bê tông","n:Ép cọc, khoan cọc"],"Cọc tre · cung cấp + đóng cọc":["v:Cọc tre","n:Máy thi công · đóng cọc"],
+  "Kết cấu thép · gia công + lắp dựng":["v:Kết cấu thép gia công","v:Tôn sàn deck, đinh chống cắt","n:Kết cấu thép"],"Mái, bao che · cung cấp + lợp":["v:Tôn lợp, bao che","n:Lợp mái, bao che"],
+  ["Trần, vách thạch cao"+PKCN]:["v:Trần, vách thạch cao","n:Trần, vách"],["Chống thấm"+PKCN]:["v:Vật liệu chống thấm","n:Chống thấm"]};
+["Cửa nhôm kính, vách kính","Cửa cuốn","Cửa thép chống cháy","Cửa đi, cửa sổ khác (gỗ, nhựa…)","Sàn tăng cứng","Cây xanh, cỏ","Hàng rào","Cổng tự động","Vách vệ sinh compact, bàn đá lavabo","Biển hiệu, chữ"].forEach(n=>PKGP[n+PKCN]=["v:"+n,"n:"+n]);
+function pkList(p,P){P=P||pkBuild(p);const A=[...P.v,...P.n],TG={};A.forEach(g=>{const m=g.key.match(/^n:(?:MMTB )?[Tt]rọn gói · (.+)$/);if(m)(TG[m[1]+" · trọn gói (thiết bị + thi công)"]=TG[m[1]+" · trọn gói (thiết bị + thi công)"]||[]).push(g.key)});
+  const GP={...PKGP,...TG,...((p.pk||{}).gp||{})},used=new Set(),M=[];
   Object.entries(GP).forEach(([name,ks])=>{const parts=(ks||[]).map(k=>A.find(g=>g.key===k)).filter(Boolean);if(parts.length<2||parts.some(g=>used.has(g.key)))return;parts.forEach(g=>used.add(g.key));
     M.push({key:"g:"+name,t:"g",name,auto:name,parts,lines:parts.flatMap(g=>g.lines.map(x=>({...x,t:g.t}))).sort((a,b)=>a.c.localeCompare(b.c,"vi",{numeric:true})||(a.t==="v"?0:1)-(b.t==="v"?0:1)),units:new Set(),unit:"",kl:0,tg:parts.reduce((a,g)=>a+g.tg,0),tb:parts.reduce((a,g)=>a+g.tb,0)})});
   return[...A.filter(g=>!used.has(g.key)),...M]}
