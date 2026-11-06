@@ -2177,7 +2177,7 @@ function pkWhole(h,l){const zn=BOQ.nz(l.name||"").replace(/[^a-z0-9 ]+/g," ").re
   if(/^(chi phi )?may phat( dien)?\b/.test(zn)&&!PKMEP(h))return"Ép cọc, khoan cọc";
   if(/xe nang|xe cau|cau tu hanh|thue may/.test(zn))return"Máy thi công (xe nâng, xe cẩu)";return null}
 /* Giá tham khảo (đ, chưa VAT) chỉ để chia giá trị vật tư BOQ của một dòng cho các vật tư thành phần; không dùng làm giá vốn */
-const PTP={gd:1500,g10:2600,xm:1650,xmt:4200,cv:450000,cm:320000,sl:110000,sp:140000,tile:180000};
+const PTP={da:350000,gd:1500,g10:2600,xm:1650,xmt:4200,cv:450000,cm:320000,sl:110000,sp:140000,tile:180000};
 function ptSplit(l){const r=ptRule((l.name||"")+" "+(l.spec||""),l.unit);if(!r)return null;const M=new Map();
   r.out.forEach(c=>{const m=M.get(c.k)||{k:c.k,name:c.name,unit:c.unit,goi:c.goi,dm:0,code:[]};m.dm+=c.dm;m.code.push(c.c);M.set(c.k,m)});
   const L=[...M.values()];L.forEach(m=>m.w=m.dm*(PTP[m.k]||(/^g[lo]:/.test(m.k)?PTP.tile:0)));const T=L.reduce((a,m)=>a+m.w,0);if(!T)return null;
@@ -4660,12 +4660,15 @@ document.addEventListener("click",e=>{if(e.target.closest("input[data-pkms],butt
    đầu mục xây, trát, láng, lát, ốp, sơn tách ra gạch, xi măng, cát, sơn… để giao từng nhà cung cấp.
    Vữa: cấp phối xi măng PCB40 (12.10200); khối lượng đã cộng hao hụt thi công (21.1000): gạch đất sét nung 1,5%, gạch lỗ, gạch lát 1%, xi măng 1%, cát vàng 2%, cát mịn 3,5%, sơn 2% ---------- */
 const VUA={"xv75":{xm:239,cat:1.17,c:"cv",code:"12.10234 vữa XM cát vàng M75"},"xv50":{xm:172,cat:1.20,c:"cv",code:"12.10233 vữa XM cát vàng M50"},"xm75":{xm:261,cat:1.15,c:"cm",code:"12.10244 vữa XM cát mịn M75"}};
-const VT={gd:["Gạch đặc 6,5x10,5x22","viên","Gạch xây",.015],g10:["Gạch 10 lỗ 22x22x10,5","viên","Gạch xây",.01],xm:["Xi măng PCB40","kg","Xi măng",.01],xmt:["Xi măng trắng","kg","Xi măng",.01],cv:["Cát vàng","m³","Cát xây dựng",.02],cm:["Cát mịn","m³","Cát xây dựng",.035],sl:["Sơn lót","lít","Sơn",.02],sp:["Sơn phủ","lít","Sơn",.02]};
+const VT={gd:["Gạch đặc 6,5x10,5x22","viên","Gạch xây",.015],g10:["Gạch 10 lỗ 22x22x10,5","viên","Gạch xây",.01],xm:["Xi măng PCB40","kg","Xi măng",.01],xmt:["Xi măng trắng","kg","Xi măng",.01],cv:["Cát vàng","m³","Cát xây dựng",.02],cm:["Cát mịn","m³","Cát xây dựng",.035],sl:["Sơn lót","lít","Sơn",.02],sp:["Sơn phủ","lít","Sơn",.02],da:["Đá 1x2","m³","Đá xây dựng",.015]};
 const ptGach=(n,lat)=>{const m=BOQ.nz(n).match(/(\d{3,4})\s*[x*×]\s*(\d{3,4})/);if(!m)return null;const a=m[1]*m[2]/1e6;return{k:"gl:"+m[1]+"x"+m[2],name:(lat?"Gạch lát ":"Gạch ốp ")+m[1]+"x"+m[2],a}};
 /* Trả về các thành phần vật tư cho 1 đơn vị đầu mục: [{k,name,unit,goi,dm,code}] hoặc null */
 function ptRule(name,unit){const z=BOQ.nz(name).replace(/[^a-z0-9.,x* ]+/g," ").replace(/\s+/g," ").trim(),u=BOQ.nz(unit||"").replace(/[^a-z0-9]/g,"");const out=[],code=[];
   const add=(k,dm,c)=>{if(!dm)return;const v=VT[k];out.push({k,name:v[0],unit:v[1],goi:v[2],dm:dm*(1+v[3]),c})};
   const vua=(lit,t,c)=>{const v=VUA[t],m3=lit/1000;add("xm",v.xm*m3,c+" · "+v.code);add(v.c,v.cat*m3,c+" · "+v.code)};
+  /* Bê tông trụ, giằng tường đổ bằng tay (anh chốt 06/11/2026): tách xi măng, cát, đá theo cấp phối; nhân công do tổ xây tô làm.
+     Cấp phối tham khảo 1m³ bê tông M200 đá 1x2, xi măng PCB40 (giả định, chờ anh chốt mác) */
+  if(/be tong tru.*giang tuong|be tong giang tuong/.test(z)&&u==="m3"){add("xm",281,"cấp phối BT M200 đá 1x2 (giả định)");add("cv",.493,"cấp phối BT M200 (giả định)");add("da",.891,"cấp phối BT M200 (giả định)");return{out,rule:"Bê tông trộn tay M200 đá 1x2 · cấp phối tham khảo (giả định)"}}
   if(/chong nong|10 lo/.test(z)&&/gach/.test(z)){if(u!=="m2")return null;add("g10",20,"12.32124");vua(25.5,"xv50","12.32124 vữa lót");vua(5.5,"xv75","12.32124 vữa miết");return{out,rule:"Lát gạch chống nóng 10 lỗ (12.32124)"}}
   if(/\bxay\b/.test(z)&&!/khoi luong xay gach duoi/.test(z)){let f=0;if(u==="m3")f=1;else if(u==="m2"){const t=z.match(/(?:day|xay)\s*(\d{2,3})\b/)||z.match(/\b(110|220|330|200|100|150)\b/);if(t)f=+t[1]/1000}if(!f)return null;const thick=u==="m2"?f*1000:0,big=thick>330;
     add("gd",(big?531:542)*f,big?"12.21104":"12.21103");vua((big?300:290)*f,"xv75",big?"12.21104":"12.21103");return{out,rule:`Xây gạch đặc 6,5x10,5x22, tường ${big?">":"≤"}33cm${u==="m2"?" · tường dày "+Math.round(thick)+"mm":""} (${big?"12.21104":"12.21103"}) · vữa M75`}}
