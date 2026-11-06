@@ -53,7 +53,7 @@ returns void language plpgsql security definer set search_path = '' as $$
 declare k text;
 begin
   select value into k from public.app_secrets where name = 'cron_key';
-  perform net.http_post(url := 'https://omzyspsszmitcnejsmxq.supabase.co/functions/v1/ai',
+  perform net.http_post(url := 'https://omzyspsszmitcnejsmxq.supabase.co/functions/v1/kb-batch',
     headers := jsonb_build_object('content-type', 'application/json', 'x-cron-key', k),
     body := jsonb_build_object('action', 'kb_batch'), timeout_milliseconds := 5000);
 end $$;
