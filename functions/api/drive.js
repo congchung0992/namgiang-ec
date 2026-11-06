@@ -269,6 +269,34 @@ async function rename(api, tok, id, name) {
   return json({ ok: true, name, old: old.name });
 }
 
+// Chuyển file sang thư mục khác (xếp nhầm): sửa bản ghi trước (RLS: quyền sửa + thư mục đích phải được mở), rồi chuyển trên Drive; Drive lỗi thì trả lại như cũ
+// Nhóm 05 NCC – TP chỉ lưu theo luồng (báo giá, hợp đồng, thanh toán, nhận hàng) nên không chuyển vào đó được
+async function move(api, tok, id, folder0, sub0) {
+  const folder = OLD[folder0] || folder0, sub = /^\d{4}-\d{2}-\d{2}$/.test(sub0 || "") ? sub0 : "";
+  if (!id || !FOLDERS[folder]) return json({ error: "bad_request" }, 400);
+  if (/^05\./.test(folder)) return json({ error: "theo_luong" }, 400);
+  const r0 = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=project_id,folder,sub,drive_id`);
+  if (r0.status === 401) return json({ error: "auth" }, 401);
+  const old = r0.ok ? (await r0.json())[0] : null;
+  if (!old) return json({ error: "not_found" }, 404);
+  if (old.folder === folder && (old.sub || "") === sub) return json({ ok: true, folder, sub: sub || null });
+  const r = await api(`project_files?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify({ folder, sub: sub || null }) });
+  const row = r.ok ? (await r.json())[0] : null;
+  if (!row) return json({ error: "forbidden" }, 403);
+  try {
+    const T = await tok(), folders = await projectFolders(api, T, old.project_id);
+    const to = sub ? await dayFolder(api, T, old.project_id, folders, folder, sub) : folders[folder];
+    const g0 = await fetch(`${G}/drive/v3/files/${encodeURIComponent(old.drive_id)}?fields=parents&supportsAllDrives=true`, { headers: { authorization: "Bearer " + T } });
+    const from = g0.ok ? ((await g0.json()).parents || []).join(",") : "";
+    const g = await fetch(`${G}/drive/v3/files/${encodeURIComponent(old.drive_id)}?addParents=${encodeURIComponent(to)}${from ? "&removeParents=" + encodeURIComponent(from) : ""}&fields=id&supportsAllDrives=true`, { method: "PATCH", headers: { authorization: "Bearer " + T, "content-type": "application/json" }, body: "{}" });
+    if (!g.ok) throw new Error("google_move_" + g.status);
+  } catch (e) {
+    await api(`project_files?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ folder: old.folder, sub: old.sub }) });
+    throw e;
+  }
+  return json({ ok: true, folder, sub: sub || null });
+}
+
 export async function onRequest({ request, env }) {
   const url = new URL(request.url), action = url.searchParams.get("action") || "";
   const connected = !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN);
@@ -290,6 +318,7 @@ export async function onRequest({ request, env }) {
     if (action === "download" && request.method === "GET") return await download(api, tok, url.searchParams.get("id") || "");
     if (action === "office" && request.method === "GET") return await officeLink(env, api, url, url.searchParams.get("id") || "");
     if (action === "rename" && request.method === "POST") { const b = await request.json().catch(() => ({})); return await rename(api, tok, String(b.id || ""), String(b.name || "")); }
+    if (action === "move" && request.method === "POST") { const b = await request.json().catch(() => ({})); return await move(api, tok, String(b.id || ""), String(b.folder || ""), String(b.sub || "")); }
     if (action === "delete" && request.method === "DELETE") return await remove(api, tok, url.searchParams.get("id") || "");
     return json({ error: "bad_request" }, 400);
   } catch (e) {
