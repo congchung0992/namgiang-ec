@@ -1626,7 +1626,7 @@ const DF=[["01.1","Pháp lý dự án","Giấy phép xây dựng, quyết địn
   ["03.1","Nghiệm thu kỹ thuật","Nghiệm thu vật liệu đầu vào, công việc, giai đoạn",A4],["03.2","Thí nghiệm – CO/CQ","Kết quả thí nghiệm, chứng chỉ xuất xưởng, xuất xứ",A4],["03.3","An toàn – môi trường","Kế hoạch an toàn, huấn luyện, kiểm tra, sự cố",A4],
   ["04.1","Nghiệm thu khối lượng","Biên bản, bảng khối lượng hoàn thành",A4],["04.2","Phát sinh","Phát sinh tăng giảm, công văn xác nhận",A4],["04.3","Thanh toán – công nợ CĐT","Hồ sơ đề nghị thanh toán đợt với chủ đầu tư, hoá đơn, đối chiếu công nợ",A4],
   ["05.1","Báo giá NCC – TP","Báo giá nhà cung cấp, thầu phụ, tổ đội; đơn đặt hàng",A4],["05.2","Hợp đồng NCC – TP","Hợp đồng mua vật tư, hợp đồng thầu phụ, giao khoán tổ đội, phụ lục",A4],["05.3","Thanh toán NCC – TP","Đề nghị thanh toán, nghiệm thu thanh toán, hoá đơn, đối chiếu công nợ nhà cung cấp, thầu phụ",A4],["05.4","Nhập xuất vật tư","Phiếu nhập, xuất, giao nhận vật tư",A4],
-  ["06.1","Nhật ký thi công","Nhật ký công trường",A4],["06.2","Báo cáo – ảnh","Báo cáo tuần/tháng, ảnh hiện trường",A4],["06.3","Công văn – biên bản họp","Công văn đi/đến, biên bản họp giao ban",A4]];
+  ["06.1","Nhật ký thi công","Nhật ký công trường, báo cáo ngày (BCN) · không chứa ảnh",A4],["06.2","Báo cáo – ảnh","Ảnh hiện trường (xếp theo ngày chụp), báo cáo tuần/tháng",A4],["06.3","Công văn – biên bản họp","Công văn đi/đến, biên bản họp giao ban",A4]];
 /* Mã thư mục cũ (8 thư mục) đổi sang thư mục con mới */
 const OLDF={"01":"01.2","02":"01.3","03":"02.2","04":"04.1","05":"04.3","06":"05.1","07":"05.2","08":"06.2"},nf=f=>{const [a,b]=String(f||"").split("/");return(OLDF[a]||a)+(b?"/"+b:"")};
 const fmtSize=b=>b==null?"-":b<1048576?fm(b/1024,0)+" KB":fm(b/1048576,1)+" MB";
@@ -1674,7 +1674,7 @@ const FRULE=[["05.2",10,/hop dong (thau phu|giao khoan|khoan|mua|nguyen tac|cung
   ["02.2",5,/tien do|schedule|ke hoach thi cong|bien phap|\bmpp\b|gantt/],["05.1",6,/bao gia|chao gia|nha cung cap|\bncc\b|don dat hang|\bpo\b/],["05.3",7,/de nghi thanh toan (ncc|thau phu|to doi)|thanh toan (ncc|thau phu|to doi|nha cung cap)|doi chieu cong no (ncc|nha cung cap|thau phu)/],["05.4",6,/phieu nhap|phieu xuat|giao nhan/],
   ["01.2",5,/\bboq\b|du toan|ho so thau|du thau|moi thau|chao gia|gia goc|tien luong/],["02.1",6,/ban ve|shop drawing|thiet ke|\bdwg\b|mat bang|mat cat/],["02.3",8,/hoan cong|ban giao|bao hanh/],
   ["03.2",7,/thi nghiem|\bco\b|\bcq\b|chung chi|xuat xuong/],["03.3",7,/an toan|\batld\b|moi truong|huan luyen|su co/],["01.1",8,/giay phep|quyet dinh|tham duyet|khoi cong|phap ly|mat bang thi cong|nang luc|ki su|ky su|\bkts\b|\bcht\b|chi huy truong|\bgd ?da\b|giam doc du an|\bcv\b|ly lich|bang cap|chung chi hanh nghe|nhan su chu chot/],
-  ["06.1",6,/nhat ky/],["06.2",4,/bao cao tuan|bao cao thang|hien truong|\banh\b|photo|hinh anh/],["06.3",6,/cong van|bien ban hop|giao ban|thong bao/]];
+  ["06.1",6,/nhat ky|(?:^|[^a-z])bcn(?:[^a-z]|$)|bao cao ngay|bao cao hang ngay/],["06.2",4,/bao cao tuan|bao cao thang|hien truong|\banh\b|photo|hinh anh/],["06.3",6,/cong van|bien ban hop|giao ban|thong bao/]];
 function guessFolder(name,text,img){const t=noAcc(name+" "+(text||"").slice(0,3000)).toLowerCase(),sc={};FRULE.forEach(([k,w,re])=>{const n=(t.match(new RegExp(re.source,"g"))||[]).length;if(n)sc[k]=(sc[k]||0)+w*Math.min(n,3)+(re.test(noAcc(name).toLowerCase())?4:0)});
   if(img)sc["06.2"]=(sc["06.2"]||0)+6;const K=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]),best=K[0];if(!best)return null;
   const nm=noAcc(name).toLowerCase(),hit=FRULE.find(r=>r[0]===best)[2].test(nm);
@@ -1698,7 +1698,12 @@ async function suggest(p,f){const g=guessFolder(f.name);if(g&&g.strong&&!isImg(f
   if(!NGApp.guest)try{v=await Promise.race([NGB.drive.classify({name:o.name,text:o.text,doc:o.doc,img:o.img,project:{code:p.code,name:p.name,cdt:p.cdt}}),new Promise((_,no)=>setTimeout(()=>no(new Error("cham")),30000))]);v.ai=1;
     /* Lý do nói hợp đồng thầu phụ, nhà cung cấp mà lại chọn 01.3 (hợp đồng chủ đầu tư) thì theo lý do */
     if(v.folder==="01.3"&&/thau phu|nha cung cap|\bncc\b|to doi|giao khoan|nhan khoan|ben a la[^.]*nam giang|nam giang[^.]*(la )?ben a/.test(noAcc(v.reason||"").toLowerCase()))v.folder="05.2"}catch(e){v=null}
-  return v||guessFolder(o.name,o.text,o.isImg)||{folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"}}
+  v=v||guessFolder(o.name,o.text,o.isImg)||{folder:null,reason:"Chưa đọc được nội dung, anh chọn thư mục"};
+  /* Luật cứng nhóm 06 (anh chốt 06/11/2026): ảnh luôn vào 06.2 Báo cáo – ảnh (theo ngày chụp), báo cáo ngày / nhật ký (PDF, Excel, Word) luôn vào 06.1 */
+  const im=isImg(f),bcn=/(?:^|[^a-z])bcn(?:[^a-z]|$)|bao cao ngay|bao cao hang ngay|nhat ky/.test(noAcc(f.name+" "+(o.text||"").slice(0,1500)).toLowerCase());
+  if(im&&v.folder==="06.1")v={...v,folder:"06.2",reason:"Ảnh hiện trường · ảnh luôn lưu ở 06.2 theo ngày chụp"};
+  else if(!im&&bcn&&(v.folder==="06.2"||!v.folder))v={...v,folder:"06.1",reason:"Báo cáo ngày / nhật ký thi công · lưu ở 06.1"};
+  return v}
 /* ---------- Hợp đồng NCC – TP (05.2) gắn với gói thầu: bắt buộc chọn gói và hạng mục BOQ trước khi lưu ----------
    p.hdl = [{id, file, pk:[{key, name, t, hm:[mã hạng mục]}], at}] (lưu cùng tiến độ để chỉ huy trưởng cũng ghi được). */
 const hdFind=(p,name)=>(p.hdl||[]).find(x=>x.file===name||qCore(p.id,x.file)===qCore(p.id,name));
@@ -1752,7 +1757,8 @@ function sortFiles(p,files,here,F,pre){let wrap=document.getElementById("fview")
   document.body.appendChild(wrap);const rows=[...wrap.querySelectorAll(".fsr")],close=()=>wrap.remove();wrap.querySelector("#fvc").onclick=close;
   let left=files.length,saving=false;const okBtn=wrap.querySelector("#fsok"),def=F.some(x=>x[0]===here)?here:F[0][0];
   /* Chọn sẵn thư mục đang mở, anh lưu được ngay không phải chờ đọc xong; file tên rõ loại thì xếp ngay */
-  rows.forEach((r,i)=>{const sel=r.querySelector("select");sel.value=def;sel.onchange=()=>{r.dataset.man=1};sel.addEventListener("change",()=>hdUpd(i))});
+  const d06=i=>{const f=files[i],has=k=>F.some(x=>x[0]===k);if(!/^06\./.test(def))return def;if(isImg(f)&&has("06.2"))return"06.2";if(!isImg(f)&&/(?:^|[^a-z])bcn(?:[^a-z]|$)|bao cao ngay|nhat ky/.test(noAcc(f.name).toLowerCase())&&has("06.1"))return"06.1";return def};
+  rows.forEach((r,i)=>{const sel=r.querySelector("select");sel.value=d06(i);sel.onchange=()=>{r.dataset.man=1};sel.addEventListener("change",()=>hdUpd(i))});
   /* Hợp đồng NCC – TP (05.2): bắt buộc chọn gói thầu và hạng mục BOQ; web gợi ý theo tên file và nội dung */
   const HS=files.map(()=>pre?{sel:{...pre},q:"",sug:{},touched:1}:{sel:{},q:"",sug:null,touched:0}),hdUpd=i=>{const r=rows[i];if(!r)return;const box=r.querySelector(".fpk"),sel=r.querySelector("select");if(sel.value!=="05.2"){box.hidden=true;return}box.hidden=false;const S=HS[i];
     if(!S.sug){S.sug=hdSuggest(p,files[i].name);Object.entries(S.sug).forEach(([k,v])=>{if(v.s>=.9)S.sel[k]=[...v.hm]});
@@ -1769,7 +1775,7 @@ function sortFiles(p,files,here,F,pre){let wrap=document.getElementById("fview")
   const show=(i,v)=>{const f=files[i];if(!rows[i]||rows[i].dataset.done)return;if(saving){photoFix(i,v);return}{const r=rows[i],sel=r.querySelector("select"),why=r.querySelector(".why"),nm=r.querySelector(".nm");
     if(pre){why.textContent="Hợp đồng cho gói đã có so sánh giá được duyệt · gói chọn sẵn ở dưới · kiểm tra tên file rồi bấm Lưu";left--;if(!saving){okBtn.textContent=left?`Đang đọc ${files.length-left}/${files.length} file…`:"Lưu vào thư mục đã chọn";okBtn.disabled=left>0}return}
     if(v.folder)v.folder=nf(v.folder);if(/^05\./.test(v.folder||"")&&!F.some(x=>x[0]===v.folder)){r.dataset.q51=1;why.textContent=F05[v.folder]||F05["05.1"];why.classList.add("dif");sel.onchange=()=>{r.dataset.man=1};left--;if(!saving){okBtn.textContent=left?`Đang đọc ${files.length-left}/${files.length} file…`:"Lưu vào thư mục đã chọn";okBtn.disabled=left>0}return}
-    const ok=v.folder&&F.some(x=>x[0]===v.folder);if(ok)r.dataset.sug=v.folder;if(!r.dataset.man)sel.value=ok?v.folder:def;hdUpd(i);
+    const ok=v.folder&&F.some(x=>x[0]===v.folder);if(ok)r.dataset.sug=v.folder;if(!r.dataset.man)sel.value=ok?v.folder:d06(i);hdUpd(i);
     const fdt=r.querySelector(".fdate");if(fdt){const pd=String(v.photo_date||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(pd&&!r.dataset.dman&&r.dataset.dsrc!=="exif"){fdt.value=pd[3]+"-"+pd[2].padStart(2,"0")+"-"+pd[1].padStart(2,"0");r.dataset.dsrc="anh"}if(v.title)r.dataset.tt=v.title;phName(i,v.title)}
     else if(v.title&&GENERIC.test(noAcc(base(f.name)))&&nm.value===stdName(p.id,f.name))nm.value=stdName(p.id,v.title+ext(f.name));
     const fn=k=>{const x=F.find(y=>y[0]===k);return x?x[0]+" "+x[1]:k};

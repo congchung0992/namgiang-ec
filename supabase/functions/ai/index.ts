@@ -197,8 +197,8 @@ const FOLDERS: any = {
   "05.2": "Hợp đồng với nhà cung cấp, thầu phụ, tổ đội: hợp đồng mua vật tư thiết bị, hợp đồng thầu phụ, giao khoán, phụ lục",
   "05.3": "Thanh toán cho nhà cung cấp, thầu phụ, tổ đội: đề nghị thanh toán, nghiệm thu thanh toán, hoá đơn đầu vào, uỷ nhiệm chi, đối chiếu công nợ",
   "05.4": "Phiếu nhập, phiếu xuất, phiếu giao nhận vật tư",
-  "06.1": "Nhật ký thi công",
-  "06.2": "Báo cáo tuần/tháng, ảnh hiện trường",
+  "06.1": "Nhật ký thi công, BÁO CÁO NGÀY (BCN, báo cáo hằng ngày) dạng PDF/Excel/Word · KHÔNG để file ảnh ở đây",
+  "06.2": "Mọi file ẢNH chụp hiện trường (jpg, png…), báo cáo tuần/tháng · KHÔNG để báo cáo ngày ở đây",
   "06.3": "Công văn đi/đến, biên bản họp giao ban"
 };
 const SYS_CLASSIFY = `Bạn phân loại hồ sơ của một công ty tổng thầu xây dựng Việt Nam vào đúng thư mục dự án.
