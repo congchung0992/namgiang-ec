@@ -393,7 +393,12 @@ body.scroll main{height:auto;display:block}
 .vh p{margin:4px 0 0;color:var(--muted);font-size:15px}
 .back{display:inline-flex;align-items:center;gap:6px;border:0;background:#fff;border-radius:99px;padding:8px 14px 8px 10px;font-size:15px;font-weight:500;color:var(--ink2);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:12px}
 
-.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:16px}
+/* Mỗi dự án một màu riêng: vạch màu mép trên, nền ánh màu nhạt, mã dự án và thanh tiến độ cùng màu */
+.pc.prj{position:relative;overflow:hidden;background:linear-gradient(180deg,color-mix(in srgb,var(--pc) 12%,#fff) 0,rgba(255,255,255,.72) 150px);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 22%,transparent),0 1px 2px rgba(0,0,0,.03)}
+.pc.prj:before{content:"";position:absolute;inset:0 0 auto 0;height:6px;background:linear-gradient(90deg,var(--pc),color-mix(in srgb,var(--pc) 55%,#fff))}
+.pc.prj .code{color:#fff;background:var(--pc);box-shadow:none}.pc.prj h3{color:color-mix(in srgb,var(--pc) 75%,#16171C)}
+.pc.prj .pdot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--pc);margin-right:8px;vertical-align:2px}
 .pc{text-align:left;border:0;cursor:pointer;display:flex;flex-direction:column;gap:14px;transition:transform .2s,box-shadow .2s}
 .pc:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 18px 36px -24px rgba(20,20,60,.45)}
 .pc .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -2720,15 +2725,18 @@ function migCard(){const n=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().le
 /* Quyền trên giao diện: chỉ để gọn màn hình, máy chủ mới là nơi chặn thật (supabase/schema.sql) */
 const canOv=()=>!window.NGApp||NGApp.board||DB.projects.some(p=>p._role==="gd");
 const FIELD=["prog","lk","kh","week","bcn","mat","pyc","tt","hr","files"],sheetsFor=b=>b&&b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS;
+/* Màu riêng của dự án: theo thứ tự mã dự án (NG-26-01, 02…), bảng màu thương hiệu; cố định theo mã nên không đổi khi thêm dự án khác */
+const PRJC=["#0A2486","#12A150","#C21FC9","#F08A24","#0E9F9A","#2D3CE6","#8B5CF6","#B45309","#0369A1","#BE185D"];
+const prjColor=p=>{if(p.color)return p.color;const m=String(p.code||"").match(/(\d+)\s*$/);let i=m?+m[1]-1:0;if(!m){let h=0;for(const ch of String(p.id))h=(h*31+ch.charCodeAt(0))>>>0;i=h}return PRJC[((i%PRJC.length)+PRJC.length)%PRJC.length]};
 function projList(){const B=DB.projects,SP=canOv()?SAMPLES():[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":window.NGApp&&NGApp.board?"Chưa có dự án nào, anh tải BOQ để tạo dự án đầu tiên":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
   <div class="plist">
   ${!window.NGApp||NGApp.board?`<label class="card pc upl" id="drop"><input type="file" id="boqf" accept=".xlsx,.xls,.xlsm" hidden>
     <div class="row"><div><h3>Thêm dự án từ BOQ</h3><div class="loc">Kéo thả file Excel vào đây hoặc bấm để chọn file</div></div><span class="pill" style="${sv("boq")};pointer-events:none"><span class="dot">${ic("up",2)}</span>Tải BOQ lên</span></div>
     <div class="sub" id="upmsg">Hệ thống tự đọc bảng tổng hợp và các sheet hạng mục, bỏ qua sheet ẩn, kiểm tra tổng tiền trước khi tạo dự án.</div></label>`:""}
-  ${B.map(p=>{const c=calc(p);return `<button class="card pc" data-go="da-${p.id}">
-    <div class="row"><div><h3>${esc(p.name)}</h3><div class="loc">${esc(p.loc)} · ${esc(p.cdt)}</div></div><span class="code">${esc(p.code)}</span></div>
+  ${B.map(p=>{const c=calc(p),pc=prjColor(p);return `<button class="card pc prj" data-go="da-${p.id}" style="--pc:${pc}">
+    <div class="row"><div><h3><span class="pdot"></span>${esc(p.name)}</h3><div class="loc">${esc(p.loc)} · ${esc(p.cdt)}</div></div><span class="code">${esc(p.code)}</span></div>
     <div><div class="row" style="font-size:15px;margin-bottom:8px">${p._noCost?"<span></span>":`<span>Giá vốn đã nhập <b>${fm(pct(c.ent,c.cnt),0)}%</b> <span style="color:var(--muted)">/ ${n0(c.cnt)} dòng</span></span>`}${st("ok","Chuẩn bị thi công")}</div>
-      ${p._noCost?"":`<div class="pbar" style="${sv("boq")}"><i style="width:${pct(c.ent,c.cnt)}%"></i></div>`}</div>
+      ${p._noCost?"":`<div class="pbar" style="--c:${pc};--c2:color-mix(in srgb,${pc} 45%,#fff)"><i style="width:${pct(c.ent,c.cnt)}%"></i></div>`}</div>
     <div class="nums"><div><span>Giá trị HĐ</span><b>${fm(c.rev/1e9)} tỷ</b></div>${p._noCost?"":`<div><span>Giá vốn</span><b>${fm(c.cost/1e9)} tỷ</b></div><div><span>Lãi gộp</span><b>${fm(pct(c.gp,c.rev))}%</b></div>`}</div>
   </button>`}).join("")}
   ${SP.map(p=>{const [l,lt]=lv(p);return `<button class="card pc" data-go="da-${p.id}">
