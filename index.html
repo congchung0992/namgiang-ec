@@ -1525,7 +1525,7 @@ const LD=(p,n)=>p&&p.leads&&p.leads[n]>0?p.leads[n]:LEAD(n);const LEAD=n=>/Kết
 
 /* ---------- Danh sách sheet ---------- */
 const SHEETS=[["home","Tổng quan"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
-const BSHEETS=[["home","Tổng quan"],["lk","Tra cứu liên kết"],["files","Thư mục dự án"],["bn","Bộ não dự án"],["boq","BOQ & Giá vốn"],["goi","Gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán NCC – TP"],["hr","Nhân sự"]];
+const BSHEETS=[["home","Tổng quan"],["lk","Tra cứu liên kết"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán NCC – TP"],["hr","Nhân sự"]];
 /* Tab Hồ sơ: file lưu ở Google Drive qua api/drive; bảng quyền này chỉ để gọn màn hình, máy chủ kiểm tra lại (supabase/schema.sql) */
 /* Thư mục hồ sơ: 6 nhóm lớn (DG), file lưu ở thư mục con (DF: mã, tên, gợi ý, vai trò được xem); máy chủ kiểm tra lại quyền */
 const DG=[["01","Pháp lý – Hợp đồng"],["02","Kỹ thuật – Tiến độ"],["03","Chất lượng – An toàn"],["04","Thanh toán CĐT"],["05","NCC – TP"],["06","Hiện trường – Văn bản"]];
@@ -2570,7 +2570,7 @@ function localOld(){try{const d=STORE.load();return(d.projects||[]).filter(p=>!D
 function migCard(){const n=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().length:0;return n?card("Dữ liệu còn trên trình duyệt này",`Có ${n} dự án chưa đưa lên hệ thống · sau khi đưa lên, bản trên trình duyệt được giữ lại làm dự phòng`,`<button class="pill" id="mig" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Đưa lên hệ thống</button>`):""}
 /* Quyền trên giao diện: chỉ để gọn màn hình, máy chủ mới là nơi chặn thật (supabase/schema.sql) */
 const canOv=()=>!window.NGApp||NGApp.board||DB.projects.some(p=>p._role==="gd");
-const FIELD=["prog","lk","kh","week","bcn","mat","pyc","tt","hr","files","bn"],sheetsFor=b=>b&&b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS;
+const FIELD=["prog","lk","kh","week","bcn","mat","pyc","tt","hr","files"],sheetsFor=b=>b&&b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS;
 function projList(){const B=DB.projects,SP=canOv()?SAMPLES():[];return `<div class="vh"><div><h1>Dự án</h1><p>${B.length?B.length+" dự án từ BOQ"+(SP.length?" · ":""):SP.length?"":window.NGApp&&NGApp.board?"Chưa có dự án nào, anh tải BOQ để tạo dự án đầu tiên":"Tài khoản này chưa được phân công dự án nào, anh liên hệ quản trị viên"}${SP.length?SP.length+" công trình mẫu · bấm vào công trình để xem chi tiết":""}</p></div></div>${migCard()}
   <div class="plist">
   ${!window.NGApp||NGApp.board?`<label class="card pc upl" id="drop"><input type="file" id="boqf" accept=".xlsx,.xls,.xlsm" hidden>
