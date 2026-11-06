@@ -2361,7 +2361,7 @@ function bgPkView(p,tools){qfList(p);const {D,today}=gtRows(p),Q=p.quotes||[],us
     `${tools||""}<div class="lkf">${chip("","Tất cả",D.R.length)}${Object.keys(GTS).map(k=>chip(k,GTS[k][0],cnt(k))).join("")}<button class="lkfb" data-bgall="1">Mở tất cả</button><button class="lkfb" data-bgall="0">Thu gọn</button></div>
     <div class="tw" style="margin-top:10px;max-height:75vh;overflow:auto"><table class="t bgtree"><thead><tr><th>Tên</th><th>Thông tin</th><th>Hạn</th></tr></thead><tbody>${rows||`<tr><td colspan="3" class="sub">Không có gói nào.</td></tr>`}
     ${free.length?row(0,`<span class="bgx">${BG.open.has("__free")?"▾":"▸"}</span>${ICF}`,"<b>Báo giá chưa gắn gói</b>",`${free.length} file · chưa ghép dòng BOQ, bấm Sửa ghép ở danh sách báo giá phía dưới`,"","",` data-bgo="__free" style="cursor:pointer"`)+(BG.open.has("__free")?free.map(q=>row(1,ICD(fcol(q.file),ext(q.file)),esc(q.file||""),`Báo giá · ${esc(q.vendor||"")}`,"",qAct(p,q))).join(""):""):""}</tbody></table></div>`,"span3")}
-document.addEventListener("click",e=>{const sx=e.target.closest("tr[data-sgx]");if(sx){const k=sx.dataset.sgx;SGX.has(k)?SGX.delete(k):SGX.add(k);const y=scrollY;route();scrollTo(0,y);return}const r=e.target.closest("tr[data-bgo]");if(r&&!e.target.closest("button,a,label,input")){const k=r.dataset.bgo;BG.open.has(k)?BG.open.delete(k):BG.open.add(k);keep(route);return}
+document.addEventListener("click",e=>{const sx=e.target.closest("tr[data-sgx]");if(sx){const k=sx.dataset.sgx;SGX.has(k)?SGX.delete(k):SGX.add(k);keep(route);return}const r=e.target.closest("tr[data-bgo]");if(r&&!e.target.closest("button,a,label,input")){const k=r.dataset.bgo;BG.open.has(k)?BG.open.delete(k):BG.open.add(k);keep(route);return}
   const a=e.target.closest("[data-bgall]");if(a){const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;BG.open=new Set();if(a.dataset.bgall==="1")gtRows(p).D.R.forEach(o=>BG.open.add(o.g.key));keep(route)}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-bgst]");if(!b)return;BG.st=b.dataset.bgst;keep(route)});
 /* Chênh giá vốn nếu áp các lựa chọn */
@@ -3147,7 +3147,7 @@ view.addEventListener("change",e=>{const t=e.target;
   if(t.dataset.pf&&pending)pending.form[t.dataset.pf]=t.value;
   if(pending&&t.dataset.pc){const o=pending.opt.cols[t.dataset.sh]||(pending.opt.cols[t.dataset.sh]={});o[t.dataset.pc]=+t.value;pvRe();return}
   if(pending&&t.dataset.ps!=null){pending.opt.match[t.dataset.ps]=t.value;pvRe();return}
-  if(t.id==="ratio"&&cur){const v=parseVN(t.value);if(v!=null&&v>=0&&v<=200){cur.ratio=v;persist();const y=scrollY;route();scrollTo(0,y)}else t.value=fm(cur.ratio,0)}
+  if(t.id==="ratio"&&cur){const v=parseVN(t.value);if(v!=null&&v>=0&&v<=200){cur.ratio=v;persist();keep(route)}else t.value=fm(cur.ratio,0)}
   const tr=t.closest("tr[data-line]");if(tr&&cur&&t.dataset.f){const code=tr.dataset.line,v=/^\s*[-–]\s*$/.test(t.value)?0:parseVN(t.value);if(cur.cost[code]&&cur.cost[code].src)return;const c=cur.cost[code]||(cur.cost[code]={});c[t.dataset.f]=v;delete c.src;
     if(c.v==null&&c.n==null&&c.m==null)delete cur.cost[code];t.value=v==null?"":v?n0(v):"-";persist();refresh(code)}});
 view.addEventListener("change",e=>{const t=e.target;if(!cur)return;
@@ -3185,7 +3185,7 @@ function ggMatch(p,r){const N=BOQ.nz,used=new Set(),G=r.hms,hmN=p.hms.map(h=>N(h
       rows.push({h,hi,l,m:hit,how,v,n,uH,uG,fl,cv:(v||0)*(l.qty||0),cn:(n||0)*(l.qty||0)})})});
   const ex=G.filter((g,i)=>!pair.includes(g)&&!sumLike(g)&&g.lines.some(l=>!used.has(id(g,g.lines.indexOf(l))))).map(g=>{const t=g.lines.reduce((a,l)=>a+(l.total||0),0);let best=null,b=0;p.hms.forEach(h=>{if(h.lines.length)return;const s2=Math.max(simW(h.name,g.name),simW(h.name,g.sheet),...[...new Set(g.lines.map(l=>l.g1).filter(Boolean))].map(x=>simW(h.name,x)));if(s2>b){b=s2;best=h}});return{g,t,n:g.lines.length,def:b>=.4&&best?best.code:""}});
   return{pair,rows,ex}}
-function ggRe(top){const p=DB.projects.find(x=>x.id===ggP.pid);if(!p)return;ggP.res=ggMatch(p,ggP.r);ggP.res.ex.forEach(x=>{if(!(x.g.sheet in ggP.assign))ggP.assign[x.g.sheet]=x.def});const y=scrollY;view.innerHTML=ggView(p);dashZeros(view);const d=view.querySelector("table.ggd");if(d)d.style.setProperty("--h1",d.tHead.rows[0].getBoundingClientRect().height+"px");scrollTo({top:top?0:y})}
+function ggRe(top){const p=DB.projects.find(x=>x.id===ggP.pid);if(!p)return;ggP.res=ggMatch(p,ggP.r);ggP.res.ex.forEach(x=>{if(!(x.g.sheet in ggP.assign))ggP.assign[x.g.sheet]=x.def});const y=scrollY,TW=[...view.querySelectorAll(".tw")].map(e=>[e.scrollTop,e.scrollLeft]);view.innerHTML=ggView(p);dashZeros(view);if(!top){const T=[...view.querySelectorAll(".tw")];if(T.length===TW.length)T.forEach((e,i)=>{e.scrollTop=TW[i][0];e.scrollLeft=TW[i][1]})}const d=view.querySelector("table.ggd");if(d)d.style.setProperty("--h1",d.tHead.rows[0].getBoundingClientRect().height+"px");scrollTo({top:top?0:y})}
 const GGF={none:["bad","Không có giá gốc"],lo:["bad","Giá gốc cao hơn giá HĐ"],kl:["warn","Khối lượng lệch"],ten:["warn","Tên khác, đã ghép theo vị trí"]};
 function ggView(p){const R=ggP.res,rows=R.rows,ok=rows.filter(x=>x.m).length,cnt=f=>rows.filter(x=>x.fl.includes(f)).length;
   const xc={};R.ex.forEach(x=>{const a=ggP.assign[x.g.sheet];if(a)xc[a]=(xc[a]||0)+x.t});
@@ -3339,7 +3339,7 @@ window.NG={
   if(/gia tri|hop dong|doanh thu|bao nhieu tien|tong/.test(t))return`${N} có giá trị hợp đồng **${n0(c.rev)} đ** (chưa VAT), gồm ${c.hs.filter(x=>x.rev>0).length} hạng mục và ${n0(c.cnt)} dòng công việc.`;
   return"Câu này em chưa trả lời được bằng số liệu sẵn có. Khi web được kết nối Claude, em sẽ hiểu và trả lời câu hỏi tự do.\nAnh có thể hỏi về: **giá trị hợp đồng, lãi gộp, hạng mục, tiến độ, vật tư cần đặt, dòng tiền**."}};
 /* Sự kiện màn Báo giá */
-const qRe=()=>{const y=scrollY;route();scrollTo(0,y)};
+const qRe=()=>{keep(route)};
 const qParse=v=>{v=String(v||"").trim();if(!v)return null;const c=v.split(" · ")[0].trim();return c||null};
 view.addEventListener("change",async e=>{const t=e.target;if(!cur)return;const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;
   if((t.id==="qup"||t.dataset.qupk!==undefined)&&t.files.length){QPK=t.dataset.qupk||"";const F=[...t.files];t.value="";let G;try{G=await Promise.all(F.map(async f=>new File([await f.arrayBuffer()],f.name,{type:f.type})))}catch(er){qMsg="Không đọc được file, nếu đang mở trong Excel anh đóng lại rồi chọn lại";qRe();return}qAnalyze(p,G,true);return}
