@@ -2195,7 +2195,9 @@ const pkMd=(p,id)=>(((p.pk||{}).md||{})[id])||pkMdDef(id);
 function pkList(p,P){P=P||pkBuild(p);const A=[...P.v,...P.n],GP={};PKSC.forEach(([id,ks])=>{if(pkMd(p,id)==="tron")GP[id]=ks});
   A.forEach(g=>{if(g.key.endsWith(PKLD)){const n=g.key.slice(2);(GP[n]=GP[n]||[]).push(g.key)}});Object.assign(GP,(p.pk||{}).gp||{});const used=new Set(),M=[];
   Object.entries(GP).forEach(([name,ks])=>{const parts=(ks||[]).map(k=>A.find(g=>g.key===k)).filter(Boolean);if(parts.length<2||parts.some(g=>used.has(g.key)))return;parts.forEach(g=>used.add(g.key));
-    M.push({key:"g:"+name,t:"g",name,auto:name,parts,lines:parts.flatMap(g=>g.lines.map(x=>({...x,t:g.t}))).sort((a,b)=>a.c.localeCompare(b.c,"vi",{numeric:true})||(a.t==="v"?0:1)-(b.t==="v"?0:1)),units:new Set(),unit:"",kl:0,tg:parts.reduce((a,g)=>a+g.tg,0),tb:parts.reduce((a,g)=>a+g.tb,0)})});
+    const DM=new Set(parts.flatMap(g=>g.lines.map(x=>{try{return dmKey(x.h,x.l)}catch(e){return""}}))),own=((p.pk||{}).gp||{})[name];
+    /* anh chốt 06/11/2026: gói trọn gói nằm gọn trong một đầu mục thì lấy tên đầu mục (vd Công tác cọc) · mã gói giữ nguyên nên hợp đồng, so sánh giá đã gắn không đổi */
+    M.push({key:"g:"+name,t:"g",name:((p.pk||{}).nm||{})["g:"+name]||(!own&&DM.size===1&&[...DM][0]?[...DM][0]:name),auto:name,parts,lines:parts.flatMap(g=>g.lines.map(x=>({...x,t:g.t}))).sort((a,b)=>a.c.localeCompare(b.c,"vi",{numeric:true})||(a.t==="v"?0:1)-(b.t==="v"?0:1)),units:new Set(),unit:"",kl:0,tg:parts.reduce((a,g)=>a+g.tg,0),tb:parts.reduce((a,g)=>a+g.tb,0)})});
   return[...A.filter(g=>!used.has(g.key)),...M]}
 /* Danh sách phạm vi có trong dự án để chọn trọn gói / tách: giá trị BOQ, khoá khi gói liên quan đã có so sánh giá hoặc hợp đồng */
 function pkScopes(p){const P=pkBuild(p),A=[...P.v,...P.n],by=new Map(A.map(g=>[g.key,g])),S=[],SS=(PY.pid===p.id&&PY.list||[]).filter(y=>y.kind==="ssg"&&y.status!=="cancelled").map(y=>(y.data||{}).key),HK=(p.hdl||[]).flatMap(h=>h.pk.map(k=>k.key));
