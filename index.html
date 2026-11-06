@@ -2059,13 +2059,18 @@ function pkAuto(h,l,t,tron){const z=BOQ.nz((l.name||"")+" "+(l.spec||"")),zn=BOQ
   const u=BOQ.nz(l.unit||"").replace(/[^a-z0-9]/g,""),r=MR.find(m=>m[1].test(z)&&(!m[2]||m[2].test(u)));
   if(r&&r[0]!=="Thiết bị (bơm, tủ, máy)")return r[0]==="Bê tông"?"Bê tông thương phẩm":r[0];
   return mep&&dmName(h,l)==="Thiết bị vệ sinh"?"Thiết bị vệ sinh":"Vật tư · "+(mep?PKHN(h)+" · "+dmName(h,l):tcase(l.g1||h.name))}
+/* Dòng giao cả dòng (vật tư + nhân công) cho một đơn vị: thuê máy, dịch vụ đi kèm gói ép cọc (anh chốt 06/11/2026) */
+function pkWhole(h,l){const zn=BOQ.nz(l.name||"").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+  if(/\brobot\b|may ep coc/.test(zn))return"Ép cọc, khoan cọc";
+  if(/^(chi phi )?may phat( dien)?\b/.test(zn)&&!PKMEP(h))return"Ép cọc, khoan cọc";
+  if(/xe nang|xe cau|cau tu hanh|thue may/.test(zn))return"Máy thi công (xe nâng, xe cẩu)";return null}
 function pkBuild(p){const O=p.pk||{},MV=O.mv||{},NM=O.nm||{},G={v:new Map(),n:new Map()};
   p.hms.forEach(h=>h.lines.forEach(l=>{const q=l.qty||0;if(!q||!l.code)return;const cc=lineCost(p,l);let uv=l.uVL!=null?l.uVL:l.vl!=null?l.vl/q:null,un=l.uNC!=null?l.uNC:l.nc!=null?l.nc/q:null;
     /* Dòng BOQ chỉ có thành tiền (không chia vật liệu, nhân công): giao thầu phụ trọn gói theo hạng mục */
-    const tron=uv==null&&un==null;const parts=tron?[["n",(l.total||0)/q,(cc.v||0)+(cc.n||0)]]:[["v",uv||0,cc.v],["n",un||0,cc.n]];
+    const tron=uv==null&&un==null,wh=pkWhole(h,l);const parts=tron||wh?[["n",(l.total||0)/q,(cc.v||0)+(cc.n||0)]]:[["v",uv||0,cc.v],["n",un||0,cc.n]];
     parts.forEach(([t,cu,gv])=>{if(!(cu>0||gv>0))return;let key,name;
       if(MV[l.code+"|"+t]){key=MV[l.code+"|"+t];name=key.split("|").slice(1).join("|")}
-      else{name=pkAuto(h,l,t,tron);key=t+":"+name}
+      else{name=wh||pkAuto(h,l,t,tron);key=t+":"+name}
       const M=G[t];if(!M.has(key))M.set(key,{key,t,name:NM[key]||name,auto:name,lines:[],units:new Set(),kl:0,tg:0,tb:0});const g=M.get(key);
       g.lines.push({c:l.code,l,h,q,cu,gv});g.units.add(l.unit||"");g.kl+=q;g.tg+=gv;g.tb+=cu*q})}));
   const S=["v","n"].map(t=>[...G[t].values()].sort((a,b)=>b.tg-a.tg));
