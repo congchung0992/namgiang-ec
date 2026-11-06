@@ -133,9 +133,10 @@ table.xl{border-collapse:collapse;table-layout:fixed;font:14.5px/1.35 Calibri,"B
 </style>
 
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Encode+Sans+Expanded:wght@600&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Encode+Sans+Expanded:wght@600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Encode+Sans+Expanded:wght@600&display=swap"></noscript>
 <!-- Chữ số dùng Roboto: chỉ tải các ký tự số và dấu, chữ khác vẫn là Be Vietnam Pro -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap&text=0123456789.%2C%25%2B-%E2%88%92%2F%3A">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap&text=0123456789.%2C%25%2B-%E2%88%92%2F%3A" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap&text=0123456789.%2C%25%2B-%E2%88%92%2F%3A"></noscript>
 <style>
 /* Bố cục: nền xám sáng, thanh biểu tượng bên trái, thanh phân hệ dạng viên thuốc trên cùng; lưới 4 cột: bản đồ chấm + 3 ô kính màu số LED / biểu đồ tròn mờ + biểu đồ thu chi + thẻ trợ lý */
 :root{
@@ -815,7 +816,6 @@ tr[data-wfdr]{cursor:grab}tr[data-wfdr] input,tr[data-wfdr] select,tr[data-wfdr]
 .bcqa{font-size:14.5px!important;padding:7px 14px!important;min-height:34px;border-radius:99px!important}
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 </head>
 <body>
 <div id="intro" class="s1" role="dialog" aria-label="Đăng nhập hệ thống Nam Giang">
@@ -962,6 +962,8 @@ tr[data-wfdr]{cursor:grab}tr[data-wfdr] input,tr[data-wfdr] select,tr[data-wfdr]
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
+<script>/* Dự phòng: jsDelivr chậm hoặc bị chặn thì lấy bộ đăng nhập từ unpkg */if(!window.supabase)document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"><\/script>')</script>
 <script>
 /* Số âm hiện trong ngoặc ( ) và tô đỏ: các hàm định dạng số gọi pn(); ký tự ẩn \u2060 đánh dấu để tô màu sau khi vẽ */
 window.NEGM="\u2060";
