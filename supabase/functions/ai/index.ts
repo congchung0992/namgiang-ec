@@ -5,6 +5,7 @@
 // Mỗi lượt ghi một dòng vào ai_usage để đo lường (việc, mẫu, token, thời gian, lỗi).
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import Anthropic from "npm:@anthropic-ai/sdk@1.5.0";
+import { PDFDocument } from "npm:pdf-lib@1.17.1";
 
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type, apikey, x-client-info", "access-control-allow-methods": "POST, OPTIONS" };
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, "content-type": "application/json; charset=utf-8" } });
@@ -268,6 +269,23 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return json({ error: "bad_request" }, 405);
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false, autoRefreshToken: false } });
+  // Lượt chạy theo lịch (pg_cron gọi kèm khoá riêng trong app_secrets): chép bản scan, tóm tắt tài liệu
+  const cron = req.headers.get("x-cron-key");
+  if (cron) {
+    const { data } = await admin.from("app_secrets").select("name,value").in("name", ["cron_key", "claude", "claude_model"]);
+    const get = (n: string) => (data || []).find((x: any) => x.name === n)?.value || "";
+    if (!get("cron_key") || cron !== get("cron_key")) return json({ error: "auth" }, 401);
+    const k = Deno.env.get("ANTHROPIC_API_KEY") || get("claude");
+    if (!k) return json({ error: "chua_ket_noi" }, 503);
+    const M = { model: "", in: 0, out: 0, err: "" }, t0 = Date.now(), m = get("claude_model");
+    const env: any = { client: new Anthropic({ apiKey: k, timeout: 120000, maxRetries: 1 }), MODEL: MODELS.includes(m) ? m : MODELS[0], M, admin };
+    const job = kbBatch(env).catch((e) => { M.err = String(e?.message || e).slice(0, 160); }).finally(async () => {
+      if (M.in || M.out || M.err) try { await admin.from("ai_usage").insert({ user_id: null, provider: "claude", action: "kb_batch", model: M.model || null, in_tok: M.in, out_tok: M.out, ms: Date.now() - t0, ok: !M.err, err: M.err || null }); } catch (_) { /* bỏ qua */ }
+    });
+    // @ts-ignore EdgeRuntime có sẵn trên Supabase
+    if (typeof EdgeRuntime !== "undefined") { EdgeRuntime.waitUntil(job); return json({ ok: true, started: true }); }
+    await job; return json({ ok: true });
+  }
   const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) return json({ error: "auth" }, 401);
   const { data: who, error: whoErr } = await admin.auth.getUser(token);
@@ -302,6 +320,64 @@ Deno.serve(async (req) => {
   } catch (e) { console.error("ai_usage", String(e).slice(0, 100)); }
   return res;
 });
+/* Lưu kết quả tóm tắt vào kb_docs và điền hồ sơ dự án (không đè mục đã xác nhận) */
+async function digestSave(env: any, f: any, data: any, model: string, o: { body?: string; src?: string }) {
+  const now = new Date().toISOString(), row: any = { file_id: f.id, project_id: f.project_id, folder: f.folder, name: f.name, status: "ok", kind: String(data.kind || "").slice(0, 120) || "Tài liệu", summary: String(data.summary || "").slice(0, 4000) || "- (không có nội dung để tóm tắt)", err: "", model, at: now };
+  if (o.body != null) row.body = o.body; if (o.src) row.src = o.src;
+  const { error: e1 } = await env.admin.from("kb_docs").upsert(row);
+  if (e1) throw new Error(e1.message);
+  const F = (data.facts || []).filter((x: any) => x && FACT_KEYS.has(String(x.k)) && String(x.v || "").trim());
+  if (!F.length) return 0;
+  const { data: old } = await env.admin.from("kb_facts").select("k,status").eq("project_id", f.project_id);
+  const locked = new Set((old || []).filter((x: any) => x.status === "ok").map((x: any) => x.k));
+  const rows = F.filter((x: any) => !locked.has(x.k)).map((x: any) => ({ project_id: f.project_id, k: x.k, v: String(x.v).slice(0, 2000), clause: String(x.clause || "").slice(0, 2000), file_id: f.id, src: f.name, status: "auto", by_name: "Claude đọc file", by: null, at: now }));
+  if (rows.length) { const { error: e2 } = await env.admin.from("kb_facts").upsert(rows, { onConflict: "project_id,k" }); if (e2) throw new Error(e2.message); }
+  return rows.length;
+}
+const b64u8 = (u: Uint8Array) => { let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s); };
+/* Đợt chạy theo lịch (6:00, 13:00): chép nguyên văn PDF scan đang chờ, rồi tóm tắt các file đã có bản chữ nhưng chưa tóm tắt. Mỗi lượt ~100 giây, chép dở thì lượt sau làm tiếp */
+async function kbBatch(env: any) {
+  const t0 = Date.now(), A = env.admin, late = (ms = 95000) => Date.now() - t0 > ms;
+  const { data: W } = await A.from("kb_docs").select("file_id,project_id,folder,name,inbox,ocr_page,body").eq("status", "wait").order("at").limit(5);
+  for (const d of W || []) {
+    if (late()) return;
+    try {
+      if (!d.inbox) throw new Error("Thiếu file chờ chép");
+      const { data: blob, error } = await A.storage.from("kb-inbox").download(d.inbox);
+      if (error || !blob) throw new Error("Không tải được file chờ: " + (error?.message || ""));
+      const src = await PDFDocument.load(new Uint8Array(await blob.arrayBuffer()), { ignoreEncryption: true }), all = src.getPageCount(), n = Math.min(all, 300);
+      let a = d.ocr_page || 0, body = a ? String(d.body || "") : "";
+      while (a < n && !late(85000)) {
+        let k = Math.min(3, n - a), bytes: Uint8Array;
+        while (true) { const nd = await PDFDocument.create(); (await nd.copyPages(src, [...Array(k).keys()].map((i) => a + i))).forEach((pg) => nd.addPage(pg)); bytes = await nd.save(); if (bytes.byteLength <= 9 * 1048576 || k === 1) break; k = Math.max(1, Math.floor(k / 2)); }
+        const { text } = await claude(env, { system: SYS_OCR, content: [fileBlock("application/pdf", b64u8(bytes!)), { type: "text", text: `File: ${d.name}\nCác trang gửi kèm là trang ${a + 1} đến ${a + k} của tài liệu. Chép nguyên văn.` }], effort: "low", maxTokens: 32000 });
+        body += (body ? "\n" : "") + String(text || "").trim(); a += k;
+        await A.from("kb_docs").update({ body: body.slice(0, 400000), ocr_page: a }).eq("file_id", d.file_id);
+      }
+      if (a < n) return;
+      await A.from("kb_docs").update({ status: "ok", src: "ocr", summary: "", inbox: null, err: n < all ? `chép ${n}/${all} trang đầu` : "" }).eq("file_id", d.file_id);
+      await A.storage.from("kb-inbox").remove([d.inbox]);
+    } catch (e) {
+      const code = e instanceof AiErr ? e.code : "";
+      if (["sai_khoa", "het_tien", "het_luot", "qua_tai"].includes(code)) { env.M.err = code; return; }
+      await A.from("kb_docs").update({ status: "err", err: String((e as Error)?.message || e).slice(0, 280) }).eq("file_id", d.file_id);
+    }
+  }
+  const { data: S } = await A.from("kb_docs").select("file_id,project_id,folder,name,body").eq("status", "ok").eq("summary", "").order("at").limit(12);
+  for (const d of S || []) {
+    if (late()) return;
+    const f = { id: d.file_id, project_id: d.project_id, folder: d.folder, name: d.name };
+    try {
+      if (!String(d.body || "").trim()) { await A.from("kb_docs").update({ summary: "- (file không có chữ)", kind: "Tài liệu" }).eq("file_id", d.file_id); continue; }
+      const { data, model } = await claude(env, { system: SYS_DIGEST, content: [{ type: "text", text: `Thư mục: ${f.folder}\nTên file: ${f.name}\nNội dung chữ của file:\n${String(d.body).slice(0, 150000)}` }], schema: DIGEST, effort: "low", maxTokens: 24000 });
+      await digestSave(env, f, data, model, {});
+    } catch (e) {
+      const code = e instanceof AiErr ? e.code : "";
+      if (["sai_khoa", "het_tien", "het_luot", "qua_tai"].includes(code)) { env.M.err = code; return; }
+      await A.from("kb_docs").update({ summary: "- (chưa tóm tắt được: " + String((e as Error)?.message || e).slice(0, 120) + ")" }).eq("file_id", d.file_id);
+    }
+  }
+}
 async function run(b: any, env: any): Promise<Response> {
   try {
     if (b.action === "ping") {
@@ -369,17 +445,7 @@ async function run(b: any, env: any): Promise<Response> {
       if (!fb && !text) return json({ error: "khong_doc_duoc" }, 422);
       content.push({ type: "text", text: `Thư mục: ${f.folder}\nTên file: ${f.name}` + (text ? `\nNội dung chữ của file:\n${text.slice(0, 150000)}` : "") });
       const { data, model } = await claude(env, { system: SYS_DIGEST, content, schema: DIGEST, effort: "low", maxTokens: 24000 });
-      const now = new Date().toISOString();
-      const { error: e1 } = await env.admin.from("kb_docs").upsert({ file_id: f.id, project_id: f.project_id, folder: f.folder, name: f.name, status: "ok", kind: String(data.kind || "").slice(0, 120), summary: String(data.summary || "").slice(0, 4000), body: text ? text.slice(0, 400000) : String(data.notes || "").slice(0, 60000), src: text ? (b.src === "ocr" ? "ocr" : "text") : "notes", err: "", model, at: now });
-      if (e1) throw new Error(e1.message);
-      const F = (data.facts || []).filter((x: any) => x && FACT_KEYS.has(String(x.k)) && String(x.v || "").trim());
-      let n = 0;
-      if (F.length) {
-        const { data: old } = await env.admin.from("kb_facts").select("k,status").eq("project_id", f.project_id);
-        const locked = new Set((old || []).filter((x: any) => x.status === "ok").map((x: any) => x.k));
-        const rows = F.filter((x: any) => !locked.has(x.k)).map((x: any) => ({ project_id: f.project_id, k: x.k, v: String(x.v).slice(0, 2000), clause: String(x.clause || "").slice(0, 2000), file_id: f.id, src: f.name, status: "auto", by_name: "Trợ lý đọc file", by: null, at: now }));
-        if (rows.length) { const { error: e2 } = await env.admin.from("kb_facts").upsert(rows, { onConflict: "project_id,k" }); if (e2) throw new Error(e2.message); n = rows.length; }
-      }
+      const n = await digestSave(env, f, data, model, { body: text ? text.slice(0, 400000) : String(data.notes || "").slice(0, 60000), src: text ? (b.src === "ocr" ? "ocr" : "text") : "notes" });
       return json({ kind: data.kind, summary: data.summary, facts: n, model });
     }
     if (b.action === "chat") {
