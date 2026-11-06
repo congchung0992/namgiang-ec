@@ -248,6 +248,25 @@ const CONTRACT = {
   },
   required: ["contract_no", "sign_date", "value_before_vat", "value_with_vat", "vat_rate", "advance_percent", "advance_recovery", "retention_percent", "warranty_months", "payment_days", "payment_cycle", "start_date", "duration_days", "end_date", "penalty", "notes", "milestones", "evidence"]
 };
+/* Hồ sơ đề nghị thanh toán (claim) gửi chủ đầu tư: lấy số liệu để theo dõi tiền về */
+const CLAIM = {
+  type: "object",
+  properties: {
+    dot: { type: "number" }, kind: { type: "string", enum: ["tam_ung", "dot", "quyet_toan", "bao_hanh", "khac"] }, doc_no: { type: "string" },
+    sent_date: { type: "string" }, period_to: { type: "string" }, value_period: { type: "number" }, value_cum: { type: "number" }, vat_rate: { type: "number" },
+    advance_recovery: { type: "number" }, retention: { type: "number" }, paid_before: { type: "number" }, request_amount: { type: "number" }, due_date: { type: "string" }, notes: { type: "string" },
+    evidence: { type: "array", items: { type: "object", properties: { field: { type: "string" }, quote: { type: "string" } }, required: ["field", "quote"] } }
+  },
+  required: ["dot", "kind", "doc_no", "sent_date", "period_to", "value_period", "value_cum", "vat_rate", "advance_recovery", "retention", "paid_before", "request_amount", "due_date", "notes", "evidence"]
+};
+const SYS_CLAIM = `Bạn là kế toán tổng hợp của một tổng thầu xây dựng Việt Nam. Đọc HỒ SƠ ĐỀ NGHỊ THANH TOÁN (claim) mà tổng thầu gửi CHỦ ĐẦU TƯ và lấy CHÍNH XÁC các số liệu dưới đây. Không đoán, không bịa: ô nào hồ sơ không ghi thì để 0 (ô số) hoặc "" (ô chữ). Tiền là số đồng thuần, không dấu chấm phẩy.
+- dot: số đợt/lần thanh toán; kind: tam_ung (đề nghị tạm ứng) | dot (thanh toán theo khối lượng/giai đoạn) | quyet_toan | bao_hanh (hoàn trả tiền giữ lại bảo hành) | khac; doc_no: số công văn/đề nghị.
+- sent_date: ngày lập/ngày gửi đề nghị (dd/mm/yyyy); period_to: khối lượng tính đến ngày (dd/mm/yyyy).
+- value_period: giá trị khối lượng hoàn thành KỲ NÀY chưa VAT; value_cum: giá trị khối lượng hoàn thành LŨY KẾ đến kỳ này chưa VAT; vat_rate: thuế suất %.
+- advance_recovery: số tiền thu hồi tạm ứng kỳ này; retention: số tiền giữ lại (bảo hành, bảo lãnh) kỳ này; paid_before: đã thanh toán các kỳ trước.
+- request_amount: SỐ TIỀN ĐỀ NGHỊ THANH TOÁN KỲ NÀY (số chủ đầu tư phải chuyển, thường đã gồm VAT và đã trừ tạm ứng, giữ lại, đã thanh toán).
+- due_date: hạn thanh toán nếu hồ sơ ghi (dd/mm/yyyy); notes: lưu ý ảnh hưởng tiền về (tối đa 2 câu).
+- evidence: với mỗi ô số đã lấy (field = tên ô) chép nguyên văn dòng/câu làm căn cứ.`;
 const SYS_CONTRACT = `Bạn là chuyên viên hợp đồng của một tổng thầu xây dựng Việt Nam. Đọc hợp đồng thi công (hoặc phụ lục) ký với chủ đầu tư và lấy CHÍNH XÁC các điều khoản dưới đây. Không đoán, không bịa: điều khoản nào hợp đồng không ghi thì để 0 (ô số) hoặc "" (ô chữ).
 - value_before_vat, value_with_vat: giá trị hợp đồng (đồng, số thuần); vat_rate: thuế suất %.
 - advance_percent: % tạm ứng trên giá trị hợp đồng; advance_recovery: cách thu hồi tạm ứng (một câu).
@@ -424,6 +443,15 @@ async function run(b: any, env: any): Promise<Response> {
       const { data, model } = await claude(env, { system: SYS_CONTRACT, content, schema: CONTRACT, effort: "medium", maxTokens: 32000 });
       (data.milestones || []).forEach((m: any) => blank(m, ["basis", "documents", "progress_percent", "days_after", "clause"]));
       blank(data, ["contract_no", "sign_date", "value_before_vat", "value_with_vat", "vat_rate", "advance_percent", "advance_recovery", "retention_percent", "warranty_months", "payment_days", "payment_cycle", "start_date", "duration_days", "end_date", "penalty", "notes"]);
+      return json({ ...data, model });
+    }
+    if (b.action === "claim") {
+      const content: any[] = [];
+      const fb = b.doc && typeof b.doc.data === "string" ? fileBlock(String(b.doc.mime || ""), b.doc.data) : null;
+      if (fb) content.push(fb);
+      content.push({ type: "text", text: `Tên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung hồ sơ:\n${b.text.slice(0, 300000)}` : "") });
+      const { data, model } = await claude(env, { system: SYS_CLAIM, content, schema: CLAIM, effort: "medium", maxTokens: 16000 });
+      blank(data, ["dot", "doc_no", "sent_date", "period_to", "value_period", "value_cum", "vat_rate", "advance_recovery", "retention", "paid_before", "request_amount", "due_date", "notes"]);
       return json({ ...data, model });
     }
     if (b.action === "ocr") {

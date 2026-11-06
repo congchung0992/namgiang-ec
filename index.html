@@ -35,7 +35,8 @@
 .qt2 [data-vb]{border-left:2px solid #C9CCD8!important}.qt2 th.hg-c[data-v]{border-left:2px solid #fff}
 .pkt .pkn{min-width:200px;font-weight:600;padding:5px 8px;margin-bottom:2px}.pkt .sel{min-width:150px;max-width:200px;padding:5px 8px}.pkt .pkmv{min-width:140px;font-size:13px;color:var(--muted)}
 .bch{display:flex;gap:16px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 16px;background:#fff}.bch img{height:58px}.bch>div{display:flex;flex-direction:column;gap:2px;font-size:15px}.bch>div>b{font-size:22px;letter-spacing:.02em}
-.ffn .hdnm{white-space:normal;overflow:visible}.ffn .hdfl{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}.hdwrap{display:block;flex:1;min-width:0;width:100%}.hdmeta{display:grid;grid-template-columns:1fr 1.4fr 1.6fr;gap:8px;margin-bottom:12px}.hdmeta label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}.hdmeta .sub{grid-column:1/-1}@media(max-width:760px){.hdmeta{grid-template-columns:1fr}}
+.ffn .hdnm{white-space:normal;overflow:visible}.ffn .hdfl{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}.cltb th{white-space:normal}.cltb td,.cltb th{padding-left:8px;padding-right:8px}.clfm{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.clfm label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}.clfm .fi{min-width:0}.clrf{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}.clrf label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}@media(max-width:760px){.clfm{grid-template-columns:1fr 1fr}}
+.hdwrap{display:block;flex:1;min-width:0;width:100%}.hdmeta{display:grid;grid-template-columns:1fr 1.4fr 1.6fr;gap:8px;margin-bottom:12px}.hdmeta label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}.hdmeta .sub{grid-column:1/-1}@media(max-width:760px){.hdmeta{grid-template-columns:1fr}}
 .gtmd{margin-top:12px;border:1px solid #C3C9D8;border-radius:18px;padding:10px 14px;background:#F7F8FC}.gtmd summary{cursor:pointer;font-size:15px}.gtmd h4{margin:12px 0 6px}.gtmg{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:8px}.gtmr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:1px solid #C3C9D8;border-radius:14px;background:#fff}.gtmr .spec{display:block}.gtsg{display:flex;gap:4px;flex:none}.gtsg .lkfb{margin:0}.gtmd>.sub{display:block;margin-top:8px}
 .fi.req{border-color:#E1141B!important;background:#FFF5F5}
 .bcbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:12px}.bcbar label{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--muted)}.bcbar .fi{width:auto;min-width:150px;padding:7px 10px}.bcbar #bcsave{margin-left:auto}
@@ -1022,6 +1023,8 @@ window.NGB=(function(){
     const sm={},cm={};ok(S).forEach(x=>sm[x.project_id]=x);ok(C).forEach(x=>cm[x.project_id]=x);saved={};
     const projects=ok(P).map(x=>{const s=sm[x.id],k=cm[x.id],p={...x.boq,id:x.id,...(s?s.data:{}),...(k?k.data:{})};if(!p.cost)p.cost={};if(p.ratio==null)p.ratio=85;if(!k)p._noCost=1;
       saved[x.id]={b:J(boqOf(p)),vb:x.version,s:s?J(pick(p,SK)):null,vs:s?s.version:0,c:k?J(pick(p,CK)):null,vc:k?k.version:0};return p});
+    /* Claim chủ đầu tư (bảng cdt_claims): chưa có bảng thì _cl = null để màn Claim báo chưa bật */
+    let CL=null;try{const r=await c.from("cdt_claims").select("*");if(r.error)throw r.error;CL=r.data||[]}catch(e){}projects.forEach(p=>{p._cl=CL?CL.filter(x=>x.project_id===p.id):null});
     const dec={};ok(D).forEach(x=>dec[x.item_id]={s:x.status,at:x.at});savedDec=JSON.parse(J(dec));
     const mine=ok(await c.from("project_members").select("project_id,role").eq("user_id",session.user.id));const cr=((ok(me)||{}).role)||"";projects.forEach(p=>{const r=mine.find(x=>x.project_id===p.id);if(r)p._role=r.role;else if(["gd","kt","ktvt","hcns"].includes(cr))p._role=cr});
     return{projects,dec,uid:session.user.id,isBoard:!!(ok(me)||{}).is_board,role:cr}}
@@ -1512,13 +1515,17 @@ function msPlan(p,tl){const M=p.contract&&p.contract.ms;if(!M||!M.length)return 
     if(m.kind==="tam_ung")mi=0;else if(m.kind==="bao_hanh")mi=null;
     else{acc+=pc;trig=m.prog>0?m.prog:m.progress_percent>0?m.progress_percent:m.kind==="quyet_toan"?100:Math.min(100,Math.round(acc/ps*100));const k=F.findIndex(f=>f>=trig/100-1e-9);mi=k<0?R.length-1:k}
     const at=mi==null?null:mi+Math.round(dd/30);return{...m,pc,amt,dd,trig,mi,at}})}
-function cash(p,tl){const t=p.terms,V=p.value,sh=Math.round(t.pay/30),sc=Math.round(t.cost/30),MP=msPlan(p,tl);
+function cash(p,tl,raw){const t=p.terms,V=p.value,sh=Math.round(t.pay/30),sc=Math.round(t.cost/30),MP=msPlan(p,tl);
   const n=Math.max(tl.nm+Math.max(sh,sc)+1,MP?Math.max(...MP.map(m=>m.at==null?0:m.at+1)):0);
   const inn=Array(n).fill(0),out=Array(n).fill(0);let ret=V*t.ret/100;
   if(MP){MP.forEach(m=>{if(m.at!=null)inn[m.at]+=m.amt});ret=MP.filter(m=>m.kind==="bao_hanh").reduce((a,m)=>a+m.amt,0)}
   else{inn[0]+=V*t.adv/100;tl.rev.forEach((r,i)=>{inn[i+sh]+=r*(1-t.adv/100-t.ret/100)})}
   tl.cost.forEach((c,i)=>{out[i+sc]+=c});
-  let cum=0;const cu=inn.map((v,i)=>cum+=v-out[i]);const lab=[...Array(n)].map((_,i)=>{const d=new Date(tl.st.getFullYear(),tl.st.getMonth()+i,1);return"T"+(d.getMonth()+1)+"/"+String(d.getFullYear()).slice(2)});
+  /* Claim CĐT: phần thu đã claim (theo giá trị CĐT duyệt, chưa duyệt thì theo đề nghị) bỏ khỏi kế hoạch từ đầu, thay bằng tiền thực về theo tháng và số còn phải thu ở tháng hạn (quá hạn dồn vào tháng này) */
+  const CL=!raw&&p._cl&&p._cl.length?p._cl:null;if(CL){const m0=M_(tl.st),at=i=>{while(inn.length<=i){inn.push(0);out.push(0)}return i},now=Math.max(0,M_(new Date())-m0);let r=CL.reduce((a,c)=>a+clAmt(c),0);
+    for(let i=0;i<inn.length&&r>0;i++){const x=Math.min(inn[i],r);inn[i]-=x;r-=x}
+    CL.forEach(c=>{(c.receipts||[]).forEach(x=>{const d=pd(x.d);if(d)inn[at(Math.max(0,M_(d)-m0))]+=+x.amt||0});const rem=clAmt(c)-clPaid(c),du=clDue(p,c);if(rem>1)inn[at(Math.max(now,du?M_(du)-m0:now))]+=rem})}
+  let cum=0;const cu=inn.map((v,i)=>cum+=v-out[i]);const lab=[...Array(inn.length)].map((_,i)=>{const d=new Date(tl.st.getFullYear(),tl.st.getMonth()+i,1);return"T"+(d.getMonth()+1)+"/"+String(d.getFullYear()).slice(2)});
   const peak=Math.min(0,...cu),pi=cu.indexOf(peak);return{inn,out,cu,lab,peak:-peak,pm:pi>=0&&peak<0?lab[pi]:"",ret,ms:MP}}
 /* Bề rộng biểu đồ theo khung đang hiển thị để chữ không bị phóng to theo màn hình */
 const CHW=()=>{const v=document.getElementById("view"),w=v&&v.clientWidth||1100;return Math.max(560,Math.min(1500,Math.round(w-(innerWidth>900?290:40))))};
@@ -1573,7 +1580,7 @@ const LD=(p,n)=>p&&p.leads&&p.leads[n]>0?p.leads[n]:LEAD(n);const LEAD=n=>/Kết
 
 /* ---------- Danh sách sheet ---------- */
 const SHEETS=[["home","Tổng quan"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
-const BSHEETS=[["home","Tổng quan"],["lk","Tra cứu liên kết"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Phân tách gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán NCC – TP"],["hr","Nhân sự"]];
+const BSHEETS=[["home","Tổng quan"],["lk","Tra cứu liên kết"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Phân tách gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["cl","Claim CĐT"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán NCC – TP"],["hr","Nhân sự"]];
 /* Tab Hồ sơ: file lưu ở Google Drive qua api/drive; bảng quyền này chỉ để gọn màn hình, máy chủ kiểm tra lại (supabase/schema.sql) */
 /* Thư mục hồ sơ: 6 nhóm lớn (DG), file lưu ở thư mục con (DF: mã, tên, gợi ý, vai trò được xem); máy chủ kiểm tra lại quyền */
 const DG=[["01","Pháp lý – Hợp đồng"],["02","Kỹ thuật – Tiến độ"],["03","Chất lượng – An toàn"],["04","Thanh toán CĐT"],["05","NCC – TP"],["06","Hiện trường – Văn bản"]];
@@ -2428,7 +2435,7 @@ function ctFlow(p,file){let w=document.getElementById("fview");if(w)w.remove();w
 /* File trong thư mục 01.3 để chọn đọc lại */
 function ctFilesLoad(){if(!cur||!document.getElementById("ctsel"))return;const p=DB.projects.find(x=>x.id===cur.id);if(!p||p._files13!==undefined)return;p._files13=[];
   FS.list(p.id).then(L=>{p._files13=L.map(x=>({...x,folder:nf(x.folder)})).filter(x=>x.folder==="01.3"&&ctOk(x.name)&&!x.wait);if(document.getElementById("ctsel"))keep(route)}).catch(()=>{})}
-function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="goi")return ssgRoute(p,sub)||(gtView(p)+`<details class="pkold" id="pkold"${BQS.pk?" open":""}><summary>Chi tiết từng gói: chọn báo giá theo dòng BOQ, chuyển dòng sang gói khác, đổi tên gói</summary><div id="pkoldb"${BQS.pk?' data-ok="1"':""}>${BQS.pk?pkView(p):""}</div></details>`);if(s==="kh")return khView(p);if(s==="bn")return kbView(p);if(s==="lk")return lkView(p,sub);if(s==="bcn")return bcView(p);if(s==="week")return weekView(p);if(s==="nt")return ntView(p,sub);if(s==="pyc")return pycView(p,sub);if(s==="tt")return ttView(p,sub);if(s==="dc")return dcView(p);const c=calc(p),mg=pct(c.gp,c.rev);
+function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return quoteView(p);if(s==="goi")return ssgRoute(p,sub)||(gtView(p)+`<details class="pkold" id="pkold"${BQS.pk?" open":""}><summary>Chi tiết từng gói: chọn báo giá theo dòng BOQ, chuyển dòng sang gói khác, đổi tên gói</summary><div id="pkoldb"${BQS.pk?' data-ok="1"':""}>${BQS.pk?pkView(p):""}</div></details>`);if(s==="kh")return khView(p);if(s==="bn")return kbView(p);if(s==="lk")return lkView(p,sub);if(s==="bcn")return bcView(p);if(s==="week")return weekView(p);if(s==="nt")return ntView(p,sub);if(s==="cl"){qfList(p);return clView(p,sub)}if(s==="pyc")return pycView(p,sub);if(s==="tt")return ttView(p,sub);if(s==="dc")return dcView(p);const c=calc(p),mg=pct(c.gp,c.rev);
   const k3=kc("proj","Giá trị hợp đồng",ty(c.rev),"tỷ",`Chưa VAT · hồ sơ ${esc(p.qcode||"")} ngày ${esc(p.date||"")}`)+kc("cost","Giá vốn dự thầu",ty(c.cost),"tỷ",`Vật tư ${ty(c.cv)} · nhân công ${ty(c.cn)} · máy ${ty(c.cm)} tỷ`,"gv")+kc(mg>=10?"rev":"mat","Lãi gộp dự kiến",ty(c.gp),"tỷ",`Biên lãi ${fm(mg)}% doanh thu`,"lg");
   if(s==="home"){const tl0=timeline(p),cf0=cash(p,tl0);const warn=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.warn).length,0),lump=p.hms.reduce((a,h)=>a+h.lines.filter(l=>l.lump).length,0);
     return `<div class="vgrid">${k3}${todoCard(p)}
@@ -3424,7 +3431,7 @@ window.NGApp={board:false,uid:null,drive:false,guest:false,
   guestEnter(){const d=STORE.load();DB.projects=Array.isArray(d.projects)?d.projects:[];DB.dec=d.dec||{};DB.projects.forEach(p=>{if(!p.cost)p.cost={};if(p.ratio==null)p.ratio=85});NGApp.guest=true;NGApp.board=true;NGApp.uid=null;NGApp.drive=false;
     const b=document.createElement("div");b.textContent="Chế độ thử · số liệu chỉ lưu trên trình duyệt này";b.style.cssText="position:fixed;left:50%;bottom:10px;transform:translateX(-50%);max-width:70vw;padding:5px 12px;border-radius:99px;background:rgba(10,36,134,.88);color:#fff;font-size:15px;text-align:center;z-index:50;pointer-events:none";document.body.appendChild(b);
     route();if(window.renderHello)window.renderHello()},
-  async sync(){const d=await NGB.loadAll();DB.projects=d.projects;DB.dec=d.dec;NGApp.board=d.isBoard;NGApp.uid=d.uid;NGApp.realBoard=d.isBoard;NGApp.real=null;if(NGApp.as)asApply();asBtn();NGApp.drive=await NGB.drive.status();route();if(window.renderHello)window.renderHello();
+  async sync(){const d=await NGB.loadAll();DB.projects=d.projects;DB.dec=d.dec;NGApp.board=d.isBoard;NGApp.uid=d.uid;NGApp.crole=d.role||"";NGApp.realBoard=d.isBoard;NGApp.real=null;if(NGApp.as)asApply();asBtn();NGApp.drive=await NGB.drive.status();route();if(window.renderHello)window.renderHello();
     flushLocal().then(r=>{if(r.done&&document.getElementById("fls"))filesLoad()}).catch(()=>{})}};
 addEventListener("hashchange",()=>{pending=null;route()});route();
 view.addEventListener("submit",async e=>{const f=e.target;if(f.id!=="rlf")return;e.preventDefault();const d=Object.fromEntries(new FormData(f)),m=document.getElementById("rlm");try{await NGB.addRule(d.scope,d.text);rulesLoad()}catch(er){if(m){m.textContent="Chưa ghi được: "+er.message;m.style.color="#C0141B"}}});
@@ -3873,7 +3880,7 @@ const ssgV=r=>{const d=r.data||{};return(d.vendors||[]).find(v=>v.qid===d.pick)|
 /* Tổng mỗi đơn vị chỉ trên các dòng họ chào; tg = giá gốc của đúng các dòng đó (để lời/lỗ so đúng phạm vi) */
 function ssgTot(r){const T={};(r.data.vendors||[]).forEach(v=>T[v.qid]={tn:0,n:0,tg:0});(r.items||[]).forEach(x=>Object.entries(x.pr||{}).forEach(([q,v])=>{if(v!=null&&T[q]){T[q].tn+=v*x.q;T[q].tg+=x.gv*x.q;T[q].n++}}));return T}
 /* File báo giá trong 05.1 (để bấm Xem) */
-function qfList(p){if(p._f05!==undefined)return;p._f05=[];FS.list(p.id).then(L=>{p._f05=L.filter(x=>!x.wait).sort((a,b)=>(/^05\.1$/.test(nf(b.folder))?1:0)-(/^05\.1$/.test(nf(a.folder))?1:0));if(p._f05.length&&/-(goi|kh|bg)(-|$)/.test(location.hash))keep(route)}).catch(()=>{})}
+function qfList(p){if(p._f05!==undefined)return;p._f05=[];FS.list(p.id).then(L=>{p._f05=L.filter(x=>!x.wait).sort((a,b)=>(/^05\.1$/.test(nf(b.folder))?1:0)-(/^05\.1$/.test(nf(a.folder))?1:0));if(p._f05.length&&/-(goi|kh|bg|cl)(-|$)/.test(location.hash))keep(route)}).catch(()=>{})}
 const qfBtn=(p,name,sm)=>{if(!name)return"";const f=(p._f05||[]).find(x=>x.name===name||qCore(p.id,x.name)===qCore(p.id,name));return f?`<button class="back sm" style="margin:0" data-fv="${esc(f.id)}" data-n="${esc(f.name)}" title="${esc(f.name)} · thư mục ${esc(nf(f.folder))}">${sm?"Xem":"📄 Xem file "+(/^05\.2$/.test(nf(f.folder))?"hợp đồng":"báo giá")}</button>`:sm?`<span class="sub" title="File báo giá: ${esc(name)} (chưa thấy trong 05.1)">📄</span>`:`<small class="spec" title="${esc(name)}">📄 ${esc(name.replace(/^\d{8}_[^_]+_/,"").slice(0,40))}</small>`};
 function ssgNew(p,key){const g=pkList(p).find(x=>x.key===key);if(!g)return null;const O=pkOffers(p,g);if(!O.length)return null;const fo=O.filter(o=>o.full),best=(fo.length?fo:O).reduce((a,b)=>b.tn<a.tn?b:a);
   const pick=(p.pksel||{})[key]&&O.some(o=>o.q.id===p.pksel[key])?p.pksel[key]:best.q.id;
@@ -4557,6 +4564,98 @@ function asSet(a){NGApp.as=a;asApply();asBar();try{ntfLoad()}catch(e){}const w=d
 document.addEventListener("click",e=>{const t=e.target;if(t.closest("#asBtn")){asOpen();return}if(t.closest("[data-asclose]")){document.getElementById("asdlg").hidden=true;return}
   if(t.closest("[data-asx]")){asSet(null);return}const i=t.closest("[data-asi]");if(i){const o=(i.dataset.asg==="u"?AS.U:AS.R)[+i.dataset.asi];if(o)asSet({role:o.role,cht:o.cht||[],uid:o.uid||null,label:o.label})}});
 document.addEventListener("input",e=>{if(e.target.id==="asq"){AS.q=e.target.value;AS.focus=1;asDraw();AS.focus=0}});
+/* ---------- Claim chủ đầu tư (anh chốt 06/11/2026) ----------
+   Kế toán tổng hợp (và Admin) tải hồ sơ đề nghị thanh toán gửi CĐT → file lưu thư mục 04.3, Claude đọc số liệu (Excel đọc được cả trên máy) → anh kiểm, lưu vào bảng cdt_claims.
+   Mỗi đợt ghi các lần tiền về. Dòng tiền (hàm cash): phần thu đã có claim thay bằng tiền thực về theo tháng + số còn phải thu ở tháng hạn thanh toán; phần thu chưa claim giữ theo tiến độ, điều khoản */
+COL.cl=["#047857","#34D399","#D1FAE5","#065F46"];I.cl='<path d="M4 7h16v12H4z"/><path d="M8 7V5h8v2M12 10v6M9.5 13.5 12 16l2.5-2.5"/>';
+var CLE=null,CLM="",CLR=null,CLX="";
+const CLK={tam_ung:"Tạm ứng",dot:"Thanh toán đợt",quyet_toan:"Quyết toán",bao_hanh:"Hoàn bảo hành",khac:"Khác"};
+const clAmt=c=>{const d=c.data||{};return +(d.ok!=null&&d.ok!==""?d.ok:d.de)||0},clPaid=c=>(c.receipts||[]).reduce((a,x)=>a+(+x.amt||0),0);
+const clCan=p=>!NGApp.guest&&(p._role==="kt"||(!NGApp.as&&NGApp.crole==="admin"));
+const clDue=(p,c)=>{const d=c.data||{};return pd(d.due)||(pd(d.sent)?addD(pd(d.sent),(p.terms||{}).pay||30):null)};
+function clSt(p,c,today){const a=clAmt(c),pa=clPaid(c),du=clDue(p,c);if(a&&pa>=a-1)return["ok","Đã thu đủ"];if(du&&du<today)return["bad",pa?"Quá hạn · thu một phần":"Quá hạn"];return pa?["warn","Thu một phần"]:["","Chờ thu"]}
+/* Đọc hồ sơ: Claude đọc mọi loại file; Excel đọc thêm trên máy làm dự phòng */
+async function clRead(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),buf=await f.arrayBuffer(),body={action:"claim",name:f.name};let wb=null;
+  if(ext==="pdf"||/^(jpe?g|png|webp)$/.test(ext)){if(f.size>30*1048576)throw new Error("File quá lớn để đọc (tối đa 30 MB)");body.doc={mime:ext==="pdf"?"application/pdf":/^jpe?g$/.test(ext)?"image/jpeg":"image/"+ext,data:b64(buf)}}
+  else if(ext==="docx"){await needX();const z=XLSX.CFB.read(new Uint8Array(buf),{type:"array"}),x=XLSX.CFB.find(z,"word/document.xml");if(!x)throw new Error("Không đọc được file Word này");body.text=xmlText(new TextDecoder().decode(new Uint8Array(x.content)))}
+  else if(/^(xlsx|xls|xlsm)$/.test(ext)){await needX();wb=XLSX.read(buf,{type:"array"});body.text=wb.SheetNames.map(n=>"[Sheet "+n+"]\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false})).join("\n")}
+  else throw new Error("Chỉ đọc được hồ sơ PDF, Word (.docx), Excel hoặc ảnh chụp");
+  try{const r=await NGB.ai(body);return{src:"Claude",d:{dot:r.dot,kind:r.kind||"dot",no:r.doc_no||"",sent:r.sent_date||"",to:r.period_to||"",kk:r.value_period,kl:r.value_cum,vat:r.vat_rate,tu:r.advance_recovery,gl:r.retention,pb:r.paid_before,de:r.request_amount,due:r.due_date||"",note:r.notes||""},ev:r.evidence||[]}}
+  catch(e){if(!wb)throw e;return{src:"máy (Claude chưa đọc được: "+(e.message||e)+")",d:clXls(wb),ev:[]}}}
+/* Đọc nhanh file Excel đề nghị thanh toán theo nhãn dòng (dự phòng khi chưa gọi được Claude) */
+function clXls(wb){const N=BOQ.nz,d={kind:"dot"},num=v=>typeof v==="number"?v:parseVN(v);
+  wb.SheetNames.forEach(n=>{const R=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,blankrows:false});
+    R.forEach(r=>{const t=N(r.filter(x=>typeof x==="string").join(" ")),ns=r.map(num).filter(v=>v!=null&&Math.abs(v)>=1000),v=ns.length?ns[ns.length-1]:null,set=(k,x)=>{if(d[k]==null&&x!=null)d[k]=x};
+      if(!d.no){const c=r.find(x=>typeof x==="string"&&/^\s*số\s*:\s*\S/i.test(x));if(c)d.no=c.replace(/^\s*số\s*:\s*/i,"").trim().slice(0,60)}
+      if(d.dot==null){const m=t.match(/(?:dot|lan)\s*(?:thanh toan\s*)?(?:so\s*)?(\d{1,2})\b/);if(m&&/thanh toan|de nghi/.test(t))d.dot=+m[1]}
+      if(!d.sent){const m=t.match(/ngay\s*(\d{1,2})\s*thang\s*(\d{1,2})\s*nam\s*(\d{4})/);if(m)d.sent=m[1].padStart(2,"0")+"/"+m[2].padStart(2,"0")+"/"+m[3]}
+      if(/tam ung/.test(t)&&/de nghi/.test(t)&&!/thu hoi|hoan|khau tru/.test(t))d.kind="tam_ung";
+      if(d.vat==null&&/vat|thue gtgt/.test(t)){const m=t.match(/(\d{1,2})\s*%/);if(m)d.vat=+m[1]}
+      if(v==null)return;
+      if(/de nghi thanh toan (ky|dot|lan) nay|so tien de nghi|gia tri de nghi thanh toan|tong (so tien|gia tri) de nghi/.test(t))set("de",v);
+      else if(/thu hoi tam ung|hoan (tra )?tam ung|khau tru tam ung/.test(t))set("tu",v);
+      else if(/giu lai|bao hanh/.test(t))set("gl",v);
+      else if(/da thanh toan|cac (ky|dot|lan) truoc/.test(t))set("pb",v);
+      else if(/luy ke|den ky nay|den het/.test(t)&&/gia tri|khoi luong/.test(t))set("kl",v);
+      else if(/(ky|dot|lan) nay/.test(t)&&/gia tri|khoi luong/.test(t))set("kk",v)})});return d}
+const clNew=p=>{const L=p._cl||[];return{dot:L.reduce((a,c)=>Math.max(a,+c.dot||0),0)+1,kind:L.length?"dot":"tam_ung",no:"",sent:fd(new Date()),to:"",kk:"",kl:"",vat:(p.contract&&p.contract.vat)||8,tu:"",gl:"",pb:"",de:"",ok:"",due:"",note:""}};
+function clView(p,sub){const L=(p._cl||[]).slice().sort((a,b)=>(+a.dot||0)-(+b.dot||0)),today=new Date(new Date().toDateString()),can=clCan(p),c0=calc(p),vat=1+(+((p.contract||{}).vat)||8)/100;
+  if(p._cl===null)return`<div class="vgrid"><section class="card span3"><h3>Claim chủ đầu tư</h3><div class="ctb" style="margin-top:10px">Chưa bật bảng lưu claim trên máy chủ · cần chạy bản cập nhật cơ sở dữ liệu "cdt_claims"</div></section></div>`;
+  const de=L.reduce((a,c)=>a+(+(c.data||{}).de||0),0),am=L.reduce((a,c)=>a+clAmt(c),0),pa=L.reduce((a,c)=>a+clPaid(c),0),od=L.filter(c=>clSt(p,c,today)[0]==="bad"),odv=od.reduce((a,c)=>a+clAmt(c)-clPaid(c),0);
+  const n0v=v=>v===""||v==null||!+v?"-":n0(v);
+  const rows=L.map(c=>{const d=c.data||{},s=clSt(p,c,today),du=clDue(p,c),rem=clAmt(c)-clPaid(c),op=CLR===c.id;
+    return`<tr class="${s[0]==="bad"?"wcons":""}"><td class="tc"><b>${esc(c.dot||"")}</b></td><td>${esc(CLK[d.kind]||d.kind||"")}<small class="spec">${esc(d.no||"")}</small></td><td class="tc num">${esc(d.sent||"-")}</td><td class="r num">${n0v(d.kk)}${+d.kl?`<small class="spec">lũy kế ${n0(d.kl)}</small>`:""}</td><td class="r num"><b>${n0v(d.de)}</b></td><td class="r num">${n0v(d.ok)}</td><td class="tc num">${du?fd(du):"-"}</td>
+      <td class="r num">${n0v(clPaid(c))}${(c.receipts||[]).length?`<small class="spec">${c.receipts.map(x=>esc(x.d)+": "+n0(x.amt)).join("<br>")}</small>`:""}</td><td class="r num"${rem>1?' style="color:#C0141B"':""}>${rem>1?n0(rem):"-"}</td><td class="tc">${st(s[0],s[1])}</td>
+      <td><div style="display:flex;gap:6px;flex-wrap:wrap">${c.file_name?clFile(p,c.file_name):""}${can?`<button class="back sm" style="margin:0" data-clrc="${esc(c.id)}">${op?"Đóng":"Ghi tiền về"}</button><button class="back sm" style="margin:0" data-cledit="${esc(c.id)}">Sửa</button><button class="back sm ico del" style="margin:0" data-clx="${esc(c.id)}" title="${CLX===c.id?"Bấm lần nữa để xoá":"Xoá đợt"}">${CLX===c.id?"Xoá?":"×"}</button>`:""}</div></td></tr>`+
+      (op?`<tr class="clrc"><td></td><td colspan="10"><div class="clrf"><b>Ghi nhận tiền về đợt ${esc(c.dot)}</b><label>Ngày <input class="fi" id="clrd" value="${fd(today)}" style="width:130px"></label><label>Số tiền (đ) <input class="fi r" id="clra" inputmode="decimal" value="${rem>1?n0(rem):""}" style="width:180px"></label><label>Ghi chú <input class="fi" id="clrn" placeholder="UNC, ngân hàng…" style="width:240px"></label><button class="pill" data-clrok="${esc(c.id)}" style="${sv("rev")};margin:0"><span class="dot">✓</span>Lưu</button>
+        ${(c.receipts||[]).map((x,i)=>`<span class="ftg">${esc(x.d)} · ${n0(x.amt)}${x.n?" · "+esc(x.n):""} <button class="back sm ico del" style="margin:0" data-clrx="${esc(c.id)}|${i}" aria-label="Xoá lần thu">×</button></span>`).join("")}</div></td></tr>`:"")}).join("");
+  /* Dòng tiền thu theo tháng: kế hoạch ban đầu (tiến độ + điều khoản) · kế hoạch cập nhật theo claim · thực thu */
+  let cfh="";try{const tl=timeline(p),A=cash(p,tl,1),B=cash(p,tl),n=Math.max(A.inn.length,B.inn.length),act=Array(n).fill(0),m0=M_(tl.st);
+    L.forEach(c=>(c.receipts||[]).forEach(x=>{const d=pd(x.d);if(!d)return;const i=Math.min(n-1,Math.max(0,M_(d)-m0));act[i]+=+x.amt||0}));
+    const lab=B.lab.length>=n?B.lab:A.lab,nowi=M_(today)-m0;let ca=0,cb=0,cr=0;
+    cfh=`<section class="card span3"><div class="bh"><div><h3>Dòng tiền thu theo tháng</h3><span class="sub">Kế hoạch ban đầu: theo tiến độ và điều khoản hợp đồng · Kế hoạch cập nhật: phần đã claim thay bằng tiền đã về và số còn phải thu ở tháng hạn thanh toán (quá hạn dồn vào tháng này), phần chưa claim giữ theo tiến độ · đã cập nhật vào biểu đồ dòng tiền ở tab Doanh thu · đơn vị đồng</span></div></div>
+      <div class="tw" style="margin-top:10px;max-height:60vh;overflow:auto"><table class="t cltb"><thead><tr><th>Tháng</th><th>KH ban đầu</th><th>KH cập nhật</th><th>Thực thu</th><th>Thực thu − KH ban đầu</th><th>Lũy kế KH ban đầu</th><th>Lũy kế KH cập nhật</th><th>Lũy kế thực thu</th></tr></thead><tbody>${[...Array(n)].map((_,i)=>{const a=A.inn[i]||0,b=B.inn[i]||0,r=act[i];ca+=a;cb+=b;cr+=r;const ch=i<=nowi?r-a:null;
+        return`<tr${i===nowi?' class="gr"':""}><td class="tc">${esc(lab[i]||"")}${i===nowi?`<small class="spec">tháng này</small>`:""}</td><td class="r num">${n0v(a)}</td><td class="r num">${n0v(b)}</td><td class="r num">${n0v(r)}</td><td class="r num"${ch!=null&&ch<0?' style="color:#C0141B"':""}>${ch==null?"":ch<0?"("+n0(-ch)+")":n0v(ch)}</td><td class="r num">${n0v(ca)}</td><td class="r num">${n0v(cb)}</td><td class="r num">${i<=nowi?n0v(cr):""}</td></tr>`}).join("")}</tbody></table></div></section>`}catch(e){}
+  const form=CLE&&CLE.pid===p.id?clForm(p):"";
+  return`<div class="vgrid">${kc("rev","Giá trị hợp đồng (gồm VAT)",ty(c0.rev*vat),"tỷ","VAT "+fm((vat-1)*100,0)+"% · chưa gồm phát sinh")}${kc("cl","Đã đề nghị thanh toán",ty(de),"tỷ",`${L.length} đợt · CĐT duyệt/đề nghị tính thu ${ty(am)} tỷ`)}${kc(od.length?"cost":"prog",od.length?"Quá hạn chưa thu":"Đã thu",ty(od.length?odv:pa),"tỷ",od.length?`${od.length} đợt quá hạn · đã thu ${ty(pa)} tỷ`:`Còn phải thu ${ty(am-pa)} tỷ`)}
+    ${form}<section class="card span3"><div class="bh"><div><h3>Claim chủ đầu tư · theo dõi tiền về</h3><span class="sub">Kế toán tổng hợp tải hồ sơ đề nghị thanh toán gửi CĐT · file lưu vào thư mục 04.3, Claude đọc số liệu để anh kiểm trước khi lưu · hạn thu = ngày gửi + ${(p.terms||{}).pay||30} ngày theo điều khoản nếu hồ sơ không ghi · số tiền đơn vị đồng${can?"":" · tài khoản này chỉ xem"}</span></div>${can?`<div style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill" style="${sv("cl")};cursor:pointer;margin:0"><input type="file" id="clf" accept=".pdf,.xlsx,.xls,.xlsm,.docx,.jpg,.jpeg,.png,.webp" hidden><span class="dot">↑</span>Tải hồ sơ claim</label><button class="back" style="margin:0" data-clman="1">Nhập tay</button></div>`:""}</div>
+    ${CLM?`<div class="sub" style="margin-top:8px;color:${/^Đã/.test(CLM)?"#0B6B34":"#C0141B"}">${esc(CLM)}</div>`:""}
+    ${L.length?`<div class="tw" style="margin-top:12px"><table class="t cltb"><thead><tr><th>Đợt</th><th>Loại · số hồ sơ</th><th>Ngày gửi</th><th>KL kỳ này chưa VAT</th><th>Đề nghị thanh toán</th><th>CĐT duyệt</th><th>Hạn thu</th><th>Đã thu</th><th>Còn phải thu</th><th>Tình trạng</th><th></th></tr></thead><tbody>${rows}</tbody>
+      <tfoot><tr><td colspan="4">Cộng ${L.length} đợt</td><td class="r num">${n0v(de)}</td><td class="r num">${n0v(L.reduce((a,c)=>a+(+(c.data||{}).ok||0),0))}</td><td></td><td class="r num">${n0v(pa)}</td><td class="r num">${n0v(am-pa)}</td><td colspan="2"></td></tr></tfoot></table></div>`:`<div class="sub" style="margin-top:10px">Chưa có đợt claim nào.${can?" Bấm Tải hồ sơ claim để thêm đợt.":""}</div>`}</section>${cfh}</div>`}
+const clFile=(p,name)=>{const f=(p._f05||[]).find(x=>x.name===name);return f?`<button class="back sm" style="margin:0" data-fv="${esc(f.id)}" data-n="${esc(f.name)}" title="${esc(f.name)}">Xem file</button>`:`<span class="sub" title="${esc(name)}">File ở 04.3</span>`};
+function clForm(p){const E=CLE,d=E.d,inp=(k,lab,w,num,ph)=>`<label>${lab}<input class="fi${num?" r":""}" data-cld="${k}" ${num?'inputmode="decimal"':""} value="${esc(num?(d[k]!==""&&d[k]!=null&&+d[k]?n0(d[k]):""):d[k]==null?"":d[k])}" placeholder="${ph||""}"${w?` style="${w}"`:""}></label>`;
+  if(E.busy)return`<section class="card span3"><h3>Đang đọc hồ sơ · ${esc(E.file.name)}</h3><div class="sub" style="margin-top:8px">Claude đang đọc số liệu đề nghị thanh toán, file dài có thể mất 1–2 phút…</div></section>`;
+  const ev=(E.ev||[]).filter(x=>x.quote).slice(0,8);
+  return`<section class="card span3"><div class="bh"><div><h3>${E.id?"Sửa đợt claim "+esc(d.dot||""):"Đợt claim mới"}${E.file?" · "+esc(E.file.name):""}</h3><span class="sub">${E.src?"Số liệu do "+esc(E.src)+" đọc · anh kiểm lại theo hồ sơ, sửa nếu sai rồi bấm Lưu":"Nhập số liệu theo hồ sơ đã gửi CĐT"} · tiền là số chưa làm tròn, đơn vị đồng</span></div></div>
+    <div class="clfm"><label>Loại<select class="fi sel" data-cld="kind">${Object.entries(CLK).map(([k,v])=>`<option value="${k}"${d.kind===k?" selected":""}>${v}</option>`).join("")}</select></label>${inp("dot","Đợt số *","",0)}${inp("no","Số hồ sơ / công văn")}${inp("sent","Ngày gửi CĐT * (dd/mm/yyyy)")}${inp("to","Khối lượng tính đến ngày")}
+      ${inp("kk","Giá trị KL kỳ này, chưa VAT","",1)}${inp("kl","Giá trị KL lũy kế, chưa VAT","",1)}${inp("vat","VAT %","",1)}${inp("tu","Thu hồi tạm ứng kỳ này","",1)}${inp("gl","Giữ lại (bảo hành) kỳ này","",1)}${inp("pb","Đã thanh toán các kỳ trước","",1)}
+      ${inp("de","Số tiền đề nghị thanh toán kỳ này *","",1)}${inp("ok","CĐT duyệt (khi có)","",1,"để trống = theo đề nghị")}${inp("due","Hạn thanh toán (dd/mm/yyyy)","",0,"trống = ngày gửi + "+((p.terms||{}).pay||30)+" ngày")}${inp("note","Ghi chú","grid-column:span 2")}</div>
+    ${ev.length?`<details style="margin-top:8px"><summary class="sub">Căn cứ Claude trích trong hồ sơ (${ev.length})</summary>${ev.map(x=>`<div class="sub">· <b>${esc(x.field)}</b>: ${esc(x.quote)}</div>`).join("")}</details>`:""}
+    <div class="bh" style="margin-top:12px"><span class="sub" style="color:#C0141B">${esc(E.err||"")}</span><div style="display:flex;gap:8px"><button class="back" data-clcancel="1">Huỷ</button><button class="pill" data-clsave="1" style="${sv("cl")}"><span class="dot">✓</span>${E.file?"Lưu file vào 04.3 và lưu đợt":"Lưu"}</button></div></div></section>`}
+{const P=()=>cur&&DB.projects.find(x=>x.id===cur.id),R=()=>keep(route),num=v=>{const x=parseVN(String(v));return x==null?"":x},isCl=()=>/^#da-[^-]+-cl/.test(location.hash),db=()=>NGB.sb().from("cdt_claims");
+  const put=(p,row)=>{p._cl=[...(p._cl||[]).filter(x=>x.id!==row.id),row]};
+  view.addEventListener("change",async e=>{const t=e.target,p=P();if(!p||!isCl())return;
+    if(t.dataset.cld&&CLE){const k=t.dataset.cld;CLE.d[k]=["kk","kl","vat","tu","gl","pb","de","ok"].includes(k)?num(t.value):k==="dot"?(parseInt(t.value)||""):t.value.trim();if(["kk","kl","vat","tu","gl","pb","de","ok"].includes(k))R();return}
+    if(t.id==="clf"&&t.files[0]){const f=t.files[0];t.value="";CLE={pid:p.id,file:f,busy:1,d:clNew(p)};CLM="";R();
+      try{const r=await clRead(f);Object.entries(r.d).forEach(([k,v])=>{if(v!=null&&v!=="")CLE.d[k]=v});CLE.src=r.src;CLE.ev=r.ev}catch(er){CLE.err="Chưa đọc được số liệu: "+(er.message||er)+" · anh nhập tay theo hồ sơ"}CLE.busy=0;R()}});
+  view.addEventListener("click",async e=>{const b=e.target.closest("[data-clman],[data-clcancel],[data-clsave],[data-cledit],[data-clrc],[data-clrok],[data-clrx],[data-clx]");if(!b||!isCl())return;const p=P();if(!p)return;const d=b.dataset;
+    if(d.clman){CLE={pid:p.id,d:clNew(p)};CLM="";R();return}
+    if(d.clcancel){CLE=null;R();return}
+    if(d.cledit){const c=(p._cl||[]).find(x=>x.id===d.cledit);if(c){CLE={pid:p.id,id:c.id,d:{dot:c.dot,...(c.data||{})}};window.scrollTo({top:0,behavior:"smooth"});R()}return}
+    if(d.clrc){CLR=CLR===d.clrc?null:d.clrc;R();return}
+    if(d.clx){if(CLX!==d.clx){CLX=d.clx;R();setTimeout(()=>{if(CLX===d.clx){CLX="";if(isCl())R()}},4000);return}CLX="";try{const {error}=await db().delete().eq("id",d.clx);if(error)throw error;p._cl=(p._cl||[]).filter(x=>x.id!==d.clx);CLM="Đã xoá đợt claim (file ở 04.3 vẫn giữ)"}catch(er){CLM="Chưa xoá được: "+(er.message||er)}R();return}
+    if(d.clrok||d.clrx){const id=d.clrok||d.clrx.split("|")[0],c=(p._cl||[]).find(x=>x.id===id);if(!c)return;let rc=(c.receipts||[]).slice();
+      if(d.clrok){const dt=document.getElementById("clrd").value.trim(),a=num(document.getElementById("clra").value),n=document.getElementById("clrn").value.trim();if(!pd(dt)||!(a>0)){CLM="Ghi ngày dạng dd/mm/yyyy và số tiền về";R();return}rc.push({d:dt,amt:a,n,at:new Date().toISOString(),by:NGApp.uid})}
+      else rc.splice(+d.clrx.split("|")[1],1);
+      try{const {data,error}=await db().update({receipts:rc}).eq("id",id).select().single();if(error)throw error;put(p,data);CLM=d.clrok?"Đã ghi nhận tiền về đợt "+c.dot:"Đã xoá lần thu";if(d.clrok)CLR=null}catch(er){CLM="Chưa lưu được: "+(er.message||er)}R();return}
+    if(d.clsave&&CLE){const E=CLE,x=E.d;if(!(+x.dot>0)||!pd(x.sent)||!(+x.de>0)){E.err="Cần đợt số, ngày gửi (dd/mm/yyyy) và số tiền đề nghị thanh toán";R();return}if(x.due&&!pd(x.due)){E.err="Hạn thanh toán ghi dạng dd/mm/yyyy";R();return}
+      if((p._cl||[]).some(c=>c.id!==E.id&&+c.dot===+x.dot&&(c.data||{}).kind===x.kind)){E.err="Đợt "+x.dot+" ("+CLK[x.kind]+") đã có · anh sửa đợt đó hoặc đổi số đợt";R();return}
+      b.disabled=true;E.err="";try{let fname=E.id?((p._cl||[]).find(c=>c.id===E.id)||{}).file_name:null;
+        if(E.file){const ext=(E.file.name.match(/\.[^.]+$/)||[""])[0],f=new File([E.file],"Claim CDT dot "+x.dot+(x.no?" "+String(x.no).replace(/[\/\\]/g,"-"):"")+ext,{type:E.file.type});fname=named(p.id,f).name;await FS.upload(p.id,"04.3",f);p._f05=undefined}
+        const {dot,...data}=x,row={id:E.id||"cl"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),project_id:p.id,dot:+dot,data,file_name:fname||null};
+        const {data:sv2,error}=await (E.id?db().update({dot:row.dot,data:row.data,file_name:row.file_name}).eq("id",E.id).select().single():db().insert(row).select().single());if(error)throw error;
+        put(p,sv2);CLE=null;CLM="Đã lưu đợt "+row.dot+(E.file?" · file đã lưu vào 04.3":"")+" · dòng tiền đã cập nhật"}catch(er){E.err="Chưa lưu được: "+(er.message||er);b.disabled=false}R()}});}
+
 NGBoot();
 })();
 /* ===== Toàn màn hình ===== */
