@@ -112,6 +112,11 @@ Dự án tạo theo cấu trúc cũ (8 thư mục ngang hàng) tự chuyển ở
 - Bản đồ gói thầu: mỗi gói đi tới bước nào (báo giá → so sánh giá → hợp đồng → yêu cầu vật tư → nghiệm thu → thanh toán), tô màu theo kế hoạch giao thầu.
 - Trợ lý chat nhận kèm tóm tắt liên kết của dự án đang mở để trả lời lần theo mối nối.
 
+## Làm việc với Claude thay trợ lý trên web (06/11/2026)
+- Đã bỏ khung chat trợ lý và việc tự đọc file của Bộ não dự án trên web. Hỏi đáp, phân tích, so sánh giá, trích hợp đồng làm trên Claude với skill `quan-tri-du-an-nam-giang` (đọc dữ liệu qua kết nối Supabase; chỉ đọc tự do, mọi việc ghi phải được anh đồng ý).
+- Giữ các nút giúp nhập liệu: đọc báo giá, đọc hợp đồng CĐT, gợi ý thư mục khi tải file, nút "Tạo bản chữ" từng file ở tab Bộ não dự án.
+- Thẻ "Trợ lý Nam Giang" ở trang Tổng quan chuyển thành nút mở Claude.
+
 ## Bài học cho AI
 - Bảng `ai_lessons` (migration `20261105_ai_lessons.sql`): `kind = match` là cặp dòng báo giá ↔ dòng BOQ đúng/sai (web tự áp khi ghép); `kind = rule` là câu dặn (`q` = phạm vi `baogia | hopdong | thumuc | chat | all`, `l` = nội dung).
 - Web tự ghi bài học khi anh sửa ghép báo giá, đổi gói vật tư, sửa số đọc từ hợp đồng hoặc đợt thanh toán, xếp file khác thư mục gợi ý. Anh tự dặn thêm ở Quản trị → Bài học cho AI.
