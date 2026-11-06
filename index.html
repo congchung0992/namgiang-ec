@@ -44,6 +44,11 @@
 .admas{display:grid;grid-template-columns:minmax(260px,1.6fr) minmax(160px,.8fr) minmax(220px,1.2fr) auto;gap:10px;align-items:end;max-width:1000px}.admas .fl{margin:0}.admtb td{vertical-align:middle}@media(max-width:760px){.admas{grid-template-columns:1fr}}
 .sheets.grp{margin-bottom:6px}.sgsub{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;padding-left:4px}.sgt{border:0;border-radius:99px;padding:7px 14px;font:600 15px var(--f);background:var(--cd,#EEF1F8);color:var(--t,#0A2486);cursor:pointer;background:color-mix(in srgb,var(--c) 12%,#fff);color:var(--cd)}.sgt.on{background:linear-gradient(135deg,var(--c),var(--c2));color:#fff;box-shadow:0 6px 14px -8px var(--c)}
 .gpin{vertical-align:-3px;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}.gloc{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px;min-width:0}.gloc b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gloc:hover b{text-decoration:underline}
+body.sfull .top,body.sfull .phd,body.sfull .sheets,body.sfull .note{display:none!important}
+body.sfull #view{padding-top:8px}
+body.sfull .sgsub{position:sticky;top:0;z-index:30;padding:10px 4px;margin:0 0 10px;background:rgba(236,236,238,.92);backdrop-filter:blur(6px)}
+#sfx{display:none;position:fixed;top:10px;right:16px;z-index:45;border:0;border-radius:999px;padding:8px 14px;background:#fff;color:#0A2486;font:600 13px/1 Arial,sans-serif;box-shadow:0 6px 18px -8px rgba(16,24,64,.45);cursor:pointer}
+body.sfull:not(.edmode) #sfx{display:block}
 body.edmode .top,body.edmode .phd,body.edmode .sheets,body.edmode .sgsub,body.edmode .note{display:none!important}
 body.edmode #view>*:not(:has(.edfull)):not(.edfull),body.edmode .vgrid>*:not(:has(.edfull)):not(.edfull),body.edmode :has(>.edfull)>*:not(.edfull){display:none!important}
 body.edmode .edfull{grid-column:1/-1;margin:0 0 96px;border-radius:20px}body.edmode #view{padding-top:8px}
@@ -4831,6 +4836,13 @@ view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.targe
       const {data,error}=await NGB.sb().rpc("mr_save",{p_id:x.id,p_project:p.id,p_kind:"pnh",p_no:"",p_title:"Nhận hàng · "+x.vendor+" · "+x.pno,p_need:x.date,p_items:items,p_data:{po:x.po,pno:x.pno,vendor:x.vendor,hdf:x.hdf,dn:x.dn||"",note:x.note||"",file:fn},p_submit:true,p_note:""});if(error)throw error;
       PN=null;PY.list=[data,...PY.list.filter(y=>y.id!==data.id)];PY.msg="Đã lưu phiếu nhận hàng "+data.no;location.hash="da-"+p.id+"-pyc-"+data.id;R()}
     catch(er){PY.msg=pyErr(er);b.disabled=false;R()}}});}
+
+/* Bấm thẻ con của nhóm sheet (BOQ & Giá vốn, Phân tách gói thầu…) thì mở toàn màn hình, Esc hoặc nút góc phải để thoát (anh chốt 06/11/2026) */
+(()=>{const x=document.createElement("button");x.id="sfx";x.type="button";x.textContent="✕ Thoát toàn màn hình (Esc)";document.body.appendChild(x);
+  const off=()=>document.body.classList.remove("sfull");x.addEventListener("click",off);
+  document.addEventListener("click",e=>{if(e.target.closest(".sgsub .sgt")){document.body.classList.add("sfull");scrollTo(0,0)}},true);
+  addEventListener("keydown",e=>{if(e.key!=="Escape"||!document.body.classList.contains("sfull")||document.body.classList.contains("edmode"))return;if(document.getElementById("fview")||document.getElementById("lkp"))return;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){a.blur();return}off()});
+  addEventListener("hashchange",()=>{if(!/^#da-/.test(location.hash)||!document.querySelector(".sgsub"))off()})})();
 NGBoot();
 })();
 /* ===== Toàn màn hình ===== */
