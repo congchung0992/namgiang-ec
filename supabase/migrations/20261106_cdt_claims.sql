@@ -25,3 +25,6 @@ create trigger cdt_claims_touch before update on public.cdt_claims for each row 
 
 -- Đổi tên file theo chuẩn (nút "Đổi tên file theo chuẩn" ở thư mục 05.2): cho GĐ dự án, QS, Kế toán tổng hợp, Ban giám đốc sửa tên file
 create policy files_update on public.project_files for update to authenticated using (public.has_role(project_id, array['gd','qs','kt'])) with check (public.has_role(project_id, array['gd','qs','kt']));
+
+-- Bảng project_files trước đây không cấp quyền UPDATE cho người dùng: chỉ mở cột name để đổi tên file
+grant update (name) on public.project_files to authenticated;
