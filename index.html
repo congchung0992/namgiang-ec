@@ -173,7 +173,7 @@ main{padding-block:16px 32px;min-width:0}
 /* thanh trên */
 .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:0 1 auto;min-width:0;padding:4px 2px}
-.tlogo{flex:1 1 0;display:flex;justify-content:center;align-items:center;min-width:0;overflow:hidden}.tlogo img{height:78px;width:78px;object-fit:contain;display:block;margin:-10px 0}
+.tlogo{flex:1 1 0;display:flex;justify-content:center;align-items:center;min-width:0;overflow:visible;position:relative;z-index:2}.tlogo img{height:74px;width:74px;object-fit:contain;display:block;margin:-14px 0}
 @media (max-width:1180px){.tlogo{display:none}}
 @media (min-width:1181px){.top{flex-wrap:nowrap}.top .pills{flex:0 0 auto}.top .search{flex:0 2 280px;min-width:120px}.top .round,.top .tav{flex:none}}
 .pill{display:inline-flex;align-items:center;gap:8px;background:var(--t);border:0;border-radius:99px;padding:7px 15px 7px 7px;font-size:15px;font-weight:600;white-space:nowrap;color:var(--cd);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);transition:transform .15s,box-shadow .2s,background .2s}
@@ -883,7 +883,7 @@ tr[data-wfdr]{cursor:grab}tr[data-wfdr] input,tr[data-wfdr] select,tr[data-wfdr]
     </div>
     <div class="top">
       <div class="pills" id="pills"></div>
-      <div class="tlogo" aria-hidden="true"><img src="img/logo-round.svg" alt=""></div>
+      <div class="tlogo" aria-hidden="true"><img src="img/logo-round.svg?v=2" alt=""></div>
       <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" name="ng-tim" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="Tìm công trình, vật tư, nhân sự"></label>
       <button class="round" id="fs" aria-label="Xem toàn màn hình" title="Xem toàn màn hình"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
       <button class="round" aria-label="Thông báo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15zM10 20a2 2 0 004 0"/></svg><span class="badge"></span></button>
