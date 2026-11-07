@@ -1080,6 +1080,64 @@ html body :is(#fvc,#ctx,[data-x],[data-lkclose],[data-nhgx],[data-nhrx],[data-as
 @media(max-width:900px){.hd2{grid-template-columns:1fr}.hdside{position:static;max-height:none}.hdlist{max-height:40vh}}
 .hdside>*{flex:none}.hdside>.hdlist{flex:1 1 auto;min-height:0}.hdside .hdsq{height:40px}
 .hdwrap{overflow:visible!important;contain:none!important}
+/* Trò chuyện kiểu Zalo */
+.chat{display:grid;grid-template-columns:340px minmax(0,1fr);width:100%;min-width:0;height:calc(100vh - 140px);min-height:480px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 0 0 1px #E3E6EE,0 8px 24px -16px rgba(10,36,134,.25)}
+.chl{display:flex;flex-direction:column;border-right:1px solid #E7E9EF;min-height:0;background:#fff}
+.chlh{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px}.chlh b{font-size:20px;font-weight:600}
+.chib{width:36px;height:36px;border-radius:50%;border:0;background:#F1F3F7;color:#3A3F4E;display:inline-grid;place-items:center;cursor:pointer;flex:none;font-size:17px;padding:0}.chib svg{width:18px;height:18px}.chib:hover{background:#E4E8F1}.chib.on{background:#DCEBFF;color:#0068FF}
+.chlh .chib{background:#0068FF;color:#fff}.chlh .chib:hover{background:#0050C8}
+.chs{display:flex;align-items:center;gap:8px;margin:4px 14px 8px;padding:0 12px;height:38px;border-radius:99px;background:#F1F3F7;color:var(--muted)}.chs input{border:0;outline:0;background:none;font:400 15px var(--f);width:100%;color:var(--ink)}
+.chtabs{display:flex;gap:4px;padding:0 12px 8px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid #EEF0F4}.chtabs button{border:0;background:none;padding:6px 10px;border-radius:99px;font:500 14px var(--f);color:#5B6170;cursor:pointer;white-space:nowrap}.chtabs button.on{background:#DCEBFF;color:#0068FF}
+.chrl{flex:1;overflow:auto;padding:6px}
+.chr{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;text-align:left;padding:10px;border-radius:14px;cursor:pointer;font:inherit;color:inherit}.chr:hover{background:#F4F6FA}.chr.on{background:#E5EFFF}.chr.sm{padding:7px 10px;gap:10px}
+.chrt{flex:1;min-width:0}.chrt b{display:block;font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chrt span{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.chr.un .chrt b{font-weight:700}.chr.un .chrt span{color:var(--ink);font-weight:500}.chpi{font-style:normal;font-size:11px}
+.chrm{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}.chrm small{font-size:12px;color:var(--muted)}.chrm em{font-style:normal;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#E1141B;color:#fff;font-size:12px;font-weight:600;display:grid;place-items:center}.chrm em.mu{background:#B8BDC9}
+.chav{width:48px;height:48px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:600;font-size:17px;background:linear-gradient(135deg,var(--a),color-mix(in srgb,var(--a) 55%,#fff))}.chavg{border-radius:16px}
+.chsec{font-size:13px;color:var(--muted);padding:10px 10px 4px;font-weight:500}
+.chm{display:flex;flex-direction:column;min-width:0;min-height:0;background:#EEF1F6;position:relative}.chm.drop::after{content:"Thả ảnh, tệp vào đây để gửi";position:absolute;inset:10px;border:2px dashed #0068FF;border-radius:20px;background:rgba(220,235,255,.85);display:grid;place-items:center;font-size:18px;font-weight:600;color:#0068FF;z-index:9}
+.chempty{margin:auto;text-align:center;max-width:420px;padding:20px;color:var(--muted)}.chempty b{display:block;color:var(--ink);font-size:18px;margin:10px 0 6px}.chemi{font-size:52px}
+.chhd{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fff;border-bottom:1px solid #E7E9EF}.chhd .chav{width:40px;height:40px;font-size:15px}.chht{flex:1;min-width:0}.chht b,.chht span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chht b{font-size:16px;font-weight:600}.chht span{font-size:13px;color:var(--muted)}.chsp{flex:1}.chbk{display:none}
+.chpin{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border-bottom:1px solid #E7E9EF}.chpic{font-size:18px}.chpt{flex:1;min-width:0;border:0;background:none;text-align:left;cursor:pointer;font:inherit}.chpt b{display:block;font-size:13px;color:#0068FF}.chpt span{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chfind{background:#fff;border-bottom:1px solid #E7E9EF;padding:4px 0 8px}.chfr{max-height:220px;overflow:auto;padding:0 14px}.chfi2{display:block;width:100%;text-align:left;border:0;background:none;padding:6px 8px;border-radius:10px;cursor:pointer;font:inherit}.chfi2:hover{background:#F4F6FA}.chfi2 span{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chbody{flex:1;display:flex;min-height:0}.chmsgs{flex:1;overflow:auto;padding:12px 18px 8px;display:flex;flex-direction:column}
+.chside{width:320px;flex:none;background:#fff;border-left:1px solid #E7E9EF;overflow:auto;padding-bottom:12px}.chside[hidden]{display:none}.chsh{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #EEF0F4}
+.chinfo{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;text-align:center}.chinfo b{font-size:16px}.chren{display:flex;gap:6px;width:100%}.chren input{flex:1}
+.chopts{display:flex;flex-direction:column;padding:0 8px;gap:2px}.chopts button{border:0;background:none;text-align:left;padding:9px 10px;border-radius:10px;font:400 15px var(--f);cursor:pointer}.chopts button:hover{background:#F4F6FA}.chopts .bad{color:#C0141B}
+.chgal{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:0 10px}.chgal img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:zoom-in;background:#EEF1F6}
+.chday{text-align:center;margin:12px 0 6px}.chday span{font-size:12px;background:rgba(0,0,0,.08);color:#4A4F5C;padding:3px 12px;border-radius:99px}
+.chsys{text-align:center;font-size:13px;color:#6B7080;margin:6px 0}
+.chmsg{display:flex;align-items:flex-end;gap:8px;margin-top:10px;position:relative;max-width:100%}.chmsg.g{margin-top:3px}.chmsg.me{flex-direction:row-reverse}
+.chmav{width:34px;flex:none}.chmav .chav{width:34px;height:34px;font-size:13px}
+.chbw{max-width:min(620px,72%);display:flex;flex-direction:column;min-width:0}.chmsg.me .chbw{align-items:flex-end}
+.chwho{font-size:12px;color:#6B7080;margin:0 0 3px 4px}
+.chbub{position:relative;background:#fff;border-radius:14px;padding:8px 12px 6px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06);overflow-wrap:anywhere;min-width:60px}.chmsg.me .chbub{background:#DBEBFF}
+.chbub a{color:#0068FF}.chmn{color:#0068FF;font-weight:600}.chmn.me{background:#FFF1C2;border-radius:4px;padding:0 2px}
+.chbub.pic{padding:4px;background:#fff}.chimg{display:block;max-width:min(360px,100%);max-height:360px;border-radius:10px;cursor:zoom-in;background:#EEF1F6;min-width:120px;min-height:80px;object-fit:cover}
+.chtm{display:block;font-size:11px;color:#8A8FA0;margin-top:3px}.chbub.pic .chtm{padding:0 6px 2px}
+.chrec{color:#8A8FA0}
+.chrq{display:block;width:100%;text-align:left;border:0;border-left:3px solid #0068FF;background:rgba(0,104,255,.06);border-radius:6px;padding:4px 8px;margin-bottom:6px;cursor:pointer;font:inherit}.chrq b{display:block;font-size:12px;color:#0068FF}.chrq span{display:block;font-size:13px;color:#4A4F5C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(420px,55vw)}
+.chfl{display:flex;align-items:center;gap:10px;border:0;background:none;text-align:left;cursor:pointer;font:inherit;padding:2px 0;max-width:340px}.chside .chfl{padding:6px 12px;width:100%}.chfi{width:40px;height:44px;border-radius:8px;background:#0068FF;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;flex:none}.chfl b{display:block;font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px}.chfl small{font-size:12px;color:var(--muted)}
+.chrx{position:absolute;right:8px;bottom:-12px;display:flex;gap:3px}.chrx button{border:0;background:#fff;border-radius:99px;padding:1px 6px;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.15);cursor:pointer}.chrx button.mine{background:#DBEBFF}.chmsg:has(.chrx){margin-bottom:12px}
+.chseen{font-size:12px;color:#8A8FA0;margin-top:4px;display:flex;align-items:center;gap:3px}.chseen .chav{width:16px;height:16px;font-size:8px}
+.chact{display:none;align-items:center;gap:2px;align-self:center}.chmsg:hover .chact{display:flex}.chact button{width:28px;height:28px;border-radius:50%;border:0;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);cursor:pointer;font-size:14px;color:#4A4F5C}
+.chmsg.hl .chbub{animation:chhl 1.6s ease-out}@keyframes chhl{0%{box-shadow:0 0 0 3px #FFC83D}100%{box-shadow:0 0 0 0 transparent}}
+.chold{align-self:center;border:0;background:#fff;border-radius:99px;padding:5px 14px;font:500 13px var(--f);color:#0068FF;cursor:pointer;margin-bottom:6px}
+.chtyp{font-size:13px;color:#6B7080;padding:0 18px;min-height:18px;font-style:italic}
+.chq{display:flex;align-items:center;gap:10px;margin:0 12px 6px;padding:8px 12px;background:#fff;border-radius:12px;border-left:3px solid #0068FF}.chq>div{flex:1;min-width:0}.chq b{display:block;font-size:13px;color:#0068FF}.chq span{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chcomp{position:relative;display:flex;align-items:flex-end;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid #E7E9EF}.chtool{display:flex;gap:4px}.chtool .chib{background:none;font-size:19px}.chtool .chib:hover{background:#F1F3F7}
+#chin{flex:1;resize:none;border:0;outline:0;background:#F1F3F7;border-radius:20px;padding:9px 16px;font:400 15px var(--f);line-height:1.4;max-height:160px;min-height:40px}#chin:focus{box-shadow:inset 0 0 0 2px #B7D3FF}
+.chsend{width:40px;height:40px;border-radius:50%;border:0;background:#0068FF;color:#fff;display:grid;place-items:center;cursor:pointer;flex:none}.chsend svg{width:19px;height:19px}.chsend:hover{background:#0050C8}
+.chemo{position:absolute;left:12px;bottom:60px;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:8px;display:grid;grid-template-columns:repeat(8,36px);gap:2px;z-index:20}.chemo[hidden]{display:none}.chemo button{border:0;background:none;font-size:22px;border-radius:8px;cursor:pointer;height:36px}.chemo button:hover{background:#F1F3F7}
+.chmen{position:absolute;left:60px;bottom:60px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px;width:280px;z-index:20}.chmen[hidden]{display:none}
+.chpop{position:fixed;z-index:9999;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.2);padding:6px}.chre{display:flex;gap:2px}.chre button{border:0;background:none;font-size:24px;width:40px;height:40px;border-radius:50%;cursor:pointer;transition:transform .12s}.chre button:hover{transform:scale(1.25);background:#F1F3F7}
+.chmm{display:flex;flex-direction:column;min-width:170px}.chmm button{border:0;background:none;text-align:left;padding:8px 12px;border-radius:8px;font:400 15px var(--f);cursor:pointer}.chmm button:hover{background:#F4F6FA}.chmm .bad{color:#C0141B}
+.chdlg{position:fixed;inset:0;z-index:9998;background:rgba(15,18,40,.35);display:flex;align-items:flex-start;justify-content:center;padding:60px 16px}.chdlg[hidden]{display:none}.chdb{background:#fff;border-radius:24px;padding:18px 20px;width:min(520px,100%);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.2)}.chdb>.bh{display:flex;justify-content:space-between;align-items:center;flex-wrap:nowrap}.chdb>.bh b{font-size:18px;font-weight:600}.chdb .chtabs{border:0;padding:0}
+.chpl{overflow:auto;margin-top:8px;min-height:120px}.chck{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px #C9CEDA;display:grid;place-items:center;color:#fff;font-size:13px;flex:none}.chr.on .chck{background:#0068FF;box-shadow:none}
+.chdf{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid #EEF0F4;margin-top:8px}
+.chview{position:fixed;inset:0;z-index:9999;background:rgba(10,12,20,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}.chview[hidden]{display:none}.chview img{max-width:100%;max-height:calc(100vh - 100px);border-radius:8px}.chvb{display:flex;gap:8px}
+#pills .pill{position:relative}.chbd{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#E1141B;color:#fff;font:600 11px var(--f);font-style:normal;display:grid;place-items:center;box-shadow:0 0 0 2px #fff}.chbd[hidden]{display:none}
+@media(max-width:760px){.chat{grid-template-columns:minmax(0,1fr);height:calc(100dvh - 120px);border-radius:18px}.chat.open .chl{display:none}.chat:not(.open) .chm{display:none}.chhd{gap:8px;padding:8px 10px}.chhd .chib{width:32px;height:32px}.chsp{display:none}.chcomp{gap:4px;padding:8px}.chtool .chib{width:32px}.chbk{display:inline-grid}.chside{position:absolute;inset:0;width:auto;z-index:5}.chbw{max-width:82%}.chact{display:none!important}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -1404,7 +1462,8 @@ const I={
  prog:'<path d="M4 6h9M8 12h12M6 18h8"/><circle cx="16" cy="6" r="2"/>',
  mat:'<path d="M3 8l9-5 9 5-9 5-9-5zM3 8v8l9 5 9-5V8M12 13v8"/>',
  hr:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.8a3 3 0 010 6M18.5 14.8c1.8.7 3 2.4 3.3 5.2"/>',
- rep:'<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/>'};
+ rep:'<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/>',
+ chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>'};
 const ic=(k,w=1.8)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${I[k]}</svg>`;
 const NAV=[["home","Tổng quan","#16171C","#4A4D5C","#E2E2E7","#16171C"],["proj","Dự án","#0A2486","#3D5BFF","#E1E7FB","#0A2486"],["rev","Doanh thu","#12A150","#4FD889","#DAF4E4","#0B6B34"],["cost","Chi phí","#C21FC9","#EE7CEE","#F7DFF8","#8E1496"],["prog","Tiến độ","#2D3CE6","#7FA2FF","#E0E5FD","#1E2BC4"],["mat","Vật liệu","#F08A24","#FFBE7A","#FDE9D4","#A0560B"],["hr","Nhân sự","#8B5CF6","#C2A6FF","#ECE4FE","#5B32C8"],["rep","Báo cáo","#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"]];
 
@@ -1671,7 +1730,7 @@ addEventListener("resize",()=>{clearTimeout(fitCharts.t);fitCharts.t=setTimeout(
 function dashZeros(root){centerCols(root);setTimeout(()=>fitCharts(root),0);(root||document).querySelectorAll("table.t td").forEach(td=>{if(td.querySelector("input,select,button,svg,.mbar,.st"))return;const t=td.textContent.replace(/\u2060/g,"").trim();if(Z0.test(t)||t==="–"){const b=td.querySelector("b");if(b)b.textContent="-";else td.textContent="-"}})}
 const ty=v=>fm((+v||0)/1e9,2);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const COL={home:["#16171C","#4A4D5C","#E2E2E7","#16171C"],proj:["#0A2486","#3D5BFF","#E1E7FB","#0A2486"],boq:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],rev:["#12A150","#4FD889","#DAF4E4","#0B6B34"],cost:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"],prog:["#2D3CE6","#7FA2FF","#E0E5FD","#1E2BC4"],mat:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],hr:["#8B5CF6","#C2A6FF","#ECE4FE","#5B32C8"],rep:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],week:["#1E2BC4","#5B8CFF","#E3E8FE","#1E2BC4"],brief:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],inbox:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"]};
+const COL={chat:["#0068FF","#4EA1FF","#DCEBFF","#0050C8"],home:["#16171C","#4A4D5C","#E2E2E7","#16171C"],proj:["#0A2486","#3D5BFF","#E1E7FB","#0A2486"],boq:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],rev:["#12A150","#4FD889","#DAF4E4","#0B6B34"],cost:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"],prog:["#2D3CE6","#7FA2FF","#E0E5FD","#1E2BC4"],mat:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],hr:["#8B5CF6","#C2A6FF","#ECE4FE","#5B32C8"],rep:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],week:["#1E2BC4","#5B8CFF","#E3E8FE","#1E2BC4"],brief:["#F08A24","#FFBE7A","#FDE9D4","#A0560B"],inbox:["#C21FC9","#EE7CEE","#F7DFF8","#8E1496"]};
 I.boq='<path d="M4 4h16v16H4zM4 9h16M4 14h16M9 9v11"/>';
 I.brief='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';I.inbox='<path d="M4 13l2.5-7h11L20 13v6H4zM4 13h4.5l1 2.5h5l1-2.5H20"/>';
 I.week='<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8.5 15l2.5 2.5 4.5-5"/>';
@@ -3453,8 +3512,8 @@ window.renderHello=function(){homeReal();const box=document.getElementById("hp")
   box.innerHTML=emp+rows.map(r=>`<button class="hpr" data-go="da-${r.id}">${ring(r.v,r.c)}<div class="hn"><b>${esc(r.name)}${r.demo?' <small class="mau">Mẫu</small>':""}</b><span>${esc(r.sub)}</span></div><div class="hv"><b class="num">${fm(r.val)} tỷ</b>${r.tag}</div></button>`).join("")+
     `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div>`};
 /* ---------- Điều hướng ---------- */
-const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["rep","Báo cáo","bao-cao"],["hr","Quản trị","quan-tri"]];
-const topFor=()=>TOP.filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"?window.NGApp&&!NGApp.guest:t[2]==="tong-quan"?canOv():pqTop(t[2])>0));
+const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["chat","Trò chuyện","tro-chuyen"],["rep","Báo cáo","bao-cao"],["hr","Quản trị","quan-tri"]];
+const topFor=()=>TOP.filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"||t[2]==="tro-chuyen"?window.NGApp&&!NGApp.guest:t[2]==="tong-quan"?canOv():pqTop(t[2])>0));
 /* Màn quản trị: Tổng giám đốc phân quyền; máy chủ tự từ chối nếu không đủ quyền */
 const ROLES=[["cht","Chỉ huy trưởng"]];let admPid="";
 /* Vai trò toàn công ty (áp cho mọi dự án); riêng Chỉ huy trưởng phân theo từng công trường */
@@ -3591,6 +3650,9 @@ const HD=[
 {g:"top",k:"da",t:"Dự án",go:"du-an",d:"Danh sách dự án và tạo dự án mới từ file BOQ.",
  s:["Bấm Tải BOQ lên (hoặc kéo thả file Excel vào khung Thêm dự án từ BOQ)","Kiểm tra tổng hạng mục khớp Tổng cộng trước thuế rồi tạo dự án","Bấm vào thẻ dự án để mở"],
  b:[["Tải BOQ lên","Chọn file Excel BOQ; web đọc sheet tổng hợp và các sheet chi tiết (bỏ sheet ẩn)"],["Thẻ dự án","Mở dự án; trong dự án có 6 sheet ở thanh trên: Tổng quan, Hồ sơ, Giá vốn & giao thầu, Doanh thu – CĐT, Chi phí – NTP/NCC, Hiện trường"],["‹ (đầu trang dự án)","Quay về danh sách dự án"],["📍 Địa chỉ","Mở vị trí công trình trên Google Maps"]]},
+{g:"top",k:"chat",t:"Trò chuyện",go:"tro-chuyen",d:"Nhắn tin nội bộ như Zalo: nhóm Cả công ty, mỗi dự án một nhóm (tự có cho người được phân ở dự án), nhóm tự lập và nhắn riêng 1-1. Tin đến ngay, có thông báo về điện thoại khi nhắn riêng, nhóm tự lập hoặc khi được @nhắc tên.",
+ s:["Bấm Trò chuyện trên thanh menu (số đỏ là tin chưa đọc)","Chọn hội thoại bên trái, gõ tin rồi Enter để gửi (Shift+Enter xuống dòng)","Bấm ＋ để nhắn riêng một người hoặc tạo nhóm"],
+ b:[["Ô Tìm hội thoại, người","Tìm hội thoại; gõ tên người chưa từng nhắn sẽ hiện ở mục Danh bạ để nhắn ngay"],["Tất cả · Chưa đọc · Dự án · Nhóm · Riêng","Lọc danh sách hội thoại"],["😊 · 📎","Chèn biểu tượng cảm xúc · gửi ảnh, tệp (tối đa 50 MB; dán ảnh hoặc kéo thả vào khung chat cũng được)"],["@tên","Nhắc tên một người trong hội thoại, người đó nhận thông báo"],["Rê chuột vào tin: 😊 · ↩ · ⋯","Bày tỏ cảm xúc · trả lời trích dẫn · sao chép, ghim, sửa, thu hồi (tin của mình, trong 24 giờ); trên điện thoại bấm giữ vào tin"],["🔍 · 🖼 · ⓘ đầu hội thoại","Tìm tin nhắn · xem ảnh, tệp đã gửi · thông tin, thành viên, tắt thông báo, ghim hội thoại, thêm người, đổi tên, rời nhóm"],["Thanh 📌 Tin đã ghim","Bấm để nhảy tới tin, ✕ để bỏ ghim"],["Đã xem / Đã gửi","Dưới tin cuối của mình: ai đã đọc"]]},
 {g:"top",k:"bc",t:"Báo cáo",go:"bao-cao",pa:"t:bao-cao",d:"So sánh các dự án toàn công ty: giá trị HĐ, nghiệm thu, chi phí, công nợ, tiến độ.",b:[["Tên công trình","Bấm để mở dự án"]]},
 {g:"home",k:"ptq",t:"Tổng quan dự án",go:"@home",pa:"p:home",d:"Trang đầu của từng dự án: việc cần xử lý theo vai trò của tài khoản đang dùng, doanh thu và giá vốn theo hạng mục.",
  b:[["Bảng Công việc cần xử lý","Việc quá hạn, sắp hạn của anh/chị; bấm một dòng để mở đúng chỗ"],["Doanh thu và giá vốn theo hạng mục","Thanh màu: giá vốn so với doanh thu, vạch đen là 100%"]]},
@@ -3682,6 +3744,226 @@ function hdRe(focus){const b=document.getElementById("adm");if(!b)return;const s
 document.addEventListener("click",e=>{const j=e.target.closest("[data-hdj]");if(j){HDS.sel=j.dataset.hdj;hdRe();const m=document.getElementById("hdmain");if(m){const r=m.getBoundingClientRect();if(r.top<70||r.top>innerHeight*.6)scrollTo({top:scrollY+r.top-90,behavior:"smooth"});m.firstElementChild&&m.firstElementChild.classList.add("hdin")}return}
   if(e.target.closest('.top .round[aria-label="Cài đặt"]')){location.hash=window.NGApp&&NGApp.board?"quan-tri":"quan-tri-mk"}});
 document.addEventListener("input",e=>{if(e.target.id!=="hdq")return;HDS.q=e.target.value;clearTimeout(HDS.t);HDS.t=setTimeout(()=>hdRe(1),200)});
+/* ---------- Trò chuyện kiểu Zalo (anh Chung 07/11/2026) ----------
+   Phòng: Cả công ty · mỗi dự án (ai có vai trò ở dự án) · nhóm tự lập · nhắn riêng 1-1. Bảng chat_rooms, chat_members, chat_messages; file ở bucket "chat".
+   Tin mới đến ngay (realtime), đang soạn tin, đã xem, trả lời, bày tỏ cảm xúc, @nhắc tên, sửa, thu hồi, ghim, gửi ảnh/tệp (dán, kéo thả), tìm tin, kho ảnh/tệp, tắt thông báo, ghim hội thoại. */
+var CH={rooms:[],ppl:new Map(),cur:"",msgs:{},more:{},tab:"all",q:"",reply:null,edit:null,ment:new Map(),typing:{},urls:new Map(),rp:{},mem:{},side:"",un:0,boot:0,ld:0,find:null,emo:0,newc:null};
+const CHE=["👍","❤️","😆","😮","😢","😡"],CHEMO="😀 😁 😂 🤣 😊 😍 😘 😎 🤔 😅 😭 😡 👍 👎 👏 🙏 💪 🤝 👌 ✌️ 🔥 🎉 ❤️ 💯 ✅ ❌ ⚠️ 📌 📷 📄 🏗️ 🚧 👷 🧱 🔧 ⏰ 📅 💰".split(" ");
+const chRole=p=>!p?"":p.role?crName(p.role):p.board?"Tổng giám đốc":"";
+const chSb=()=>NGB.sb(),chMe=()=>window.NGApp&&NGApp.uid;
+const chNm=id=>{const p=CH.ppl.get(id);return p?p.name:"Người dùng"};
+const chCol=id=>{let h=0;for(const c of String(id||""))h=(h*31+c.charCodeAt(0))>>>0;return["#0068FF","#12A150","#C21FC9","#F08A24","#0E9F9A","#8B5CF6","#E1141B","#2D3CE6"][h%8]};
+const chIni=n=>{const w=String(n||"?").trim().split(/\s+/);return((w.length>1?w[w.length-2][0]:"")+(w[w.length-1]||"?")[0]).toUpperCase()};
+const chAv=(id,n,sz)=>`<span class="chav" style="--a:${chCol(id)};${sz?`width:${sz}px;height:${sz}px;font-size:${Math.round(sz*.38)}px`:""}">${esc(chIni(n||chNm(id)))}</span>`;
+function chRoomName(r){if(!r)return"";if(r.kind==="company")return"Cả công ty";if(r.kind==="project"){const p=DB.projects.find(x=>x.id===r.project_id);return p?(p.code?p.code+" · ":"")+p.name:"Dự án"}if(r.kind==="direct")return chNm(r.peer);return r.name||"Nhóm"}
+function chRoomAv(r,sz){if(r.kind==="direct")return chAv(r.peer,chNm(r.peer),sz);const k={company:["#0A2486","NG"],project:["#F08A24","DA"],group:["#12A150","N"]}[r.kind];const n=r.kind==="group"?chIni(r.name):k[1];return`<span class="chav chavg" style="--a:${r.kind==="project"?prjColor(DB.projects.find(x=>x.id===r.project_id)||{id:r.project_id}):k[0]};${sz?`width:${sz}px;height:${sz}px;font-size:${Math.round(sz*.36)}px`:""}">${esc(n)}</span>`}
+const chT=d=>{d=new Date(d);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")};
+function chDay(d){d=new Date(d);const t=new Date();t.setHours(0,0,0,0);const x=new Date(d);x.setHours(0,0,0,0);const n=(t-x)/864e5;return n===0?"Hôm nay":n===1?"Hôm qua":fd(d)}
+function chAgo(d){if(!d)return"";d=new Date(d);const s=(Date.now()-d)/1e3;if(s<60)return"vừa xong";if(s<3600)return Math.floor(s/60)+" phút";const t=new Date();t.setHours(0,0,0,0);if(d>=t)return chT(d);if(s<7*86400)return["CN","T2","T3","T4","T5","T6","T7"][d.getDay()];return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")}
+function chTxt(s,men){let o=esc(s||"");o=o.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');(men||[]).forEach(id=>{const n=esc(chNm(id));if(n)o=o.split("@"+n).join(`<b class="chmn${id===chMe()?" me":""}">@${n}</b>`)});return o.replace(/\n/g,"<br>")}
+const chSz=b=>b>1048576?(b/1048576).toFixed(1).replace(".",",")+" MB":Math.max(1,Math.round(b/1024))+" KB";
+async function chUrl(path){if(CH.urls.has(path))return CH.urls.get(path);const {data}=await chSb().storage.from("chat").createSignedUrl(path,3600);const u=data&&data.signedUrl||"";CH.urls.set(path,u);setTimeout(()=>CH.urls.delete(path),3e6);return u}
+
+async function chLoad(){if(!window.NGApp||NGApp.guest||!chMe()||NGApp.as)return;try{
+  if(!CH.ppl.size){const {data}=await chSb().rpc("chat_people");(data||[]).forEach(p=>CH.ppl.set(p.id,p))}
+  const {data,error}=await chSb().rpc("chat_list");if(error)throw error;CH.rooms=data||[];CH.ld=1;chBadge();if(document.getElementById("ngchat")){chDrawList();if(CH.cur&&!document.getElementById("chhd")&&CH.rooms.some(r=>r.id===CH.cur))chOpen(CH.cur)}}catch(e){CH.err=e.message||"lỗi";if(document.getElementById("ngchat"))chDrawList()}}
+function chBadge(){CH.un=CH.rooms.filter(r=>!r.muted).reduce((s,r)=>s+(r.unread||0),0);const b=document.querySelector('#pills [data-go="tro-chuyen"]');if(b){let x=b.querySelector(".chbd");if(!x){x=document.createElement("i");x.className="chbd";b.appendChild(x)}x.textContent=CH.un>99?"99+":CH.un;x.hidden=!CH.un}}
+function chBoot(){if(CH.boot||!window.NGApp||NGApp.guest||!chMe())return;CH.boot=1;chLoad();
+  try{chSb().channel("chat-db").on("postgres_changes",{event:"*",schema:"public",table:"chat_messages"},p=>chOnMsg(p)).on("postgres_changes",{event:"UPDATE",schema:"public",table:"chat_members"},p=>{const m=p.new;if(!m)return;const L=CH.mem[m.room_id];if(L){const i=L.findIndex(x=>x.user_id===m.user_id);if(i>=0)L[i]=m;else L.push(m);if(m.room_id===CH.cur)chDrawMsgs(1)}}).on("postgres_changes",{event:"UPDATE",schema:"public",table:"chat_rooms"},p=>{const r=CH.rooms.find(x=>x.id===p.new.id);if(r){Object.assign(r,{name:p.new.name,pinned_msg:p.new.pinned_msg});if(r.id===CH.cur){chDrawHead();chDrawPin()}}}).subscribe()}catch(e){}
+  setInterval(()=>{if(document.visibilityState==="visible")chLoad()},120000)}
+function chOnMsg(p){const m=p.new;if(!m||!m.room_id)return;const r=CH.rooms.find(x=>x.id===m.room_id);
+  if(!r){chLoad();return}
+  const L=CH.msgs[m.room_id];if(L){const i=L.findIndex(x=>x.id===m.id||(x._tmp&&x._tmp===m.body&&m.user_id===chMe()&&!x._done));if(i>=0)L[i]=m;else if(p.eventType==="INSERT")L.push(m)}
+  if(p.eventType==="INSERT"){r.last_at=m.created_at;r.last_by=m.user_id;r.last_text=m.kind==="image"?"[Hình ảnh]":m.kind==="file"?"[Tệp] "+((m.file||{}).name||""):m.body;
+    const here=m.room_id===CH.cur&&document.getElementById("ngchat")&&document.visibilityState==="visible";
+    if(m.user_id!==chMe()&&m.kind!=="system"){if(here)chRead();else r.unread=(r.unread||0)+1}
+    CH.rooms.sort((a,b)=>(b.pinned-a.pinned)||(new Date(b.last_at)-new Date(a.last_at)));delete CH.typing[m.room_id+":"+m.user_id]}
+  chBadge();if(document.getElementById("ngchat")){chDrawList();if(m.room_id===CH.cur)chDrawMsgs(p.eventType==="INSERT")}}
+async function chRead(){const r=CH.rooms.find(x=>x.id===CH.cur);if(!r)return;const had=r.unread;r.unread=0;chBadge();const now=new Date().toISOString();
+  try{await chSb().from("chat_members").update({last_read:now}).eq("room_id",r.id).eq("user_id",chMe());if(had)await chSb().from("notifications").update({read:true}).eq("user_id",chMe()).eq("kind","chat").eq("link","#tro-chuyen-"+r.id)}catch(e){}}
+async function chOpen(rid){CH.cur=rid;CH.reply=null;CH.edit=null;CH.find=null;CH.side="";const r=CH.rooms.find(x=>x.id===rid);if(!r)return;
+  document.getElementById("ngchat").classList.add("open");chDrawList();chDrawRoom();
+  if(!CH.msgs[rid]){const {data}=await chSb().from("chat_messages").select("*").eq("room_id",rid).order("created_at",{ascending:false}).limit(60);CH.msgs[rid]=(data||[]).reverse();CH.more[rid]=(data||[]).length===60}
+  if(!CH.mem[rid]){chSb().from("chat_members").select("user_id,last_read").eq("room_id",rid).then(({data})=>{CH.mem[rid]=data||[];if(CH.cur===rid)chDrawMsgs()})}
+  if(!CH.rp[rid]){chSb().rpc("chat_room_people",{rid}).then(({data})=>{CH.rp[rid]=data||[];if(CH.cur===rid)chDrawHead()})}
+  chDrawMsgs(1);chRead();chTypingSub(rid);const i=document.getElementById("chin");if(i&&innerWidth>760)i.focus()}
+async function chOlder(){const rid=CH.cur,L=CH.msgs[rid];if(!L||!CH.more[rid]||CH.busy)return;CH.busy=1;const box=document.getElementById("chmsgs"),h0=box.scrollHeight;
+  const {data}=await chSb().from("chat_messages").select("*").eq("room_id",rid).lt("created_at",L[0].created_at).order("created_at",{ascending:false}).limit(60);
+  CH.msgs[rid]=(data||[]).reverse().concat(L);CH.more[rid]=(data||[]).length===60;CH.busy=0;chDrawMsgs();box.scrollTop=box.scrollHeight-h0}
+
+function chView(rid){if(window.NGApp&&NGApp.as)return`<div class="vh"><div><h1>Trò chuyện</h1><p>Đang xem như người dùng khác · trò chuyện chỉ dùng bằng tài khoản của mình, bấm Thoát trên dải đỏ</p></div></div>`;if(!window.NGApp||NGApp.guest)return`<div class="vh"><div><h1>Trò chuyện</h1><p>Cần đăng nhập để trò chuyện</p></div></div>`;
+  if(rid)CH.cur=rid;
+  return`<div class="chat${CH.cur?" open":""}" id="ngchat"><aside class="chl"><div class="chlh"><b>Trò chuyện</b><button type="button" class="chib" data-chnew title="Tin nhắn mới, tạo nhóm" aria-label="Tin nhắn mới">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'}</button></div>
+    <label class="chs"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="chq" placeholder="Tìm hội thoại, người" value="${esc(CH.q)}" autocomplete="off"></label>
+    <div class="chtabs">${[["all","Tất cả"],["un","Chưa đọc"],["project","Dự án"],["group","Nhóm"],["direct","Riêng"]].map(([k,n])=>`<button type="button" data-chtab="${k}" class="${CH.tab===k?"on":""}">${n}</button>`).join("")}</div>
+    <div class="chrl" id="chrl"></div></aside><section class="chm" id="chm"></section></div>`}
+function chMount(){chBoot();chDrawList();if(CH.cur&&CH.rooms.some(r=>r.id===CH.cur))chOpen(CH.cur);else chDrawRoom();if(!CH.ld)chLoad()}
+function chDrawList(){const b=document.getElementById("chrl");if(!b)return;const W=BOQ.nz(CH.q||"").split(/\s+/).filter(Boolean);
+  let L=CH.rooms.filter(r=>CH.tab==="all"||(CH.tab==="un"?r.unread>0:r.kind===CH.tab||(CH.tab==="group"&&r.kind==="company")));
+  if(W.length)L=L.filter(r=>W.every(w=>BOQ.nz(chRoomName(r)).includes(w)));
+  let P="";if(W.length){const ids=new Set(CH.rooms.filter(r=>r.kind==="direct").map(r=>r.peer));const pp=[...CH.ppl.values()].filter(p=>p.id!==chMe()&&!ids.has(p.id)&&W.every(w=>BOQ.nz(p.name+" "+p.login).includes(w))).slice(0,8);
+    if(pp.length)P=`<div class="chsec">Danh bạ</div>`+pp.map(p=>`<button type="button" class="chr" data-chdm="${p.id}">${chAv(p.id,p.name)}<div class="chrt"><b>${esc(p.name)}</b><span>${esc(chRole(p))||"Nhắn tin"}</span></div></button>`).join("")}
+  b.innerHTML=(CH.ld?"":`<div class="sub" style="padding:16px">Đang tải…</div>`)+(CH.err&&!CH.rooms.length?`<div class="sub" style="padding:16px;color:#C0141B">Chưa tải được: ${esc(CH.err)}</div>`:"")+
+    L.map(r=>{const who=r.last_by&&r.kind!=="direct"&&r.last_text?(r.last_by===chMe()?"Bạn":chNm(r.last_by).split(" ").pop())+": ":r.last_by===chMe()&&r.last_text?"Bạn: ":"";
+      return`<button type="button" class="chr${r.id===CH.cur?" on":""}${r.unread&&!r.muted?" un":""}" data-chroom="${r.id}">${chRoomAv(r)}<div class="chrt"><b>${esc(chRoomName(r))}${r.pinned?' <i class="chpi" title="Đã ghim">📌</i>':""}${r.muted?' <i class="chpi" title="Đã tắt thông báo">🔕</i>':""}</b><span>${r.last_text?esc(who+r.last_text):r.kind==="project"?"Nhóm dự án · chưa có tin":"Chưa có tin nhắn"}</span></div><div class="chrm"><small>${r.last_text?chAgo(r.last_at):""}</small>${r.unread?`<em class="${r.muted?"mu":""}">${r.unread>99?"99+":r.unread}</em>`:""}</div></button>`}).join("")+(CH.ld&&!L.length&&!P?`<div class="sub" style="padding:16px">${W.length?"Không tìm thấy":"Chưa có hội thoại"}</div>`:"")+P}
+function chDrawRoom(){const m=document.getElementById("chm");if(!m)return;const r=CH.rooms.find(x=>x.id===CH.cur);
+  if(!r){m.innerHTML=`<div class="chempty"><div class="chemi">💬</div><b>Trò chuyện nội bộ Nam Giang</b><p>Chọn một hội thoại bên trái, hoặc bấm ＋ để nhắn riêng, tạo nhóm · mỗi dự án có sẵn một nhóm cho người được phân ở dự án đó</p></div>`;return}
+  m.innerHTML=`<div class="chhd" id="chhd"></div><div class="chpin" id="chpin" hidden></div><div class="chfind" id="chfind" hidden></div><div class="chbody"><div class="chmsgs" id="chmsgs"></div><aside class="chside" id="chside" hidden></aside></div>
+    <div class="chtyp" id="chtyp"></div><div class="chbar" id="chbar"></div>
+    <div class="chcomp"><div class="chtool"><button type="button" class="chib" data-chemo title="Biểu tượng cảm xúc" aria-label="Biểu tượng cảm xúc">😊</button><label class="chib" title="Gửi ảnh, tệp (hoặc dán, kéo thả vào khung chat)" aria-label="Gửi ảnh, tệp"><input type="file" id="chfile" multiple hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.5l-8.5 8.5a5 5 0 01-7-7L14 5.5a3.3 3.3 0 014.7 4.7L10.2 18.7a1.7 1.7 0 01-2.4-2.4L15.5 8.6"/></svg></label></div>
+      <textarea id="chin" rows="1" placeholder="${innerWidth<=760?"Nhập tin nhắn…":"Nhập tin nhắn tới "+esc(chRoomName(r))+" · @ để nhắc tên · Enter gửi, Shift+Enter xuống dòng"}"></textarea><button type="button" class="chsend" data-chsend aria-label="Gửi"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.5-7.5a1 1 0 000-1.8L3.4 3.6a1 1 0 00-1.4 1.1L4 11l9 1-9 1-2 6.3a1 1 0 001.4 1.1z"/></svg></button>
+      <div class="chemo" id="chemo" hidden>${CHEMO.map(e=>`<button type="button" data-chei="${e}">${e}</button>`).join("")}</div><div class="chmen" id="chmen" hidden></div></div>`;
+  chDrawHead();chDrawPin();chDrawBar()}
+function chDrawHead(){const h=document.getElementById("chhd"),r=CH.rooms.find(x=>x.id===CH.cur);if(!h||!r)return;const n=(CH.rp[r.id]||[]).length||r.members;
+  const sub=r.kind==="direct"?esc(chRole(CH.ppl.get(r.peer))||"Nhắn riêng"):r.kind==="company"?n+" thành viên · toàn công ty":r.kind==="project"?n+" thành viên · người được phân ở dự án":n+" thành viên";
+  h.innerHTML=`<button type="button" class="chib chbk" data-chback aria-label="Danh sách hội thoại"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg></button>${chRoomAv(r,40)}<div class="chht"><b>${esc(chRoomName(r))}</b><span>${sub}</span></div><span class="chsp"></span>
+    <button type="button" class="chib${CH.find?" on":""}" data-chfind title="Tìm tin nhắn" aria-label="Tìm tin nhắn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+    <button type="button" class="chib${CH.side==="media"?" on":""}" data-chside="media" title="Ảnh, tệp đã gửi" aria-label="Ảnh, tệp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg></button>
+    <button type="button" class="chib${CH.side==="info"?" on":""}" data-chside="info" title="Thông tin hội thoại, thành viên" aria-label="Thông tin hội thoại"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></button>`}
+function chDrawPin(){const b=document.getElementById("chpin"),r=CH.rooms.find(x=>x.id===CH.cur);if(!b||!r)return;const m=r.pinned_msg&&(CH.msgs[r.id]||[]).find(x=>x.id===r.pinned_msg);
+  if(!r.pinned_msg){b.hidden=true;return}b.hidden=false;b.innerHTML=`<span class="chpic">📌</span><button type="button" class="chpt" data-chjump="${r.pinned_msg}"><b>Tin đã ghim</b><span>${m?esc(m.deleted_at?"Tin đã thu hồi":m.kind==="text"?m.body:m.kind==="image"?"[Hình ảnh]":"[Tệp] "+((m.file||{}).name||"")):"Bấm để xem"}</span></button><button type="button" class="chib" data-chunpin title="Bỏ ghim" aria-label="Bỏ ghim">✕</button>`}
+function chDrawBar(){const b=document.getElementById("chbar");if(!b)return;const R=CH.reply,E=CH.edit;
+  b.innerHTML=E?`<div class="chq"><div><b>Đang sửa tin nhắn</b><span>${esc(E.body||"")}</span></div><button type="button" class="chib" data-chcx aria-label="Huỷ">✕</button></div>`:R?`<div class="chq"><div><b>Trả lời ${esc(chNm(R.user_id))}</b><span>${esc(R.kind==="text"?R.body:R.kind==="image"?"[Hình ảnh]":"[Tệp] "+((R.file||{}).name||""))}</span></div><button type="button" class="chib" data-chcx aria-label="Huỷ">✕</button></div>`:""}
+function chMsgHtml(m,prev,next,L,rd){const me=m.user_id===chMe(),sys=m.kind==="system";const day=!prev||chDay(prev.created_at)!==chDay(m.created_at);let o=day?`<div class="chday"><span>${chDay(m.created_at)}</span></div>`:"";
+  if(sys)return o+`<div class="chsys">${esc(chNm(m.user_id))} ${esc(m.body)} · ${chT(m.created_at)}</div>`;
+  const grp=prev&&!day&&prev.user_id===m.user_id&&prev.kind!=="system"&&(new Date(m.created_at)-new Date(prev.created_at))<300000,last=!next||next.user_id!==m.user_id||next.kind==="system"||chDay(next.created_at)!==chDay(m.created_at)||(new Date(next.created_at)-new Date(m.created_at))>=300000;
+  const rp=m.reply_to&&L.find(x=>x.id===m.reply_to);const f=m.file||{};
+  let body=m.deleted_at?`<i class="chrec">Tin nhắn đã được thu hồi</i>`:m.kind==="image"?`<img class="chimg" data-chpath="${esc(f.path)}" alt="${esc(f.name||"Ảnh")}" loading="lazy"${f.w?` style="aspect-ratio:${f.w}/${f.h}"`:""}>`:m.kind==="file"?`<button type="button" class="chfl" data-chdl="${esc(f.path)}" data-chfn="${esc(f.name)}"><span class="chfi">${esc((String(f.name).split(".").pop()||"").slice(0,4).toUpperCase())}</span><span><b>${esc(f.name)}</b><small>${chSz(f.size||0)} · bấm để tải</small></span></button>`:chTxt(m.body,m.mentions);
+  const rx=Object.entries(m.reactions||{}).filter(([,a])=>a&&a.length);
+  return o+`<div class="chmsg${me?" me":""}${grp?" g":""}${last?" l":""}" data-chmid="${m.id}">${me?"":`<div class="chmav">${grp?"":chAv(m.user_id)}</div>`}<div class="chbw">${!me&&!grp&&CH.rooms.find(x=>x.id===CH.cur).kind!=="direct"?`<div class="chwho">${esc(chNm(m.user_id))}</div>`:""}
+    <div class="chbub${m.kind==="image"&&!m.deleted_at?" pic":""}">${rp?`<button type="button" class="chrq" data-chjump="${rp.id}"><b>${esc(chNm(rp.user_id))}</b><span>${esc(rp.deleted_at?"Tin đã thu hồi":rp.kind==="text"?rp.body:rp.kind==="image"?"[Hình ảnh]":"[Tệp] "+((rp.file||{}).name||""))}</span></button>`:""}${body}<span class="chtm">${chT(m.created_at)}${m.edited_at&&!m.deleted_at?" · đã sửa":""}${m._tmp?" · đang gửi":""}</span>
+    ${rx.length?`<span class="chrx">${rx.map(([e,a])=>`<button type="button" data-chrx="${e}" class="${a.includes(chMe())?"mine":""}" title="${esc(a.map(chNm).join(", "))}">${e}${a.length>1?" "+a.length:""}</button>`).join("")}</span>`:""}</div>
+    ${rd?`<div class="chseen">${rd}</div>`:""}</div>${m.deleted_at||m._tmp?"":`<div class="chact"><button type="button" data-chreact title="Bày tỏ cảm xúc">😊</button><button type="button" data-chrep title="Trả lời">↩</button><button type="button" data-chmore title="Thêm">⋯</button></div>`}</div>`}
+function chDrawMsgs(stick){const box=document.getElementById("chmsgs");if(!box)return;const r=CH.rooms.find(x=>x.id===CH.cur),L=CH.msgs[CH.cur];if(!L){box.innerHTML=`<div class="sub" style="padding:20px">Đang tải tin nhắn…</div>`;return}
+  const near=box.scrollHeight-box.scrollTop-box.clientHeight<120;
+  /* Đã xem: dưới tin cuối cùng của mình, ai đã đọc tới đó */
+  let lastMine=null;for(let i=L.length-1;i>=0;i--){if(L[i].user_id===chMe()&&L[i].kind!=="system"){lastMine=L[i];break}}
+  const M=CH.mem[CH.cur]||[];let rd="";if(lastMine&&lastMine===L[L.length-1]){const S=M.filter(x=>x.user_id!==chMe()&&x.last_read&&new Date(x.last_read)>=new Date(lastMine.created_at));rd=S.length?(r.kind==="direct"?"Đã xem":S.length<=5?`Đã xem ${S.map(x=>chAv(x.user_id,0,16)).join("")}`:`${S.length} người đã xem`):lastMine._tmp?"":"Đã gửi"}
+  box.innerHTML=(CH.more[CH.cur]?`<button type="button" class="chold" data-cholder>Xem tin cũ hơn</button>`:"")+(L.length?"":`<div class="chsys" style="margin-top:30px">Chưa có tin nhắn · gửi lời chào đầu tiên 👋</div>`)+L.map((m,i)=>chMsgHtml(m,L[i-1],L[i+1],L,m===lastMine?rd:"")).join("");
+  box.querySelectorAll("img[data-chpath]").forEach(async im=>{im.src=await chUrl(im.dataset.chpath)});
+  if(stick||near)box.scrollTop=box.scrollHeight;chDrawPin()}
+function chTypingSub(rid){try{if(CH.tch)chSb().removeChannel(CH.tch);CH.tch=chSb().channel("typing-"+rid).on("broadcast",{event:"t"},({payload})=>{if(!payload||payload.u===chMe())return;const k=rid+":"+payload.u;CH.typing[k]=Date.now();chTyp();setTimeout(chTyp,4200)}).subscribe()}catch(e){}}
+function chTyp(){const b=document.getElementById("chtyp");if(!b)return;const n=Object.entries(CH.typing).filter(([k,t])=>k.startsWith(CH.cur+":")&&Date.now()-t<4000).map(([k])=>chNm(k.split(":")[1]).split(" ").pop());b.textContent=n.length?n.join(", ")+" đang soạn tin…":""}
+async function chSend(){const i=document.getElementById("chin");if(!i)return;const t=i.value.trim(),r=CH.rooms.find(x=>x.id===CH.cur);if(!t||!r)return;
+  const men=[...CH.ment.entries()].filter(([n])=>t.includes("@"+n)).map(([,id])=>id);
+  if(CH.edit){const E=CH.edit;CH.edit=null;i.value="";chDrawBar();try{const {error}=await chSb().from("chat_messages").update({body:t,edited_at:new Date().toISOString(),mentions:men}).eq("id",E.id);if(error)throw error;E.body=t;E.edited_at=new Date().toISOString();chDrawMsgs()}catch(e){NGB.warn("Chưa sửa được: "+e.message)}return}
+  const tmp={id:"tmp"+Date.now(),_tmp:t,room_id:r.id,user_id:chMe(),kind:"text",body:t,mentions:men,reply_to:CH.reply&&CH.reply.id,reactions:{},created_at:new Date().toISOString()};
+  (CH.msgs[r.id]=CH.msgs[r.id]||[]).push(tmp);i.value="";i.style.height="";const rep=CH.reply;CH.reply=null;CH.ment.clear();chDrawBar();chDrawMsgs(1);
+  try{const {data,error}=await chSb().from("chat_messages").insert({room_id:r.id,body:t,kind:"text",reply_to:rep?rep.id:null,mentions:men}).select().single();if(error)throw error;const L=CH.msgs[r.id],k=L.indexOf(tmp);if(k>=0){if(L.some(x=>x.id===data.id))L.splice(k,1);else{const row=Object.assign({},tmp,data);delete row._tmp;L[k]=row}}chDrawMsgs(1)}
+  catch(e){const L=CH.msgs[r.id];L.splice(L.indexOf(tmp),1);chDrawMsgs();i.value=t;NGB.warn("Chưa gửi được: "+e.message)}}
+async function chFiles(files){const r=CH.rooms.find(x=>x.id===CH.cur);if(!r)return;for(const f of files){if(f.size>50*1048576){NGB.warn(f.name+": quá 50 MB");continue}
+  const img=/^image\//.test(f.type),path=r.id+"/"+Date.now()+"-"+Math.random().toString(36).slice(2,7)+"-"+f.name.replace(/[^\w.\-]+/g,"_").slice(-80);let w=0,h=0;
+  if(img)try{const b=await createImageBitmap(f);w=b.width;h=b.height}catch(e){}
+  const tmp={id:"tmp"+Date.now(),_tmp:"…",room_id:r.id,user_id:chMe(),kind:"file",file:{name:f.name,size:f.size},reactions:{},created_at:new Date().toISOString()};(CH.msgs[r.id]=CH.msgs[r.id]||[]).push(tmp);chDrawMsgs(1);
+  try{const {error}=await chSb().storage.from("chat").upload(path,f,{contentType:f.type||"application/octet-stream"});if(error)throw error;
+    const {data,error:e2}=await chSb().from("chat_messages").insert({room_id:r.id,kind:img?"image":"file",file:{path,name:f.name,size:f.size,type:f.type,w,h}}).select().single();if(e2)throw e2;
+    const L=CH.msgs[r.id],k=L.indexOf(tmp);if(k>=0){if(L.some(x=>x.id===data.id))L.splice(k,1);else{const row=Object.assign({},tmp,data);delete row._tmp;L[k]=row}}chDrawMsgs(1)}
+  catch(e){const L=CH.msgs[r.id];L.splice(L.indexOf(tmp),1);chDrawMsgs();NGB.warn("Chưa gửi được "+f.name+": "+e.message)}}}
+function chMenu(btn,html){chMenuX();const m=document.createElement("div");m.className="chpop";m.innerHTML=html;document.body.appendChild(m);const b=btn.getBoundingClientRect();
+  m.style.left=Math.max(8,Math.min(innerWidth-m.offsetWidth-8,b.left+b.width/2-m.offsetWidth/2))+"px";m.style.top=(b.top-m.offsetHeight-6<8?b.bottom+6:b.top-m.offsetHeight-6)+"px";CH.pop=m}
+function chMenuX(){if(CH.pop){CH.pop.remove();CH.pop=null}}
+async function chSide(){const s=document.getElementById("chside"),r=CH.rooms.find(x=>x.id===CH.cur);if(!s||!r)return;s.hidden=!CH.side;if(!CH.side)return;
+  if(CH.side==="media"){s.innerHTML=`<div class="chsh"><b>Ảnh, tệp đã gửi</b><button type="button" class="chib" data-chside="" aria-label="Đóng">✕</button></div><div class="sub" style="padding:10px">Đang tải…</div>`;
+    const {data}=await chSb().from("chat_messages").select("id,kind,file,created_at,user_id").eq("room_id",r.id).in("kind",["image","file"]).is("deleted_at",null).order("created_at",{ascending:false}).limit(120);const I=(data||[]).filter(x=>x.kind==="image"),F=(data||[]).filter(x=>x.kind==="file");
+    s.innerHTML=`<div class="chsh"><b>Ảnh, tệp đã gửi</b><button type="button" class="chib" data-chside="" aria-label="Đóng">✕</button></div><div class="chsec">Ảnh · ${I.length}</div><div class="chgal">${I.map(x=>`<img data-chpath="${esc(x.file.path)}" alt="">`).join("")||'<span class="sub">Chưa có ảnh</span>'}</div><div class="chsec">Tệp · ${F.length}</div>${F.map(x=>`<button type="button" class="chfl" data-chdl="${esc(x.file.path)}" data-chfn="${esc(x.file.name)}"><span class="chfi">${esc((String(x.file.name).split(".").pop()||"").slice(0,4).toUpperCase())}</span><span><b>${esc(x.file.name)}</b><small>${chSz(x.file.size||0)} · ${fd(new Date(x.created_at))}</small></span></button>`).join("")||'<span class="sub" style="padding:0 10px">Chưa có tệp</span>'}`;
+    s.querySelectorAll("img[data-chpath]").forEach(async im=>{im.src=await chUrl(im.dataset.chpath)});return}
+  const P=CH.rp[r.id]||[],own=P.find(x=>x.id===chMe());
+  s.innerHTML=`<div class="chsh"><b>Thông tin hội thoại</b><button type="button" class="chib" data-chside="" aria-label="Đóng">✕</button></div><div class="chinfo">${chRoomAv(r,64)}<b>${esc(chRoomName(r))}</b>${r.kind==="group"?`<button type="button" class="back sm" data-chren style="margin:0">Đổi tên nhóm</button>`:""}</div>
+    <div class="chopts"><button type="button" data-chmute>${r.muted?"🔔 Bật thông báo":"🔕 Tắt thông báo"}</button><button type="button" data-chpinroom>${r.pinned?"Bỏ ghim hội thoại":"📌 Ghim hội thoại lên đầu"}</button>${r.kind==="group"?`<button type="button" data-chadd>＋ Thêm thành viên</button><button type="button" data-chleave class="bad">Rời nhóm</button>`:""}</div>
+    <div class="chsec">Thành viên · ${P.length}</div><div class="chml">${P.map(p=>`<button type="button" class="chr sm" ${p.id===chMe()?"":`data-chdm="${p.id}"`} title="${p.id===chMe()?"":"Nhắn riêng"}">${chAv(p.id,p.name,32)}<div class="chrt"><b>${esc(p.name)}${p.id===chMe()?" (bạn)":""}</b><span>${p.role==="owner"?"Trưởng nhóm":esc(chRole(CH.ppl.get(p.id)))}</span></div></button>`).join("")}</div>`}
+function chNew(mode){let w=document.getElementById("chdlg");if(!w){w=document.createElement("div");w.id="chdlg";w.className="chdlg";document.body.appendChild(w)}CH.newc=CH.newc||{mode:mode||"dm",sel:new Set(),q:"",name:""};if(mode)CH.newc.mode=mode;const N=CH.newc,add=N.mode==="add";
+  const ex=add?new Set((CH.rp[CH.cur]||[]).map(x=>x.id)):new Set([chMe()]);const W=BOQ.nz(N.q).split(/\s+/).filter(Boolean),L=[...CH.ppl.values()].filter(p=>!ex.has(p.id)&&W.every(w=>BOQ.nz(p.name+" "+p.login).includes(w)));
+  w.hidden=false;w.innerHTML=`<div class="chdb"><div class="bh"><div><b>${add?"Thêm thành viên":N.mode==="grp"?"Tạo nhóm":"Tin nhắn mới"}</b></div><button type="button" class="back sm" data-chnx style="margin:0">Đóng</button></div>
+    ${add?"":`<div class="chtabs" style="margin-top:10px"><button type="button" data-chnm="dm" class="${N.mode==="dm"?"on":""}">Nhắn riêng</button><button type="button" data-chnm="grp" class="${N.mode==="grp"?"on":""}">Tạo nhóm</button></div>`}
+    ${N.mode==="grp"?`<input class="fi" id="chgn" placeholder="Tên nhóm, ví dụ: Nhóm QS Ekochem" value="${esc(N.name)}" style="width:100%;margin-top:10px">`:""}
+    <input class="fi" id="chnq" placeholder="Tìm người theo tên" value="${esc(N.q)}" style="width:100%;margin-top:10px" autocomplete="off">
+    <div class="chpl">${L.map(p=>`<button type="button" class="chr sm${N.sel.has(p.id)?" on":""}" data-chpk="${p.id}">${chAv(p.id,p.name,34)}<div class="chrt"><b>${esc(p.name)}</b><span>${esc(chRole(p))}</span></div>${N.mode==="dm"&&!add?"":`<span class="chck">${N.sel.has(p.id)?"✓":""}</span>`}</button>`).join("")||'<span class="sub">Không tìm thấy</span>'}</div>
+    ${N.mode==="dm"&&!add?"":`<div class="chdf"><span class="sub">Đã chọn ${N.sel.size}</span><button type="button" class="pill" data-chnok style="${sv("chat")}"${N.sel.size?"":" disabled"}><span class="dot">✓</span>${add?"Thêm vào nhóm":"Tạo nhóm"}</button></div>`}</div>`;
+  const q=document.getElementById(N.foc||"chnq");if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length)}}
+function chNewX(){const w=document.getElementById("chdlg");if(w)w.hidden=true;CH.newc=null}
+async function chGo(rid){await chLoad();location.hash="tro-chuyen-"+rid;if(document.getElementById("ngchat"))chOpen(rid)}
+function chMenAuto(i){const m=document.getElementById("chmen");if(!m)return;const v=i.value.slice(0,i.selectionStart),k=v.match(/@([^\s@]{0,20})$/);if(!k){m.hidden=true;return}
+  const W=BOQ.nz(k[1]),P=(CH.rp[CH.cur]||[]).filter(p=>p.id!==chMe()&&BOQ.nz(p.name).includes(W)).slice(0,6);if(!P.length){m.hidden=true;return}
+  m.hidden=false;m.innerHTML=P.map((p,j)=>`<button type="button" class="chr sm${j?"":" on"}" data-chmen="${p.id}">${chAv(p.id,p.name,28)}<div class="chrt"><b>${esc(p.name)}</b></div></button>`).join("")}
+function chMenPick(id){const i=document.getElementById("chin"),m=document.getElementById("chmen"),n=chNm(id);const v=i.value,c=i.selectionStart,s=v.slice(0,c).replace(/@([^\s@]{0,20})$/,"@"+n+" ");i.value=s+v.slice(c);i.setSelectionRange(s.length,s.length);CH.ment.set(n,id);m.hidden=true;i.focus()}
+async function chJump(id){const L=CH.msgs[CH.cur]||[];if(!L.some(x=>x.id===id)){const {data:m}=await chSb().from("chat_messages").select("created_at").eq("id",id).maybeSingle();if(!m)return;
+    const [a,b]=await Promise.all([chSb().from("chat_messages").select("*").eq("room_id",CH.cur).lte("created_at",m.created_at).order("created_at",{ascending:false}).limit(40),chSb().from("chat_messages").select("*").eq("room_id",CH.cur).gt("created_at",m.created_at).order("created_at",{ascending:true}).limit(200)]);
+    CH.msgs[CH.cur]=(a.data||[]).reverse().concat(b.data||[]);CH.more[CH.cur]=(a.data||[]).length===40;chDrawMsgs()}
+  const e=document.querySelector(`[data-chmid="${id}"]`);if(e){e.scrollIntoView({block:"center",behavior:"smooth"});e.classList.remove("hl");void e.offsetWidth;e.classList.add("hl")}}
+async function chFind(q){const b=document.getElementById("chfind");if(!b)return;if(!CH.find){b.hidden=true;return}b.hidden=false;
+  if(!b.querySelector("input"))b.innerHTML=`<label class="chs"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="chfq" placeholder="Tìm tin nhắn trong hội thoại này" autocomplete="off"></label><div class="chfr" id="chfr"></div>`;
+  const r=document.getElementById("chfr");if(!q||q.length<2){r.innerHTML="";return}
+  const {data}=await chSb().from("chat_messages").select("id,body,user_id,created_at").eq("room_id",CH.cur).is("deleted_at",null).ilike("body","%"+q.replace(/[%_]/g,"")+"%").order("created_at",{ascending:false}).limit(40);
+  r.innerHTML=(data||[]).map(m=>`<button type="button" class="chfi2" data-chjump="${m.id}"><b>${esc(chNm(m.user_id))}</b> · <small>${fd(new Date(m.created_at))} ${chT(m.created_at)}</small><span>${esc(m.body)}</span></button>`).join("")||'<span class="sub">Không thấy tin nào</span>'}
+
+document.addEventListener("click",async e=>{const t=e.target;if(!t.closest)return;
+  if(CH.pop&&!t.closest(".chpop")){chMenuX();if(!t.closest("[data-chmore],[data-chreact]"))return}
+  if(t.closest("#chemo")){const x=t.closest("[data-chei]");if(x){const i=document.getElementById("chin");const c=i.selectionStart||i.value.length;i.value=i.value.slice(0,c)+x.dataset.chei+i.value.slice(c);i.focus();i.setSelectionRange(c+x.dataset.chei.length,c+x.dataset.chei.length)}return}
+  if(!t.closest("[data-chemo]")){const em=document.getElementById("chemo");if(em)em.hidden=true}
+  let b;
+  if(b=t.closest("[data-chroom]")){location.hash="tro-chuyen-"+b.dataset.chroom;return}
+  if(b=t.closest("[data-chtab]")){CH.tab=b.dataset.chtab;document.querySelectorAll("[data-chtab]").forEach(x=>x.classList.toggle("on",x===b));chDrawList();return}
+  if(b=t.closest("[data-chdm]")){try{const {data,error}=await chSb().rpc("chat_direct",{other:b.dataset.chdm});if(error)throw error;chNewX();CH.q="";chGo(data)}catch(er){NGB.warn("Chưa mở được: "+er.message)}return}
+  if(t.closest("[data-chback]")){CH.cur="";location.hash="tro-chuyen";return}
+  if(t.closest("[data-chsend]")){chSend();return}
+  if(t.closest("[data-chemo]")){const m=document.getElementById("chemo");m.hidden=!m.hidden;return}
+  if(t.closest("[data-chcx]")){if(CH.edit){const i=document.getElementById("chin");if(i)i.value=""}CH.reply=null;CH.edit=null;chDrawBar();return}
+  if(t.closest("[data-cholder]")){chOlder();return}
+  if(b=t.closest("[data-chjump]")){chJump(b.dataset.chjump);return}
+  if(t.closest("[data-chunpin]")){await chSb().rpc("chat_pin",{rid:CH.cur,mid:null});const r=CH.rooms.find(x=>x.id===CH.cur);r.pinned_msg=null;chDrawPin();return}
+  if(t.closest("[data-chfind]")){CH.find=!CH.find;chDrawHead();chFind("");const i=document.getElementById("chfq");if(i)i.focus();return}
+  if(b=t.closest("[data-chside]")){CH.side=CH.side===b.dataset.chside?"":b.dataset.chside;chDrawHead();chSide();return}
+  if(b=t.closest("img[data-chpath]")){const u=await chUrl(b.dataset.chpath);let v=document.getElementById("chview");if(!v){v=document.createElement("div");v.id="chview";v.className="chview";document.body.appendChild(v)}v.hidden=false;v.innerHTML=`<img src="${esc(u)}" alt=""><div class="chvb"><a class="back sm" href="${esc(u)}" target="_blank" rel="noopener" style="margin:0">Mở ảnh gốc</a><button type="button" class="back sm" data-chvx style="margin:0">Đóng</button></div>`;return}
+  if(t.closest("[data-chvx]")||t.id==="chview"){document.getElementById("chview").hidden=true;return}
+  if(b=t.closest("[data-chdl]")){const u=await chUrl(b.dataset.chdl);const a=document.createElement("a");a.href=u;a.download=b.dataset.chfn||"";a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove();return}
+  if(b=t.closest("[data-chrx]")){const m=b.closest("[data-chmid]");chReact(m.dataset.chmid,b.dataset.chrx);return}
+  if(b=t.closest("[data-chreact]")){const id=b.closest("[data-chmid]").dataset.chmid;chMenu(b,`<div class="chre">${CHE.map(x=>`<button type="button" data-chrq="${x}" data-chm="${id}">${x}</button>`).join("")}</div>`);return}
+  if(b=t.closest("[data-chrq]")){chMenuX();chReact(b.dataset.chm,b.dataset.chrq);return}
+  if(b=t.closest("[data-chrep]")){const id=b.closest("[data-chmid]").dataset.chmid;CH.reply=(CH.msgs[CH.cur]||[]).find(x=>x.id===id);CH.edit=null;chDrawBar();document.getElementById("chin").focus();return}
+  if(b=t.closest("[data-chmore]")){const id=b.closest("[data-chmid]").dataset.chmid,m=(CH.msgs[CH.cur]||[]).find(x=>x.id===id),me=m.user_id===chMe(),age=Date.now()-new Date(m.created_at);
+    chMenu(b,`<div class="chmm">${m.kind==="text"?`<button type="button" data-chop="copy" data-chm="${id}">Sao chép</button>`:""}<button type="button" data-chop="pin" data-chm="${id}">📌 Ghim tin nhắn</button>${me&&m.kind==="text"?`<button type="button" data-chop="edit" data-chm="${id}">Sửa</button>`:""}${me&&age<864e5?`<button type="button" data-chop="rec" data-chm="${id}" class="bad">Thu hồi</button>`:""}</div>`);return}
+  if(b=t.closest("[data-chop]")){chMenuX();const id=b.dataset.chm,m=(CH.msgs[CH.cur]||[]).find(x=>x.id===id),op=b.dataset.chop;if(!m)return;
+    if(op==="copy"){try{await navigator.clipboard.writeText(m.body||"")}catch(er){}return}
+    if(op==="pin"){const {error}=await chSb().rpc("chat_pin",{rid:CH.cur,mid:id});if(error){NGB.warn("Chưa ghim được: "+error.message);return}CH.rooms.find(x=>x.id===CH.cur).pinned_msg=id;chDrawPin();return}
+    if(op==="edit"){CH.edit=m;CH.reply=null;chDrawBar();const i=document.getElementById("chin");i.value=m.body||"";i.focus();return}
+    if(op==="rec"){const {error}=await chSb().from("chat_messages").update({deleted_at:new Date().toISOString(),body:null}).eq("id",id);if(error){NGB.warn("Chưa thu hồi được: "+error.message);return}m.deleted_at=new Date().toISOString();m.body=null;chDrawMsgs();return}}
+  if(b=t.closest("[data-chmen]")){chMenPick(b.dataset.chmen);return}
+  if(t.closest("[data-chnew]")){chNew("dm");return}
+  if(t.closest("[data-chnx]")||t.id==="chdlg"){chNewX();return}
+  if(b=t.closest("[data-chnm]")){CH.newc.mode=b.dataset.chnm;CH.newc.sel.clear();chNew();return}
+  if(b=t.closest("[data-chpk]")){const N=CH.newc,id=b.dataset.chpk;if(N.mode==="dm"){try{const {data,error}=await chSb().rpc("chat_direct",{other:id});if(error)throw error;chNewX();chGo(data)}catch(er){NGB.warn("Chưa mở được: "+er.message)}return}N.sel.has(id)?N.sel.delete(id):N.sel.add(id);N.foc="";chNew();return}
+  if(t.closest("[data-chnok]")){const N=CH.newc;try{if(N.mode==="add"){const {error}=await chSb().rpc("chat_add",{rid:CH.cur,uids:[...N.sel]});if(error)throw error;delete CH.rp[CH.cur];chNewX();const {data}=await chSb().rpc("chat_room_people",{rid:CH.cur});CH.rp[CH.cur]=data||[];chDrawHead();chSide()}
+      else{const nm=(document.getElementById("chgn")||{}).value||N.name;const {data,error}=await chSb().rpc("chat_group",{gname:nm,uids:[...N.sel]});if(error)throw error;chNewX();chGo(data)}}catch(er){NGB.warn("Chưa làm được: "+er.message)}return}
+  if(t.closest("[data-chadd]")){CH.newc=null;chNew("add");return}
+  if(t.closest("[data-chmute]")||t.closest("[data-chpinroom]")){const r=CH.rooms.find(x=>x.id===CH.cur),k=t.closest("[data-chmute]")?"muted":"pinned";r[k]=!r[k];await chSb().from("chat_members").update({[k]:r[k]}).eq("room_id",r.id).eq("user_id",chMe());chSide();chDrawList();chBadge();return}
+  if(b=t.closest("[data-chleave]")){if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Bấm lần nữa để rời nhóm";return}const {error}=await chSb().rpc("chat_leave",{rid:CH.cur});if(error){NGB.warn(error.message);return}CH.rooms=CH.rooms.filter(x=>x.id!==CH.cur);CH.cur="";location.hash="tro-chuyen";return}
+  if(t.closest("[data-chren]")){const s=document.querySelector(".chinfo");if(!s||s.querySelector("input"))return;const r=CH.rooms.find(x=>x.id===CH.cur);s.insertAdjacentHTML("beforeend",`<div class="chren"><input class="fi" id="chrn" value="${esc(r.name||"")}"><button type="button" class="back sm" data-chrok style="margin:0">Lưu</button></div>`);document.getElementById("chrn").focus();return}
+  if(t.closest("[data-chrok]")){const v=document.getElementById("chrn").value.trim();if(!v)return;const {error}=await chSb().rpc("chat_rename",{rid:CH.cur,gname:v});if(error){NGB.warn(error.message);return}CH.rooms.find(x=>x.id===CH.cur).name=v;chDrawHead();chSide();chDrawList();return}
+});
+async function chReact(id,e){try{const {data,error}=await chSb().rpc("chat_react",{mid:id,emo:e});if(error)throw error;const m=(CH.msgs[CH.cur]||[]).find(x=>x.id===id);if(m){m.reactions=data||{};chDrawMsgs()}}catch(er){NGB.warn("Chưa gửi được cảm xúc: "+er.message)}}
+document.addEventListener("keydown",e=>{const i=e.target;
+  if(i.id==="chin"){const m=document.getElementById("chmen");if(m&&!m.hidden&&["Enter","Tab","ArrowDown","ArrowUp","Escape"].includes(e.key)){e.preventDefault();const B=[...m.querySelectorAll("[data-chmen]")],k=B.findIndex(x=>x.classList.contains("on"));
+      if(e.key==="Escape"){m.hidden=true;return}if(e.key==="ArrowDown"||e.key==="ArrowUp"){B.forEach(x=>x.classList.remove("on"));B[(k+(e.key==="ArrowDown"?1:B.length-1))%B.length].classList.add("on");return}chMenPick(B[Math.max(0,k)].dataset.chmen);return}
+    if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();chSend();return}
+    if(e.key==="Escape"&&(CH.reply||CH.edit)){e.stopPropagation();if(CH.edit)i.value="";CH.reply=null;CH.edit=null;chDrawBar()}}},true);
+document.addEventListener("input",e=>{const i=e.target;
+  if(i.id==="chin"){i.style.height="";i.style.height=Math.min(160,i.scrollHeight)+"px";chMenAuto(i);if(!CH.tsent||Date.now()-CH.tsent>2500){CH.tsent=Date.now();try{CH.tch&&CH.tch.send({type:"broadcast",event:"t",payload:{u:chMe()}})}catch(er){}}return}
+  if(i.id==="chq"){CH.q=i.value;chDrawList();return}
+  if(i.id==="chnq"){CH.newc.q=i.value;CH.newc.foc="chnq";chNew();return}
+  if(i.id==="chgn"){CH.newc.name=i.value;return}
+  if(i.id==="chfq"){clearTimeout(CH.ft);CH.ft=setTimeout(()=>chFind(i.value.trim()),300)}});
+document.addEventListener("change",e=>{if(e.target.id==="chfile"){chFiles([...e.target.files]);e.target.value=""}});
+document.addEventListener("paste",e=>{if(e.target.id!=="chin")return;const F=[...(e.clipboardData||{}).files||[]];if(F.length){e.preventDefault();chFiles(F)}});
+document.addEventListener("dragover",e=>{if(e.target.closest&&e.target.closest(".chm")&&CH.cur){e.preventDefault();e.target.closest(".chm").classList.add("drop")}});
+document.addEventListener("dragleave",e=>{const m=e.target.closest&&e.target.closest(".chm");if(m&&!m.contains(e.relatedTarget))m.classList.remove("drop")});
+document.addEventListener("drop",e=>{const m=e.target.closest&&e.target.closest(".chm");if(m&&CH.cur&&e.dataTransfer.files.length){e.preventDefault();m.classList.remove("drop");chFiles([...e.dataTransfer.files])}});
+document.addEventListener("scroll",e=>{if(e.target.id==="chmsgs"&&e.target.scrollTop<60)chOlder()},true);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&CH.cur&&document.getElementById("ngchat"))chRead()});
+/* Bấm giữ (điện thoại) hoặc chuột phải: cảm xúc + thao tác */
+document.addEventListener("contextmenu",e=>{const b=e.target.closest&&e.target.closest("#chmsgs [data-chmid]");if(!b||b.dataset.chmid.startsWith("tmp"))return;const m=(CH.msgs[CH.cur]||[]).find(x=>x.id===b.dataset.chmid);if(!m||m.deleted_at)return;e.preventDefault();
+  const id=m.id,me=m.user_id===chMe(),age=Date.now()-new Date(m.created_at);chMenu(b.querySelector(".chbub")||b,`<div class="chre">${CHE.map(x=>`<button type="button" data-chrq="${x}" data-chm="${id}">${x}</button>`).join("")}</div><div class="chmm"><button type="button" data-chop2="rep" data-chm="${id}">↩ Trả lời</button>${m.kind==="text"?`<button type="button" data-chop="copy" data-chm="${id}">Sao chép</button>`:""}<button type="button" data-chop="pin" data-chm="${id}">📌 Ghim tin nhắn</button>${me&&m.kind==="text"?`<button type="button" data-chop="edit" data-chm="${id}">Sửa</button>`:""}${me&&age<864e5?`<button type="button" data-chop="rec" data-chm="${id}" class="bad">Thu hồi</button>`:""}</div>`)});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-chop2]");if(!b)return;chMenuX();CH.reply=(CH.msgs[CH.cur]||[]).find(x=>x.id===b.dataset.chm);CH.edit=null;chDrawBar();const i=document.getElementById("chin");if(i)i.focus()},true);
+
 var PQA={P:[],MA:[],rst:0,msg:""};const PQL=["Ẩn","Xem","Sửa"];
 async function pqAdmLoad(){const box=document.getElementById("adm");if(!box)return;
   try{await pqLoad();const A=NGB.admin,[P,MA]=await Promise.all([A.people(),A.allMembers()]);PQA.P=P||[];PQA.MA=MA||[];pqAdmDraw()}
@@ -3717,15 +3999,16 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-pqr]
     PQA.rst=0;try{const {error}=await NGB.sb().from("role_perms").delete().neq("role","");if(error)throw error;PQ.m={};PQA.msg="Đã khôi phục quyền mặc định"}catch(er){NGB.warn("Chưa khôi phục được: "+er.message)}pqAdmDraw()}});
 function route(){let h=(location.hash||"#tong-quan").slice(1);if(["ban-tin","duyet","bao-cao"].includes(h)&&pqTop(h)<1)h="du-an";let top="tong-quan",html="";cur=null;
   if(h==="du-an"){top="du-an";html=projList()}
+  else if(/^tro-chuyen(-|$)/.test(h)){top="tro-chuyen";html=chView(h.slice(11))}
   else if(h==="bao-cao"){top="bao-cao";html=report()}
   else if(h==="ban-tin"){top="ban-tin";html=brief()}
   else if(h==="duyet"){top="duyet";html=inbox()}
   else if(/^quan-tri(-ai|-mk|-do|-bh|-wf|-bc|-pq|-hd)?$/.test(h)&&window.NGApp&&!NGApp.guest){top="quan-tri";html=adminView(h==="quan-tri-hd"?"hd":h==="quan-tri-pq"?"pq":h==="quan-tri-ai"?"ai":h==="quan-tri-mk"?"mk":h==="quan-tri-do"?"do":h==="quan-tri-bh"?"bh":h==="quan-tri-wf"?"wf":h==="quan-tri-bc"?"bc":"tk")}
   else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){window.NG_PID=p.code||id;top="du-an";const L=p.boq?sheetsFor(DB.projects.find(x=>x.id===id)):SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:L[0][0],sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
   if(!html&&!canOv()){top="du-an";html=projList()}
-  {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("")}
+  {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=topFor().map(t=>pill(t[0],t[0]==="inbox"&&np?t[1]+" ("+np+")":t[1],t[2],t[2]===top)).join("");try{chBadge()}catch(e){}}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
-  if(!isHome){view.innerHTML=html;subLay(view);try{pqApply(h,top)}catch(e){console.error(e)}dashZeros(view);bqApply();try{tsSync()}catch(e){}if(top==="quan-tri"&&admTab!=="mk"&&admTab!=="hd")adminLoad();if(document.getElementById("sgbox")&&window.NGApp)sigSync([NGApp.uid]);if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad();if(/-(pyc|tt|dc|goi|kh|files|lk|bn|bg)(-|$)/.test(location.hash)&&cur&&(PY.pid!==cur.id||!PY.list||Date.now()-(PY.at||0)>30000))pyLoad();if(!NGApp.guest&&NGApp.uid)try{kbAuto(cur&&/^#?da-/.test(location.hash)?(DB.projects.find(x=>x.id===cur.id)||cur):null)}catch(e){}}else{try{drawMap()}catch(e){console.error(e)}try{if(!NGApp.guest&&NGApp.uid)kbAuto(null)}catch(e){}}
+  if(!isHome){view.innerHTML=html;subLay(view);if(document.getElementById("ngchat"))try{chMount()}catch(e){console.error(e)}try{pqApply(h,top)}catch(e){console.error(e)}dashZeros(view);bqApply();try{tsSync()}catch(e){}if(top==="quan-tri"&&admTab!=="mk"&&admTab!=="hd")adminLoad();if(document.getElementById("sgbox")&&window.NGApp)sigSync([NGApp.uid]);if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad();if(/-(pyc|tt|dc|goi|kh|files|lk|bn|bg)(-|$)/.test(location.hash)&&cur&&(PY.pid!==cur.id||!PY.list||Date.now()-(PY.at||0)>30000))pyLoad();if(!NGApp.guest&&NGApp.uid)try{kbAuto(cur&&/^#?da-/.test(location.hash)?(DB.projects.find(x=>x.id===cur.id)||cur):null)}catch(e){}}else{try{drawMap()}catch(e){console.error(e)}try{if(!NGApp.guest&&NGApp.uid)kbAuto(null)}catch(e){}}
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b||b.closest("#intro"))return;const g=b.dataset.go;if(g==="home")return;
   if(e.target.closest("input"))return;
@@ -4139,7 +4422,7 @@ window.NGApp={board:false,uid:null,drive:false,guest:false,
   guestEnter(){const d=STORE.load();DB.projects=Array.isArray(d.projects)?d.projects:[];DB.dec=d.dec||{};DB.projects.forEach(p=>{if(!p.cost)p.cost={};if(p.ratio==null)p.ratio=85});NGApp.guest=true;NGApp.board=true;NGApp.uid=null;NGApp.drive=false;
     const b=document.createElement("div");b.textContent="Chế độ thử · số liệu chỉ lưu trên trình duyệt này";b.style.cssText="position:fixed;left:50%;bottom:10px;transform:translateX(-50%);max-width:70vw;padding:5px 12px;border-radius:99px;background:rgba(10,36,134,.88);color:#fff;font-size:15px;text-align:center;z-index:50;pointer-events:none";document.body.appendChild(b);
     route();if(window.renderHello)window.renderHello()},
-  async sync(){const d=await NGB.loadAll();DB.projects=d.projects;DB.dec=d.dec;NGApp.board=d.isBoard;NGApp.uid=d.uid;NGApp.crole=d.role||"";NGApp.name=d.name||"";NGApp.email=d.email||"";await pqLoad();meUI();pplLoad();NGApp.realBoard=d.isBoard;NGApp.real=null;if(NGApp.as)asApply();asBtn();NGApp.drive=await NGB.drive.status();route();if(window.renderHello)window.renderHello();
+  async sync(){const d=await NGB.loadAll();DB.projects=d.projects;DB.dec=d.dec;NGApp.board=d.isBoard;NGApp.uid=d.uid;NGApp.crole=d.role||"";NGApp.name=d.name||"";NGApp.email=d.email||"";await pqLoad();try{chBoot()}catch(e){}meUI();pplLoad();NGApp.realBoard=d.isBoard;NGApp.real=null;if(NGApp.as)asApply();asBtn();NGApp.drive=await NGB.drive.status();route();if(window.renderHello)window.renderHello();
     flushLocal().then(r=>{if(r.done&&document.getElementById("fls"))filesLoad()}).catch(()=>{})}};
 addEventListener("hashchange",()=>{pending=null;route()});route();
 view.addEventListener("submit",async e=>{const f=e.target;if(f.id!=="rlf")return;e.preventDefault();const d=Object.fromEntries(new FormData(f)),m=document.getElementById("rlm");try{await NGB.addRule(d.scope,d.text);rulesLoad()}catch(er){if(m){m.textContent="Chưa ghi được: "+er.message;m.style.color="#C0141B"}}});
@@ -4381,7 +4664,7 @@ const NTK={ssg:"Mở bảng so sánh giá",pyc:"Mở phiếu yêu cầu vật t�
 const ntAgo=s=>{const m=Math.round((Date.now()-new Date(s))/6e4);return m<1?"vừa xong":m<60?m+" phút trước":m<1440?Math.round(m/60)+" giờ trước":fdt(s).slice(0,10)};
 function ntfBadge(){const n=NTI.list.filter(x=>!x.read).length;document.querySelectorAll('[aria-label="Thông báo"]').forEach(b=>{let x=b.querySelector(".badge");if(!x){x=document.createElement("span");x.className="badge";b.appendChild(x)}x.textContent=n?(n>9?"9+":n):"";x.classList.toggle("nb",n>0);x.hidden=!n;b.title=n?n+" thông báo chưa đọc":"Thông báo"})}
 /* Thông báo của đúng người đang dùng; khi "Xem như" một tài khoản thì đọc thông báo của tài khoản đó (Ban giám đốc được quyền đọc, không sửa) */
-async function ntfLoad(){if(!window.NGApp||NGApp.guest||!NGApp.uid)return;const who=NGApp.as?NGApp.as.uid:NGApp.uid;if(!who||who==="preview"){NTI.list=[];ntfBadge();ntfPanel(true);return}try{const {data,error}=await NGB.sb().from("notifications").select("*").eq("user_id",who).order("at",{ascending:false}).limit(60);if(!error){NTI.list=data||[];ntfBadge();ntfPanel(true)}}catch(e){}}
+async function ntfLoad(){if(!window.NGApp||NGApp.guest||!NGApp.uid)return;const who=NGApp.as?NGApp.as.uid:NGApp.uid;if(!who||who==="preview"){NTI.list=[];ntfBadge();ntfPanel(true);return}try{const {data,error}=await NGB.sb().from("notifications").select("*").eq("user_id",who).neq("kind","chat").order("at",{ascending:false}).limit(60);if(!error){NTI.list=data||[];ntfBadge();ntfPanel(true)}}catch(e){}}
 function ntfPanel(only){let b=document.getElementById("ntfp");if(only&&!b)return;if(!b){b=document.createElement("div");b.id="ntfp";b.className="ntfp";b.setAttribute("role","dialog");b.setAttribute("aria-label","Danh sách thông báo");document.body.appendChild(b)}
   const perm=window.Notification?Notification.permission:"x",L=NTI.list;
   /* Bấm một thông báo: mở chi tiết ngay trong khung (đủ tiêu đề, nội dung, thời điểm, công trình) + nút mở đúng phiếu (anh Chung 07/11/2026) */
