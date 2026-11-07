@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Nam Giang E&amp;C · Hệ thống quản trị</title>
 <meta name="description" content="Hệ thống quản trị nội bộ Công ty Cổ phần Đầu tư và Xây lắp Nam Giang: doanh thu, chi phí, tiến độ, vật liệu, nhân sự.">
 <meta name="theme-color" content="#4E6BFF">
@@ -948,8 +948,14 @@ table.t tfoot td{border-top:1px solid #8D9BD3!important;box-shadow:inset 0 1px 0
 .nhmenu{position:fixed;z-index:9500;width:300px;max-height:320px;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:16px;background:#fff;box-shadow:0 0 0 1px #DDE2EE,0 18px 40px -16px rgba(16,24,64,.45)}
 .nhml{overflow:auto;display:grid}.nhml button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:10px;font:inherit;font-size:13.5px;cursor:pointer}.nhml button:hover{background:#F0F3FD}.nhml .nhmnew{color:#2D3CE6;font-weight:600}
 @media(max-width:760px){.nh2{grid-template-columns:1fr}.nhdl{position:static;max-height:240px}.nhbar .sub{width:100%}}
+
+/* Điện thoại: cố định khung, không tự phóng to khi chạm ô nhập, không chạm đúp để zoom (anh Chung 07/11/2026) */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+@media(max-width:760px){input,select,textarea,.fi{font-size:16px!important}}
 </style>
 
+<script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
+(function(){try{["gesturestart","gesturechange","gestureend"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));document.addEventListener("touchmove",e=>{if(e.touches&&e.touches.length>1)e.preventDefault()},{passive:false});let last=0,lt=null;document.addEventListener("touchend",e=>{const n=Date.now(),t=e.target;if(n-last<300&&t===lt&&!t.closest("input,textarea,select,button,a,[role=button]"))e.preventDefault();last=n;lt=t},{passive:false})}catch(e){}})();</script>
 </head>
 <body>
 <div id="intro" class="s1" role="dialog" aria-label="Đăng nhập hệ thống Nam Giang">
