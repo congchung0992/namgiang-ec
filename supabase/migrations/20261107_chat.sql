@@ -188,3 +188,13 @@ create policy chat_obj_ins on storage.objects for insert to authenticated with c
 alter publication supabase_realtime add table public.chat_messages;
 alter publication supabase_realtime add table public.chat_members;
 alter publication supabase_realtime add table public.chat_rooms;
+
+-- Đổi tên: nhóm tự lập thì thành viên nào cũng đổi được; nhóm Cả công ty, nhóm dự án chỉ Admin, Tổng giám đốc (để trống = tên mặc định)
+create or replace function public.chat_rename(rid uuid, gname text) returns void language plpgsql security definer set search_path to '' as $$
+begin
+  if not exists(select 1 from public.chat_rooms r where r.id=rid and (
+      (r.kind='group' and exists(select 1 from public.chat_members m where m.room_id=r.id and m.user_id=auth.uid()))
+      or (r.kind in ('company','project') and public.is_board()))) then raise exception 'Chỉ Admin, Tổng giám đốc đổi được tên nhóm này'; end if;
+  update public.chat_rooms set name = nullif(left(trim(gname),80),'') where id = rid;
+  insert into public.chat_messages(room_id, user_id, kind, body) values (rid, auth.uid(), 'system', case when trim(gname)='' then 'đã đặt lại tên nhóm mặc định' else 'đã đổi tên nhóm thành ' || left(trim(gname),80) end);
+end $$;
