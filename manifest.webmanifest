@@ -6,5 +6,30 @@
   "background_color": "#ECECEE",
   "theme_color": "#4E6BFF",
   "lang": "vi",
-  "icons": [{ "src": "img/mark.png", "sizes": "140x163", "type": "image/png" }]
+  "icons": [
+    {
+      "src": "img/mark.png",
+      "sizes": "140x163",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chấm công",
+      "short_name": "Chấm công",
+      "description": "Mở thẳng màn chấm công bằng khuôn mặt",
+      "url": "./#cham-cong",
+      "icons": [
+        {
+          "src": "img/cham-cong-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Trò chuyện",
+      "url": "./#tro-chuyen"
+    }
+  ]
 }

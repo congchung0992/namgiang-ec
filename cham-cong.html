@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Chấm công</title>
+<meta name="description" content="Nút chấm công Nam Giang E&C trên màn hình chính điện thoại">
+<meta name="theme-color" content="#0E9F9A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chấm công">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" type="image/png" href="img/cham-cong-192.png">
+<link rel="apple-touch-icon" href="img/cham-cong-180.png">
+<link rel="manifest" href="cham-cong.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+/* Mở từ biểu tượng trên màn hình chính (chế độ ứng dụng): vào thẳng màn chấm công */
+if((window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone)location.replace("./#cham-cong");
+</script>
+<style>
+:root{--ink:#16171C;--muted:#6B7080;--c:#0E9F9A}
+*{box-sizing:border-box}body{margin:0;background:#ECECEE;font:400 15px/1.55 "Be Vietnam Pro",system-ui,sans-serif;color:var(--ink)}
+main{max-width:520px;margin:0 auto;padding:28px 16px 40px}
+.hd{display:flex;align-items:center;gap:16px}.hd img{width:76px;height:76px;border-radius:18px;box-shadow:0 10px 24px -12px var(--c)}
+h1{font-size:22px;font-weight:600;margin:0}.hd p{margin:2px 0 0;color:var(--muted)}
+.card{background:#fff;border-radius:24px;padding:20px;margin-top:18px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card h2{font-size:17px;font-weight:600;margin:0 0 10px}
+ol{margin:0;padding-left:22px}li{margin:6px 0}b{font-weight:600}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:99px;padding:14px 18px;font:600 17px "Be Vietnam Pro",sans-serif;color:#fff;background:linear-gradient(135deg,#0E9F9A,#4FD8C9);box-shadow:0 10px 24px -12px #0E9F9A;cursor:pointer;text-decoration:none}
+.btn.alt{background:#EAF2FF;color:#0A2486;box-shadow:none;margin-top:10px}
+.ico{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:#F1F3F7;vertical-align:-7px;margin:0 2px}
+.note{color:var(--muted);font-size:13px;margin-top:12px}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div class="hd"><img src="img/cham-cong-180.png" alt=""><div><h1>Nút Chấm công</h1><p>Đặt biểu tượng ra màn hình chính điện thoại · bấm là vào thẳng màn chấm công</p></div></div>
+  <section class="card" id="and" hidden><h2>Điện thoại Android</h2><button class="btn" id="ins">Thêm nút Chấm công vào màn hình chính</button>
+    <p class="note" id="andm">Nếu nút trên không hiện hộp cài đặt: bấm <b>⋮</b> góc trên phải Chrome → <b>Thêm vào màn hình chính</b> → <b>Cài đặt</b>.</p></section>
+  <section class="card" id="ios" hidden><h2>iPhone</h2><ol>
+    <li>Mở trang này bằng <b>Safari</b></li>
+    <li>Bấm nút <b>Chia sẻ</b> <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="2" stroke-linecap="round"><path d="M12 15V3M8 7l4-4 4 4M5 11v9h14v-9"/></svg></span> ở thanh dưới cùng</li>
+    <li>Kéo xuống, chọn <b>Thêm vào MH chính</b></li>
+    <li>Giữ tên <b>Chấm công</b>, bấm <b>Thêm</b></li></ol>
+    <p class="note">Lần đầu mở từ biểu tượng, iPhone cần đăng nhập lại một lần (biểu tượng chạy như ứng dụng riêng), sau đó nhớ đăng nhập.</p></section>
+  <section class="card" id="pc" hidden><h2>Trên máy tính</h2><p>Mở trang này trên điện thoại để đặt nút Chấm công ra màn hình chính.</p></section>
+  <a class="btn alt" href="./#cham-cong">Mở màn chấm công ngay</a>
+</main>
+<script>
+const ua=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),and=/Android/.test(ua);
+document.getElementById(ios?"ios":and?"and":"pc").hidden=false;
+let ev=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();ev=e;document.getElementById("and").hidden=false});
+document.getElementById("ins").onclick=async()=>{if(!ev){document.getElementById("andm").style.color="#C0141B";return}ev.prompt();const r=await ev.userChoice;if(r.outcome==="accepted")document.getElementById("ins").textContent="Đã thêm · tìm biểu tượng Chấm công trên màn hình chính"};
+addEventListener("appinstalled",()=>{document.getElementById("ins").textContent="Đã thêm · tìm biểu tượng Chấm công trên màn hình chính"});
+</script>
+</body>
+</html>

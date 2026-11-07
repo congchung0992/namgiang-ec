@@ -1,0 +1,16 @@
+{
+  "id": "./cham-cong.html",
+  "name": "Chấm công · Nam Giang E&C",
+  "short_name": "Chấm công",
+  "description": "Chấm công bằng khuôn mặt và vị trí",
+  "start_url": "./#cham-cong",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ECECEE",
+  "theme_color": "#0E9F9A",
+  "lang": "vi",
+  "icons": [
+    { "src": "img/cham-cong-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/cham-cong-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
