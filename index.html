@@ -4904,7 +4904,8 @@ function gtGoiAgg(p,D){const pn=(p.pk||{}).pn||{},SC=(p.sched&&p.sched.t)||{},z=
       {const tt=SC[tkey(x.h,x.l)];if(tt&&tt.s<s0)s0=tt.s}
       const pk=String(x.l.name||"").trim()+"|"+String(x.l.spec||"").trim()+"|"+t,dm=x.pt&&!x.pt.ratio;
       const n=dm?x.pt.name:pn[pk]||(x.pt&&x.pt.ratio?x.pt.name:x.l.name),u=dm||(x.pt&&x.pt.ratio)?x.pt.unit:(x.l.unit||""),q=x.pt?x.pt.dm*x.q:x.q;
-      const ck=BOQ.nz(n)+"|"+BOQ.nz(u)+"|"+t;if(!C.has(ck))C.set(ck,{k:g.key+"§"+ck,n,u,t,q:0,v:0,c:z(),L:[],hm:new Set()});const e=C.get(ck);e.q+=q;e.v+=v;add(e.c);e.hm.add(x.h.code);
+      /* dòng giao cả dòng (máy phát, robot, cừ…): nhãn Vật tư / Nhân công theo phần chiếm nhiều hơn trong BOQ, không theo nhóm gói */
+      const te=x.bv!=null?(x.bv>=.5?"v":"n"):t,ck=BOQ.nz(n)+"|"+BOQ.nz(u)+"|"+te;if(!C.has(ck))C.set(ck,{k:g.key+"§"+ck,n,u,t:te,q:0,v:0,c:z(),L:[],hm:new Set()});const e=C.get(ck);e.q+=q;e.v+=v;add(e.c);e.hm.add(x.h.code);
       const lc=z();add(lc);e.L.push({h:x.h,l:x.l,dk:dmKey(x.h,x.l),q,bq:x.q,v,c:lc,dm:dm?x.pt:null})});
     return{o,c,v:g.tb,s0,C:[...C.values()].sort((a,b)=>(a.t==="v"?0:1)-(b.t==="v"?0:1)||b.v-a.v)}}).sort((a,b)=>a.s0-b.s0||b.v-a.v)}
 var GTC=new Set();
