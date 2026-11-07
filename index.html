@@ -941,6 +941,12 @@ table.t > thead > tr:first-child > th:last-child{border-top-right-radius:13px}
 .tw.bsw,.tw[data-fit]{border:1px solid #A9B3D3;border-radius:14px;background:rgba(255,255,255,.55)}
 .tw.bsw>table.t,.tw[data-fit]>table.t{border:0;border-radius:0;overflow:visible;background:transparent}
 .tw.bsw>table.t>thead>tr>th,.tw[data-fit]>table.t>thead>tr>th{border-radius:0}
+/* Thanh cuộn của bảng trong khung: nền trong suốt, con trượt bo tròn, cách hai đầu bằng độ bo để không đè lên góc bo của khung (Chrome trên Windows) */
+.tw.bsw::-webkit-scrollbar,.tw[data-fit]::-webkit-scrollbar{width:12px;height:12px}
+.tw.bsw::-webkit-scrollbar-track,.tw[data-fit]::-webkit-scrollbar-track{background:transparent;margin:13px}
+.tw.bsw::-webkit-scrollbar-thumb,.tw[data-fit]::-webkit-scrollbar-thumb{background:#B7C0D8;border:3px solid transparent;border-radius:8px;background-clip:padding-box;min-height:48px;min-width:48px}
+.tw.bsw::-webkit-scrollbar-thumb:hover,.tw[data-fit]::-webkit-scrollbar-thumb:hover{background-color:#A9B3D3}
+.tw.bsw::-webkit-scrollbar-corner,.tw[data-fit]::-webkit-scrollbar-corner{background:transparent}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
