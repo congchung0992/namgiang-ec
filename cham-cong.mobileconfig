@@ -537,7 +537,7 @@
 			<key>Precomposed</key>
 			<true/>
 			<key>URL</key>
-			<string>https://namgiang-ec.pages.dev/#cham-cong</string>
+			<string>https://namgiang-ec.pages.dev/?app=cc#cham-cong</string>
 		</dict>
 	</array>
 	<key>PayloadDescription</key>

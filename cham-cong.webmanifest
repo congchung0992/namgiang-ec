@@ -3,7 +3,7 @@
   "name": "Chấm công · Nam Giang E&C",
   "short_name": "Chấm công",
   "description": "Chấm công bằng khuôn mặt và vị trí",
-  "start_url": "./#cham-cong",
+  "start_url": "./?app=cc#cham-cong",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ECECEE",
