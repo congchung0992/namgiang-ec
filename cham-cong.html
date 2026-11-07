@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
 /* Mở từ biểu tượng trên màn hình chính (chế độ ứng dụng): vào thẳng màn chấm công */
-if((window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone)location.replace("./?app=cc#cham-cong");
+if(((window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone)&&!document.referrer)location.replace("./?app=cc#cham-cong");
 </script>
 <style>
 :root{--ink:#16171C;--muted:#6B7080;--c:#0E9F9A}
@@ -31,6 +31,7 @@ ol{margin:0;padding-left:22px}li{margin:6px 0}b{font-weight:600}
 .btn.alt{background:#EAF2FF;color:#0A2486;box-shadow:none;margin-top:10px}
 .ico{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:#F1F3F7;vertical-align:-7px;margin:0 2px}
 .st{margin-top:14px}details{margin-top:14px}summary{cursor:pointer;color:#0A6E6A;font-weight:600}details ol{margin-top:8px}
+.warn{margin-top:12px;padding:10px 12px;border-radius:14px;background:#FFF4E5;color:#8A4B00;font-size:14px}.warn button{border:0;border-radius:99px;padding:4px 12px;background:#F08A24;color:#fff;font:600 14px "Be Vietnam Pro",sans-serif}
 .note{color:var(--muted);font-size:13px;margin-top:12px}[hidden]{display:none!important}
 </style>
 </head>
@@ -43,6 +44,7 @@ ol{margin:0;padding-left:22px}li{margin:6px 0}b{font-weight:600}
     <a class="btn" href="cham-cong.mobileconfig">Cài nút Chấm công</a>
     <ol class="st"><li>Bấm nút trên → <b>Cho phép</b></li><li>Mở <b>Cài đặt</b> → bấm dòng <b>Đã tải về hồ sơ</b> ở trên cùng</li><li>Bấm <b>Cài đặt</b> (góc phải) → nhập mật mã máy → <b>Cài đặt</b> → <b>Xong</b></li></ol>
     <p class="note">Máy sẽ báo "Chưa xác minh" vì hồ sơ do công ty tự làm: hồ sơ chỉ thêm một biểu tượng mở trang chấm công, không đổi gì khác. Muốn gỡ: Cài đặt → Cài đặt chung → VPN &amp; Quản lý thiết bị.</p>
+    <div id="inapp" hidden class="warn">Anh/chị đang mở trong app Nam Giang: nếu bấm nút trên không hiện hộp <b>Cho phép</b>, bấm <button type="button" id="cp">Sao chép link</button> rồi dán vào <b>Safari</b> và làm lại.</div>
     <details><summary>Cách khác: tự thêm bằng Safari</summary><ol>
     <li>Mở trang này bằng <b>Safari</b></li>
     <li>Bấm nút <b>Chia sẻ</b> <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="2" stroke-linecap="round"><path d="M12 15V3M8 7l4-4 4 4M5 11v9h14v-9"/></svg></span> ở thanh dưới cùng</li>
@@ -55,6 +57,8 @@ ol{margin:0;padding-left:22px}li{margin:6px 0}b{font-weight:600}
 <script>
 const ua=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),and=/Android/.test(ua);
 document.getElementById(ios?"ios":and?"and":"pc").hidden=false;
+const sa=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone;if(sa)document.getElementById("inapp").hidden=false;
+document.getElementById("cp").onclick=async e=>{const u=location.origin+location.pathname;try{await navigator.clipboard.writeText(u);e.target.textContent="Đã sao chép"}catch(er){e.target.textContent=u}};
 let ev=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();ev=e;document.getElementById("and").hidden=false});
 document.getElementById("ins").onclick=async()=>{if(!ev){document.getElementById("andm").style.color="#C0141B";return}ev.prompt();const r=await ev.userChoice;if(r.outcome==="accepted")document.getElementById("ins").textContent="Đã thêm · tìm biểu tượng Chấm công trên màn hình chính"};
 addEventListener("appinstalled",()=>{document.getElementById("ins").textContent="Đã thêm · tìm biểu tượng Chấm công trên màn hình chính"});

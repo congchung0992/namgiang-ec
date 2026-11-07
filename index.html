@@ -1264,7 +1264,6 @@ html.atlock,html.atlock body{overflow:hidden}
 }
 </style>
 
-<script>try{if(/[?&]app=cc\b/.test(location.search))localStorage.setItem("ng_cc","1")}catch(e){}</script>
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
 (function(){try{["gesturestart","gesturechange","gestureend"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));document.addEventListener("touchmove",e=>{if(e.touches&&e.touches.length>1)e.preventDefault()},{passive:false});let last=0,lt=null;document.addEventListener("touchend",e=>{const n=Date.now(),t=e.target;if(n-last<300&&t===lt&&!t.closest("input,textarea,select,button,a,[role=button]"))e.preventDefault();last=n;lt=t},{passive:false})}catch(e){}})();</script>
 </head>
@@ -4220,9 +4219,9 @@ function atCC(){const me=NGApp.uid,today=atYmd(new Date()),D=atDay(me,today),L=A
   const [a,b]=atMonRange(AT.mon),days=[];for(let d=new Date(b);d>=a;d.setDate(d.getDate()-1)){const s=atYmd(d);if(s<=today)days.push(atDay(me,s))}
   const W=days.reduce((s,d)=>s+d.work,0),LT=days.reduce((s,d)=>s+d.late,0),K=days.filter(d=>d.code==="K").length,Q=+(AT.cfg.leave_year||12),U=atLeaveUsed(me);
   const g=AT.geo,WD=["CN","T2","T3","T4","T5","T6","T7"],note=d=>[d.late?"Muộn "+d.late+" phút":"",d.early?"Về sớm "+d.early+" phút":"",d.lv?atLv(d.lv.kind)[1]:""].filter(Boolean).join(" · ");
-  let hide=0;try{hide=localStorage.getItem("ng_cc")==="1"}catch(e){}
+  let hide=/[?&]app=cc\b/.test(location.search);try{localStorage.removeItem("ng_cc");if(localStorage.getItem("ng_ccx")==="1")hide=1}catch(e){}
   const ICF=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="2.6"/><path d="M7.5 17c.9-2 2.5-3 4.5-3s3.6 1 4.5 3"/></svg>`;
-  return`<section class="card span3 atcc">${hide?"":`<div class="athome"><a href="cham-cong.html" target="_blank" rel="noopener"><img src="img/cham-cong-192.png" alt=""><span><b>Cài nút Chấm công ra màn hình điện thoại</b><small>Bấm biểu tượng là vào thẳng màn này</small></span><i>›</i></a><button type="button" class="athx" data-athide aria-label="Ẩn">×</button></div>`}<div class="athero">
+  return`<section class="card span3 atcc">${hide?"":`<div class="athome"><a href="cham-cong.html"${(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone?"":` target="_blank" rel="noopener"`}><img src="img/cham-cong-192.png" alt=""><span><b>Cài nút Chấm công ra màn hình điện thoại</b><small>Bấm biểu tượng là vào thẳng màn này</small></span><i>›</i></a><button type="button" class="athx" data-athide aria-label="Ẩn">×</button></div>`}<div class="athero">
       <div class="athd"><b>${["Chủ nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"][new Date().getDay()]}, ${fd(new Date())}</b><span class="atclock" id="atclock">${atHm(new Date())}</span>
         <span class="atshift">${sh?`<i class="atdot" style="background:${esc(sh.color||"#2D3CE6")}"></i>${esc(sh.name)} · ${sh.t1.slice(0,5)} – ${sh.t2.slice(0,5)}`:"Hôm nay nghỉ hoặc chưa phân ca"}</span></div>
       <div class="atbig">${AT.face?`<button type="button" class="atgo ${nxt}" data-atpunch="${nxt}"${AT.busy?" disabled":""}>${ICF}<span>${nxt==="in"?"Vào ca":"Ra ca"}</span><small>Bấm để chấm công</small></button>`:`<button type="button" class="atgo reg" data-atreg${AT.busy?" disabled":""}>${ICF}<span>Đăng ký khuôn mặt</span><small>Làm một lần</small></button>`}</div>
@@ -4329,7 +4328,7 @@ async function atDo(fn,ok){try{await fn();if(ok){AT.ok=1;AT.msg=ok}}catch(e){AT.
 document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!document.getElementById("att"))return;let b;const sb=NGB.sb();
   if(t.closest("[data-atpunch]")){atPunch(t.closest("[data-atpunch]").dataset.atpunch);return}
   if(t.closest("[data-atreg]")){atReg();return}
-  if(t.closest("[data-athide]")){try{localStorage.setItem("ng_cc","1")}catch(er){}atDraw();return}
+  if(t.closest("[data-athide]")){try{localStorage.setItem("ng_ccx","1")}catch(er){}atDraw();return}
   if(t.closest("[data-atgeo]")){try{atStatus("");AT.geo=atNear(await atGeo())}catch(er){AT.geo={err:er.message}}atDraw();return}
   if(b=t.closest("[data-atmon]")){const [y,m]=AT.mon.split("-").map(Number),d=new Date(y,m-1+(+b.dataset.atmon),1);AT.mon=atYmd(d).slice(0,7);AT.msg="";atLoad();return}
   if(b=t.closest("[data-atwk]")){AT.wk=+b.dataset.atwk?AT.wk+(+b.dataset.atwk):0;atLoad();return}
