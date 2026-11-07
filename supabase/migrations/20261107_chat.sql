@@ -198,3 +198,56 @@ begin
   update public.chat_rooms set name = nullif(left(trim(gname),80),'') where id = rid;
   insert into public.chat_messages(room_id, user_id, kind, body) values (rid, auth.uid(), 'system', case when trim(gname)='' then 'đã đặt lại tên nhóm mặc định' else 'đã đổi tên nhóm thành ' || left(trim(gname),80) end);
 end $$;
+-- Trò chuyện bổ sung (anh Chung 07/11/2026): @Tất cả, bình chọn, tin nhắn thoại, xoá thành viên nhóm
+alter table public.chat_messages drop constraint if exists chat_messages_kind_check;
+alter table public.chat_messages add constraint chat_messages_kind_check check (kind in ('text','image','file','system','poll'));
+
+create or replace function public.chat_vote(mid uuid, idx int) returns jsonb language plpgsql security definer set search_path to '' as $$
+declare f jsonb; me text := auth.uid()::text; o jsonb; i int; n int; v jsonb;
+begin
+  select file into f from public.chat_messages where id = mid and kind = 'poll' and deleted_at is null and public.chat_in(room_id);
+  if f is null then raise exception 'forbidden'; end if;
+  o := f->'opts'; n := jsonb_array_length(o);
+  if idx < 0 or idx >= n then raise exception 'bad'; end if;
+  for i in 0..n-1 loop
+    v := coalesce(o->i->'v','[]'::jsonb);
+    if i = idx then
+      if v ? me then v := v - me; else v := v || to_jsonb(me); end if;
+    elsif not coalesce((f->>'multi')::boolean,false) then v := v - me; end if;
+    o := jsonb_set(o, array[i::text,'v'], v);
+  end loop;
+  f := jsonb_set(f, '{opts}', o);
+  update public.chat_messages set file = f where id = mid;
+  return f;
+end $$;
+
+create or replace function public.chat_kick(rid uuid, uid uuid) returns void language plpgsql security definer set search_path to '' as $$
+begin
+  if not exists(select 1 from public.chat_rooms r join public.chat_members m on m.room_id=r.id where r.id=rid and r.kind='group' and m.user_id=auth.uid() and m.role='owner') then raise exception 'Chỉ trưởng nhóm xoá được thành viên'; end if;
+  if uid = auth.uid() then raise exception 'bad'; end if;
+  delete from public.chat_members where room_id=rid and user_id=uid;
+  insert into public.chat_messages(room_id, user_id, kind, body) values (rid, auth.uid(), 'system', 'đã mời ' || (select coalesce(nullif(p.full_name,''),split_part(p.email,'@',1)) from public.profiles p where p.id=uid) || ' ra khỏi nhóm');
+end $$;
+
+-- Thông báo: @Tất cả (mã 0000…) báo mọi thành viên; nhãn cho bình chọn, tin nhắn thoại
+create or replace function public.chat_after_msg() returns trigger language plpgsql security definer set search_path to '' as $$
+declare r public.chat_rooms; who text; t text; txt text; allm boolean;
+begin
+  select * into r from public.chat_rooms where id = new.room_id;
+  txt := case new.kind when 'image' then '[Hình ảnh]' when 'poll' then '[Bình chọn] ' || coalesce(new.body,'')
+    when 'file' then case when coalesce(new.file->>'type','') like 'audio/%' then '[Tin nhắn thoại]' else '[Tệp] ' || coalesce(new.file->>'name','') end
+    else coalesce(new.body,'') end;
+  update public.chat_rooms set last_at = new.created_at, last_text = left(txt,200), last_by = new.user_id where id = new.room_id;
+  update public.chat_members set last_read = new.created_at where room_id = new.room_id and user_id = new.user_id;
+  if new.kind = 'system' then return new; end if;
+  allm := '00000000-0000-0000-0000-000000000000'::uuid = any(new.mentions);
+  select coalesce(nullif(full_name,''), split_part(email,'@',1)) into who from public.profiles where id = new.user_id;
+  t := case r.kind when 'direct' then who when 'company' then who || ' · ' || coalesce(r.name,'Cả công ty') when 'project' then who || ' · ' || coalesce(r.name,(select pr.boq->>'code' from public.projects pr where pr.id=r.project_id),'Dự án') else who || ' · ' || coalesce(r.name,'Nhóm') end;
+  insert into public.notifications(user_id, project_id, kind, title, body, link)
+  select distinct m.user_id, r.project_id, 'chat', t, left(txt,140), '#tro-chuyen-' || r.id
+  from public.chat_members m
+  where m.room_id = new.room_id and m.user_id <> new.user_id
+    and ((not m.muted and r.kind in ('direct','group')) or m.user_id = any(new.mentions) or allm);
+  return new;
+exception when others then return new;
+end $$;
