@@ -66,6 +66,11 @@ body.edland .a4p{max-width:1320px}
 .sgpad{display:grid;gap:4px}.sgpad canvas{width:100%;aspect-ratio:3/1;border:1.5px dashed #8B93B5;border-radius:16px;background:#fff;touch-action:none;cursor:crosshair}.sgpad small{color:#6B7290}
 .sgbt{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sgbt .back{margin:0}
 .sgme [hidden]{display:none!important}
+.svst{position:fixed;right:18px;bottom:18px;z-index:9000;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:99px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);box-shadow:0 0 0 1px #DDE2EE,0 10px 26px -12px rgba(16,24,64,.35);font-size:13px;color:#3A4160;min-height:32px}
+.svst i{width:8px;height:8px;border-radius:50%;background:#12A150;flex:none}.svst.saved{padding-right:14px;opacity:.85}.svst.pending i{background:#F08A24}.svst.saving i{background:#2D3CE6;animation:svp 1s infinite}.svst.error{color:#C0141B}.svst.error i{background:#E1141B}
+.svst button{border:0;border-radius:99px;padding:6px 14px;font:inherit;font-weight:600;color:#fff;background:linear-gradient(135deg,#12A150,#0B7A3B);cursor:pointer}.svst button:active{transform:scale(.96)}
+@keyframes svp{50%{opacity:.3}}@media(prefers-reduced-motion:reduce){.svst.saving i{animation:none}}
+@media(max-width:760px){.svst{right:10px;bottom:10px;font-size:12px}}
 @media(max-width:760px){.sgb{grid-template-columns:1fr 1fr;gap:10px 8px}.sgc>b{min-height:2.7em;display:flex;align-items:flex-end;justify-content:center}.sgi{height:64px}.sgi img{max-height:60px}}
 .a4p{max-width:900px;margin:14px auto 0;background:#fff;border-radius:6px;padding:30px 34px;box-shadow:0 0 0 1px #D5DAE6,0 14px 34px -16px rgba(16,24,64,.35)}
 .a4p .pyh{box-shadow:none;padding:0;margin:0;flex-direction:column;align-items:stretch;gap:10px}.a4p .pyh img{align-self:flex-start;width:104px;margin-bottom:-58px}.a4p .pyht h2{margin:4px 0 22px}.a4p .ttt th{white-space:normal;line-height:1.25;vertical-align:middle}.a4p .pyg{grid-template-columns:auto 1fr auto 150px}
@@ -1102,6 +1107,8 @@ window.NGB=(function(){
   const boqOf=p=>{const o={};Object.keys(p).forEach(k=>{if(!CK.includes(k)&&!SK.includes(k)&&k[0]!=="_")o[k]=p[k]});return o};
   const J=JSON.stringify;
   let saved={},savedDec={},timer=null,running=false,again=false,dirty=false,lastDb=null,onState=null,box=null;
+  /* Trạng thái lưu lên máy chủ cho nút Lưu (anh Chung 07/11/2026): pending (có sửa, chờ lưu) · saving · saved · error */
+  let SVS={s:"saved",at:null};const SVL=[],svEmit=(st)=>{SVS={s:st,at:st==="saved"?new Date():SVS.at};SVL.forEach(f=>{try{f(SVS)}catch(e){}})};
   const ok=r=>{if(r.error){const e=new Error(r.error.message);e.code=r.error.code;throw e}return r.data};
   const conflict=()=>{const e=new Error("x");e.conflict=1;return e};
   const toast=m=>{if(!box){box=document.createElement("div");box.setAttribute("role","alert");box.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:90vw;padding:10px 18px;border-radius:999px;background:#C0141B;color:#fff;font-size:15px;text-align:center;z-index:9999;box-shadow:0 8px 24px rgba(192,20,27,.3)";document.body.appendChild(box)}box.textContent=m||"";box.hidden=!m;clearTimeout(box._t);if(m)box._t=setTimeout(()=>{box.hidden=true},9000)};
@@ -1136,9 +1143,9 @@ window.NGB=(function(){
     const cur=db.dec||{},owner=id=>db.projects.find(p=>id.startsWith(p.id+"|"));
     for(const id of Object.keys(savedDec))if(!cur[id]&&owner(id)){ok(await c.from("decisions").delete().eq("item_id",id));delete savedDec[id]}
     for(const id of Object.keys(cur)){const o=owner(id);if(o&&J(cur[id])!==J(savedDec[id])){ok(await c.from("decisions").upsert({item_id:id,project_id:o.id,status:cur[id].s,at:cur[id].at}));savedDec[id]=cur[id]}}}
-  async function run(){if(running){again=true;return}running=true;dirty=false;
-    try{await flush(lastDb);toast("");if(onState)onState(true)}
-    catch(e){dirty=!(e.conflict||e.code==="42501");if(onState)onState(false);
+  async function run(){if(running){again=true;return}running=true;dirty=false;svEmit("saving");
+    try{await flush(lastDb);toast("");if(onState)onState(true);if(!again&&!dirty)svEmit("saved")}
+    catch(e){dirty=!(e.conflict||e.code==="42501");if(onState)onState(false);svEmit("error");
       if(e.conflict)toast("Chưa lưu được: tài khoản này không có quyền sửa phần này, hoặc dự án đã bị xoá. Anh tải lại trang.");
       else if(e.code==="42501")toast("Tài khoản này không có quyền lưu phần này.");
       else{toast("Chưa lưu được lên máy chủ, hệ thống đang thử lại. Anh đừng đóng trang.");clearTimeout(timer);timer=setTimeout(run,8000)}}
@@ -1211,10 +1218,13 @@ window.NGB=(function(){
       async geocode(q){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
         const r=await fetch("api/geocode?q="+encodeURIComponent(q),{headers:{authorization:"Bearer "+session.access_token}});if(!r.ok)throw new Error("geocode_"+r.status);return r.json()}
     },
-    queue(db,cb){lastDb=db;onState=cb;dirty=true;clearTimeout(timer);timer=setTimeout(run,300)},
+    queue(db,cb){lastDb=db;onState=cb;dirty=true;clearTimeout(timer);svEmit("pending");timer=setTimeout(run,1200)},
+    onSave(f){SVL.push(f);f(SVS)},
+    /* Bấm nút Lưu: lưu ngay phần đang chờ, không đợi */
+    saveFlush(){if(!lastDb)return;clearTimeout(timer);if(running){again=true;return}run()},
     /* Lưu ngay (trước khi tải file lên Drive): chờ lượt lưu đang chạy xong, giữ cờ để hai lượt không ghi chồng nhau */
     async saveNow(db){lastDb=db;clearTimeout(timer);while(running)await new Promise(r=>setTimeout(r,100));running=true;
-      try{await flush(db);dirty=false;toast("");return true}catch(e){toast("Chưa lưu được lên máy chủ, dữ liệu trên trình duyệt vẫn còn nguyên.");return false}
+      svEmit("saving");try{await flush(db);dirty=false;toast("");svEmit("saved");return true}catch(e){svEmit("error");toast("Chưa lưu được lên máy chủ, dữ liệu trên trình duyệt vẫn còn nguyên.");return false}
       finally{running=false;if(again){again=false;run()}}}
   }})();
 /* Gọi Claude (Edge Function "ai"); hàm nằm trong NGB.drive, gọi tắt NGB.ai */
@@ -1510,6 +1520,12 @@ const STORE={key:"ngic.v1",
   load(){try{return JSON.parse(localStorage.getItem(this.key)||"null")||{projects:[]}}catch(e){return{projects:[]}}},
   save(d){try{localStorage.setItem(this.key,JSON.stringify(d));return true}catch(e){return false}}};
 const DB={projects:[],dec:{}};
+/* Nút Lưu (anh Chung 07/11/2026): góc dưới phải, cho biết đã lưu lên máy chủ chưa; sửa xong hệ thống tự lưu sau ~1 giây, bấm Lưu để lưu ngay */
+function svPill(S){if(!window.NGApp||NGApp.guest||NGApp.as||!NGApp.uid)return;let b=document.getElementById("svst");if(!b){b=document.createElement("div");b.id="svst";b.className="svst";b.setAttribute("role","status");b.setAttribute("aria-live","polite");document.body.appendChild(b);
+    b.addEventListener("click",e=>{if(e.target.closest("[data-svnow]"))NGB.saveFlush()})}
+  const t=S.at?S.at.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}):"";
+  b.className="svst "+S.s;b.innerHTML=S.s==="pending"?`<i></i><span>Có thay đổi chưa lưu</span><button type="button" data-svnow>Lưu</button>`:S.s==="saving"?`<i></i><span>Đang lưu lên máy chủ…</span>`:S.s==="error"?`<i></i><span>Chưa lưu được</span><button type="button" data-svnow>Lưu lại</button>`:`<i></i><span>Đã lưu${t?" lúc "+t:""}</span>`}
+if(window.NGB&&NGB.onSave)NGB.onSave(svPill);
 let saveOK=true;const persist=()=>{if(window.NGApp&&NGApp.as){asToast();return}if(window.NGApp&&NGApp.guest){saveOK=STORE.save(DB);return}NGB.queue(DB,v=>{saveOK=v})};
 
 const PJ=[
@@ -2263,13 +2279,15 @@ function ptSplit(l){const r=ptRule((l.name||"")+" "+(l.spec||""),l.unit);if(!r)r
   const L=[...M.values()];L.forEach(m=>m.w=m.dm*(PTP[m.k]||(/^g[lo]:/.test(m.k)?PTP.tile:0)));const T=L.reduce((a,m)=>a+m.w,0);if(!T)return null;
   L.forEach(m=>{m.sh=m.w/T;m.rule=r.rule});return L}
 const PKMS=50;
-function pkBuild(p){const O=p.pk||{},MV=O.mv||{},NM=O.nm||{},G={v:new Map(),n:new Map()};
+function pkBuild(p){const O=p.pk||{},MV=O.mv||{},NM=O.nm||{},G={v:new Map(),n:new Map()},TK=new Set(PKSC.filter(([id])=>pkMd(p,id)==="tron").flatMap(x=>x[1]));
   p.hms.forEach(h=>h.lines.forEach(l=>{const q=l.qty||0;if(!q||!l.code)return;const cc=lineCost(p,l);let uv=l.uVL!=null?l.uVL:l.vl!=null?l.vl/q:null,un=l.uNC!=null?l.uNC:l.nc!=null?l.nc/q:null;
     /* Dòng BOQ chỉ có thành tiền (không chia vật liệu, nhân công): giao thầu phụ trọn gói theo hạng mục */
     const tron=uv==null&&un==null,CT=pkCt(p,h,l),wh=CT&&CT.ov==="tach"?null:pkWhole(h,l),hs0=!wh&&pkSid(h,l),hs=hs0&&pkMd(p,hs0)==="tron"&&!(CT&&CT.ov)?hs0:null,
       ct=CT&&CT.ov==="tron"?String(l.name||"").trim()+PKCT:null,sep=CT&&CT.ov==="tach"&&!hs0;const parts=tron||wh?[["n",(l.total||0)/q,(cc.v||0)+(cc.n||0)]]:[["v",uv||0,cc.v],["n",un||0,cc.n]];
     parts.forEach(([t,cu,gv])=>{if(!(cu>0||gv>0))return;let key,name;
-      if(MV[l.code+"|"+t]){key=MV[l.code+"|"+t];name=key.includes("|")?key.split("|").slice(1).join("|"):key.slice(2)}
+      if(MV[l.code+"|"+t]){key=MV[l.code+"|"+t];name=key.includes("|")?key.split("|").slice(1).join("|"):key.slice(2);
+        /* công tác đang chọn Tách VT – NC mà phần đã chuyển vào gói của một phạm vi trọn gói: để thành gói giao riêng, không bị gộp vào gói trọn gói (anh hỏi 07/11/2026) */
+        if(CT&&CT.m==="tach"&&TK.has(key)){key+=PKRI;name+=PKRI}}
       else{name=ct||(hs?hs+PKLD:wh||pkAuto(h,l,t,tron)+(sep?PKRI:""));key=t+":"+name}
       const put=(key,name,cu,gv,pt)=>{const M=G[t];if(!M.has(key))M.set(key,{key,t,name:NM[key]||name,auto:name,lines:[],units:new Set(),kl:0,tg:0,tb:0});const g=M.get(key);
         g.lines.push({c:l.code,l,h,q,cu,gv,pt,bv:wh&&!tron?((uv||0)/(((uv||0)+(un||0))||1)):null});g.units.add(pt?pt.unit:(l.unit||""));g.kl+=pt?pt.dm*q:q;g.tg+=gv;g.tb+=cu*q};
