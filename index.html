@@ -1199,7 +1199,9 @@ html body table.t>tfoot:has(>tr+tr) td{position:static!important}
 .atmsg{font-size:15px;padding:14px 20px!important}.atmsg.ok{color:#0B6B34;background:#E6F4EA!important}.atmsg.bad{color:#C0141B;background:#FDECEC!important}
 .atcc{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:28px;align-items:start}
 .atcam{display:flex;flex-direction:column;align-items:center;gap:10px}.atvid{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#EEF2FF,#DCE3F7)}
-.atvid video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:0;transition:opacity .3s}.atvid.on video{opacity:1}
+.atvid video{position:absolute;inset:0;width:100%!important;height:100%!important;max-width:none;object-fit:cover;object-position:center;transform:scaleX(-1);opacity:0;transition:opacity .3s;display:block}.atvid.on video{opacity:1}
+.atvid.on .atph{display:none}.atvid{isolation:isolate;-webkit-mask-image:-webkit-radial-gradient(white,black)}
+.atvid.on::after{content:"";position:absolute;left:24%;right:24%;top:14%;bottom:14%;border:3px dashed rgba(255,255,255,.9);border-radius:50%;box-shadow:0 0 0 999px rgba(10,36,134,.18);pointer-events:none;z-index:2}
 .atph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:56px;color:#0A2486}.atph small{font-size:15px;color:var(--muted)}
 .atring{position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 0 4px #DCE3F7;pointer-events:none}.atvid.on .atring{box-shadow:inset 0 0 0 4px #0E9F9A;animation:atr 1.4s ease-in-out infinite}@keyframes atr{50%{box-shadow:inset 0 0 0 8px rgba(14,159,154,.45)}}
 .atst{min-height:22px;font-size:15px;color:#0A2486;font-weight:600;text-align:center}
@@ -4179,7 +4181,7 @@ function atCC(){const me=NGApp.uid,today=atYmd(new Date()),D=atDay(me,today),L=A
   const [a,b]=atMonRange(AT.mon),days=[];for(let d=new Date(b);d>=a;d.setDate(d.getDate()-1)){const s=atYmd(d);if(s<=today)days.push(atDay(me,s))}
   const W=days.reduce((s,d)=>s+d.work,0),LT=days.reduce((s,d)=>s+d.late,0),K=days.filter(d=>d.code==="K").length,Q=+(AT.cfg.leave_year||12),U=atLeaveUsed(me);
   const g=AT.geo;
-  return`<section class="card span3 atcc"><div class="atcam"><div class="atvid${AT.busy?" on":""}" id="atvid"><video id="atv" playsinline muted></video><canvas id="atc" hidden></canvas>${AT.busy?"":`<div class="atph">${AT.face?"📷":"🙂"}<small>${AT.face?"Bấm nút bên phải để chấm công":"Chưa đăng ký khuôn mặt"}</small></div>`}<i class="atring"></i></div><div class="atst" id="atst">${esc(AT.busy||"")}</div></div>
+  return`<section class="card span3 atcc"><div class="atcam"><div class="atvid${AT.busy?" on":""}" id="atvid"><video id="atv" playsinline muted></video><canvas id="atc" hidden></canvas>${AT.busy?"":`<div class="atph">${AT.face?"📷":"🙂"}<small>${AT.face?"Bấm nút bên phải để chấm công":"Chưa đăng ký khuôn mặt"}</small></div>`}<i class="atring"></i></div><div class="sub" style="text-align:center">Đưa khuôn mặt vào giữa khung bầu dục, cách màn hình khoảng một gang tay rưỡi</div><div class="atst" id="atst">${esc(AT.busy||"")}</div></div>
     <div class="atinfo"><div class="atday"><b>${["Chủ nhật","Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy"][new Date().getDay()]}, ${fd(new Date())}</b><span class="atclock" id="atclock">${atHm(new Date())}</span></div>
       <div class="atrow"><span>Ca hôm nay</span><b>${sh?`<i class="atdot" style="background:${esc(sh.color||"#2D3CE6")}"></i>${esc(sh.name)} · ${sh.t1.slice(0,5)} – ${sh.t2.slice(0,5)}`:"Nghỉ / chưa phân ca"}</b></div>
       <div class="atrow"><span>Vị trí</span><b class="${g?g.ok?"gok":"gbad":""}">${g?g.err?esc(g.err):`${esc(g.name)} · cách ${n0(g.dist)} m${g.ok?" · trong vùng":" · ngoài vùng ("+n0(g.r)+" m)"}`:`<button type="button" class="back sm" data-atgeo style="margin:0">Kiểm tra vị trí</button>`}</b></div>
