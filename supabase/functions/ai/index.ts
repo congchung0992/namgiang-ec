@@ -228,20 +228,6 @@ const CLASSIFY = {
   additionalProperties: false
 };
 
-/* Đọc sơ bộ báo giá khi tải lên (anh chốt 07/11/2026): chỉ lấy ngày, tên công ty, nội dung cung cấp để đặt tên file; phân tích giá để lúc lập so sánh giá */
-const SYS_PEEK = `Bạn đọc lướt một file báo giá gửi công ty tổng thầu xây dựng Nam Giang (Nam Giang là bên NHẬN báo giá, không phải bên báo giá).
-Chỉ trả về:
-"date": ngày ghi trên báo giá dạng yyyy-mm-dd; không thấy thì "".
-"vendor": tên ngắn của công ty/đơn vị gửi báo giá, bỏ các chữ loại hình (Công ty, Cổ phần, TNHH, MTV, Thương mại, Đầu tư, Xây dựng nếu không phải tên riêng), tối đa 4 chữ, ví dụ "Thép Hòa Phát", "Bê tông Việt Hàn"; không thấy thì "".
-"scope": nội dung cung cấp/thi công chính, tối đa 6 chữ, ví dụ "Bê tông thương phẩm", "Ép cọc D350", "Cát đá xi măng".
-"kind": ncc (bán vật tư/thiết bị), thau_phu (thầu phụ cung cấp và thi công, trọn gói) hoặc nhan_cong (tổ đội, nhân công).`;
-const PEEK = {
-  type: "object",
-  properties: { date: { type: "string" }, vendor: { type: "string" }, scope: { type: "string" }, kind: { type: "string", enum: ["ncc", "thau_phu", "nhan_cong"] } },
-  required: ["date", "vendor", "scope", "kind"],
-  additionalProperties: false
-};
-
 /* Hợp đồng với chủ đầu tư: điều khoản thanh toán, tiến độ; ô thiếu ghi 0 hoặc "" */
 const CONTRACT = {
   type: "object",
@@ -426,14 +412,6 @@ async function run(b: any, env: any): Promise<Response> {
       blank(data, ["quote_no", "date", "scope", "vat_rate", "payment_terms", "payment_days", "advance_percent", "delivery_terms", "delivery_days", "validity"]);
       (data.items || []).forEach((it: any) => blank(it, ["spec", "unit", "qty", "price_material", "price_labor", "price", "amount", "note"]));
       return json({ ...data, model });
-    }
-    if (b.action === "peek") {
-      const content: any[] = [];
-      const fb = b.doc && typeof b.doc.data === "string" ? fileBlock(String(b.doc.mime || ""), b.doc.data) : null;
-      if (fb) content.push(fb);
-      content.push({ type: "text", text: `Tên file: ${String(b.name || "").slice(0, 200)}` + (typeof b.text === "string" && b.text ? `\nNội dung đầu file:\n${b.text.slice(0, 12000)}` : "") });
-      const { data, model } = await claude(env, { system: SYS_PEEK, content, schema: PEEK, maxTokens: 4000 });
-      return json({ date: String(data.date || "").slice(0, 10), vendor: String(data.vendor || "").slice(0, 80), scope: String(data.scope || "").slice(0, 80), kind: data.kind, model });
     }
     if (b.action === "match") {
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 80);
