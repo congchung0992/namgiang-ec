@@ -3961,7 +3961,7 @@ const SIG=new Map(),SIGD=new Map();
 async function sigLoad(ids){ids=[...new Set((ids||[]).filter(x=>x&&!SIG.has(x)))];if(!ids.length)return;try{const {data,error}=await NGB.sb().rpc("sigs",{p_ids:ids});if(error)return;ids.forEach(i=>SIG.set(i,""));(data||[]).forEach(x=>SIG.set(x.id,x.sig||""))}catch(e){}
   await Promise.all(ids.filter(i=>SIG.get(i)).map(i=>new Promise(res=>{const m=new Image();m.onload=()=>{SIGD.set(i,{w:m.naturalWidth,h:m.naturalHeight});res()};m.onerror=res;m.src=SIG.get(i)})))}
 function sigFill(){document.querySelectorAll("img[data-sigu]").forEach(m=>{const u=m.dataset.sigu,v=u&&SIG.get(u);if(v){if(m.getAttribute("src")!==v)m.src=v;m.hidden=false;const n=m.nextElementSibling;if(n)n.hidden=true}else{m.hidden=true;m.removeAttribute("src");const n=m.nextElementSibling;if(n)n.hidden=false}})}
-const sigSync=ids=>{setTimeout(()=>sigLoad(ids).then(sigFill),0)};
+function sigSync(ids){setTimeout(()=>sigLoad(ids).then(sigFill),0)}
 /* Ô ký theo luồng duyệt: người lập (khi đã gửi duyệt) + từng bước đã duyệt (lần duyệt gần nhất của bước đó) */
 function pySigs(r,first){const L=r.log||[],sub=[...L].reverse().find(a=>a.act==="submit");
   return[{i:0,t:first||"Người lập",name:r.created_name||"",at:sub?sub.at:"",by:sub?sub.by||r.created_by:"",ok:!!sub},...(r.steps||[]).map((s,i)=>{const a=r.status!=="returned"&&(r.status==="approved"||i<r.step)?[...L].reverse().find(x=>x.act==="approve"&&x.step===s.name):null;return{i:i+1,t:s.name,name:a?a.name:"",at:a?a.at:"",by:a?a.by||"":"",ok:!!a}})]}
