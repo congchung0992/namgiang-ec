@@ -3636,6 +3636,7 @@ document.addEventListener("dblclick",e=>{const tr=e.target.closest&&e.target.clo
 document.addEventListener("click",e=>{const r=e.target.closest&&e.target.closest("tr.hmr");if(r&&!e.target.closest("input,button,a")){const b=r.closest("tbody"),k=r.dataset.hmt,op=b.classList.toggle("cl");op?BQS.ho.delete(k):BQS.ho.add(k);const x=r.querySelector(".bqx");if(x)x.textContent=op?"+":"−";return}
   const a=e.target.closest&&e.target.closest("[data-hmall]");if(a&&cur){const T=[...view.querySelectorAll("#bqd tbody.hmb")],open=T.some(t=>t.classList.contains("cl"));T.forEach(t=>{t.classList.toggle("cl",!open);open?BQS.ho.add(t.dataset.hm):BQS.ho.delete(t.dataset.hm);const x=t.querySelector(".bqx");if(x)x.textContent=open?"−":"+"});a.textContent=open?"Thu gọn tất cả":"Mở tất cả"}});
 /* ---------- Tìm công tác trong bảng diễn giải ---------- */
+document.addEventListener("click",e=>{if(!e.target.closest||!e.target.closest("[data-bqclr]"))return;bq="";BQS.hl=null;const i=document.getElementById("bsq");if(i)i.value="";view.querySelectorAll("tr.bqhl").forEach(r=>r.classList.remove("bqhl"));bqApply()});
 let bq="";const fold=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[đĐ]/g,"d").toLowerCase();
 function bqApply(){const tb=view.querySelector("table.bt");if(!tb)return;
   const h1=tb.tHead.rows[0].getBoundingClientRect().height;if(h1)tb.style.setProperty("--h1",h1+"px");
@@ -3643,7 +3644,7 @@ function bqApply(){const tb=view.querySelector("table.bt");if(!tb)return;
   tb.querySelectorAll("tr[data-line]").forEach(r=>{const ok=!q||fold(r.cells[0].textContent+" "+r.cells[1].textContent).includes(q);r.hidden=!ok;if(ok){vis.add(r.dataset.gi);hv.add(String(r.dataset.gi).split(":")[0]);n++}});
   tb.querySelectorAll("tr.gs").forEach(r=>r.hidden=!vis.has(r.dataset.gi));tb.querySelectorAll("tr.hmr").forEach(r=>{r.hidden=!!q&&!hv.has(r.dataset.hmt);if(q&&hv.has(r.dataset.hmt)){const t=r.closest("tbody");if(t.classList.contains("cl")){t.classList.remove("cl");BQS.ho.add(r.dataset.hmt);const x=r.querySelector(".bqx");if(x)x.textContent="−"}}});
   if(BQS.hl&&BQS.hl.size){let f=null;tb.querySelectorAll("tr[data-line]").forEach(r=>{if(BQS.hl.has(r.dataset.line)){r.classList.add("bqhl");f=f||r}});BQS.hl=null;if(f)setTimeout(()=>f.scrollIntoView({block:"center"}),80)}
-  const o=view.querySelector("#bqn");if(!o)return;o.innerHTML=q?(n?`<b>${n}</b> dòng khớp ở ${hv.size} hạng mục`:"Không có dòng khớp"):""}
+  const o=view.querySelector("#bqn");if(!o)return;o.innerHTML=q?(n?`<b>${n}</b> dòng khớp ở ${hv.size} hạng mục`:"Không có dòng khớp")+` <button type="button" class="gtclr" data-bqclr>✕ Bỏ tìm</button>`:""}
 function refresh(code){setTimeout(()=>dashZeros(view));const p=cur,c=calc(p),mg=pct(c.gp,c.rev),set=(el,sel,v)=>{const x=el&&el.querySelector(sel);if(x)x.innerHTML=v};
   const tr=view.querySelector(`tr[data-line="${code}"]`);if(tr){const h=p.hms.find(h=>h.lines.some(x=>x.code===code)),l=h.lines.find(x=>x.code===code),lc=lineCost(p,l),gp=(l.total||0)-lc.t;
     set(tr,'[data-c="tv"]',n0(lc.v));set(tr,'[data-c="tn"]',n0(lc.n));set(tr,'[data-c="tm"]',n0(lc.m));set(tr,'[data-c="t"]',`<b>${n0(lc.t)}</b>`);const g=tr.querySelector('[data-c="g"]');g.textContent=n0(gp);g.style.color=gp<0?"#C0141B":"inherit";set(tr,'[data-c="s"]',lc.est?(p.gg?st("bad","Chưa có giá"):st("warn","Ước tính")):st("ok","Đã nhập"));
