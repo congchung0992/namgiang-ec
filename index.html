@@ -1006,6 +1006,11 @@ input.hasclr{padding-right:30px!important}
 .sclr:hover{background:#C0141B;color:#fff}.sclr[hidden]{display:none!important}
 
 .nht tr.nhi.bqhl2 td{background:#FFF3C4!important;transition:background .6s}
+
+/* Kẻ ngang thân bảng bằng nét trên của mỗi dòng (không dùng nét dưới) để dòng cuối không chồng với nét trên dòng tổng thành nét đôi (anh Chung 07/11/2026) */
+html body table.t tbody td{border-bottom:0!important;border-top:1px solid #4F535E!important}
+html body table.t thead+tbody>tr:first-child>td,html body table.t colgroup+tbody>tr:first-child>td,html body table.t:not(:has(>thead))>tbody:first-of-type>tr:first-child>td{border-top:0!important}
+html body table.t:not(:has(tfoot)) tbody:last-of-type tr:last-child td{border-bottom:1px solid #4F535E!important}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
