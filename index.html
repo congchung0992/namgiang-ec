@@ -994,6 +994,11 @@ html body .tw:has(> table.t)::-webkit-scrollbar{width:10px;height:10px}
 html body .tw:has(> table.t)::-webkit-scrollbar-track{background:transparent;margin:14px}
 html body .tw:has(> table.t)::-webkit-scrollbar-thumb{background:#A3A9BD;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
 html body .tw:has(> table.t)::-webkit-scrollbar-corner{background:transparent}
+
+input[type=search]::-webkit-search-cancel-button{display:none;-webkit-appearance:none}
+input.hasclr{padding-right:30px!important}
+.sclr{position:relative;z-index:3;margin-left:-28px;margin-right:6px;flex:none;width:22px;height:22px;border:0;border-radius:50%;background:#E4E7F0;color:#4B5170;font-size:11px;line-height:22px;padding:0;cursor:pointer;align-self:center}
+.sclr:hover{background:#C0141B;color:#fff}.sclr[hidden]{display:none!important}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5638,6 +5643,18 @@ document.getElementById("cchips").addEventListener("click",e=>{const b=e.target.
 document.querySelector(".sugg")?.addEventListener("click",e=>{const b=e.target.closest("button");if(b)ask(b.dataset.s)});
 document.getElementById("askf")?.addEventListener("submit",e=>{e.preventDefault();const i=document.getElementById("ask"),v=i.value;i.value="";if(v.trim())ask(v);else open(true)});
 })();
+
+/* Ô tìm kiếm nào cũng có nút ✕ để huỷ tìm (anh Chung 07/11/2026): hiện khi ô có chữ, bấm thì xoá và trả bảng về đầy đủ */
+(function(){const SEL='input[type="search"],input.hdq,#bchq,#bqsq,#asq,#bsq';let t=null;
+  const sync=()=>{document.querySelectorAll(SEL).forEach(i=>{if(i.closest("#nhmenu"))return;let b=i.nextElementSibling;if(!b||!b.classList||!b.classList.contains("sclr")){b=document.createElement("button");b.type="button";b.className="sclr";b.title="Huỷ tìm";b.setAttribute("aria-label","Huỷ tìm");b.textContent="✕";i.after(b);i.classList.add("hasclr")}b.hidden=!i.value})};
+  window.sclrSync=sync;
+  document.addEventListener("input",e=>{if(e.target.matches&&e.target.matches(SEL)){const b=e.target.nextElementSibling;if(b&&b.classList.contains("sclr"))b.hidden=!e.target.value;else sync()}},true);
+  document.addEventListener("mousedown",e=>{if(e.target.closest&&e.target.closest(".sclr"))e.preventDefault()});
+  document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".sclr");if(!b)return;e.preventDefault();e.stopPropagation();const i=b.previousElementSibling;if(!i)return;i.value="";b.hidden=true;
+    if(i.id==="bsq")document.querySelectorAll("tr.bqhl").forEach(r=>r.classList.remove("bqhl"));
+    i.dispatchEvent(new Event("input",{bubbles:true}));i.dispatchEvent(new Event("change",{bubbles:true}));i.dispatchEvent(new KeyboardEvent("keyup",{bubbles:true,key:"Backspace"}));
+    if(i.id!=="q3")i.focus();setTimeout(sync,350)},true);
+  new MutationObserver(()=>{clearTimeout(t);t=setTimeout(sync,40)}).observe(document.body,{childList:true,subtree:true});setTimeout(sync,500)})();
 </script>
 
 </body>
