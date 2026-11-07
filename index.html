@@ -630,6 +630,10 @@ table.t:has(> thead){border-top:0}table.t > thead > tr:first-child > th{box-shad
 .badge.nb{width:auto;min-width:17px;height:17px;top:-3px;right:-3px;padding:0 4px;border-radius:99px;color:#fff;font-size:12px;font-weight:600;line-height:17px;text-align:center}
 .ntfp{position:fixed;z-index:9000;width:min(380px,calc(100vw - 16px));max-height:min(560px,75vh);display:flex;flex-direction:column;background:#fff;border-radius:18px;box-shadow:0 18px 48px rgba(16,24,64,.22),0 0 0 1px rgba(16,24,64,.06);overflow:hidden;font-family:var(--f)}
 .ntfh{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}.ntfh b{font-size:15px}.ntfh button,.ntfon{border:0;background:none;color:#2D3CE6;font:inherit;font-size:12px;cursor:pointer}
+.pask{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9600;width:min(520px,calc(100vw - 32px));display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:20px;background:#fff;box-shadow:0 18px 48px rgba(10,36,134,.22),inset 0 0 0 1px #E3E7F3;animation:ntfin .35s ease}
+.paski{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#4E6BFF,#8B5CF6);font-size:18px}.paskt{display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.45}.paskt b{font-size:15px}.paskt span{color:#4B5170}
+.paskb{display:flex;gap:8px;margin-top:6px}.paskon{border:0;border-radius:999px;padding:8px 16px;font:600 14px var(--f);color:#fff;background:linear-gradient(135deg,#4E6BFF,#8B5CF6);cursor:pointer}.paskx{border:0;border-radius:999px;padding:8px 14px;font:500 14px var(--f);color:#4B5170;background:#EEF1F8;cursor:pointer}
+@media (max-width:760px){.pask{bottom:12px}}
 .ntfon{display:block;text-align:left;padding:10px 14px;background:#EEF1FD;width:100%}.ntfn{padding:14px;color:var(--muted);font-size:15px}
 .ntfl{overflow:auto}.ntfi{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;border:0;background:#fff;padding:10px 14px 10px 26px;border-bottom:1px solid var(--line);font:inherit;cursor:pointer;position:relative}.ntfi:hover{background:#F6F7FB}
 .ntfi b{font-size:15px;font-weight:600}.ntfi span{font-size:12px;color:var(--ink2)}.ntfi small{font-size:12px;color:var(--muted)}.ntfi.un:before{content:"";position:absolute;left:11px;top:16px;width:8px;height:8px;border-radius:50%;background:#E1141B}
@@ -3833,7 +3837,18 @@ async function pushSub(force){if(!pushOK()||!window.NGApp||NGApp.guest||NGApp.as
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID)});const j=sub.toJSON();
     if(force||NTI.pushEp!==j.endpoint){const {error}=await NGB.sb().from("push_subs").upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,ua:navigator.userAgent.slice(0,200),user_id:NGApp.uid},{onConflict:"endpoint"});if(error)throw error}
     NTI.pushEp=j.endpoint;NTI.pushOn=true;return true}catch(e){NTI.pushOn=false;NTI.pushErr=e.message||String(e);console.error(e);return false}}
-function ntfStart(){if(NTI.on||!window.NGApp||NGApp.guest||!NGApp.uid)return;NTI.on=true;ntfLoad();pushSub().then(()=>ntfPanel(true));
+/* Lời mời bật thông báo (anh Chung 07/11/2026: chưa máy nào bật nên điện thoại không nhận): hiện một lần sau khi đăng nhập trên máy chưa bật, "Để sau" thì 7 ngày sau mới hỏi lại */
+function pushAsk(){if(NGApp.as||document.getElementById("pask"))return;let snooze=0;try{snooze=+localStorage.getItem("ng_pask")||0}catch(e){}if(Date.now()<snooze)return;
+  const ios=isIOS&&!isStand();if(!ios&&(!pushOK()||Notification.permission!=="default"))return;
+  const d=document.createElement("div");d.id="pask";d.className="pask";d.setAttribute("role","dialog");d.setAttribute("aria-label","Bật thông báo");
+  d.innerHTML=`<div class="paski">🔔</div><div class="paskt"><b>Nhận thông báo về ${matchMedia("(max-width:760px)").matches||isIOS?"điện thoại":"máy này"}</b><span>${ios?"iPhone cần 2 bước: bấm <b>Chia sẻ</b> → <b>Thêm vào MH chính</b>, rồi mở Nam Giang E&C từ biểu tượng trên màn hình chính và bấm Bật ở đây (iOS 16.4 trở lên).":"Phiếu cần anh duyệt, phiếu đã duyệt xong… hiện ngay trên màn hình, kể cả khi đã đóng web."}</span>
+    <div class="paskb">${ios?"":`<button type="button" class="paskon" data-paskon>Bật thông báo</button>`}<button type="button" class="paskx" data-paskx>${ios?"Đã hiểu":"Để sau"}</button></div></div>`;document.body.appendChild(d)}
+document.addEventListener("click",async e=>{const on=e.target.closest&&e.target.closest("[data-paskon]"),x=e.target.closest&&e.target.closest("[data-paskx]");if(!on&&!x)return;const d=document.getElementById("pask");
+  if(x){try{localStorage.setItem("ng_pask",String(Date.now()+7*864e5))}catch(er){}if(d)d.remove();return}
+  on.disabled=true;on.textContent="Đang bật…";try{await Notification.requestPermission()}catch(er){}const ok=await pushSub(true);
+  if(ok){try{await NGB.sb().rpc("push_test")}catch(er){}d.querySelector(".paskt").innerHTML="<b>✓ Đã bật thông báo trên máy này</b><span>Em vừa gửi một thông báo thử, vài giây nữa máy sẽ báo.</span>";setTimeout(()=>d.remove(),6000)}
+  else{d.querySelector(".paskt span").textContent=Notification.permission==="denied"?"Máy đang chặn thông báo của web này. Mở Cài đặt → Thông báo (hoặc biểu tượng ổ khoá cạnh địa chỉ web) để cho phép, rồi thử lại.":"Chưa bật được: "+(NTI.pushErr||"trình duyệt không hỗ trợ");on.disabled=false;on.textContent="Thử lại"}ntfPanel(true)});
+function ntfStart(){if(NTI.on||!window.NGApp||NGApp.guest||!NGApp.uid)return;NTI.on=true;ntfLoad();pushSub().then(()=>{ntfPanel(true);if(!NTI.pushOn)setTimeout(pushAsk,1500)});
   try{NTI.ch=NGB.sb().channel("ntf-"+NGApp.uid).on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:"user_id=eq."+NGApp.uid},e=>{const x=e.new;if(!x||NTI.list.some(y=>y.id===x.id))return;NTI.list.unshift(x);ntfBadge();ntfPanel(true);ntfPop(x)}).subscribe()}catch(e){}
   NTI.t=setInterval(()=>{if(!document.hidden)ntfLoad()},60000)}
 function ntfPop(x){if(["pyc","tt","ssg"].includes(x.kind)&&cur&&x.project_id===cur.id){PY.list=null;if(/-(pyc|tt|goi|kh)/.test(location.hash))keep(route)}
