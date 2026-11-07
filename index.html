@@ -921,6 +921,13 @@ tr[data-wfdr]{cursor:grab}tr[data-wfdr] input,tr[data-wfdr] select,tr[data-wfdr]
 .olb{width:26px!important;height:26px!important;font-size:22px!important;line-height:22px!important;border-radius:7px!important}
 .gtg{width:24px!important;font-size:15px!important}
 .bcqa{font-size:15px!important;padding:7px 14px!important;min-height:34px;border-radius:99px!important}
+
+/* Viền tiêu đề, dòng tổng bảng đậm hơn, giữ nguyên khi tiêu đề dính đầu bảng lúc cuộn (anh Chung 07/11/2026) */
+table.t thead th,table.t thead tr.h2 th{border-right:1px solid #8D9BD3!important;border-bottom:1px solid #8D9BD3!important;box-shadow:inset 0 -1px 0 #8D9BD3,inset -1px 0 0 #8D9BD3}
+table.t > thead > tr:first-child > th{box-shadow:inset 0 1px 0 #8D9BD3,inset 0 -1px 0 #8D9BD3,inset -1px 0 0 #8D9BD3}
+table.t thead th:last-child{box-shadow:inset 0 1px 0 #8D9BD3,inset 0 -1px 0 #8D9BD3}
+table.t tfoot td{border-top:1px solid #8D9BD3!important;box-shadow:inset 0 1px 0 #8D9BD3}
+
 </style>
 
 </head>
@@ -2249,7 +2256,8 @@ const PKTR=[[/^tuong xay|^xay\b/,"Gạch xây","Xây"],[/son gia da/,"Sơn","Sơ
 const MEPSYS=[[/tang ap|hut khoi|tahk|ong gio/,"Tăng áp, hút khói"],[/bao chay/,"Báo cháy"],[/exit|su co/,"Đèn exit, sự cố"],[/chua chay/,"Chữa cháy"],[/dien nhe/,"Điện nhẹ"],[/chong set|tiep dia/,"Chống sét, tiếp địa"],
   [/den ngoai nha|chieu sang ngoai/,"Chiếu sáng ngoài nhà"],[/tu dien|cap nguon/,"Tủ điện, cáp nguồn"],[/chieu sang|o cam/,"Chiếu sáng, ổ cắm"],[/thiet bi nuoc|thiet bi ve sinh/,"Thiết bị vệ sinh"],[/thoat nuoc thai/,"Thoát nước thải"],[/thoat nuoc mua/,"Thoát nước mưa"],
   [/thoat nuoc/,"Thoát nước"],[/cap nuoc/,"Cấp nước"],[/diem dau|cap ngam/,"Cáp ngầm, điểm đấu"],[/^tram\b/,"Trạm biến áp"],[/xay lap|xay dung/,"Phần xây dựng"],[/thiet bi/,"Thiết bị"]];
-const dmName=(h,l)=>{const g=[l.g1,l.g2].filter(Boolean).join(" "),z=BOQ.nz(g),zl=BOQ.nz(l.name||"");if(/\bcu\b.*(larsen|lasel|lars)|ep cu\b/.test(zl))return"Công tác cừ";if(/\bcoc tre\b/.test(zl))return"Công tác cọc tre";if(/^cong tac coc,? cu$/.test(z.trim()))return"Công tác cọc";if(PKMEP(h)){const r=MEPSYS.find(x=>x[0].test(z));return r?r[1]:tcase(String(l.g1||h.name).replace(/^h[aạ]ng m[uụ]c\s+/i,""))}
+const dmName=(h,l)=>{const d=dmName0(h,l);return d==="Phần xây dựng"&&!PKMEP(h)?"Công tác kết cấu":d}; /* anh chốt 07/11/2026: đầu mục "Phần xây dựng" gọi là "Công tác kết cấu" */
+const dmName0=(h,l)=>{const g=[l.g1,l.g2].filter(Boolean).join(" "),z=BOQ.nz(g),zl=BOQ.nz(l.name||"");if(/\bcu\b.*(larsen|lasel|lars)|ep cu\b/.test(zl))return"Công tác cừ";if(/\bcoc tre\b/.test(zl))return"Công tác cọc tre";if(/^cong tac coc,? cu$/.test(z.trim()))return"Công tác cọc";if(PKMEP(h)){const r=MEPSYS.find(x=>x[0].test(z));return r?r[1]:tcase(String(l.g1||h.name).replace(/^h[aạ]ng m[uụ]c\s+/i,""))}
   /* Nhóm BOQ theo hạng mục (Hàng rào, Đường và cảnh quan…) chứ không theo loại công việc: đất, bê tông, xây trát đưa về đúng đầu mục chung (anh chốt 07/11/2026) */
   if(!/^(cong tac|phan)\b/.test(BOQ.nz(l.g1||"").trim())){const m=dmLearn(h).get(zl+"|"+BOQ.nz(l.unit||""));if(m)return m;const r=DMWT.find(x=>x[0].test(zl));if(r)return r[1]}
   return tcase(String(l.g1||h.name).replace(/^h[aạ]ng m[uụ]c\s+/i,""))};
@@ -2344,7 +2352,7 @@ function pkCt(p,h,l){const q=l.qty||0;if(!q||!l.code)return null;const uv=l.uVL!
   if(!sid&&!to&&!wh){const kv="v:"+pkAuto(h,l,"v",false),kn="n:"+pkAuto(h,l,"n",false),x=PKSC.find(s=>s[1].includes(kv)||s[1].includes(kn));sid=x?x[0]:""}
   /* Mọi công tác đều có nút gạt (anh chốt 07/11/2026): ngoài phạm vi → mặc định Tách; dòng giao cả dòng (cừ Larsen, máy, robot…) → mặc định Trọn gói, gạt Tách được;
      dòng BOQ chỉ có thành tiền (không chia vật tư / nhân công) → Trọn gói, không tách được */
-  const k=pkCk(h,l),sm=to||wh?"tron":sid?pkMd(p,sid):"tach",o=((p.pk||{}).mc||{})[k],ov=!to&&o&&o!==sm?o:null;return{sid,k,sm,m:ov||sm,ov,fix:to?"BOQ dòng này chỉ có thành tiền, chưa chia vật tư / nhân công nên chưa tách được":""}}
+  const k=pkCk(h,l),sm=to||wh?"tron":sid?pkMd(p,sid):"tach",MC=((p.pk||{}).mc||{}),o=MC[k]!=null?MC[k]:MC[k.replace(/^Công tác kết cấu\|/,"Phần xây dựng|")],ov=!to&&o&&o!==sm?o:null;return{sid,k,sm,m:ov||sm,ov,fix:to?"BOQ dòng này chỉ có thành tiền, chưa chia vật tư / nhân công nên chưa tách được":""}}
 function pkList(p,P){P=P||pkBuild(p);const A=[...P.v,...P.n],GP={};PKSC.forEach(([id,ks])=>{if(pkMd(p,id)==="tron")GP[id]=ks});
   A.forEach(g=>{if(g.key.endsWith(PKLD)||g.key.endsWith(PKCT)){const n=g.key.slice(2);(GP[n]=GP[n]||[]).push(g.key)}});Object.assign(GP,(p.pk||{}).gp||{});const used=new Set(),M=[];
   Object.entries(GP).forEach(([name,ks])=>{const parts=(ks||[]).map(k=>A.find(g=>g.key===k)).filter(Boolean);if(parts.length<2||parts.some(g=>used.has(g.key)))return;parts.forEach(g=>used.add(g.key));
@@ -5113,7 +5121,7 @@ document.addEventListener("keydown",e=>{if(!e.target.matches||!e.target.matches(
 /* Vẽ lại bảng giao thầu tại chỗ, giữ vị trí cuộn của bảng và trang (bấm Trọn gói / Tách không nhảy lên đầu) */
 function gtRe(p){const c=document.getElementById("gtc");if(!c)return;const y=scrollY,S=[...c.querySelectorAll(".tw")].map(e=>[e.scrollTop,e.scrollLeft]);const w=document.createElement("div");w.innerHTML=gtView(p);const n=w.querySelector("#gtc");c.replaceWith(n);const T=[...n.querySelectorAll(".tw")];if(T.length===S.length)T.forEach((e,i)=>{e.scrollTop=S[i][0];e.scrollLeft=S[i][1]});scrollTo(0,y)}
 document.addEventListener("click",e=>{const b=e.target.closest("button[data-gtmc]");if(!b||b.disabled)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const k=b.dataset.gtmc,m=b.dataset.m,mc={...((p.pk||{}).mc||{})};
-  if(m===b.dataset.sm)delete mc[k];else mc[k]=m;
+  delete mc[k.replace(/^Công tác kết cấu\|/,"Phần xây dựng|")];if(m===b.dataset.sm)delete mc[k];else mc[k]=m;
   /* gạt cách giao thì bỏ các lần chuyển gói bằng tay trước đó của công tác này, để lựa chọn mới có hiệu lực ngay */
   const mv={...((p.pk||{}).mv||{})};let ch=0;p.hms.forEach(h=>h.lines.forEach(l=>{if(l.code&&pkCk(h,l)===k)["v","n"].forEach(t=>{if(mv[l.code+"|"+t]){delete mv[l.code+"|"+t];ch=1}})}));
   p.pk={...(p.pk||{}),mc,...(ch?{mv}:{})};if(cur!==p)cur.pk=p.pk;persist();gtRe(p)});
