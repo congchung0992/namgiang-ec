@@ -2310,8 +2310,9 @@ const PKCT=" · trọn gói",PKRI=" · giao riêng";
 const pkCk=(h,l)=>{let d="";try{d=dmKey(h,l)}catch(e){}return d+"|"+BOQ.nz(l.name||"")+"|"+BOQ.nz(l.spec||"")+"|"+BOQ.nz(l.unit||"")};
 function pkCt(p,h,l){const q=l.qty||0;if(!q||!l.code)return null;const uv=l.uVL!=null?l.uVL:l.vl!=null?l.vl/q:null,un=l.uNC!=null?l.uNC:l.nc!=null?l.nc/q:null;if(uv==null&&un==null||pkWhole(h,l))return null;
   const zn=BOQ.nz(l.name||"");if(/ban ma/.test(zn)&&/mui coc/.test(zn))return null;let sid=pkSid(h,l);
-  if(!sid){const kv="v:"+pkAuto(h,l,"v",false),kn="n:"+pkAuto(h,l,"n",false),x=PKSC.find(s=>s[1].includes(kv)||s[1].includes(kn));sid=x?x[0]:null}if(!sid)return null;
-  const k=pkCk(h,l),sm=pkMd(p,sid),o=((p.pk||{}).mc||{})[k],ov=o&&o!==sm?o:null;return{sid,k,sm,m:ov||sm,ov}}
+  if(!sid){const kv="v:"+pkAuto(h,l,"v",false),kn="n:"+pkAuto(h,l,"n",false),x=PKSC.find(s=>s[1].includes(kv)||s[1].includes(kn));sid=x?x[0]:""}
+  /* Công tác không thuộc phạm vi nào (vd băng cản nước chỉ có nhân công): mặc định Tách VT – NC, vẫn cho gạt Trọn gói riêng (anh hỏi 07/11/2026) */
+  const k=pkCk(h,l),sm=sid?pkMd(p,sid):"tach",o=((p.pk||{}).mc||{})[k],ov=o&&o!==sm?o:null;return{sid,k,sm,m:ov||sm,ov}}
 function pkList(p,P){P=P||pkBuild(p);const A=[...P.v,...P.n],GP={};PKSC.forEach(([id,ks])=>{if(pkMd(p,id)==="tron")GP[id]=ks});
   A.forEach(g=>{if(g.key.endsWith(PKLD)||g.key.endsWith(PKCT)){const n=g.key.slice(2);(GP[n]=GP[n]||[]).push(g.key)}});Object.assign(GP,(p.pk||{}).gp||{});const used=new Set(),M=[];
   Object.entries(GP).forEach(([name,ks])=>{const parts=(ks||[]).map(k=>A.find(g=>g.key===k)).filter(Boolean);if(parts.length<2||parts.some(g=>used.has(g.key)))return;parts.forEach(g=>used.add(g.key));
@@ -4987,7 +4988,7 @@ function gtView(p){const {D:D0,today}=gtRows(p),FF=GT.f&&GTF(p,today)[GT.f],D=FF
 /* Gói đã có so sánh giá hoặc hợp đồng: không đổi cách giao của công tác thuộc gói đó */
 function pkLk(p){const SS=new Set((PY.pid===p.id&&PY.list||[]).filter(y=>y.kind==="ssg"&&y.status!=="cancelled").map(y=>(y.data||{}).key)),HK=new Set((p.hdl||[]).flatMap(h=>h.pk.map(k=>k.key)));return k=>HK.has(k)?"đã có hợp đồng":SS.has(k)?"đã có so sánh giá":""}
 const gtTogC=(c,R,LK)=>{const t=c.ct;if(!t)return"";let lk="";R.forEach(r=>{[r.o.g.key,...(r.o.g.parts||[]).map(g=>g.key)].forEach(k=>{lk=lk||LK(k)})});const D=t.sm==="tron"?"Trọn gói":"Tách VT – NC";
-  return`<div class="gttg${t.ov?" ov":""}" title="${esc("Chỉ áp dụng cho công tác này"+(t.ov?" · đang chọn riêng, mặc định phạm vi "+t.sid.split(" · ")[0]+" là "+D:"")+(lk?" · "+lk+", không đổi được":""))}">${[["tron","Trọn gói"],["tach","Tách VT – NC"]].map(([m,l])=>`<button class="${t.m===m?"on":""}" data-gtmc="${esc(t.k)}" data-m="${m}" data-sm="${t.sm}"${lk?" disabled":""}>${l}</button>`).join("")}</div>`};
+  return`<div class="gttg${t.ov?" ov":""}" title="${esc("Chỉ áp dụng cho công tác này"+(t.ov?" · đang chọn riêng, mặc định "+(t.sid?"phạm vi "+t.sid.split(" · ")[0]+" là ":"")+D:"")+(lk?" · "+lk+", không đổi được":""))}">${[["tron","Trọn gói"],["tach","Tách VT – NC"]].map(([m,l])=>`<button class="${t.m===m?"on":""}" data-gtmc="${esc(t.k)}" data-m="${m}" data-sm="${t.sm}"${lk?" disabled":""}>${l}</button>`).join("")}</div>`};
 function gtScMap(p){const S=pkScopes(p),k=new Map(),he=new Set(),by=new Map(S.map(x=>[x.id,x]));
   PKSC.forEach(([id,ks])=>{if(!by.has(id))return;["g:"+id,...ks].forEach(x=>k.set(x,id))});S.filter(x=>x.k==="he").forEach(x=>{he.add(x.id);["g:","v:","n:"].forEach(pf=>k.set(pf+x.id+PKLD,x.id));k.set("n:Lắp đặt · "+x.id,x.id)});return{S:by,k,he}}
 const gtTog=(M,id)=>{const s=id&&M.S.get(id);if(!s)return"";return`<div class="gttg" title="${esc((s.k==="he"?"Hệ ":"Phạm vi ")+s.n+" · "+fm(s.v/1e9,2)+" tỷ"+(s.lock?" · "+s.lock+", không đổi được":""))}">${[["tron","Trọn gói"],["tach","Tách VT – NC"]].map(([m,l])=>`<button class="${s.m===m?"on":""}" data-gtmd="${esc(s.id)}" data-m="${m}"${s.lock?" disabled":""}>${l}</button>`).join("")}${s.k==="he"?`<small>hệ ${esc(s.n)}</small>`:""}</div>`};
@@ -5081,7 +5082,10 @@ document.addEventListener("keydown",e=>{if(!e.target.matches||!e.target.matches(
 /* Vẽ lại bảng giao thầu tại chỗ, giữ vị trí cuộn của bảng và trang (bấm Trọn gói / Tách không nhảy lên đầu) */
 function gtRe(p){const c=document.getElementById("gtc");if(!c)return;const y=scrollY,S=[...c.querySelectorAll(".tw")].map(e=>[e.scrollTop,e.scrollLeft]);const w=document.createElement("div");w.innerHTML=gtView(p);const n=w.querySelector("#gtc");c.replaceWith(n);const T=[...n.querySelectorAll(".tw")];if(T.length===S.length)T.forEach((e,i)=>{e.scrollTop=S[i][0];e.scrollLeft=S[i][1]});scrollTo(0,y)}
 document.addEventListener("click",e=>{const b=e.target.closest("button[data-gtmc]");if(!b||b.disabled)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const k=b.dataset.gtmc,m=b.dataset.m,mc={...((p.pk||{}).mc||{})};
-  if(m===b.dataset.sm)delete mc[k];else mc[k]=m;p.pk={...(p.pk||{}),mc};if(cur!==p)cur.pk=p.pk;persist();gtRe(p)});
+  if(m===b.dataset.sm)delete mc[k];else mc[k]=m;
+  /* gạt cách giao thì bỏ các lần chuyển gói bằng tay trước đó của công tác này, để lựa chọn mới có hiệu lực ngay */
+  const mv={...((p.pk||{}).mv||{})};let ch=0;p.hms.forEach(h=>h.lines.forEach(l=>{if(l.code&&pkCk(h,l)===k)["v","n"].forEach(t=>{if(mv[l.code+"|"+t]){delete mv[l.code+"|"+t];ch=1}})}));
+  p.pk={...(p.pk||{}),mc,...(ch?{mv}:{})};if(cur!==p)cur.pk=p.pk;persist();gtRe(p)});
 document.addEventListener("click",e=>{const b=e.target.closest("button[data-gtmd]");if(!b||b.disabled)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const id=b.dataset.gtmd,m=b.dataset.m,md={...((p.pk||{}).md||{})};
   if(m===pkMdDef(id))delete md[id];else md[id]=m;p.pk={...(p.pk||{}),md};if(cur!==p)cur.pk=p.pk;GT.mdo=true;persist();gtRe(p)});
 document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("input[data-pkms]"))return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const v=parseVN(t.value);
