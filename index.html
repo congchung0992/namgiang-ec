@@ -1057,7 +1057,11 @@ html body :is(#fvc,#ctx,[data-x],[data-lkclose],[data-nhgx],[data-nhrx],[data-as
 .top .avatar{width:44px;height:44px}
 /* Logo giữa trang, căn giữa theo chiều dọc thanh trên */
 .top{position:relative}.tlogo.mid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);flex:none}.tlogo.mid~.search{margin-left:auto}
-.tlogo img{height:58px;width:58px;margin:0}.tlogo:not(.mid) img{visibility:hidden}}
+.tlogo img{height:58px;width:58px;margin:0}}
+/* Tiêu đề trang và dòng mô tả trên cùng một hàng cho đỡ tốn chiều cao (anh Chung 07/11/2026) */
+.vh>div:first-child{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;min-width:0}.vh>div:first-child>p{margin:0}.vh{margin-bottom:12px}
+.tlogo.nolg img{visibility:hidden}
+@media (min-width:761px) and (max-width:1500px){.top .search{max-width:250px}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5794,7 +5798,7 @@ document.getElementById("askf")?.addEventListener("submit",e=>{e.preventDefault(
 
 /* Logo đầu trang nằm giữa màn hình nếu đủ chỗ, không đè thanh menu và ô tìm (anh Chung 07/11/2026) */
 (function(){const fit=()=>{const t=document.querySelector(".top"),l=document.querySelector(".tlogo"),p=document.getElementById("pills"),q=document.querySelector(".top .search");if(!t||!l||!p||!q)return;
-  l.classList.add("mid");const c=innerWidth/2,a=p.getBoundingClientRect(),b=q.getBoundingClientRect();if(a.right+12>c-30||b.left-12<c+30)l.classList.remove("mid")};
+  l.classList.add("mid");l.classList.remove("nolg");const c=innerWidth/2,a=p.getBoundingClientRect(),b=q.getBoundingClientRect();if(a.right+12>c-30||b.left-12<c+30){l.classList.remove("mid");if(b.left-a.right<66)l.classList.add("nolg")}};
   addEventListener("resize",fit);new MutationObserver(fit).observe(document.getElementById("pills"),{childList:true});setTimeout(fit,300);
   addEventListener("keydown",e=>{if(e.key!=="Escape")return;const B=[...document.querySelectorAll("#fvc,#ctx,[data-x],[data-lkclose],[data-nhgx],[data-nhrx],[data-asclose]")].filter(b=>b.offsetParent);if(B.length)B[B.length-1].click()})})();
 </script>
