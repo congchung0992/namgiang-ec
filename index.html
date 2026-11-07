@@ -933,6 +933,11 @@ table.t thead tr:first-child>th:last-child,table.t tbody td:last-child,table.t t
 table.t tfoot td{border-top:1px solid #A9B3D3!important;border-bottom:0!important;border-right-color:#A9B3D3!important}
 table.t:has(tfoot) tbody:last-of-type tr:last-child td{border-bottom:0!important}
 table.t:not(:has(tfoot)) tbody:last-of-type tr:last-child td{border-bottom:0!important}
+/* Viền bảng liền nét (anh Chung 07/11/2026): bảng thường đủ viền 4 cạnh; bảng cuộn trong khung (BOQ & Giá vốn, bảng kéo vừa màn hình) thì khung vẽ viền và bo góc, tiêu đề và dòng tổng dính sát mép trong khung nên không còn hở */
+table.t:has(> thead){border-top:1px solid #A9B3D3}
+.tw.bsw,.tw[data-fit]{border:1px solid #A9B3D3;border-radius:14px;background:rgba(255,255,255,.55)}
+.tw.bsw>table.t,.tw[data-fit]>table.t{border:0;border-radius:0;overflow:visible;background:transparent}
+.tw.bsw>table.t>thead>tr>th,.tw[data-fit]>table.t>thead>tr>th{border-radius:0}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
