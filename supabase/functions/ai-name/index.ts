@@ -7,6 +7,8 @@ import Anthropic from "npm:@anthropic-ai/sdk@1.5.0";
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type, apikey, x-client-info", "access-control-allow-methods": "POST, OPTIONS" };
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, "content-type": "application/json; charset=utf-8" } });
 const MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"];
+/* Mẫu theo tác vụ (anh Chung chọn ở Quản trị → Đo lường AI): app_secrets "claude_models" {tác vụ: mẫu}, chưa chọn thì dùng "claude_model" */
+const pickModel = (act: string, cms: string, def: string) => { let cm: any = {}; try { cm = JSON.parse(cms || "{}"); } catch { /* bỏ qua */ } return MODELS.includes(cm[act]) ? cm[act] : MODELS.includes(def) ? def : MODELS[0]; };
 const SYS = `Bạn là QS của tổng thầu xây dựng Nam Giang. Mỗi mục là một phần giao thầu tách từ một dòng BOQ: t = "v" là phần VẬT TƯ (mua vật liệu), t = "n" là phần NHÂN CÔNG (tổ đội, thầu phụ thi công).
 Đặt tên ngắn gọn, đúng nghề, tiếng Việt có dấu, tối đa 10 chữ, để sau này cộng khối lượng theo gói thầu:
 - Vật tư: ghi đúng loại vật liệu cần mua và quy cách chính (mác, đường kính, chủng loại), KHÔNG ghi chữ "Vật tư" ở đầu. Ví dụ: "Bê tông thương phẩm M300", "Bê tông thương phẩm M100", "Nilon lót 2 lớp", "Cát đen san lấp", "Thép bản mã đầu cọc", "Keo chèn khe cắt mạch".
@@ -30,11 +32,11 @@ Deno.serve(async (req) => {
   if (whoErr || !who?.user) return json({ error: "auth" }, 401);
   let b: any;
   try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
-  const { data: S } = await admin.from("app_secrets").select("name,value").in("name", ["claude", "claude_model"]);
+  const { data: S } = await admin.from("app_secrets").select("name,value").in("name", ["claude", "claude_model", "claude_models"]);
   const get = (n: string) => (S || []).find((x: any) => x.name === n)?.value || "";
   const key = Deno.env.get("ANTHROPIC_API_KEY") || get("claude");
   if (!key) return json({ error: "chua_ket_noi" }, 503);
-  const model = MODELS.includes(get("claude_model")) ? get("claude_model") : MODELS[0], t0 = Date.now();
+  const model = pickModel("name_parts", get("claude_models"), get("claude_model")), t0 = Date.now();
   const items = (Array.isArray(b.items) ? b.items : []).slice(0, 200).map((x: any) => ({ k: String(x.k || "").slice(0, 300), t: x.t === "v" ? "v" : "n", ten: String(x.name || "").slice(0, 200), quy_cach: String(x.spec || "").slice(0, 200), dvt: String(x.unit || "").slice(0, 20), hang_muc: String(x.hm || "").slice(0, 120), dau_muc: String(x.dm || "").slice(0, 120), goi: String(x.goi || "").slice(0, 120) }));
   if (!items.length) return json({ names: [] });
   const content = JSON.stringify({ muc: items });

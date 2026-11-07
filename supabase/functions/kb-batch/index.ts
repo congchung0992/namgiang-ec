@@ -8,6 +8,8 @@ import { PDFDocument } from "npm:pdf-lib@1.17.1";
 
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8" } });
 const MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"];
+/* Mẫu theo tác vụ (anh Chung chọn ở Quản trị → Đo lường AI): app_secrets "claude_models" {tác vụ: mẫu}, chưa chọn thì dùng "claude_model" */
+const pickModel = (act: string, cms: string, def: string) => { let cm: any = {}; try { cm = JSON.parse(cms || "{}"); } catch { /* bỏ qua */ } return MODELS.includes(cm[act]) ? cm[act] : MODELS.includes(def) ? def : MODELS[0]; };
 const strictify = (s: any): any => {
   if (Array.isArray(s)) return s.map(strictify);
   if (!s || typeof s !== "object") return s;
@@ -132,13 +134,13 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "bad_request" }, 405);
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false, autoRefreshToken: false } });
   const cron = req.headers.get("x-cron-key") || "";
-  const { data } = await admin.from("app_secrets").select("name,value").in("name", ["cron_key", "claude", "claude_model"]);
+  const { data } = await admin.from("app_secrets").select("name,value").in("name", ["cron_key", "claude", "claude_model", "claude_models"]);
   const get = (n: string) => (data || []).find((x: any) => x.name === n)?.value || "";
   if (!cron || !get("cron_key") || cron !== get("cron_key")) return json({ error: "auth" }, 401);
   const k = Deno.env.get("ANTHROPIC_API_KEY") || get("claude");
   if (!k) return json({ error: "chua_ket_noi" }, 503);
   const M = { model: "", in: 0, out: 0, err: "" }, t0 = Date.now(), m = get("claude_model");
-  const env: any = { client: new Anthropic({ apiKey: k, timeout: 120000, maxRetries: 1 }), MODEL: MODELS.includes(m) ? m : MODELS[0], M, admin };
+  const env: any = { client: new Anthropic({ apiKey: k, timeout: 120000, maxRetries: 1 }), MODEL: pickModel("kb_batch", get("claude_models"), m), M, admin };
   const job = kbBatch(env).catch((e) => { M.err = String(e?.message || e).slice(0, 160); }).finally(async () => {
     if (M.in || M.out || M.err) try { await admin.from("ai_usage").insert({ user_id: null, provider: "claude", action: "kb_batch", model: M.model || null, in_tok: M.in, out_tok: M.out, ms: Date.now() - t0, ok: !M.err, err: M.err || null }); } catch (_) { /* bỏ qua */ }
   });

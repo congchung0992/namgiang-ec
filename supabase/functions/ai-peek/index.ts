@@ -7,6 +7,8 @@ import Anthropic from "npm:@anthropic-ai/sdk@1.5.0";
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type, apikey, x-client-info", "access-control-allow-methods": "POST, OPTIONS" };
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, "content-type": "application/json; charset=utf-8" } });
 const MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"];
+/* Mẫu theo tác vụ (anh Chung chọn ở Quản trị → Đo lường AI): app_secrets "claude_models" {tác vụ: mẫu}, chưa chọn thì dùng "claude_model" */
+const pickModel = (act: string, cms: string, def: string) => { let cm: any = {}; try { cm = JSON.parse(cms || "{}"); } catch { /* bỏ qua */ } return MODELS.includes(cm[act]) ? cm[act] : MODELS.includes(def) ? def : MODELS[0]; };
 const SYS = `Bạn đọc lướt một file báo giá gửi công ty tổng thầu xây dựng Nam Giang (Nam Giang là bên NHẬN báo giá, không phải bên báo giá).
 Chỉ trả về:
 "date": ngày ghi trên báo giá dạng yyyy-mm-dd; không thấy thì "".
@@ -33,11 +35,11 @@ Deno.serve(async (req) => {
   if (whoErr || !who?.user) return json({ error: "auth" }, 401);
   let b: any;
   try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
-  const { data: S } = await admin.from("app_secrets").select("name,value").in("name", ["claude", "claude_model"]);
+  const { data: S } = await admin.from("app_secrets").select("name,value").in("name", ["claude", "claude_model", "claude_models"]);
   const get = (n: string) => (S || []).find((x: any) => x.name === n)?.value || "";
   const key = Deno.env.get("ANTHROPIC_API_KEY") || get("claude");
   if (!key) return json({ error: "chua_ket_noi" }, 503);
-  const model = MODELS.includes(get("claude_model")) ? get("claude_model") : MODELS[0], t0 = Date.now();
+  const model = pickModel("peek", get("claude_models"), get("claude_model")), t0 = Date.now();
   const content: any[] = [];
   const fb = b.doc && typeof b.doc.data === "string" ? fileBlock(String(b.doc.mime || ""), b.doc.data) : null;
   if (fb) content.push(fb);
