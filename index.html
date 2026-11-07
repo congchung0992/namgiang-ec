@@ -46,7 +46,7 @@
 .gpin{vertical-align:-3px;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}.gloc{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px;min-width:0}.gloc b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gloc:hover b{text-decoration:underline}
 body.sfull .top,body.sfull .phd,body.sfull .sheets,body.sfull .note{display:none!important}
 body.sfull #view{padding-top:0}body.sfull main{padding-top:6px!important}
-body.sfull .sgsub{position:sticky;top:0;z-index:30;padding:4px 240px 4px 4px;margin:0 0 6px;background:rgba(236,236,238,.92);backdrop-filter:blur(6px)}
+body.sfull .sgsub{position:sticky;top:0;z-index:30;padding:6px 240px 8px 4px;margin:0 0 8px;background:#ECECEE;box-shadow:0 1px 0 #D5D9E5,0 10px 14px -12px rgba(16,24,64,.35)} /* nền đặc: bảng cuộn dưới không lộ mờ qua thanh (anh Chung 07/11/2026) */
 #sfx{display:none;position:fixed;top:8px;right:16px;z-index:45;border:0;border-radius:999px;padding:8px 14px;background:#fff;color:#0A2486;font:600 12px/1 Arial,sans-serif;box-shadow:0 6px 18px -8px rgba(16,24,64,.45);cursor:pointer}
 body.sfull:not(.edmode) #sfx{display:none}
 .sfx2{display:none;margin-left:auto;align-self:center;border:0;border-radius:999px;padding:7px 14px;background:#E1141B;color:#fff;font:600 12px/1 Arial,sans-serif;box-shadow:0 6px 16px -8px rgba(225,20,27,.7);cursor:pointer}.sfx2:hover{background:#C0111A}body.sfull .sfx2{display:inline-flex}
@@ -81,7 +81,7 @@ body.edland .a4p{max-width:1320px}
 @media(max-width:760px){.a4p{padding:16px 12px;border-radius:12px}.a4p .pyg{grid-template-columns:auto 1fr}.a4p .ttt{min-width:760px;table-layout:auto}.a4p .ttg{grid-template-columns:1fr}}
 .fi.req{border-color:#E1141B!important;background:#FFF5F5}
 .ffile[draggable=true]{cursor:grab}.ffile.fdg{opacity:.45}.frow.fdrop{background:#E8ECFF!important;box-shadow:inset 0 0 0 2px #2D3CE6}.frow.fno{opacity:.45}
-.bctop{position:sticky;top:0;z-index:20;margin:-10px -10px 6px;padding:10px;border-radius:14px;background:rgba(255,255,255,.94);backdrop-filter:blur(6px)}
+.bctop{position:sticky;top:0;z-index:20;margin:-10px -10px 6px;padding:10px;border-radius:14px;background:#fff;box-shadow:0 8px 12px -12px rgba(16,24,64,.35)}
 .bcimh{display:flex;flex-direction:column;align-items:center;gap:4px;margin:6px 0 14px;padding:12px 0 10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center}.bcimh b{font-size:20px;font-weight:700;letter-spacing:.04em;color:#0A2486}.bcimh span{font-size:16px;font-weight:600;color:var(--ink)}.bcimh small{font-size:13px;color:var(--muted)}
 .spa{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.spbt{border:0;border-radius:999px;padding:4px 11px;font:500 12px var(--f);color:#0A2486;background:#EEF1FA;cursor:pointer;white-space:nowrap}.spbt:hover{box-shadow:inset 0 0 0 1px #9AA8DA}.spbt.stop{color:#B42318;background:#FDECEC}.spb{color:#5B21B6}
 .spedr>td{background:#F7F8FC!important;padding:0!important}.sped{position:sticky;left:10px;width:min(1080px,calc(100vw - 140px));box-sizing:border-box;margin:6px 10px 10px;padding:14px 16px;border-radius:16px;background:#fff;box-shadow:inset 0 0 0 1.5px #C9D2EE;display:flex;flex-direction:column;gap:10px}.sped.stop{box-shadow:inset 0 0 0 1.5px #F2B8B5}
@@ -924,8 +924,9 @@ tr[data-wfdr]{cursor:grab}tr[data-wfdr] input,tr[data-wfdr] select,tr[data-wfdr]
 
 /* Viền tiêu đề, dòng tổng (anh Chung 07/11/2026): kẻ bằng bóng trong ô (không dùng border) để tiêu đề dính đầu, dòng tổng dính đáy khi cuộn vẫn giữ nét, không hở khe trắng */
 table.t thead th,table.t thead tr.h2 th{border-right:0!important;border-bottom:0!important;box-shadow:inset -1px -1px 0 #9FADE0}
-table.t > thead > tr:first-child > th{box-shadow:inset -1px -1px 0 #9FADE0}
+table.t > thead > tr:first-child > th{box-shadow:inset 0 1px 0 #9FADE0,inset -1px -1px 0 #9FADE0}
 table.t thead th:last-child{box-shadow:inset 0 -1px 0 #9FADE0}
+table.t > thead > tr:first-child > th:last-child{box-shadow:inset 0 1px 0 #9FADE0,inset 0 -1px 0 #9FADE0}
 table.t tfoot td{border-top:0!important;box-shadow:inset 0 1px 0 #9FADE0}
 .tw table.t tfoot td{position:sticky;bottom:0;z-index:2}
 table.t:has(> thead > tr.h2)>thead tr:last-child th{box-shadow:inset -1px -1px 0 #9FADE0}
