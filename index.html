@@ -1162,6 +1162,8 @@ html body .sfx2 svg{width:14px;height:14px}html body .sfx2 kbd{font:600 11px var
 html body .sfx2:hover{background:#E1141B;color:#fff}html body .sfx2:hover kbd{background:rgba(255,255,255,.2);color:#fff;box-shadow:none}
 /* Nút số liệu báo cáo: chữ đậm (anh Chung 07/11/2026) */
 html body .kpb,html body .kpb *,html body .kpl,html body .kpl *,html body .bqf,html body .bqf *,html body .lkfb,html body .lkfb *{font-weight:700!important}
+/* Tiêu đề bảng luôn căn giữa, không tràn sang cột bên (anh Chung 07/11/2026): chữ dài thì xuống dòng theo từ */
+html body table.t thead th{text-align:center!important;white-space:normal!important;overflow-wrap:normal;word-break:keep-all;hyphens:none}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5799,7 +5801,7 @@ function gtNhom(p){if(!DMRL&&!NGApp.guest){DMRL=1;dmrLoad().then(()=>gtRe(p))}
   const rs=c=>{const S=new Set(c.L.map(x=>(DMR.get(dmRk(x.h,x.l))||{}).src).filter(Boolean));return S.has("tay")?"tay":S.has("ai")?"ai":""};
   /* Bố cục 2 cột (anh Chung 07/11/2026): trái danh sách đầu mục (thả công tác vào đây), phải toàn bộ công tác của đầu mục đang chọn, ghi đủ tên; tick nhiều dòng để chuyển một lần */
   if(!NH.cur||!G.some(g=>g.d===NH.cur))NH.cur=(G[0]||{}).d||"";
-  const rows=[];G.forEach(g=>g.C.forEach(c=>{if(W?hit(g.d+" "+c.n+" "+c.sp+" "+[...c.hm].join(" ")):g.d===NH.cur)rows.push({g,c})}));
+  const rows=[];G.forEach(g=>g.C.forEach(c=>{if(W?hit(g.d+" "+c.n+" "+c.sp+" "+[...c.hm].join(" ")):g.d===NH.cur)rows.push({g,c})}));rows.sort((a,b)=>String(a.c.n||"").localeCompare(String(b.c.n||""),"vi",{sensitivity:"base",numeric:true}));
   const cnt=g=>W?[...g.C.values()].filter(c=>hit(g.d+" "+c.n+" "+c.sp+" "+[...c.hm].join(" "))).length:g.C.size;
   const left=`<div class="nhdl" role="list">${(W?[...G].sort((a,b)=>(cnt(b)>0)-(cnt(a)>0)):G).map(g=>`<button type="button" class="nhc nhd${g.d===NH.cur&&!W?" on":""}${g.mep?" mep":""}${W?(cnt(g)?" hit":" dim"):""}" data-nhd="${esc(g.d)}" data-nhcur="${esc(g.d)}" role="listitem"><b>${esc(g.d)}</b><small>${W?cnt(g)+" khớp / ":""}${g.C.size} công tác · ${nhTr(g.v)}</small></button>`).join("")}<div class="nhc nhd nhnew" data-nhd=""><b>+ Đầu mục mới</b><input class="fi" id="nhnew" placeholder="Gõ tên rồi thả công tác vào đây" aria-label="Tên đầu mục mới"></div></div>`;
   const sel=NH.pick||new Set();
