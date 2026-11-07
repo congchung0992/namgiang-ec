@@ -2345,7 +2345,7 @@ function bcCur(p){const date=BC&&BC.pid===p.id?BC.date:bcIso(new Date());if(!BC|
   p.bcn=p.bcn||{};if(!p.bcn[date])BC.d=bcNew(p,date);else BC.d=p.bcn[date];return BC}
 const bcSet=(o,path,v)=>{const k=path.split(".");let x=o;for(let i=0;i<k.length-1;i++)x=x[k[i]];x[k[k.length-1]]=v};
 function bcKeep(p){p.bcn={...(p.bcn||{}),[BC.date]:BC.d};persist()}
-function bcView(p){const B=bcCur(p),d=B.d,saved=d.at?`Đã lưu PDF lúc ${new Date(d.at).toLocaleString("vi-VN")} vào 06.1 Nhật ký thi công`:"Chưa lưu PDF cho ngày này";
+function bcView(p){const B=bcCur(p),d=B.d,saved=d.at?`Đã lưu lúc ${new Date(d.at).toLocaleString("vi-VN")} vào 06.1 Nhật ký thi công`:"Chưa lưu cho ngày này";
   const inp=(path,v,cls="",ph="",type="text")=>`<input class="fi ${cls}" type="${type}" data-bc="${path}" value="${esc(v==null?"":v)}" placeholder="${esc(ph)}">`;
   const ta=(path,v,ph="")=>`<textarea class="fi bct" rows="1" data-bc="${path}" placeholder="${esc(ph)}">${esc(v||"")}</textarea>`;
   const res=(k,h,u)=>`<div class="bcq"><div class="bcqh"><b>${h}</b><span>Tổng <b data-bctot="${k}">${n0(d[k].reduce((a,r)=>a+(+r[1]||0),0))}</b> ${u}</span></div><div class="bcqg">${d[k].map((r,i)=>`<div class="bcqi">${inp(k+"."+i+".0",r[0],"bqn","Tên")}${inp(k+"."+i+".1",r[1],"bqv","0","number")}<button type="button" class="bcx" data-bcdel="${k}.${i}" title="Xoá">×</button></div>`).join("")}<button type="button" class="bcqa" data-bcadd="${k}">+ Thêm</button></div></div>`;
@@ -2353,7 +2353,7 @@ function bcView(p){const B=bcCur(p),d=B.d,saved=d.at?`Đã lưu PDF lúc ${new D
     <div class="bh" style="margin-top:6px;gap:8px;justify-content:flex-start"><button type="button" class="bcqa" data-bcadd="${k}">+ Thêm dòng</button>${k==="mai"?`<button type="button" class="bcqa" id="bccp">Chép từ kế hoạch hôm nay</button>`:""}</div>`;
   const frames=[...Array(d.ns||6).keys()].map(i=>`<div class="bcf${BC&&BC.imgs[i]?" on":""}" data-bcf="${i}">${bcFrameHtml(i)}</div>`).join("");
   const days=Object.keys(p.bcn||{}).sort().reverse().slice(0,30);
-  return`<div class="a4p bcpaper"><div class="bh bctop"><span class="sub">Khổ giấy xem trên màn hình</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span class="sub" id="bcmsg" style="max-width:420px">${saved}</span><button type="button" class="pill" id="bcsave" style="${sv("bcn")}"><span class="dot">↑</span>Lưu PDF vào 06.1</button>${edTools()}</div></div><div class="vgrid bcv">${card("Báo cáo ngày",`Mẫu báo cáo ngày Nam Giang · chủ đầu tư, nhà thầu, dự án tự điền · bấm Lưu để tạo file PDF và lưu vào 06.1 Nhật ký thi công`,`
+  return`<div class="a4p bcpaper"><div class="bh bctop"><span class="sub">Khổ giấy xem trên màn hình</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span class="sub" id="bcmsg" style="max-width:420px">${saved}</span><button type="button" class="pill" id="bcsave" style="${sv("bcn")}"><span class="dot">↑</span>Lưu PDF + Excel vào 06.1</button>${edTools()}</div></div><div class="vgrid bcv">${card("Báo cáo ngày",`Mẫu báo cáo ngày Nam Giang · chủ đầu tư, nhà thầu, dự án tự điền · bấm Lưu để tạo file PDF và Excel, lưu cả hai vào 06.1 Nhật ký thi công`,`
     <div class="bch"><img src="img/logo-bcn.png" alt="Nam Giang"><div><b>BÁO CÁO NGÀY</b><span>Chủ đầu tư: <b>${esc(p.cdt||"")}</b></span><span>Nhà thầu thi công: <b>Công ty CP Đầu tư và Xây lắp Nam Giang</b></span><span>Dự án: <b>${esc(p.name||"")}</b></span></div></div>
     <div class="bcbar"><label>Ngày <input class="fi" type="date" id="bcdate" value="${B.date}"></label><label>Thời tiết <input class="fi" list="bcwl" data-bc="w" value="${esc(d.w||"")}"></label><datalist id="bcwl">${BCW.map(w=>`<option value="${w}">`).join("")}</datalist>
       ${days.length?`<label>Báo cáo đã có <select class="fi sel" id="bcday"><option value="">— chọn ngày —</option>${days.map(k=>`<option value="${k}"${k===B.date?" selected":""}>${bcVN(k)}${p.bcn[k].at?" ✓":""}</option>`).join("")}</select></label>`:""}</div>`,"span3")}
@@ -2402,6 +2402,33 @@ async function bcPdf(p){await needJS("https://cdnjs.cloudflare.com/ajax/libs/htm
   finally{box.remove()}
   const nm=BC.date.replace(/-/g,"")+"_BCN_DA_"+noAcc(p.name||"").toUpperCase().replace(/^(NHA MAY|DU AN|XAY DUNG)\s+/,"").replace(/[^A-Z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,50)+".pdf";
   return new File([pdf.output("blob")],nm,{type:"application/pdf"})}
+/* Bản Excel của báo cáo ngày (anh Chung 07/11/2026): cùng mẫu với PDF, số liệu sửa được, tổng nhân lực/máy là công thức; sheet Hình ảnh chứa ảnh đã căn khung */
+async function bcXlsx(p,pdfName){await needXJ();const d=BC.d,wb=new ExcelJS.Workbook();wb.creator="Nam Giang E&C";
+  const ws=wb.addWorksheet("Báo cáo ngày",{pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:.4,right:.4,top:.5,bottom:.5,header:.2,footer:.2}}});
+  ws.columns=[{width:12},{width:46},{width:17},{width:17},{width:30}];
+  const F={name:"Times New Roman",size:12},B={...F,bold:true},thin={style:"thin",color:{argb:"FF000000"}},BOX={top:thin,left:thin,bottom:thin,right:thin},HEAD="FFC6D9F1";
+  const put=(ref,v,o={})=>{const c=ws.getCell(ref);c.value=v;c.font=o.font||F;c.border=BOX;c.alignment={vertical:"middle",wrapText:true,horizontal:o.h||"left"};if(o.fill)c.fill={type:"pattern",pattern:"solid",fgColor:{argb:o.fill}};if(o.fmt)c.numFmt=o.fmt;return c};
+  const mrg=(r,a,b,v,o)=>{ws.mergeCells(`${a}${r}:${b}${r}`);put(a+r,v,o);for(const col of "ABCDE".slice("ABCDE".indexOf(a),"ABCDE".indexOf(b)+1))ws.getCell(col+r).border=BOX};
+  const dt=s=>{const m=String(s||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?new Date(Date.UTC(+m[1],+m[2]-1,+m[3])):null};
+  try{const buf=await (await fetch("img/logo-bcn.png")).arrayBuffer();let bin="";new Uint8Array(buf).forEach(x=>bin+=String.fromCharCode(x));ws.addImage(wb.addImage({base64:btoa(bin),extension:"png"}),{tl:{col:0.3,row:0.15},ext:{width:105,height:67}})}catch(e){}
+  ws.mergeCells("A1:B2");put("A1","");ws.mergeCells("C1:E2");put("C1","BÁO CÁO NGÀY",{font:{...B,size:20},h:"center"});ws.getRow(1).height=30;ws.getRow(2).height=30;["A2","B1","B2","D1","E1","C2","D2","E2"].forEach(r=>ws.getCell(r).border=BOX);
+  mrg(3,"A","E","CHỦ ĐẦU TƯ: "+(p.cdt||"").toUpperCase(),{font:B});mrg(4,"A","E","NHÀ THẦU THI CÔNG: CÔNG TY CP ĐẦU TƯ VÀ XÂY LẮP NAM GIANG");mrg(5,"A","E","DỰ ÁN: "+(p.name||"").toUpperCase());
+  mrg(6,"A","B","NGÀY THÁNG:");put("C6",dt(BC.date),{font:B,h:"center",fmt:"dd/mm/yyyy"});put("D6","THỜI TIẾT:");put("E6",d.w||"",{font:B});
+  let r=7;mrg(r,"A","B","NHÂN LỰC",{font:B,h:"center",fill:HEAD});put("C"+r,"SỐ LƯỢNG",{font:B,h:"center",fill:HEAD});put("D"+r,"DỤNG CỤ, MÁY MÓC",{font:B,h:"center",fill:HEAD});put("E"+r,"SỐ LƯỢNG",{font:B,h:"center",fill:HEAD});ws.getRow(r).height=30;
+  const n=Math.max(d.nl.length,d.mm.length,1),r0=r+1;for(let i=0;i<n;i++){r++;const a=d.nl[i],b=d.mm[i];mrg(r,"A","B",a?a[0]:"");put("C"+r,a&&a[0]?(+a[1]||0):null,{h:"center",fmt:"#,##0"});put("D"+r,b?b[0]:"");put("E"+r,b&&b[0]?(+b[1]||0):null,{h:"center",fmt:"#,##0"})}
+  r++;mrg(r,"A","B","TỔNG",{font:B});put("C"+r,{formula:`SUM(C${r0}:C${r-1})`,result:d.nl.reduce((x,y)=>x+(+y[1]||0),0)},{font:B,h:"center",fmt:"#,##0"});put("D"+r,"TỔNG",{font:B});put("E"+r,{formula:`SUM(E${r0}:E${r-1})`,result:d.mm.reduce((x,y)=>x+(+y[1]||0),0)},{font:B,h:"center",fmt:"#,##0"});
+  r++;mrg(r,"A","E","HẠNG MỤC TIẾN HÀNH THI CÔNG",{font:B,h:"center"});
+  const plan=(k,t,h)=>{r++;mrg(r,"A","E",t,{font:B});r++;["STT","NỘI DUNG THI CÔNG",h,"HOÀN THÀNH DỰ KIẾN","GHI CHÚ"].forEach((v,i)=>put("ABCDE"[i]+r,v,{font:B,h:"center",fill:HEAD}));ws.getRow(r).height=32;
+    const L=d[k].filter(x=>x.n||x.g);(L.length?L:[{}]).forEach((x,i)=>{r++;put("A"+r,L.length?i+1:null,{h:"center"});put("B"+r,x.n||"");put("C"+r,x.p===""||x.p==null?null:(+x.p||0)/100,{h:"center",fmt:"0%"});put("D"+r,dt(x.t),{h:"center",fmt:"dd/mm/yyyy"});put("E"+r,x.g||"")})};
+  plan("nay","a) Kế hoạch thi công ngày hôm nay","TIẾN ĐỘ LŨY KẾ (%)");plan("mai","b) Kế hoạch thi công ngày mai","TIẾN ĐỘ DỰ KIẾN (%)");
+  r++;mrg(r,"A","E","c) Đề nghị / Đề xuất CĐT",{font:B});(d.dx.length?d.dx:[""]).forEach((x,i)=>{r++;put("A"+r,String(i+1).padStart(2,"0")+".",{h:"center"});ws.mergeCells(`B${r}:E${r}`);put("B"+r,x||"");["C","D","E"].forEach(c=>ws.getCell(c+r).border=BOX)});
+  r++;put("A"+r,"d) Kết luận",{font:B});ws.mergeCells(`B${r}:E${r}`);put("B"+r,d.kl||"",{font:B});["C","D","E"].forEach(c=>ws.getCell(c+r).border=BOX);ws.getRow(r).height=Math.max(20,Math.ceil(String(d.kl||"").length/70)*17);
+  for(let i=3;i<=r;i++){const w=ws.getRow(i);if(!w.height||w.height<21)w.height=21}ws.pageSetup.printArea=`A1:E${r}`;
+  const ims=[];for(let i=0;i<(d.ns||6);i++)if(BC.imgs[i])ims.push(await bcCrop(BC.imgs[i],1100,620));
+  if(ims.length){const wi=wb.addWorksheet("Hình ảnh",{pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}});wi.columns=[{width:48},{width:48}];
+    wi.mergeCells("A1:B1");const h=wi.getCell("A1");h.value="HÌNH ẢNH THI CÔNG · "+bcVN(BC.date);h.font={...B,size:14};h.alignment={horizontal:"center",vertical:"middle"};wi.getRow(1).height=26;
+    ims.forEach((src,i)=>{const R=2+Math.floor(i/2);wi.getRow(R).height=150;wi.addImage(wb.addImage({base64:src.split(",")[1],extension:"jpeg"}),{tl:{col:i%2+0.05,row:R-1+0.05},ext:{width:330,height:186}})})}
+  const buf=await wb.xlsx.writeBuffer();return new File([buf],pdfName.replace(/\.pdf$/i,".xlsx"),{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})}
 function quoteView(p){if(QV&&QV.pid===p.id)return qReview(p);const Q=p.quotes||[],sel=p.qsel||{};
   const hmOf=c=>c.split(/[.|]/)[0],codes=qCodes(Q),HM=[...new Set(codes.map(hmOf))].sort(),R=codes.filter(c=>!qHm||hmOf(c)===qHm).map(c=>{const kinds=new Set(Q.filter(q=>qFind(q,c)).map(q=>q.kind));return{c,kinds}}).sort((a,b)=>a.c.localeCompare(b.c,"vi",{numeric:true}));
   const QQ=Q.filter(q=>R.some(r=>qFind(q,r.c)));
@@ -3557,8 +3584,8 @@ view.addEventListener("click",async e=>{const t=e.target,p=P();if(!p||!BC)return
   if(b=t.closest("[data-bcz]")){const [i,s]=b.dataset.bcz.split("|"),m=BC.imgs[+i];if(m)bcZoom(+i,s==="1"?1.15:1/1.15);return}
   if(b=t.closest("[data-bcrm]")){BC.imgs[+b.dataset.bcrm]=null;bcDraw(+b.dataset.bcrm);return}
   if(b=t.closest("#bcsave")){if(b.disabled)return;const msg=view.querySelector("#bcmsg");b.disabled=true;msg.style.color="";msg.textContent="⏳ Đang tạo file PDF…";
-    try{const f=await bcPdf(p);msg.textContent="⏳ Đang lưu vào 06.1 Nhật ký thi công…";await keepFile(p.id,"06.1",f,"Báo cáo ngày");d.at=Date.now();bcKeep(p);
-      const u=URL.createObjectURL(f);msg.innerHTML=`✓ Đã lưu <b>${esc(stdName(p.id,f.name))}</b> vào 06.1 Nhật ký thi công · <a href="${u}" download="${esc(stdName(p.id,f.name))}">Tải về máy</a>`}
+    try{const f=await bcPdf(p);msg.textContent="⏳ Đang tạo file Excel…";const x=await bcXlsx(p,f.name);msg.textContent="⏳ Đang lưu PDF và Excel vào 06.1 Nhật ký thi công…";await keepFile(p.id,"06.1",f,"Báo cáo ngày");await keepFile(p.id,"06.1",x,"Báo cáo ngày");d.at=Date.now();bcKeep(p);
+      const u=URL.createObjectURL(f),ux=URL.createObjectURL(x),nf=stdName(p.id,f.name),nx=stdName(p.id,x.name);msg.innerHTML=`✓ Đã lưu PDF và Excel vào 06.1 Nhật ký thi công · tải về: <a href="${u}" download="${esc(nf)}">PDF</a> · <a href="${ux}" download="${esc(nx)}">Excel</a>`}
     catch(er){msg.style.color="#C0141B";msg.textContent="✗ "+(er.message||"Chưa lưu được, anh thử lại")}finally{b.disabled=false}return}});
 view.addEventListener("dragover",e=>{if(e.target.closest(".bcf"))e.preventDefault()});
 view.addEventListener("drop",e=>{const f=e.target.closest(".bcf"),p=P();if(!f||!BC||!p)return;e.preventDefault();const F=[...(e.dataTransfer.files||[])].filter(x=>/^image\//.test(x.type));if(F.length>1)bcMany(p,F,+f.dataset.bcf,true);else if(F[0])bcLoad(+f.dataset.bcf,F[0])});
