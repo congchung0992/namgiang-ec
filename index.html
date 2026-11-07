@@ -4209,7 +4209,7 @@ async function atGrab(n){const f=await atFace(),v=await atCam(),opt=new f.TinyFa
   for(let i=0;i<n*6&&out.length<n;i++){atStatus(n>1?`Giữ yên, nhìn thẳng camera… ${out.length}/${n}${out.length?" · nghiêng nhẹ đầu":""}`:"Đang nhận diện khuôn mặt…");
     const r=await f.detectSingleFace(v,opt).withFaceLandmarks(true).withFaceDescriptor();if(r&&r.detection.score>.6){out.push(Array.from(r.descriptor,x=>+x.toFixed(5)));if(n>1)await new Promise(z=>setTimeout(z,700))}else await new Promise(z=>setTimeout(z,250))}
   if(out.length<n)throw new Error("Không thấy rõ khuôn mặt · đứng nơi đủ sáng, nhìn thẳng camera");return{d:out,v}}
-function atStatus(t){AT.busy=t;const s=document.getElementById("atst");if(s)s.textContent=t;const w=document.getElementById("atvid");if(w)w.classList.toggle("on",!!t)}
+function atStatus(t){if(t&&!AT.busy){const w=document.getElementById("atvid");if(w)w.scrollIntoView({block:"center",behavior:"smooth"})}AT.busy=t;const s=document.getElementById("atst");if(s)s.textContent=t;const w=document.getElementById("atvid");if(w)w.classList.toggle("on",!!t)}
 async function atSnap(v){const c=document.getElementById("atc"),w=360,h=Math.round(w*v.videoHeight/v.videoWidth);c.width=w;c.height=h;c.getContext("2d").drawImage(v,0,0,w,h);return new Promise(r=>c.toBlob(r,"image/jpeg",.7))}
 async function atPunch(kind){if(AT.busy)return;AT.msg="";try{atStatus("Đang lấy vị trí…");const [c]=await Promise.all([atGeo(),atCam()]);AT.geo=atNear(c);
     if(AT.geo.err)throw new Error(AT.geo.err);if(!AT.geo.ok)throw new Error(`Anh/chị đang ở ngoài vùng chấm công · gần nhất là ${AT.geo.name} (cách ${n0(AT.geo.dist)} m) · nếu đang công tác, gửi đơn Công tác hoặc Giải trình`);
