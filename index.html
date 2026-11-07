@@ -1025,6 +1025,19 @@ html body .tw > table.t>thead>tr:first-child>th:first-child::before{left:-1px;to
 html body .tw > table.t>thead>tr:first-child>th:last-child::before{right:-1px;top:-1px;background:radial-gradient(circle at 1px 14px,transparent 14px,#F8F8F9 14.7px)}
 html body .tw > table.t tfoot tr:last-child>td:first-child::before{left:-1px;bottom:-1px;background:radial-gradient(circle at 14px 1px,transparent 14px,#F8F8F9 14.7px)}
 html body .tw > table.t tfoot tr:last-child>td:last-child::before{right:-1px;bottom:-1px;background:radial-gradient(circle at 1px 1px,transparent 14px,#F8F8F9 14.7px)}
+
+/* Bảng không có dòng tổng: bo 2 góc dưới ở dòng cuối; bảng ẩn tiêu đề (cây báo giá, kế hoạch tuần): dòng đầu có viền trên, bo 2 góc trên (anh Chung 07/11/2026) */
+html body table.t:not(:has(tfoot))>tbody:last-of-type>tr:last-child>td:first-child{border-bottom-left-radius:14px}
+html body table.t:not(:has(tfoot))>tbody:last-of-type>tr:last-child>td:last-child{border-bottom-right-radius:14px}
+html body table.t.bgtree>tbody:first-of-type>tr:first-child>td,html body table.t.wt>tbody:first-of-type>tr:first-child>td{border-top:1px solid #4F535E!important}
+html body table.t.bgtree>tbody:first-of-type>tr:first-child>td:first-child,html body table.t.wt>tbody:first-of-type>tr:first-child>td:first-child{border-top-left-radius:14px}
+html body table.t.bgtree>tbody:first-of-type>tr:first-child>td:last-child,html body table.t.wt>tbody:first-of-type>tr:first-child>td:last-child{border-top-right-radius:14px}
+html body table.t:not(.tw > table){border:0!important}
+html body table.t:not(.tw > table) tr>*:first-child{border-left:1px solid #4F535E!important}
+html body table.t:not(.tw > table)>thead>tr:first-child>th:first-child{border-top-left-radius:14px}
+html body table.t:not(.tw > table)>thead>tr:first-child>th:last-child{border-top-right-radius:14px}
+html body .tw>table.t:not(:has(> thead > tr.h2))>thead>tr>th{position:sticky;top:0;z-index:3}
+html body .tw>table.t>tfoot td{position:sticky;bottom:0;z-index:2}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
