@@ -969,6 +969,15 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulati
 @media(max-width:760px){.bqsq2{min-width:0;width:100%}.bqtl .nhsp{display:none}}
 /* dòng tổng bảng có kẻ dọc như tiêu đề */
 table.t tfoot td{box-shadow:inset 0 1px 0 #9FADE0,inset -1px 0 0 #C9D2EE}table.t tfoot td:last-child{box-shadow:inset 0 1px 0 #9FADE0}
+
+.bqez{position:fixed;inset:0;z-index:9600;background:rgba(16,24,64,.32);display:flex;align-items:center;justify-content:center;padding:16px}
+.bqeb{width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:24px;padding:18px 20px;display:grid;gap:12px;box-shadow:0 24px 60px -20px rgba(16,24,64,.5)}
+.bqeh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.bqeh b{font-size:17px;color:#0A2486;display:block}.bqeh small{color:var(--muted)}.bqeh .back{margin:0}
+.bqeg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.bqef{display:grid;gap:4px;font-size:13px;color:var(--ink2)}.bqef.w{grid-column:span 2}.bqef .fi{width:100%;box-sizing:border-box}.bqef .fi.r{text-align:right}.bqef b.num{padding:9px 0;font-size:15px;color:#0A2486}
+.bqes{font-weight:600;color:#0A2486;font-size:14px;border-top:1px solid #E4E7F0;padding-top:10px}.bqes small{font-weight:400;color:#B45309}
+.bqea{display:flex;gap:8px;align-items:center;justify-content:flex-end}.bqea .sub{flex:1}.bqea .back{margin:0}
+.bqed1{color:#B45309;font-size:12px}#bqd tr[data-line]{cursor:default}
+@media(max-width:760px){.bqeg{grid-template-columns:1fr 1fr}.bqef.w{grid-column:span 2}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -2759,7 +2768,7 @@ function bsheet(p,s,sub){if(s==="files")return filesView();if(s==="bg")return qu
     if(!BQS.ho)BQS.ho=new Set();if(!all&&sub&&BQS.hoSub!==sub){BQS.ho.add(sel.code);setTimeout(()=>{const t=document.querySelector(`#bqd tbody[data-hm="${sel.code}"]`);if(t)t.scrollIntoView({block:"nearest"})},60)}BQS.hoSub=sub;
     const HMS=p.hms.filter(h=>h.lines.length);
     const lineRow=(h,l,gi)=>{const cc=p.cost[l.code]||{},lc=lineCost(p,l),bu=l.qty?l.total/l.qty:l.total,gp=(l.total||0)-lc.t;
-      return`<tr data-line="${l.code}" data-gi="${gi}"><td class="num" style="color:var(--muted);white-space:nowrap;padding-left:22px">${l.code}</td><td style="min-width:220px">${esc(l.name)}${l.spec?`<small class="spec">${esc(l.spec)}</small>`:""}${l.warn?`<small class="spec" style="color:#C0141B">${esc(l.warn)}</small>`:""}</td><td>${esc(l.unit)}</td><td class="r">${nq(l.qty)}</td><td class="r">${Math.round(l.total)?n0(l.total):"-"}<small class="spec">${Math.round(bu)?n0(bu)+"/"+esc(l.unit||"đvt"):"-"}</small></td>
+      return`<tr data-line="${l.code}" data-gi="${gi}"${window.NGApp&&NGApp.board?` title="Bấm đúp để sửa dòng${l.ed?" · đã sửa tay "+fdt(l.ed.at)+(l.ed.by?" bởi "+l.ed.by:""):""}"`:""}><td class="num" style="color:var(--muted);white-space:nowrap;padding-left:22px">${l.code}</td><td style="min-width:220px">${esc(l.name)}${l.ed?` <span class="bqed1" title="Đã sửa tay">✎</span>`:""}${l.spec?`<small class="spec">${esc(l.spec)}</small>`:""}${l.warn?`<small class="spec" style="color:#C0141B">${esc(l.warn)}</small>`:""}</td><td>${esc(l.unit)}</td><td class="r">${nq(l.qty)}</td><td class="r">${Math.round(l.total)?n0(l.total):"-"}<small class="spec">${Math.round(bu)?n0(bu)+"/"+esc(l.unit||"đvt"):"-"}</small></td>
         ${(()=>{const zv=x=>x==null?"":x?n0(x):"-",ph={v:p.gg?"-":(x=>x?n0(x):"-")(l.uVL!=null?l.uVL*p.ratio/100:l.nc==null?bu*p.ratio/100:0),n:p.gg?"-":(x=>x?n0(x):"-")(l.uNC!=null?l.uNC*p.ratio/100:0),m:"-"},lb={v:"vật tư",n:"nhân công",m:"máy, thiết bị thi công"};
           return ["v","n","m"].map(f=>cc.src?`<td class="r num" title="${String(cc.src).startsWith("q:")?"Giá từ báo giá đã duyệt":"Giá từ file giá gốc"} · muốn đổi thì tải lại file giá gốc hoặc chốt báo giá mới">${cc[f]?n0(cc[f]):"-"}</td>`:`<td class="r"><input class="ci" inputmode="decimal" data-f="${f}" value="${zv(cc[f])}" placeholder="${ph[f]}" aria-label="Đơn giá vốn ${lb[f]}"></td>`).join("")})()}
         <td class="r" data-c="tv">${n0(lc.v)}</td><td class="r" data-c="tn">${n0(lc.n)}</td><td class="r" data-c="tm">${n0(lc.m)}</td><td class="r" data-c="t"><b>${n0(lc.t)}</b></td><td class="r" data-c="g" style="color:${gp<0?"#C0141B":"inherit"}">${n0(gp)}</td><td data-c="s">${lc.est?(p.gg?st("bad","Chưa có giá"):st("warn","Ước tính")):cc.src?st("ok",String(cc.src).startsWith("q:")?"Báo giá":"Giá gốc"):st("ok","Đã nhập")}</td></tr>`};
@@ -3586,6 +3595,27 @@ view.addEventListener("keydown",e=>{if(e.key==="Enter"&&["wn","wc","wq","wv"].in
 view.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList.contains("ci")){e.preventDefault();const all=[...view.querySelectorAll("input.ci[data-f]")],i=all.indexOf(e.target);(all[i+3]||all[i+1]||e.target).focus()}});
 /* cập nhật số khi nhập giá vốn, không vẽ lại cả trang */
 
+/* ---------- Sửa dòng BOQ (anh Chung 07/11/2026): bấm đúp vào dòng để sửa tên, quy cách, ĐVT, khối lượng, đơn giá thầu, giá vốn · chỉ Admin / Ban giám đốc ---------- */
+function bqEdit(code){const p=cur;if(!p||!(window.NGApp&&NGApp.board&&!NGApp.as))return;const h=p.hms.find(h=>h.lines.some(x=>x.code===code));if(!h)return;const l=h.lines.find(x=>x.code===code),cc=p.cost[code]||{},q=l.qty||0;
+  const uv=l.uVL!=null?l.uVL:l.vl!=null&&q?l.vl/q:null,un=l.uNC!=null?l.uNC:l.nc!=null&&q?l.nc/q:null,ut=q?(l.total||0)/q:(l.total||0),split=uv!=null||un!=null;
+  const nv=(v,k)=>!v?"":k==="qty"?fm(v,2):fm(v,v%1?2:0),f=(k,lab,v,num,w)=>`<label class="bqef${w?" w":""}"><span>${lab}</span><input class="fi${num?" r":""}" data-k="${k}"${num?' inputmode="decimal" placeholder="-"':""} value="${esc(num?nv(v,k):v||"")}"></label>`;
+  let d=document.getElementById("bqed");if(d)d.remove();d=document.createElement("div");d.id="bqed";d.className="bqez";d.setAttribute("role","dialog");d.setAttribute("aria-label","Sửa dòng BOQ "+code);
+  d.innerHTML=`<form class="bqeb"><div class="bqeh"><div><b>Sửa dòng BOQ ${esc(code)}</b><small>${esc(h.code+" · "+h.name)}${l.g1?" · "+esc(l.g1):""}</small></div><button type="button" class="back sm" data-x>Đóng</button></div>
+    <div class="bqeg">${f("name","Tên công việc",l.name,0,1)}${f("spec","Quy cách",l.spec,0,1)}${f("unit","ĐVT",l.unit)}${f("qty","Khối lượng",q,1)}</div>
+    <div class="bqes">Đơn giá thầu (đ/đvt)</div><div class="bqeg">${split?f("uVL","Vật tư",uv,1)+f("uNC","Nhân công",un,1):f("ut","Đơn giá (trọn gói)",ut,1)}<div class="bqef"><span>Thành tiền giá thầu</span><b class="num" data-tt>${n0(l.total||0)}</b></div></div>
+    <div class="bqes">Đơn giá vốn (đ/đvt)${cc.src?` <small>· đang khoá theo ${String(cc.src).startsWith("q:")?"báo giá đã duyệt":"file giá gốc"}, lưu sẽ ghi đè bằng giá nhập tay</small>`:""}</div><div class="bqeg">${f("v","Vật tư",cc.v,1)}${f("n","Nhân công",cc.n,1)}${f("m","Máy, TB",cc.m,1)}</div>
+    <div class="bqea"><span class="sub" data-msg>Thay đổi khối lượng, đơn giá thầu làm đổi doanh thu dự án</span><button type="button" class="back" data-x>Huỷ</button><button class="pill" style="${sv("cost")}"><span class="dot">✓</span>Lưu</button></div></form>`;
+  document.body.appendChild(d);const F=d.querySelector("form"),V=k=>{const i=F.querySelector(`[data-k="${k}"]`);if(!i)return undefined;const t=i.value.trim();return t===""||/^[-–]$/.test(t)?null:parseVN(t)};
+  const calcT=()=>{const qq=V("qty")||0;return split?qq*((V("uVL")||0)+(V("uNC")||0)):qq*(V("ut")||0)};F.addEventListener("input",()=>{F.querySelector("[data-tt]").textContent=n0(calcT())});
+  const close=()=>d.remove();d.querySelectorAll("[data-x]").forEach(b=>b.onclick=close);d.addEventListener("click",e=>{if(e.target===d)close()});d.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+  F.onsubmit=e=>{e.preventDefault();const name=F.querySelector('[data-k="name"]').value.trim();if(!name){F.querySelector("[data-msg]").textContent="Tên công việc không được để trống";return}
+    const old={name:l.name,spec:l.spec,unit:l.unit,qty:l.qty,total:l.total};l.name=name;l.spec=F.querySelector('[data-k="spec"]').value.trim();l.unit=F.querySelector('[data-k="unit"]').value.trim();l.qty=V("qty")||0;
+    if(split){l.uVL=V("uVL")||0;l.uNC=V("uNC")||0;l.vl=l.qty*l.uVL;l.nc=l.qty*l.uNC}l.total=calcT();
+    const nc={v:V("v"),n:V("n"),m:V("m")};const c2={...(p.cost[code]||{})};delete c2.src;["v","n","m"].forEach(k=>{if(nc[k]==null)delete c2[k];else c2[k]=nc[k]});if(Object.keys(c2).length)p.cost[code]=c2;else delete p.cost[code];
+    l.ed={by:(NGApp.name||NGApp.email||""),at:new Date().toISOString(),old:l.ed&&l.ed.old||old};delete l.warn;
+    h.total=h.lines.reduce((a,x)=>a+(x.total||0),0);persist();close();keep(route)};
+  setTimeout(()=>{const i=F.querySelector('[data-k="name"]');i.focus();i.select()},30)}
+document.addEventListener("dblclick",e=>{const tr=e.target.closest&&e.target.closest("#bqd tr[data-line]");if(!tr||e.target.closest("input"))return;if(!(window.NGApp&&NGApp.board)){return}if(NGApp.as){NGB.warn("Đang xem như người dùng khác · chỉ xem");return}window.getSelection&&getSelection().removeAllRanges();bqEdit(tr.dataset.line)});
 /* ---------- Mở / thu hạng mục trong bảng diễn giải ---------- */
 document.addEventListener("click",e=>{const r=e.target.closest&&e.target.closest("tr.hmr");if(r&&!e.target.closest("input,button,a")){const b=r.closest("tbody"),k=r.dataset.hmt,op=b.classList.toggle("cl");op?BQS.ho.delete(k):BQS.ho.add(k);const x=r.querySelector(".bqx");if(x)x.textContent=op?"+":"−";return}
   const a=e.target.closest&&e.target.closest("[data-hmall]");if(a&&cur){const T=[...view.querySelectorAll("#bqd tbody.hmb")],open=T.some(t=>t.classList.contains("cl"));T.forEach(t=>{t.classList.toggle("cl",!open);open?BQS.ho.add(t.dataset.hm):BQS.ho.delete(t.dataset.hm);const x=t.querySelector(".bqx");if(x)x.textContent=open?"−":"+"});a.textContent=open?"Thu gọn tất cả":"Mở tất cả"}});
