@@ -23,7 +23,7 @@ const b0 = html.indexOf("var BOQ=(function(){"), b1 = html.indexOf("})();", html
 const boqSrc = html.slice(b0, b1).replace(/return \{parse:parse,/, "return {words:words,sim:sim,parse:parse,");
 
 const NAMES = ["parseVN", "has", "lineCost", "calc", "pd", "fd", "addD", "tkey", "tasks", "PH", "propose", "ensureSched", "M_", "timeline", "cash",
-  "GZ", "gStat", "keepUp", "isUp", "sc", "tw_", "simW", "ggMatch", "chatMsgs", "bShift", "xc_"];
+  "msPlan", "GZ", "gStat", "keepUp", "isUp", "sc", "tw_", "simW", "ggMatch", "chatMsgs", "xc_"];
 const ctx = vm.createContext({ console });
 vm.runInContext(boqSrc, ctx);
 const got = [];
@@ -75,6 +75,7 @@ t("2. lineCost: dòng chưa nhập giá vốn ước tính = ratio% × thành ti
   near(d.t, 850000, 1e-6, "không có cột VL/NC:"); eq(d.est, 1);
   const e = lc({ cost: { e: { v: 100, n: 50 } }, ratio: 85 }, { code: "e", qty: 3, total: 1e6 });
   eq(e.t, 450, "đã nhập giá vốn:"); eq(e.est, 0);
+  eq(lc({ cost: {}, ratio: 85, gg: {} }, { code: "f", qty: 1, vl: 1, nc: 1, total: 1e6 }).t, 0, "đã có giá gốc, dòng chưa ghép giữ 0 như cũ:");
 });
 t("3. tasks/calc: hạng mục giá trị 0 có chi phí ngoài BOQ vẫn vào dòng tiền", () => {
   const p = proj([hm("A01", "Xây dựng", 8e9), hm("A02", "Công tác tạm", 0)], { xcost: { A02: { v: 1e9, n: 0 } } });
@@ -162,17 +163,11 @@ t("10. Ngưỡng khớp tổng tiền: lệch dưới 1 đồng", () => {
 });
 
 console.log("Tiến độ và chat");
-t("11. Tiến độ gốc: dời ngày khởi công 2 tháng phải báo lệch", () => {
+t("11. Tiến độ gốc: bản hiện tại không còn dùng tiến độ gốc, so với thời hạn hợp đồng (không còn lỗi)", () => {
+  const src = grab("gStat"); ok(!/S\.base/.test(src) && /contract\.dur/.test(src), "gStat vẫn dùng tiến độ gốc");
   const p = proj([hm("A01", "Xây dựng", 1e9)], { sched: { start: "01/12/2026", D: 100, t: { "A01|": { s: 0, d: 100 } } } });
-  const S = p.sched, t2 = {}; Object.entries(S.t).forEach(([k, q]) => t2[k] = { s: q.s, d: q.d });
-  S.base = { t: t2, date: "01/11/2026", start: S.start }; // giống nút Chốt tiến độ gốc ở bản mới
-  S.start = "01/02/2027";
-  const g = G("gStat")(p, G("timeline")(p));
-  console.log(`        lệch so gốc: ${g.var} ngày`);
-  eq(g.var, 62, "lệch (01/12/2026 → 01/02/2027)");
-  ok(/start:cur\.sched\.start/.test(html), "nút chốt tiến độ gốc phải lưu ngày khởi công");
-  const old = clone(p); delete old.sched.base.start; const g2 = G("gStat")(old, G("timeline")(old));
-  eq(g2.var, 0, "tiến độ gốc cũ chưa có ngày khởi công (giữ cách tính cũ, không lỗi):");
+  p.contract = { dur: 90 }; const g1 = G("gStat")(p, G("timeline")(p)); p.sched.start = "01/02/2027"; const g2 = G("gStat")(p, G("timeline")(p));
+  eq(g1.var, 10, "chậm so thời hạn HĐ:"); eq(g2.var, 10, "dời ngày khởi công, thời hạn tính từ ngày khởi công mới:");
 });
 t("12. Chat: lịch sử gửi đi luôn bắt đầu bằng tin người dùng", () => {
   const f = G("chatMsgs"); ok(f, "chưa có hàm chatMsgs");
@@ -182,22 +177,10 @@ t("12. Chat: lịch sử gửi đi luôn bắt đầu bằng tin người dùng"
   }
   ok(/Lỗi gọi Claude|chưa gọi được Claude/.test(html.slice(html.indexOf("async function ask("))), "nhãn phải báo khi gọi Claude lỗi");
 });
-const chatSrc = readFileSync(root + "functions/api/chat.js", "utf8");
-const chat = await import("data:text/javascript;base64," + Buffer.from(chatSrc).toString("base64"));
-await (async () => {
-  const name = "12b. api/chat: bỏ tin assistant đứng đầu thay vì trả 400";
-  try {
-    let sent = null; const of = globalThis.fetch;
-    globalThis.fetch = async (u, o) => { sent = JSON.parse(o.body); return new Response(JSON.stringify({ content: [{ type: "text", text: "ok" }] }), { status: 200 }) };
-    const h = [...Array(13)].map((_, i) => ({ role: i % 2 ? "assistant" : "user", content: "c" + i }));
-    const req = new Request("https://x.test/api/chat", { method: "POST", body: JSON.stringify({ messages: h, context: {} }) });
-    const res = await chat.onRequestPost({ request: req, env: { ANTHROPIC_API_KEY: "khoa-gia" } });
-    globalThis.fetch = of;
-    eq(res.status, 200, "mã trả về:"); eq(sent.messages[0].role, "user"); ok(sent.messages.length <= 12);
-    eq(sent.model, "claude-haiku-5-5", "mô hình mặc định:"); ok(sent.max_tokens >= 2000, "max_tokens phải đủ chỗ cho cả suy nghĩ và câu trả lời");
-    pass++; console.log("  ĐẠT  " + name);
-  } catch (e) { fail++; console.log("  LỖI  " + name + "\n        " + e.message) }
-})();
+t("12b. Edge Function ai: bỏ tin trợ lý đứng đầu thay vì trả 400", () => {
+  const ts = readFileSync(root + "supabase/functions/ai/index.ts", "utf8"), k = ts.indexOf('b.action === "chat"');
+  const seg = ts.slice(k, k + 900); ok(/while \(msgs\.length && msgs\[0\]\.role !== "user"\) msgs\.shift\(\)/.test(seg), "chưa bỏ tin trợ lý đứng đầu");
+});
 
 console.log(`\n${pass} đạt · ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
