@@ -159,9 +159,10 @@ async function dayFolder(api, tok, pid, folders, folder, sub) {
 async function upload(request, api, tok, url) {
   // folder có thể kèm thư mục con: thư mục ngày "06.2/2026-10-31" (ảnh hiện trường xếp theo ngày chụp)
   // hoặc thư mục gói thầu trong 05.1 Báo giá: "05.1/Cọc bê tông · cung cấp + ép cọc" (báo giá tải từ sheet Báo giá)
+  // hoặc thư mục hạng mục trong 06.1 Nhật ký thi công: "06.1/FACTORY -2" (báo cáo ngày theo hạng mục)
   const fp = url.searchParams.get("folder") || "", cut = fp.indexOf("/"), f0 = cut < 0 ? fp : fp.slice(0, cut), sub0 = cut < 0 ? "" : fp.slice(cut + 1).trim();
   const pid = url.searchParams.get("project") || "", folder = OLD[f0] || f0, name = cleanName(url.searchParams.get("name"));
-  const sub = /^\d{4}-\d{2}-\d{2}$/.test(sub0) ? sub0 : folder === "05.1" && sub0 && sub0.length <= 100 && !/[\/\\\u0000-\u001f]/.test(sub0) ? sub0 : "";
+  const sub = /^\d{4}-\d{2}-\d{2}$/.test(sub0) ? sub0 : (folder === "05.1" || folder === "06.1") && sub0 && sub0.length <= 100 && !/[\/\\\u0000-\u001f]/.test(sub0) ? sub0 : "";
   if (!pid || !FOLDERS[folder] || !name) return json({ error: "bad_request" }, 400);
   const size = Number(request.headers.get("content-length") || 0);
   if (!size) return json({ error: "empty" }, 400);
