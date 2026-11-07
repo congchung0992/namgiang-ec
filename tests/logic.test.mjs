@@ -169,17 +169,14 @@ t("11. Tiến độ gốc: bản hiện tại không còn dùng tiến độ g�
   p.contract = { dur: 90 }; const g1 = G("gStat")(p, G("timeline")(p)); p.sched.start = "01/02/2027"; const g2 = G("gStat")(p, G("timeline")(p));
   eq(g1.var, 10, "chậm so thời hạn HĐ:"); eq(g2.var, 10, "dời ngày khởi công, thời hạn tính từ ngày khởi công mới:");
 });
-t("12. Chat: lịch sử gửi đi luôn bắt đầu bằng tin người dùng", () => {
-  const f = G("chatMsgs"); ok(f, "chưa có hàm chatMsgs");
-  for (let n = 1; n <= 30; n += 2) {
-    const h = [...Array(n)].map((_, i) => ({ role: i % 2 ? "assistant" : "user", content: "c" + i })), m = f(h);
-    eq(m[0].role, "user", `độ dài ${n}:`); ok(m.length <= 12 && m[m.length - 1] === h[n - 1], "tin cuối phải là câu hỏi mới");
-  }
-  ok(/Lỗi gọi Claude|chưa gọi được Claude/.test(html.slice(html.indexOf("async function ask("))), "nhãn phải báo khi gọi Claude lỗi");
+t("12. Trợ lý chat đã gỡ khỏi web (lỗi chat không còn chỗ xảy ra)", () => {
+  ok(!/id="chatfab"|id="chat"|id="cform"|action:"chat"|window\.NG=/.test(html), "còn mã khung chat");
+  eq(G("chatMsgs"), undefined, "còn hàm chatMsgs:");
+  ok(/const AIGONE=new Set\(\["chat"\]\)/.test(html), "Đo lường AI chưa đánh dấu tác vụ chat đã gỡ");
 });
-t("12b. Edge Function ai: bỏ tin trợ lý đứng đầu thay vì trả 400", () => {
-  const ts = readFileSync(root + "supabase/functions/ai/index.ts", "utf8"), k = ts.indexOf('b.action === "chat"');
-  const seg = ts.slice(k, k + 900); ok(/while \(msgs\.length && msgs\[0\]\.role !== "user"\) msgs\.shift\(\)/.test(seg), "chưa bỏ tin trợ lý đứng đầu");
+t("12b. Edge Function ai: không còn nhánh chat", () => {
+  const ts = readFileSync(root + "supabase/functions/ai/index.ts", "utf8");
+  ok(!/action === "chat"|SYS_CHAT|TOOLS/.test(ts), "còn mã chat trong Edge Function");
 });
 
 console.log(`\n${pass} đạt · ${fail} lỗi`);

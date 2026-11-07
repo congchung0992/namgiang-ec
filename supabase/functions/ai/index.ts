@@ -1,6 +1,6 @@
 // Supabase Edge Function: ai
 // Gọi Claude (Anthropic) cho web: đọc báo giá (extract), ghép dòng với BOQ (match, match_lines), gợi ý thư mục khi tải file (classify),
-// trợ lý chat (chat), kiểm tra khoá (ping). Khoá Claude do Ban giám đốc dán ở màn Quản trị, lưu trong bảng app_secrets
+// kiểm tra khoá (ping). Trợ lý chat đã gỡ, gọi việc chat sẽ bị từ chối (bad_request). Khoá Claude do Ban giám đốc dán ở màn Quản trị, lưu trong bảng app_secrets
 // (chỉ máy chủ đọc được). Có biến môi trường ANTHROPIC_API_KEY thì ưu tiên biến đó. Người gọi phải đăng nhập.
 // Mỗi lượt ghi một dòng vào ai_usage để đo lường (việc, mẫu, token, thời gian, lỗi).
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
@@ -60,16 +60,6 @@ const fileBlock = (mime: string, data: string) => mime === "application/pdf"
   ? { type: "document", source: { type: "base64", media_type: "application/pdf", data } }
   : /^image\/(jpeg|png|gif|webp)$/.test(mime) ? { type: "image", source: { type: "base64", media_type: mime, data } } : null;
 
-const SYS_CHAT = `Bạn là "Trợ lý Nam Giang", trợ lý quản lý dự án của Công ty CP Đầu tư và Xây lắp Nam Giang (tổng thầu xây dựng).
-Trả lời bằng tiếng Việt, ngắn gọn, đi thẳng vào số liệu. Số tiền viết kiểu Việt Nam (dấu chấm phân cách nghìn, dấu phẩy thập phân), dùng "tỷ" hoặc "triệu" cho dễ đọc; ngày dạng dd/mm/yyyy.
-Chỉ dựa vào dữ liệu trong phần NGỮ CẢNH. Nếu dữ liệu không có, nói rõ là chưa có và gợi ý cần nhập gì. Không bịa số.
-Nhắc khi con số dựa trên giả định (giá vốn ước tính, điều khoản thanh toán giả định, thời gian chờ vật tư mặc định).
-Có thể dùng gạch đầu dòng "- " và **in đậm**; không dùng bảng hay tiêu đề.
-BỘ NÃO DỰ ÁN: ngoài số liệu, có HỒ SƠ DỰ ÁN (thông tin đã chốt; mục "chưa xác nhận" là trợ lý tự đọc từ file, nói rõ khi dùng) và DANH MỤC TÀI LIỆU (bản chữ các file đã tải lên, mã d1, d2…).
-- Câu hỏi về hợp đồng, điều khoản, pháp lý, tiến độ, công văn, biên bản: xem hồ sơ dự án trước; cần chi tiết hoặc trích dẫn thì gọi doc_read (đọc bản chữ một tài liệu) hoặc doc_search (tìm theo từ khoá trong mọi tài liệu).
-- Bản chữ ghi "(nguyên văn)" là chép đủ từng chữ của file: khi được hỏi trích, chép đúng nguyên văn đoạn đó (đặt trong ngoặc kép, ghi số điều và [Trang N] nếu có), không tóm tắt, không nói là không trích được. Bản chữ "(ghi chép)" chỉ là tóm lược: nói rõ khi dùng.
-- Ghi nguồn ngay sau ý lấy từ tài liệu bằng mã trong ngoặc vuông, ví dụ [d3]; kèm số điều khoản nếu có. Không ghi mã tài liệu bạn chưa đọc.
-- Khi người dùng nói ra thông tin lâu dài chưa có hoặc khác hồ sơ (ví dụ "hợp đồng Ekochem là đơn giá cố định", "TVGS là công ty X", "công ty luôn giữ lại 5% bảo hành thầu phụ"), hoặc sửa câu trả lời của bạn: gọi ghi_nho rồi hỏi lại đúng một câu "Em ghi vào hồ sơ …: … – đúng không anh?". Không tự coi là đã ghi.`;
 const SYS_OCR = `Bạn chép lại NGUYÊN VĂN toàn bộ chữ trên các trang tài liệu scan được gửi (hợp đồng, phụ lục, văn bản pháp lý của dự án xây dựng Việt Nam).
 - Chép đủ từng chữ, đúng thứ tự, giữ nguyên số điều, khoản, mục, số liệu, dấu câu, chữ in hoa; không tóm tắt, không diễn giải, không sửa câu chữ, không bỏ đoạn nào.
 - Mở đầu mỗi trang bằng một dòng "[Trang N]" (N là số trang trong cả tài liệu, được cho ở đề bài). Giữ xuống dòng theo đoạn.
@@ -87,17 +77,6 @@ const DIGEST = { type: "object", properties: { kind: { type: "string" }, summary
   facts: { type: "array", items: { type: "object", properties: { k: { type: "string" }, v: { type: "string" }, clause: { type: "string" } }, required: ["k", "v", "clause"] } } },
   required: ["kind", "summary", "notes", "facts"] };
 const FACT_KEYS = new Set("Chủ đầu tư|Tư vấn giám sát|Tên công trình|Địa điểm|Số hợp đồng với CĐT|Ngày ký hợp đồng với CĐT|Loại hợp đồng|Giá trị hợp đồng|Thuế VAT|Phạm vi công việc|Thời gian thực hiện|Ngày khởi công|Ngày hoàn thành|Tạm ứng|Thu hồi tạm ứng|Điều kiện thanh toán|Giữ lại khi thanh toán|Bảo lãnh thực hiện hợp đồng|Bảo hành|Phạt chậm tiến độ|Điều chỉnh khối lượng, đơn giá|Phát sinh|Bảo hiểm|Nghiệm thu|Giấy phép xây dựng|Phụ lục hợp đồng".split("|"));
-const TOOLS = [
-  { name: "doc_read", description: "Đọc bản chữ của một tài liệu trong DANH MỤC TÀI LIỆU. Có tu_khoa thì chỉ trả các đoạn quanh từ khoá (nhanh hơn).", input_schema: { type: "object", properties: { doc: { type: "string", description: "Mã tài liệu, ví dụ d3" }, tu_khoa: { type: "string", description: "Từ khoá có dấu, ví dụ: tạm ứng, điều chỉnh giá. Để trống để đọc cả bài." } }, required: ["doc"] } },
-  { name: "doc_search", description: "Tìm một cụm từ (tiếng Việt có dấu) trong bản chữ mọi tài liệu được phép xem, trả về các đoạn có cụm từ đó.", input_schema: { type: "object", properties: { tu_khoa: { type: "string" } }, required: ["tu_khoa"] } },
-  { name: "ghi_nho", description: "Đề xuất ghi một thông tin lâu dài người dùng vừa nói (người dùng phải bấm xác nhận mới ghi). pham_vi du_an: ghi vào hồ sơ dự án đang mở (muc nên là một tên chuẩn như Loại hợp đồng, Tư vấn giám sát…); cong_ty: kiến thức chung của công ty.", input_schema: { type: "object", properties: { pham_vi: { type: "string", enum: ["du_an", "cong_ty"] }, muc: { type: "string" }, noi_dung: { type: "string" } }, required: ["pham_vi", "muc", "noi_dung"] } },
-];
-/* Các đoạn quanh từ khoá (không phân biệt hoa thường) */
-function around(body: string, kw: string, w = 700, max = 6) {
-  const B = body.toLowerCase(), K = kw.toLowerCase().trim(); const out: string[] = []; let i = 0, last = -1e9;
-  while (K && out.length < max && (i = B.indexOf(K, i)) >= 0) { if (i - last > w) { out.push("…" + body.slice(Math.max(0, i - w), i + K.length + w) + "…"); last = i; } i += K.length; }
-  return out;
-}
 /* Claude giới hạn số ô kiểu "hoặc null" trong khuôn: dùng kiểu thường, ô thiếu ghi "" (chữ) hoặc 0 (số) / -1 (chỉ số), máy chủ đổi lại thành null */
 const nul = (t: string) => ({ type: t });
 const blank = (o: any, keys: string[]) => { for (const k of keys) if (o && (o[k] === "" || o[k] === 0 || o[k] === -1)) o[k] = null; return o; };
@@ -326,7 +305,7 @@ Deno.serve(async (req) => {
   const M = { model: "", in: 0, out: 0, err: "" }, t0 = Date.now();
   const env = { client: new Anthropic({ apiKey: key, timeout: 120000, maxRetries: 1 }), MODEL: pickModel(String(b.action || ""), keyCache.cm, keyCache.m), M };
   // Bài học anh Chung đã ghi (bảng ai_lessons, kind = rule; q = phạm vi, l = nội dung): gửi kèm mọi lượt gọi đúng phạm vi
-  const SC: any = { ocr: "", extract: "baogia", match: "baogia", match_lines: "baogia", contract: "hopdong", classify: "thumuc", chat: "chat", digest: "hopdong" };
+  const SC: any = { ocr: "", extract: "baogia", match: "baogia", match_lines: "baogia", contract: "hopdong", classify: "thumuc", digest: "hopdong" };
   try {
     const sc = SC[b.action];
     if (sc) {
@@ -477,62 +456,6 @@ async function run(b: any, env: any): Promise<Response> {
       const { data, model } = await claude(env, { system: SYS_DIGEST, content, schema: DIGEST, effort: "low", maxTokens: 24000 });
       const n = await digestSave(env, f, data, model, { body: text ? text.slice(0, 400000) : String(data.notes || "").slice(0, 60000), src: text ? (b.src === "ocr" ? "ocr" : "text") : "notes" });
       return json({ kind: data.kind, summary: data.summary, facts: n, model });
-    }
-    if (b.action === "chat") {
-      const msgs = (Array.isArray(b.messages) ? b.messages : []).filter((m: any) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string").slice(-12).map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) }));
-      // Claude yêu cầu tin đầu tiên là của người dùng: bỏ các tin trợ lý đứng đầu sau khi cắt lịch sử
-      while (msgs.length && msgs[0].role !== "user") msgs.shift();
-      if (!msgs.length || msgs[0].role !== "user") return json({ error: "no_message" }, 400);
-      const ctx = JSON.stringify(b.context || {}).slice(0, 150000), pid = String(b.proj || "");
-      // Hồ sơ dự án và danh mục tài liệu theo quyền người hỏi
-      let fq = env.uc.from("kb_facts").select("project_id,k,v,status,src").order("k").limit(400), dq = env.uc.from("kb_docs").select("file_id,project_id,folder,name,kind,summary,src").eq("status", "ok").order("folder").limit(250);
-      if (pid) { fq = fq.eq("project_id", pid); dq = dq.eq("project_id", pid); }
-      const [{ data: FA }, { data: DO }] = await Promise.all([fq, dq]);
-      const docs = (DO || []).map((d: any, i: number) => ({ ...d, code: "d" + (i + 1) })), byCode: any = Object.fromEntries(docs.map((d: any) => [d.code, d])), byFile: any = Object.fromEntries(docs.map((d: any) => [d.file_id, d]));
-      const hs = (FA || []).map((x: any) => `- ${pid ? "" : "[" + x.project_id + "] "}${x.k}: ${x.v}${x.status === "ok" ? "" : " (chưa xác nhận)"}${x.src ? " · nguồn: " + x.src : ""}`).join("\n") || "(chưa có)";
-      const dm = docs.map((d: any) => `${d.code} · ${pid ? "" : "[" + d.project_id + "] "}${d.folder} · ${d.name.replace(/^\d{8}_[^_]+_/, "")} · ${d.kind} · ${d.src === "notes" ? "(ghi chép)" : "(nguyên văn)"}\n${String(d.summary || "").slice(0, 700)}`).join("\n\n") || "(chưa có tài liệu nào được đọc)";
-      const system = SYS_CHAT + (env.R ? "\n\n" + env.R : "") + `\n\nHỒ SƠ DỰ ÁN${pid ? "" : " (mọi dự án; mã dự án trong ngoặc vuông)"}:\n${hs}\n\nDANH MỤC TÀI LIỆU:\n${dm}\n\nNGỮ CẢNH (JSON số liệu hiện có trên web):\n` + ctx;
-      const remember: any[] = [], conv: any[] = msgs.slice();
-      let text = "";
-      for (let round = 0; round < 6; round++) {
-        const r: any = { model: env.MODEL, max_tokens: 4000, system, messages: conv, tools: TOOLS, output_config: { effort: "low" } };
-        if (env.MODEL !== "claude-haiku-5-5") { r.betas = ["server-side-fallback-2026-07-01"]; r.fallbacks = "default"; }
-        let msg: any;
-        try { msg = await env.client.beta.messages.stream(r).finalMessage(); }
-        catch (e) { throw e instanceof Anthropic.AuthenticationError ? new AiErr("sai_khoa") : e instanceof Anthropic.RateLimitError ? new AiErr("het_luot") : e instanceof Anthropic.APIError && (e.status || 0) >= 500 ? new AiErr("qua_tai") : e; }
-        const u = msg.usage || {}; env.M.model = msg.model; env.M.in += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0); env.M.out += u.output_tokens || 0;
-        if (msg.stop_reason === "refusal") throw new AiErr("tu_choi");
-        text = (msg.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("\n").trim();
-        const calls = (msg.content || []).filter((c: any) => c.type === "tool_use");
-        if (!calls.length || msg.stop_reason !== "tool_use") break;
-        conv.push({ role: "assistant", content: msg.content });
-        const results: any[] = [];
-        for (const c of calls) {
-          let out = "";
-          try {
-            if (c.name === "doc_read") {
-              const d = byCode[String(c.input?.doc || "").trim()];
-              if (!d) out = "Không có tài liệu mã này.";
-              else { const { data: x } = await env.uc.from("kb_docs").select("body").eq("file_id", d.file_id).maybeSingle(); const body = String(x?.body || ""); const kw = String(c.input?.tu_khoa || "").trim();
-                const A = kw ? around(body, kw) : []; out = kw && A.length ? A.join("\n\n") : body.slice(0, 90000) || "(bản chữ trống)"; if (kw && !A.length) out = "Không thấy từ khoá; bản chữ (đầu bài):\n" + body.slice(0, 30000); }
-            } else if (c.name === "doc_search") {
-              const kw = String(c.input?.tu_khoa || "").trim().slice(0, 80);
-              if (kw.length < 2) out = "Từ khoá quá ngắn.";
-              else { let q = env.uc.from("kb_docs").select("file_id,body").eq("status", "ok").ilike("body", "%" + kw.replace(/[%_]/g, "") + "%").limit(8); if (pid) q = q.eq("project_id", pid);
-                const { data: H } = await q; out = (H || []).filter((h: any) => byFile[h.file_id]).map((h: any) => byFile[h.file_id].code + ":\n" + around(String(h.body), kw, 500, 3).join("\n")).join("\n\n") || "Không thấy cụm từ này trong tài liệu nào."; }
-            } else if (c.name === "ghi_nho") {
-              const x = { scope: c.input?.pham_vi === "cong_ty" || !pid ? "cong_ty" : "du_an", k: String(c.input?.muc || "").slice(0, 120), v: String(c.input?.noi_dung || "").slice(0, 1000) };
-              if (x.v) remember.push(x); out = "Đã đưa đề xuất lên màn hình, chờ người dùng bấm xác nhận.";
-            } else out = "Công cụ không có.";
-          } catch (e) { out = "Lỗi: " + String((e as Error)?.message || e).slice(0, 200); }
-          results.push({ type: "tool_result", tool_use_id: c.id, content: out });
-        }
-        conv.push({ role: "user", content: results });
-      }
-      // Mã tài liệu [d3] → số nguồn [1], kèm danh sách nguồn để web hiện nút mở file
-      const sources: any[] = [];
-      text = text.replace(/\[(d\d+)(?:\s*[,;]\s*(d\d+))*\]/g, (m) => m.replace(/d\d+/g, (code) => { const d = byCode[code]; if (!d) return ""; let i = sources.findIndex((s) => s.id === d.file_id); if (i < 0) { sources.push({ id: d.file_id, name: d.name }); i = sources.length - 1; } return String(i + 1); })).replace(/\[\s*[,;]?\s*\]/g, "");
-      return json({ text: text || "Em chưa trả lời được, anh hỏi lại giúp em.", sources, remember });
     }
     return json({ error: "bad_request" }, 400);
   } catch (e) {
