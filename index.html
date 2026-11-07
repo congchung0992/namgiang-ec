@@ -1182,6 +1182,9 @@ html body .bqk.bqkf>.bqf *{color:#fff!important}html body .bqk.bqkf>.bqf .bqfl{f
 html body .bqk.bqkf>.bqf .bqfn{order:0;align-self:center;min-width:0;height:auto;padding:1px 8px;border-radius:99px;background:rgba(255,255,255,.24);box-shadow:none;font-size:12px;font-style:normal;display:inline-block}
 html body .bqk.bqkf>.bqf .bqfv{font-size:17px;letter-spacing:-.01em}html body .bqk.bqkf>.bqf .bqfv small{font-size:12px;margin-left:3px;opacity:.85}
 html body .bqk.bqkf>.bqf:hover{transform:translateY(-1px)}html body .bqk.bqkf>.bqf.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--c),0 8px 18px -8px var(--c)!important}html body .bqk.bqkf.has>.bqf:not(.on){opacity:.55}html body .bqk.bqkf.has>.bqf:not(.on):hover{opacity:.9}
+/* Ô nhập, ô tìm: đủ chiều cao cho chữ tiếng Việt có dấu chồng (Ễ, Ẫ, Ặ…) không bị cắt, cỡ chữ dễ đọc (anh Chung 07/11/2026) */
+html body input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),html body textarea,html body select{line-height:1.5!important;font-family:var(--f)}
+html body input[type=search],html body .sgq input,html body .search input,html body .chs input,html body #q,html body #q2,html body #q3,html body #chq,html body #hdq,html body #asq{font-size:15px!important;height:auto!important;min-height:24px;padding-top:2px!important;padding-bottom:2px!important;overflow:visible}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -6029,8 +6032,8 @@ function tsDom(v){const W=BOQ.nz(v||"").split(/\s+/).filter(Boolean);let n=0,t=0
   view.querySelectorAll(".tsc").forEach(x=>x.remove());if(W.length&&t){const b=document.createElement("div");b.className="tsc sub";b.textContent=`Ô tìm kiếm: ${n}/${t} dòng khớp "${v}" trong ${tsName()}`;const f=view.querySelector(".card,section");if(f)f.prepend(b)}}
 function tsSync(){const q=document.getElementById("q");if(!q)return;const k=tsKey(),v=TQ[k]||"";q.placeholder="Tìm trong "+tsName();if(q.value!==v)q.value=v;{const q2=document.getElementById("q2");if(q2&&q2.value!==v)q2.value=v}
   if(/-goi$/.test(k))GT.q=v;else if(v)tsDom(v)}
-{let tm=null;document.addEventListener("input",e=>{if(!["q","q2","q3"].includes(e.target.id))return;const k=tsKey(),v=e.target.value;TQ[k]=v;["q","q2"].forEach(id=>{const o=document.getElementById(id);if(o&&o!==e.target&&o.value!==v)o.value=v});clearTimeout(tm);
-  const src=e.target.id;tm=setTimeout(()=>{if(/-goi$/.test(k)){GT.q=v;const p=cur&&DB.projects.find(x=>x.id===cur.id),c=document.getElementById("gtc");if(p&&c){gtRe(p);const n=document.getElementById("q3");if(n&&src==="q3"){n.focus();n.setSelectionRange(n.value.length,n.value.length)}}}else tsDom(v)},250)})}
+{let tm=null;document.addEventListener("input",e=>{if(!["q","q2","q3"].includes(e.target.id)||e.isComposing)return;const k=tsKey(),v=e.target.value;TQ[k]=v;["q","q2"].forEach(id=>{const o=document.getElementById(id);if(o&&o!==e.target&&o.value!==v)o.value=v});clearTimeout(tm);
+  const src=e.target.id;tm=setTimeout(()=>{if(/-goi$/.test(k)){GT.q=v;const p=cur&&DB.projects.find(x=>x.id===cur.id),c=document.getElementById("gtc");if(p&&c){gtRe(p);const n=document.getElementById("q3");if(n&&src==="q3"){n.focus();n.setSelectionRange(n.value.length,n.value.length)}}}else tsDom(v)},400)})}
 
 /* ---------- Xem như người dùng khác (Admin, Ban giám đốc): kiểm tra menu, quyền, nút của từng vai trò hoặc từng tài khoản ----------
    Chỉ đổi cách hiển thị trên máy này; mọi lệnh ghi bị chặn (xem roClient); thoát ra tải lại số liệu thật. Không đăng nhập thay ai. */
