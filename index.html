@@ -1043,6 +1043,8 @@ html body .tw>table.t>tfoot td{position:sticky;bottom:0;z-index:2}
 table.pqt{min-width:980px}.pqt td:first-child{min-width:230px}.pqt th small{display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:2px}.pqt tr.pqg td{background:#E9EDF8;font-weight:600;color:#0A2486}.pqt tr.pqs td{background:#F6F7FB;font-weight:600}.pqt tr.pqs1 td:first-child{font-weight:600}.pqt tr.pqi td:first-child{padding-left:30px}.pqtw{max-height:none}
 .pqbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}table.pqp{min-width:900px}.pqp td:nth-child(4),.pqp td:nth-child(5){min-width:260px}
 .pqbd{margin-left:8px;background:#E3E9FC;color:#0A2486;vertical-align:middle}#view.pqro .pqdis{opacity:.5;cursor:not-allowed}
+.asg2{columns:2;column-gap:12px}.asgr{break-inside:avoid;border-radius:16px;padding:12px 14px;margin-bottom:12px;background:#F7F8FC;box-shadow:inset 0 0 0 1px #E3E6EE}.asgh{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:30px}.asgh b{font-size:15px;font-weight:600;color:#0A2486;line-height:1.35}.asus{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.asu{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:99px;padding:4px 14px 4px 4px;background:#fff;box-shadow:inset 0 0 0 1px #D9DDE8;font:500 15px var(--f);color:var(--ink);cursor:pointer;white-space:nowrap}.asu i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600;color:#fff;background:linear-gradient(135deg,#0A2486,#3D5BFF)}.asu:hover{background:#EEF1FA;box-shadow:inset 0 0 0 1px #AFBCE8}@media(max-width:760px){.asg2{columns:1}}
+.asbox>.bh{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:nowrap}.asbox>.bh>div{flex:1;min-width:0}.asbox>.bh b{font-size:18px;font-weight:600}.asbox>.bh .sub{margin-top:4px}.asbox>.bh>.back{flex:none}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5481,12 +5483,16 @@ function asDraw(){const w=document.getElementById("asdlg");if(!w)return;const P0
   const W=BOQ.nz(AS.q||"").split(/\s+/).filter(Boolean),hit=t=>W.every(x=>BOQ.nz(t).includes(x));
   const users=(AS.P||[]).filter(u=>u.id!==(NGApp.real||NGApp).uid).map(u=>{const cht=AS.M.filter(m=>m.user_id===u.id&&m.role==="cht").map(m=>m.project_id),nm=u.full_name||String(u.email||"").split("@")[0];
     return{role:u.is_board&&!u.role?"tgd":u.role||"",cht,uid:u.id,label:nm,sub:(u.role||u.is_board?crName(u.role||"tgd"):"")+(cht.length?(u.role?" · ":"")+"CHT "+cht.map(pn).join(", "):"")+(!u.role&&!u.is_board&&!cht.length?"Chưa có vai trò":"")}});
-  const it=(o,i,g)=>`<button type="button" class="asi" data-asg="${g}" data-asi="${i}"><b>${esc(o.label)}</b>${o.sub?`<small class="spec">${esc(o.sub)}</small>`:""}</button>`;
-  const U=users.map((o,i)=>[o,i]).filter(([o])=>!W.length||hit(o.label+" "+o.sub)),Rl=roles.map((o,i)=>[o,i]).filter(([o])=>!W.length||hit(o.label));AS.R=roles;AS.U=users;
-  w.innerHTML=`<div class="asbox"><div class="bh"><div><b>Xem như người dùng khác</b><div class="sub">Màn hình hiện đúng menu, quyền, nút của tài khoản được chọn · chỉ xem, không lưu gì · bấm Thoát trên dải đỏ để quay lại</div></div><button type="button" class="back sm" data-asclose="1" style="margin:0">Đóng</button></div>
-    <input class="fi" id="asq" placeholder="Tìm tên, vai trò, dự án…" value="${esc(AS.q||"")}" style="width:100%;margin:10px 0">
-    <div class="asg"><div><div class="sub" style="margin-bottom:6px">Tài khoản cụ thể (${U.length})</div>${U.map(([o,i])=>it(o,i,"u")).join("")||`<span class="sub">Không có</span>`}</div>
-    <div><div class="sub" style="margin-bottom:6px">Theo vai trò</div>${Rl.map(([o,i])=>it(o,i,"r")).join("")}</div></div></div>`;
+  /* Gom theo vai trò (anh Chung 07/11/2026): mỗi nhóm một vai trò, tài khoản xếp thành viên bên dưới, không lặp chữ vai trò cạnh tên */
+  AS.R=roles;AS.U=users;const ini=n=>(String(n).trim().split(/\s+/).pop()||"?")[0].toUpperCase();
+  const G=[{label:"Admin (quản trị hệ thống)",ri:-1,us:users.map((u,i)=>[u,i]).filter(([u])=>u.role==="admin")}]
+    .concat(roles.map((r,ri)=>({label:r.label,ri,us:users.map((u,i)=>[u,i]).filter(([u])=>r.cht?u.cht.includes(r.cht[0]):u.role===r.role)})))
+    .concat([{label:"Chưa có vai trò",ri:-1,us:users.map((u,i)=>[u,i]).filter(([u])=>!u.role&&!u.cht.length)}]);
+  const V=G.map(g=>({...g,us:W.length&&!hit(g.label)?g.us.filter(([u])=>hit(u.label)):g.us})).filter(g=>(g.ri>=0&&(!W.length||hit(g.label)))||g.us.length);
+  w.innerHTML=`<div class="asbox"><div class="bh"><div><b>Xem như người dùng khác</b><div class="sub">Bấm một tài khoản, hoặc “Xem theo vai trò” để xem chung cho cả vai trò · chỉ xem, không lưu gì · bấm Thoát trên dải đỏ để quay lại</div></div><button type="button" class="back sm" data-asclose="1" style="margin:0">Đóng</button></div>
+    <input class="fi" id="asq" placeholder="Tìm tên, vai trò, dự án…" value="${esc(AS.q||"")}" style="width:100%;margin:12px 0">
+    <div class="asg2">${V.map(g=>`<section class="asgr"><div class="asgh"><b>${esc(g.label)}</b>${g.ri>=0?`<button type="button" class="back sm" data-asg="r" data-asi="${g.ri}" style="margin:0">Xem theo vai trò</button>`:""}</div>
+      <div class="asus">${g.us.map(([u,i])=>`<button type="button" class="asu" data-asg="u" data-asi="${i}"><i>${esc(ini(u.label))}</i>${esc(u.label)}</button>`).join("")||`<span class="sub">Chưa có ai</span>`}</div></section>`).join("")||`<span class="sub">Không tìm thấy</span>`}</div></div>`;
   const q=document.getElementById("asq");if(q&&AS.focus){q.focus();q.setSelectionRange(q.value.length,q.value.length)}}
 function asSet(a){NGApp.as=a;asApply();asBar();try{ntfLoad()}catch(e){}const w=document.getElementById("asdlg");if(w)w.hidden=true;if(!a){NGApp.real=null;NGApp.sync().catch(()=>{route()});return}cur=null;location.hash="tong-quan";route();if(window.renderHello)window.renderHello()}
 document.addEventListener("click",e=>{const t=e.target;if(t.closest("#asBtn")){asOpen();return}if(t.closest("[data-asclose]")){document.getElementById("asdlg").hidden=true;return}
