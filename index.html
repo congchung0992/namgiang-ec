@@ -3150,7 +3150,7 @@ const LOGIN_DOMAIN="namgiang-ec.pages.dev";
 const genPw=()=>{const c="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=crypto.getRandomValues(new Uint32Array(10));return [...a].map(x=>c[x%c.length]).join("")};
 /* ---------- Đo lường AI: đọc bảng ai_usage, gom theo tác vụ, mẫu, ngày ---------- */
 let aiDays=30;
-const AIJOB={contract:"Đọc hợp đồng",extract:"Đọc báo giá",match_lines:"Ghép báo giá với BOQ",match:"Ghép báo giá thầu phụ",classify:"Gợi ý thư mục khi tải file",chat:"Trợ lý chat",ping:"Kiểm tra kết nối khoá"};
+const AIJOB={contract:"Đọc hợp đồng",extract:"Đọc báo giá",match_lines:"Ghép báo giá với BOQ",match:"Ghép báo giá thầu phụ",classify:"Gợi ý thư mục khi tải file",chat:"Trợ lý chat",ping:"Kiểm tra kết nối khoá",digest:"Tóm tắt tài liệu vào kho kiến thức",kb_batch:"Tóm tắt tài liệu vào kho (chạy nền)",ocr:"Đọc chữ file scan (OCR)",name_parts:"Gợi ý tên phần giao",peek:"Đọc nhanh, đổi tên báo giá khi tải lên"};
 /* Giá tham khảo USD / 1 triệu token (vào, ra) theo dòng mẫu, chỉ để ước tính; khoá miễn phí thực tế chưa mất tiền */
 const AIPRICE=[[/haiku-5-5/,.1,.5],[/haiku/,1,5],[/sonnet-5/,2,10],[/sonnet/,3,15],[/opus-5-5/,4,20],[/opus/,5,25],[/fable|mythos/,10,50],[/flash-lite|lite/,.1,.4],[/flash/,.5,3],[/gemini.*pro/,2,12]],USDVND=26000;
 const aiCost=r=>{const m=String(r.model||"");const p=AIPRICE.find(x=>x[0].test(m));return p?((r.in_tok||0)*p[1]+(r.out_tok||0)*p[2])/1e6*USDVND:0};
