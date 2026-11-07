@@ -1045,6 +1045,19 @@ table.pqt{min-width:980px}.pqt td:first-child{min-width:230px}.pqt th small{disp
 .pqbd{margin-left:8px;background:#E3E9FC;color:#0A2486;vertical-align:middle}#view.pqro .pqdis{opacity:.5;cursor:not-allowed}
 .asg2{columns:2;column-gap:12px}.asgr{break-inside:avoid;border-radius:16px;padding:12px 14px;margin-bottom:12px;background:#F7F8FC;box-shadow:inset 0 0 0 1px #E3E6EE}.asgh{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:30px}.asgh b{font-size:15px;font-weight:600;color:#0A2486;line-height:1.35}.asus{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.asu{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:99px;padding:4px 14px 4px 4px;background:#fff;box-shadow:inset 0 0 0 1px #D9DDE8;font:500 15px var(--f);color:var(--ink);cursor:pointer;white-space:nowrap}.asu i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600;color:#fff;background:linear-gradient(135deg,#0A2486,#3D5BFF)}.asu:hover{background:#EEF1FA;box-shadow:inset 0 0 0 1px #AFBCE8}@media(max-width:760px){.asg2{columns:1}}
 .asbox>.bh{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:nowrap}.asbox>.bh>div{flex:1;min-width:0}.asbox>.bh b{font-size:18px;font-weight:600}.asbox>.bh .sub{margin-top:4px}.asbox>.bh>.back{flex:none}
+
+/* Nút Đóng hộp thoại: góc trên phải, đỏ nhạt; Esc để đóng (anh Chung 07/11/2026) */
+html body :is(#fvc,#ctx,[data-x],[data-lkclose],[data-nhgx],[data-nhrx],[data-asclose]){background:#FDECEC!important;color:#C0141B!important;box-shadow:inset 0 0 0 1px #F6C9CB!important}
+html body :is(#fvc,#ctx,[data-x],[data-lkclose],[data-nhgx],[data-nhrx],[data-asclose]):hover{background:#FBDADA!important}
+/* Nút tròn đầu trang: to hơn, mỗi nút một màu */
+@media (min-width:761px){.top .round{width:44px;height:44px}.top .round svg{width:21px;height:21px}
+.top .round{--rc:#0A2486;background:color-mix(in srgb,var(--rc) 10%,#fff);color:var(--rc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--rc) 25%,#fff);transition:transform .15s}
+.top .round:hover{background:color-mix(in srgb,var(--rc) 18%,#fff)}.top .round:active{transform:scale(.94)}
+.top #asBtn{--rc:#0A2486}.top #fs{--rc:#0E9F9A}.top .round[aria-label="Thông báo"]{--rc:#F08A24}.top .round[aria-label="Cài đặt"]{--rc:#8B5CF6}.top .round[aria-label="Đăng xuất"]{--rc:#C0141B}
+.top .avatar{width:44px;height:44px}
+/* Logo giữa trang, căn giữa theo chiều dọc thanh trên */
+.top{position:relative}.tlogo.mid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);flex:none}.tlogo.mid~.search{margin-left:auto}
+.tlogo img{height:58px;width:58px;margin:0}.tlogo:not(.mid) img{visibility:hidden}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5778,6 +5791,12 @@ document.getElementById("askf")?.addEventListener("submit",e=>{e.preventDefault(
     i.dispatchEvent(new Event("input",{bubbles:true}));i.dispatchEvent(new Event("change",{bubbles:true}));i.dispatchEvent(new KeyboardEvent("keyup",{bubbles:true,key:"Backspace"}));
     if(i.id!=="q3")i.focus();setTimeout(sync,350)},true);
   new MutationObserver(()=>{clearTimeout(t);t=setTimeout(sync,40)}).observe(document.body,{childList:true,subtree:true});setTimeout(sync,500)})();
+
+/* Logo đầu trang nằm giữa màn hình nếu đủ chỗ, không đè thanh menu và ô tìm (anh Chung 07/11/2026) */
+(function(){const fit=()=>{const t=document.querySelector(".top"),l=document.querySelector(".tlogo"),p=document.getElementById("pills"),q=document.querySelector(".top .search");if(!t||!l||!p||!q)return;
+  l.classList.add("mid");const c=innerWidth/2,a=p.getBoundingClientRect(),b=q.getBoundingClientRect();if(a.right+12>c-30||b.left-12<c+30)l.classList.remove("mid")};
+  addEventListener("resize",fit);new MutationObserver(fit).observe(document.getElementById("pills"),{childList:true});setTimeout(fit,300);
+  addEventListener("keydown",e=>{if(e.key!=="Escape")return;const B=[...document.querySelectorAll("#fvc,#ctx,[data-x],[data-lkclose],[data-nhgx],[data-nhrx],[data-asclose]")].filter(b=>b.offsetParent);if(B.length)B[B.length-1].click()})})();
 </script>
 
 </body>
