@@ -1786,6 +1786,11 @@ html body .tw.tw.tw.tw::-webkit-scrollbar-corner,html body .gw.gw.gw.gw::-webkit
 .nglhint{display:inline-flex;align-items:center;gap:6px;align-self:center;white-space:nowrap;border:0;cursor:pointer;font:700 13.5px var(--f);color:#0A2486;background:#E3E9FF;border-radius:99px;padding:8px 14px;transition:background .15s}
 .nglhint:hover{background:#D3DCFF}.nglhint svg{transition:transform .2s}.nglhint:hover svg{transform:translateX(3px)}
 @media(max-width:760px){.nglhint{display:none}}
+
+.nggod .nggpjw{display:flex;align-items:stretch;gap:6px}.nggod .nggpjw .nggpj{flex:1;min-width:0}
+.nggod .nggor button.nggpjx{flex:none;width:34px!important;display:grid!important;place-items:center;border:0;border-radius:12px!important;background:rgba(255,255,255,.2)!important;color:#fff!important;font:700 13px var(--f)!important;cursor:pointer;padding:0!important;opacity:.55;transition:opacity .15s,background .15s}
+.nggod .nggpjw:hover .nggpjx{opacity:1}.nggod .nggor button.nggpjx:hover{background:#E1141B!important}
+.nggod .nggor button.nggpjx.ok{width:auto!important;padding:0 10px!important;background:#E1141B!important;opacity:1;font-size:12px!important;white-space:nowrap}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5134,7 +5139,7 @@ function ngGoFill(v,box){const inl=!!box;box=box||document.getElementById("nggor
     /* Ứng dụng chỉ có 1 màn gom chung một nhóm; ứng dụng nhiều màn mỗi cái một nhóm, hiện sẵn các màn bên trong (anh Chung 08/11/2026) */
     const L0=NGG.L,A=L0.filter(x=>x[4]==="app"),one=["trang-chu","viec-can-xu-ly","ban-tin","duyet","bao-cao"];
     const grp=[["Màn hình chung","#94A3B8",one.map(k=>A.find(x=>x[0]===k)).filter(Boolean)],["Dự án","#F59E0B",L0.filter(x=>x[4]==="pj"),1],["Chấm công","#84CC16",L0.filter(x=>x[4]==="cc")],["Quản trị","#A78BFA",L0.filter(x=>x[4]==="qt")]];
-    box.innerHTML=`<div class="nglh"><span class="nglhi"><img src="img/logo-round.svg?v=2" alt=""></span><span><b>Nam Giang E&amp;C</b><small>Chọn ứng dụng · Esc để đóng</small></span></div><div class="nglg" style="--n:${grp.filter(g=>g[2].length).length}">${grp.filter(g=>g[2].length).map(([t,c,L,pj])=>`<section class="nggs${pj?" nggpjs":""}" style="--g:${c}"><div class="ngsh"><h4>${esc(t)}</h4>${pj&&(!window.NGApp||NGApp.board)?`<button type="button" class="ngadd" data-ngaddp>＋ Thêm dự án</button>`:""}</div>${pj?`<div class="nggpjl">${L.map(x=>{const i=RR.push(x)-1,p=DB.projects.find(y=>"da-"+y.id===x[0])||allPJ().find(y=>"da-"+y.id===x[0])||{},pc=(typeof prjColor==="function"&&p.id?prjColor(p):"#0A2486");return`<button type="button" data-ngr="${i}" class="nggpj" style="--pc:${pc}"><em>${esc(p.code||x[2]||"")}</em><b>${esc(x[1])}</b></button>`}).join("")}</div>`:`<div class="nggl">${L.map(x=>it(x)).join("")}</div>`}</section>`).join("")}</div>`;
+    box.innerHTML=`<div class="nglh"><span class="nglhi"><img src="img/logo-round.svg?v=2" alt=""></span><span><b>Nam Giang E&amp;C</b><small>Chọn ứng dụng · Esc để đóng</small></span></div><div class="nglg" style="--n:${grp.filter(g=>g[2].length).length}">${grp.filter(g=>g[2].length).map(([t,c,L,pj])=>`<section class="nggs${pj?" nggpjs":""}" style="--g:${c}"><div class="ngsh"><h4>${esc(t)}</h4>${pj&&(!window.NGApp||NGApp.board)?`<button type="button" class="ngadd" data-ngaddp>＋ Thêm dự án</button>`:""}</div>${pj?`<div class="nggpjl">${L.map(x=>{const i=RR.push(x)-1,p=DB.projects.find(y=>"da-"+y.id===x[0])||allPJ().find(y=>"da-"+y.id===x[0])||{},pc=(typeof prjColor==="function"&&p.id?prjColor(p):"#0A2486");return`<div class="nggpjw"><button type="button" data-ngr="${i}" class="nggpj" style="--pc:${pc}"><em>${esc(p.code||x[2]||"")}</em><b>${esc(x[1])}</b></button>${ngCanDelP()&&p.id?`<button type="button" class="nggpjx" data-ngdelp="${esc(p.id)}" title="Xoá dự án" aria-label="Xoá dự án ${esc(x[1])}">✕</button>`:""}</div>`}).join("")}</div>`:`<div class="nggl">${L.map(x=>it(x)).join("")}</div>`}</section>`).join("")}</div>`;
     NGG.a=0;const f0=box.querySelector('[data-ngr="0"]');if(f0)f0.classList.add("act");return}
   box.innerHTML=G.map(g=>{const pg=g.k.startsWith("p:");
     let body;if(pg){const P=[];g.L.forEach(x=>{let q=P.find(y=>y.t===x[2]);if(!q)P.push(q={t:x[2],L:[]});q.L.push(x)});body=`<div class="nggph">${P.map(q=>`<div class="nggpc"><div class="nggpt">${esc(q.t)}</div>${q.L.map(x=>it(x)).join("")}</div>`).join("")}</div>`}
@@ -5162,6 +5167,13 @@ addEventListener("hashchange",()=>setTimeout(()=>{try{ngMsgFab()}catch(e){}},50)
 /* Thêm dự án ngay từ bảng Ứng dụng: chọn file BOQ, web đọc và mở màn xem trước (anh Chung 08/11/2026) */
 function ngNote(t){let n=document.getElementById("upmsg");if(!n){n=document.createElement("div");n.id="upmsg";n.className="ngnote";document.body.appendChild(n)}n.style.color="";n.textContent=t;clearTimeout(n._t);n._t=setTimeout(()=>n.remove(),6000);return n}
 document.addEventListener("click",e=>{if(!e.target.closest("[data-ngaddp]"))return;e.stopPropagation();const i=document.createElement("input");i.type="file";i.accept=".xlsx,.xls,.xlsm";i.onchange=()=>{const f=i.files[0];if(!f)return;const d=document.getElementById("nggo");if(d)d.hidden=true;readBOQ(f)};i.click()},true);
+
+/* Xoá dự án ngay trong bảng Ứng dụng: chỉ Admin và Tổng giám đốc, bấm 2 lần để chắc chắn (anh Chung 08/11/2026) */
+const ngCanDelP=()=>window.NGApp&&!NGApp.guest&&!NGApp.as&&(["admin","tgd"].includes(NGApp.crole)||(NGApp.board&&!NGApp.crole));
+document.addEventListener("click",e=>{const b=e.target.closest("[data-ngdelp]");if(!b)return;e.stopPropagation();e.preventDefault();if(!ngCanDelP())return;
+  const p=DB.projects.find(x=>x.id===b.dataset.ngdelp);if(!p)return;
+  if(!b.dataset.ok){b.dataset.ok=1;b.classList.add("ok");b.textContent="Xoá?";b.title="Bấm lần nữa để xoá hẳn";clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.ok;b.classList.remove("ok");b.textContent="✕"},4000);return}
+  DB.projects=DB.projects.filter(x=>x!==p);if(cur&&cur.id===p.id){cur=null;location.hash="trang-chu"}persist();ngNote("Đã xoá dự án "+(p.code||"")+" · "+p.name);NGG.L=ngGoList();ngGoFill("")},true);
 function ngTab(){const o=document.getElementById("ngtab");if(o)o.remove();const P=document.getElementById("pills");if(!P)return;let m=P.querySelector(".ngmuc");if(!ngHasSide()){if(m)m.remove();return}
   const a=[...document.querySelectorAll(".ngside .ngit")].find(x=>x.getAttribute("aria-current")==="true"&&!x.closest("[hidden]")),lab=a?a.textContent.replace(/★/g,"").trim():"Chọn mục";
   if(!m){m=document.createElement("button");m.type="button";m.className="ngtb ngmuc";m.setAttribute("data-ngboard","");m.setAttribute("aria-label","Chọn mục");P.appendChild(m)}
