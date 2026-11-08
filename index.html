@@ -1710,6 +1710,12 @@ body.ngmsg-on .ngmsg{display:none!important}
 @media(max-width:760px){.nggod .nglg{grid-template-columns:1fr}}
 .nggod{align-items:flex-start!important;padding-top:96px!important}
 @media(max-height:900px){.nggod{padding-top:64px!important}}
+
+.nggod .nglg{grid-template-columns:repeat(var(--n,3),minmax(0,340px))!important;gap:24px 28px!important}
+.nggod .nglg .nggl{grid-template-columns:repeat(3,1fr)!important}
+@media(max-width:1500px){.nggod .nglg{grid-template-columns:repeat(2,minmax(0,420px))!important}}
+@media(max-width:760px){.nggod .nglg{grid-template-columns:1fr!important}}
+.nggod .nglg .nggl button b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5044,9 +5050,10 @@ function ngGoFill(v,box){const inl=!!box;box=box||document.getElementById("nggor
   const RR=[];if(!inl)NGG.R=RR;const BD=ngBadges();const it=(x,sub)=>{const i=RR.push(x)-1;return`<button type="button" ${inl?`data-go="${esc(x[0])}"`:`data-ngr="${i}"`} style="${sv(x[3])}"><span class="ngii">${icc(NGSI[x[0]]||x[3],2)}</span><b>${esc(x[1])}</b>${BD[x[0]]?`<i class="nggbd">${BD[x[0]]>99?"99+":BD[x[0]]}</i>`:""}${sub&&x[2]?`<small>${esc(x[2])}</small>`:""}</button>`};
   const T={app:"Ứng dụng",pj:"Dự án",cc:"Chấm công",qt:"Quản trị"};
   if(!inl&&!W.length){/* Bảng Ứng dụng kiểu bảng chọn mục: ô đầu + các nhóm thẻ kính màu (anh Chung 08/11/2026) */
-    const A=R.filter(x=>x[4]==="app"),GP=[["Điều hành","#94A3B8",["trang-chu","ban-tin","duyet","bao-cao"]],["Dự án & công trường","#F59E0B",["du-an","cham-cong"]],["Hệ thống","#22B8E8",["quan-tri"]]];
-    const used=new Set();const grp=GP.map(([t,c,K])=>{const L=K.map(k=>A.find(x=>x[0]===k)).filter(Boolean);L.forEach(x=>used.add(x));return[t,c,L]});const rest=A.filter(x=>!used.has(x)&&x[0]!=="tro-chuyen");if(rest.length)grp[grp.length-1][2].push(...rest);
-    box.innerHTML=`<div class="nglh"><span class="nglhi"><img src="img/logo-round.svg?v=2" alt=""></span><span><b>Nam Giang E&amp;C</b><small>Chọn ứng dụng · Esc để đóng</small></span></div><div class="nglg">${grp.filter(g=>g[2].length).map(([t,c,L])=>`<section class="nggs" style="--g:${c}"><h4>${esc(t)}</h4><div class="nggl">${L.map(x=>it(x)).join("")}</div></section>`).join("")}</div>`;
+    /* Ứng dụng chỉ có 1 màn gom chung một nhóm; ứng dụng nhiều màn mỗi cái một nhóm, hiện sẵn các màn bên trong (anh Chung 08/11/2026) */
+    const L0=NGG.L,A=L0.filter(x=>x[4]==="app"),one=["trang-chu","ban-tin","duyet","bao-cao"];
+    const grp=[["Màn hình chung","#94A3B8",one.map(k=>A.find(x=>x[0]===k)).filter(Boolean)],["Dự án","#F59E0B",[...A.filter(x=>x[0]==="du-an").map(x=>[x[0],"Tất cả dự án",x[2],x[3],x[4],x[5]]),...L0.filter(x=>x[4]==="pj")]],["Chấm công","#84CC16",L0.filter(x=>x[4]==="cc")],["Quản trị","#A78BFA",L0.filter(x=>x[4]==="qt")]];
+    box.innerHTML=`<div class="nglh"><span class="nglhi"><img src="img/logo-round.svg?v=2" alt=""></span><span><b>Nam Giang E&amp;C</b><small>Chọn ứng dụng · Esc để đóng</small></span></div><div class="nglg" style="--n:${grp.filter(g=>g[2].length).length}">${grp.filter(g=>g[2].length).map(([t,c,L])=>`<section class="nggs" style="--g:${c}"><h4>${esc(t)}</h4><div class="nggl">${L.map(x=>it(x)).join("")}</div></section>`).join("")}</div>`;
     NGG.a=0;const f0=box.querySelector('[data-ngr="0"]');if(f0)f0.classList.add("act");return}
   box.innerHTML=G.map(g=>{const pg=g.k.startsWith("p:");
     let body;if(pg){const P=[];g.L.forEach(x=>{let q=P.find(y=>y.t===x[2]);if(!q)P.push(q={t:x[2],L:[]});q.L.push(x)});body=`<div class="nggph">${P.map(q=>`<div class="nggpc"><div class="nggpt">${esc(q.t)}</div>${q.L.map(x=>it(x)).join("")}</div>`).join("")}</div>`}
