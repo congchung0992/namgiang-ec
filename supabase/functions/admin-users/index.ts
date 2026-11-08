@@ -66,6 +66,14 @@ Deno.serve(async (req) => {
     const { error } = await admin.from("profiles").update({ full_name: String(b.full_name || "").trim().slice(0, 100) || null }).eq("id", uid);
     return error ? json({ error: "server" }, 500) : json({ ok: true });
   }
+  if (action === "contact") {
+    const f = String(b.field || ""), v = String(b.value || "").trim().slice(0, 120);
+    if (f === "contact_email") { if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return json({ error: "bad_email" }, 400); }
+    else if (f === "phone") { if (v && !/^\+?[0-9 .()-]{8,20}$/.test(v)) return json({ error: "bad_phone" }, 400); }
+    else return json({ error: "bad_request" }, 400);
+    const { error } = await admin.from("profiles").update({ [f]: v || null }).eq("id", uid);
+    return error ? json({ error: "server" }, 500) : json({ ok: true });
+  }
   if (action === "delete") {
     const { error } = await admin.auth.admin.deleteUser(uid);
     return error ? json({ error: "server" }, 500) : json({ ok: true });
