@@ -1564,6 +1564,17 @@ label.search:has(> #q){visibility:hidden!important;flex:1 1 0!important;min-widt
 /* Biểu tượng Trang chủ = logo tròn Nam Giang như giữa thanh trên */
 img.nglogo{background:#fff;box-shadow:0 1px 4px rgba(10,36,134,.25)}
 .ngapps .ngat img.nglogo,.ngpop img.nglogo{width:44px!important;height:44px!important}
+
+/* Mở bảng Ứng dụng kiểu Mission Control */
+@media (prefers-reduced-motion:no-preference){
+ .nggod.ngin{animation:ngBg .32s ease both}
+ .nggod.ngin .nggob{transform-origin:var(--ox) var(--oy);animation:ngZoom .46s cubic-bezier(.2,.9,.25,1.15) both}
+ .nggod.ngin #nggor button,.nggod.ngin #nggor .nggs h4{animation:ngTile .42s cubic-bezier(.2,.9,.3,1.2) both;animation-delay:calc(.12s + var(--i,0) * 18ms)}
+}
+@keyframes ngBg{from{background-color:rgba(10,20,60,0);backdrop-filter:blur(0)}to{}}
+@keyframes ngZoom{0%{opacity:0;transform:scale(.08);border-radius:50%}55%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes ngTile{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
+.nggod{background:rgba(10,20,60,.32)!important;backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2)}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -4885,7 +4896,12 @@ const ngNz=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/
 let NGG={L:[],R:[],a:0};
 function ngGoOpen(){let d=document.getElementById("nggo");if(!d){d=document.createElement("div");d.id="nggo";d.className="nggod";d.innerHTML=`<div class="nggob" role="dialog" aria-label="Đi tới"><label class="nggoq">${ic("find",2.2)}<input id="nggoq" autocomplete="off" placeholder="Gõ tên màn, dự án… ví dụ: báo giá, phân ca, công nợ" aria-label="Đi tới"></label><div class="nggor" id="nggor"></div><div class="nggof">↑ ↓ chọn · Enter mở · Esc đóng</div></div>`;document.body.appendChild(d);
     d.addEventListener("mousedown",e=>{if(e.target===d)d.hidden=true});d.querySelector("input").addEventListener("input",e=>ngGoFill(e.target.value))}
-  NGG.L=ngGoList();d.hidden=false;const q=d.querySelector("input");q.value="";ngGoFill("");setTimeout(()=>q.focus(),0)}
+  NGG.L=ngGoList();d.hidden=false;const q=d.querySelector("input");q.value="";ngGoFill("");
+  /* Hiệu ứng mở kiểu Mission Control: nền mờ dần, khung bung ra từ logo, các ô lần lượt bay vào */
+  const lg=document.querySelector(".tlogo img"),r=lg&&lg.offsetWidth?lg.getBoundingClientRect():null,bx=d.querySelector(".nggob").getBoundingClientRect();
+  d.style.setProperty("--ox",(r?r.left+r.width/2-bx.left:bx.width/2)+"px");d.style.setProperty("--oy",(r?r.top+r.height/2-bx.top:0)+"px");
+  d.querySelectorAll("#nggor button,#nggor .nggs h4").forEach((b,i)=>b.style.setProperty("--i",Math.min(i,40)));
+  d.classList.remove("ngin");void d.offsetWidth;d.classList.add("ngin");setTimeout(()=>q.focus(),0)}
 function ngGoFill(v,box){const inl=!!box;box=box||document.getElementById("nggor");const W=ngNz(v).split(/\s+/).filter(Boolean),cur=(location.hash.match(/^#da-([a-z0-9]+)/i)||[])[1];
   const R=NGG.L.filter(x=>{if(!W.length)return !x[4].startsWith("p:")||x[4]==="p:"+cur;const z=ngNz(x[1]+" "+x[2]+" "+x[5]);return W.every(w=>z.includes(w))});
   const G=[];R.forEach(x=>{let g=G.find(y=>y.k===x[4]);if(!g)G.push(g={k:x[4],t:x[5],L:[]});g.L.push(x)});
