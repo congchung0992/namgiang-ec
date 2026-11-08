@@ -252,7 +252,7 @@ main{padding-block:16px 32px;min-width:0}
 .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:0 1 auto;min-width:0;padding:4px 2px}
 .tlogo{flex:1 1 0;display:flex;justify-content:center;align-items:center;min-width:0;overflow:visible;position:relative;z-index:2}.tlogo img{height:74px;width:74px;object-fit:contain;display:block;margin:-14px 0}
-@media (max-width:1180px){.tlogo{display:none}}
+@media (max-width:760px){.tlogo{display:none}}
 @media (min-width:1181px){.top{flex-wrap:nowrap}.top .pills{flex:0 0 auto}.top .search{flex:0 2 280px;min-width:120px}.top .round,.top .tav{flex:none}}
 .pill{display:inline-flex;align-items:center;gap:8px;background:var(--t);border:0;border-radius:99px;padding:7px 15px 7px 7px;font-size:15px;font-weight:600;white-space:nowrap;color:var(--cd);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);transition:transform .15s,box-shadow .2s,background .2s}
 .pill:hover{transform:translateY(-1px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 6px 14px -8px var(--c)}
@@ -1553,12 +1553,12 @@ label.search:has(> #q){visibility:hidden!important;flex:1 1 0!important;min-widt
 @media(max-width:760px){.nghgo2 kbd{display:none}}
 
 /* Logo giữa thanh trên là nút Trang chủ (máy tính); nút Trang chủ dạng viên chỉ giữ khi logo bị ẩn */
-@media(min-width:1181px){#pills>.pill[data-go="trang-chu"]{display:none}}
+
 .tlogo img{transition:transform .18s,box-shadow .18s;border-radius:50%}
 .tlogo:hover img{transform:translateY(-2px) scale(1.06);box-shadow:0 10px 22px -10px rgba(10,36,134,.55),0 0 0 3px rgba(225,20,27,.18)}
 .tlogo:active img{transform:scale(.96)}
-body.nghome-on .tlogo img{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(225,20,27,.55),0 10px 22px -10px rgba(10,36,134,.5)}
-.tlogo:after{content:"Trang chủ";position:absolute;top:calc(100% + 2px);left:50%;transform:translateX(-50%);font:700 11px var(--f);color:#0A2486;background:#fff;border-radius:99px;padding:2px 9px;box-shadow:0 4px 10px -6px rgba(10,36,134,.5);opacity:0;pointer-events:none;transition:opacity .15s;white-space:nowrap}
+
+.tlogo:after{content:"Ứng dụng · Ctrl K";position:absolute;top:calc(100% + 2px);left:50%;transform:translateX(-50%);font:700 11px var(--f);color:#0A2486;background:#fff;border-radius:99px;padding:2px 9px;box-shadow:0 4px 10px -6px rgba(10,36,134,.5);opacity:0;pointer-events:none;transition:opacity .15s;white-space:nowrap}
 .tlogo:hover:after{opacity:1}
 
 /* Biểu tượng Trang chủ = logo tròn Nam Giang như giữa thanh trên */
@@ -1635,7 +1635,7 @@ img.nglogo{background:#fff;box-shadow:0 1px 4px rgba(10,36,134,.25)}
     </div>
     <div class="top">
       <div class="pills" id="pills"></div>
-      <div class="tlogo" data-go="trang-chu" title="Về Trang chủ" role="button" tabindex="0" aria-label="Trang chủ" style="cursor:pointer"><img src="img/logo-round.svg?v=2" alt=""></div>
+      <div class="tlogo" data-nggo title="Ứng dụng (Ctrl K)" role="button" tabindex="0" aria-label="Ứng dụng" style="cursor:pointer"><img src="img/logo-round.svg?v=2" alt=""></div>
       <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" name="ng-tim" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="Tìm công trình, vật tư, nhân sự"></label>
       <button class="round" id="asBtn" hidden aria-label="Xem như người dùng khác" title="Xem như người dùng khác (kiểm tra quyền, chỉ xem)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="round" id="fs" aria-label="Xem toàn màn hình" title="Xem toàn màn hình"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -4212,7 +4212,7 @@ function hdView(){const bd=window.NGApp&&NGApp.board,pid=(DB.projects[0]||{}).id
 function hdRe(focus){const b=document.getElementById("adm");if(!b)return;const sl=(b.querySelector(".hdlist")||{}).scrollTop||0;b.innerHTML=hdView();const l=b.querySelector(".hdlist");if(l)l.scrollTop=sl;if(focus){const i=document.getElementById("hdq");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}}
 document.addEventListener("click",e=>{const j=e.target.closest("[data-hdj]");if(j){HDS.sel=j.dataset.hdj;hdRe();const m=document.getElementById("hdmain");if(m){const r=m.getBoundingClientRect();if(r.top<70||r.top>innerHeight*.6)scrollTo({top:scrollY+r.top-90,behavior:"smooth"});m.firstElementChild&&m.firstElementChild.classList.add("hdin")}return}
   if(e.target.closest('.top .round[aria-label="Cài đặt"]')){location.hash=window.NGApp&&NGApp.board?"quan-tri":"quan-tri-mk"}});
-document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest(".tlogo")){e.preventDefault();location.hash="trang-chu"}});
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest(".tlogo")){e.preventDefault();ngGoOpen()}});
 document.addEventListener("input",e=>{if(e.target.id!=="hdq")return;HDS.q=e.target.value;clearTimeout(HDS.t);HDS.t=setTimeout(()=>hdRe(1),200)});
 /* ---------- Trò chuyện kiểu Zalo (anh Chung 07/11/2026) ----------
    Phòng: Cả công ty · mỗi dự án (ai có vai trò ở dự án) · nhóm tự lập · nhắn riêng 1-1. Bảng chat_rooms, chat_members, chat_messages; file ở bucket "chat".
@@ -4871,7 +4871,7 @@ function ngHome(){const nm=(window.NGApp&&(NGApp.name||"").split(" ").pop())||""
    <section class="card nghgo"><label class="nggoq nghq">${ic("find",2.2)}<input id="nghq" autocomplete="off" placeholder="Tìm nhanh màn, dự án… ví dụ: báo giá, phân ca, công nợ" aria-label="Tìm nhanh"><kbd>Ctrl K</kbd></label><div class="nggor" id="nghr"></div></section></div>`}
 /* Thanh trên: Trang chủ · ứng dụng đang mở · Ứng dụng · Đi tới */
 function ngTopBar(top){const T=TOP.find(t=>t[2]===top),np=canOv()?waiting(decisions()).length:0;
-  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}<button type="button" class="ngtb" data-ngapps aria-label="Ứng dụng"><span>${icc("apps",2)}</span>Ứng dụng</button><button type="button" class="ngtb nggo" data-nggo aria-label="Đi tới"><span>${icc("find",2.2)}</span>Đi tới màn…<kbd>Ctrl K</kbd></button>`}
+  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}`}
 function ngAppsPop(btn){let d=document.getElementById("ngpop");if(d){d.remove();return}const np=canOv()?waiting(decisions()).length:0,chu=typeof CH!=="undefined"?CH.un||0:0;d=document.createElement("div");d.id="ngpop";d.className="ngpop";
   d.innerHTML=`<div class="ngapps">${[["cyan","Trang chủ","trang-chu"],...topFor()].map(t=>{const n=t[2]==="duyet"?np:t[2]==="tro-chuyen"?chu:0;return`<button type="button" class="ngapp" data-go="${t[2]}" style="${sv(t[0])}"><span class="ngat">${icc(t[0]==="cyan"?"house":t[0],2)}</span>${esc(t[1])}${n?`<i>${n}</i>`:""}</button>`}).join("")}</div>`;
   document.body.appendChild(d);const r=btn.getBoundingClientRect();d.style.top=(r.bottom+8)+"px";d.style.left=Math.max(12,Math.min(r.left,innerWidth-d.offsetWidth-12))+"px"}
