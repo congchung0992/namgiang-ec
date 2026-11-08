@@ -1513,6 +1513,19 @@ img.nglogo{display:block;border-radius:50%;object-fit:cover;width:24px;height:24
  body.ngpeek .ngtab{opacity:0;pointer-events:none}
 }
 @media(max-width:1000px){.ngtab{display:none}}
+
+/* Cột trái nền 7 (kính navy mờ) + thẻ nhóm pastel, đầu thẻ dải màu */
+.ngside{background:rgba(10,36,134,.80)!important;backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);gap:0!important}
+.ngside .ngph{background:rgba(255,255,255,.14)!important;color:#fff!important}.ngside .ngph *{color:#fff!important}
+.ngg{background:linear-gradient(160deg,color-mix(in srgb,var(--g) 30%,#fff),color-mix(in srgb,var(--g) 12%,#fff));border-radius:18px;padding:0 6px 8px;margin:8px 0;overflow:hidden;box-shadow:0 10px 20px -14px #000;flex:none}
+.ngside .ngg .nggh{display:flex!important;align-items:center;gap:10px;margin:0 -6px 6px;padding:12px 14px;background:linear-gradient(120deg,var(--g),color-mix(in srgb,var(--g) 65%,#fff));color:#fff;font:800 17.5px/1.2 var(--f);letter-spacing:-.01em;white-space:nowrap}
+.nggn{overflow:hidden;text-overflow:ellipsis}
+.nggc{margin-left:auto;font:700 11.5px var(--f);background:rgba(255,255,255,.28);border-radius:99px;padding:2px 9px;flex:none}
+.ngside .ngg .ngit{font-weight:600;color:#1b1d2a}
+.ngside .ngg .ngit:hover{background:rgba(255,255,255,.55)}
+.ngside .ngg .ngit[aria-current="true"]{background:#fff;color:#16171C;box-shadow:0 6px 14px -8px var(--g)}
+@media(min-width:1001px){.ngside{width:324px;align-self:stretch!important;height:auto!important}}
+body.ngcol .ngg .nggh{display:flex!important}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -4785,8 +4798,11 @@ const ngLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStor
 const ngFav=()=>{try{return new Set(JSON.parse(ngLS("ng_fav")||"[]"))}catch(e){return new Set()}};
 const ngDesc=k=>{const x=typeof HD!=="undefined"&&HD.find(h=>h.go==="@"+k||h.go===k||h.k===k);return x?x.d:""};
 function ngItem(it,fav){const [key,lab,go,icn,badge]=it,gl=it[6]||icn;return`<button type="button" class="ngit" data-go="${go}" aria-current="${!!it[5]}" style="${sv(icn)}" title="${esc(lab)}"><span class="ngii">${icc(gl,2)}</span><span class="ngtx">${esc(lab)}</span>${badge?`<em class="ngbd">${badge}</em>`:""}<i class="ngst${fav.has(key)?" on":""}" data-ngfav="${esc(key)}" role="button" aria-label="Ghim lên đầu" title="Ghim lên đầu">★</i></button>`}
+/* Cột trái: mỗi nhóm một thẻ pastel theo màu nhóm, đầu thẻ là dải màu với tên nhóm chữ to */
+const NGGC=["#94A3B8","#F59E0B","#22B8E8","#F97316","#22C55E","#EC4899","#14B8A6","#8B5CF6"];
+function ngGrp(t,c,body,n){return`<div class="ngg" style="--g:${c}"><div class="nggh"><span class="nggn">${esc(String(t).replace(/^\d+\.\s*/,""))}</span><span class="nggc">${n} mục</span></div>${body}</div>`}
 function ngSide(head,G,keyOf){const fav=ngFav(),all=G.flatMap(g=>g[1]),pins=all.filter(x=>fav.has(x[0]));
-  return`<aside class="ngside" aria-label="Các mục">${head}${pins.length?`<div class="nggh" style="--c:#F5A524"><i></i>Đã ghim</div>${pins.map(x=>ngItem(x,fav)).join("")}`:""}${G.map(g=>`<div class="nggh" style="${sv(g[2]||g[1][0][3])}"><i></i>${esc(g[0])}</div>${g[1].map(x=>ngItem(x,fav)).join("")}`).join("")}<button type="button" class="ngcolb" data-ngcol title="Thu gọn, mở rộng cột"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg><span>Thu gọn cột</span></button></aside>`}
+  return`<aside class="ngside" aria-label="Các mục">${head}${pins.length?ngGrp("Đã ghim","#A78BFA",pins.map(x=>ngItem(x,fav)).join(""),pins.length):""}${G.map((g,i)=>ngGrp(g[0],NGGC[i%NGGC.length],g[1].map(x=>ngItem(x,fav)).join(""),g[1].length)).join("")}<button type="button" class="ngcolb" data-ngcol title="Thu gọn, mở rộng cột"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg><span>Thu gọn cột</span></button></aside>`}
 function ngProjSide(p,b,L,s){const has=k=>L.some(x=>x[0]===k),nm=k=>(L.find(x=>x[0]===k)||[0,k])[1],go=k=>"da-"+p.id+(k==="home"?"":"-"+k);
   const G=NGPG.map(g=>[g[0],g[1].filter(has).map(k=>[k,nm(k),go(k),k,0,k===s])]).filter(g=>g[1].length);
   const head=`<label class="ngph" style="${sv("proj")}"><span class="ngpt">${icc("proj",2)}</span><span class="ngpn"><small>Dự án</small><select class="ngpsel" data-ngpsel aria-label="Đổi dự án">${DB.projects.map(x=>`<option value="${esc(x.id)}"${x.id===p.id?" selected":""}>${esc(x.code||"")} · ${esc(x.name)}</option>`).join("")}</select></span></label>`;
