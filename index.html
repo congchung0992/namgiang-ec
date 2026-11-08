@@ -1479,6 +1479,20 @@ img.nglogo{display:block;border-radius:50%;object-fit:cover;width:24px;height:24
 .nggor button small{max-width:40%}
 @media(max-width:1100px){.nggor{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.nggob{aspect-ratio:auto;max-height:88vh}.nggor{grid-template-columns:1fr;max-height:70vh}}
+
+/* Bảng Đi tới: chia nhóm Ứng dụng / Dự án đang mở (theo giai đoạn) / Dự án / Chấm công / Quản trị */
+.nggor{display:block!important;padding:6px 18px 16px!important}
+.nggs{padding:10px 0 6px;border-bottom:1px solid var(--line)}.nggs:last-child{border-bottom:0}
+.nggs h4{margin:4px 4px 8px;font:700 13px var(--f);color:#0A2486;display:flex;align-items:center;gap:8px}
+.nggs h4 span{font:600 11px var(--f);background:#EEF1FA;color:#0A2486;border-radius:99px;padding:1px 8px}
+.nggl{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px 8px}
+.nggl.pj{grid-template-columns:repeat(3,minmax(0,1fr))}
+.nggph{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.nggpc{background:#F7F8FB;border-radius:14px;padding:8px;display:grid;gap:2px;align-content:start}
+.nggpt{font:600 11.5px var(--f);color:var(--muted);padding:2px 6px 6px}
+.nggor button small{max-width:none}
+@media(max-width:1100px){.nggl{grid-template-columns:repeat(3,minmax(0,1fr))}.nggph{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.nggl,.nggl.pj,.nggph{grid-template-columns:1fr}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -4786,18 +4800,27 @@ function ngAppsPop(btn){let d=document.getElementById("ngpop");if(d){d.remove();
   d.innerHTML=`<div class="ngapps">${[["cyan","Trang chủ","trang-chu"],...topFor()].map(t=>{const n=t[2]==="duyet"?np:t[2]==="tro-chuyen"?chu:0;return`<button type="button" class="ngapp" data-go="${t[2]}" style="${sv(t[0])}"><span class="ngat">${icc(t[0]==="cyan"?"house":t[0],2)}</span>${esc(t[1])}${n?`<i>${n}</i>`:""}</button>`}).join("")}</div>`;
   document.body.appendChild(d);const r=btn.getBoundingClientRect();d.style.top=(r.bottom+8)+"px";d.style.left=Math.max(12,Math.min(r.left,innerWidth-d.offsetWidth-12))+"px"}
 /* Đi tới (Ctrl K) */
-function ngGoList(){const L=[["trang-chu","Trang chủ","Màn hình chính","cyan"]];topFor().forEach(t=>L.push([t[2],t[1],"Ứng dụng",t[0]]));
-  allPJ().forEach(p=>{L.push(["da-"+p.id,p.name,"Dự án "+(p.code||""),"proj"]);const b=p.boq?DB.projects.find(x=>x.id===p.id):null;if(!b)return;const S=sheetsFor(b);NGPG.forEach(g=>g[1].forEach(k=>{const x=S.find(y=>y[0]===k);if(x&&k!=="home")L.push(["da-"+p.id+"-"+k,x[1],(p.code||p.name)+" · "+g[0],k])}))});
-  if(window.NGApp&&!NGApp.guest){[["cham-cong","Chấm công","att"],["cham-cong-don","Đơn từ","inbox"]].concat(typeof atMgr==="function"&&atMgr()?[["cham-cong-bang","Bảng công","rep"],["cham-cong-ca","Phân ca","prog"]]:[]).concat(typeof atAdm==="function"&&atAdm()?[["cham-cong-cd","Cài đặt chấm công","hr"]]:[]).forEach(x=>L.push([x[0],x[1],"Chấm công",x[2]]));
-    (NGApp.board?[["quan-tri","Tài khoản & vai trò","hr"],["quan-tri-pq","Phân quyền","rose"],["quan-tri-wf","Luồng duyệt","pyc"],["quan-tri-ai","Kết nối AI","sky"],["quan-tri-do","Đo lường AI","rev"],["quan-tri-bc","Bản chữ tài liệu","files"],["quan-tri-bh","Bài học cho AI","brief"]]:[]).concat([["quan-tri-mk","Mật khẩu & chữ ký","inbox"],["quan-tri-hd","Hướng dẫn sử dụng","rep"]]).forEach(x=>L.push([x[0],x[1],"Quản trị",x[2]]))}
+function ngGoList(){const L=[["trang-chu","Trang chủ","","cyan","app","Ứng dụng"]];topFor().forEach(t=>L.push([t[2],t[1],"",t[0],"app","Ứng dụng"]));
+  allPJ().forEach(p=>{L.push(["da-"+p.id,p.name,p.code||"","proj","pj","Dự án"]);const b=p.boq?DB.projects.find(x=>x.id===p.id):null;if(!b)return;const S=sheetsFor(b);NGPG.forEach(g=>g[1].forEach(k=>{const x=S.find(y=>y[0]===k);if(x&&k!=="home")L.push(["da-"+p.id+"-"+k,x[1],g[0],k,"p:"+p.id,(p.code?p.code+" · ":"")+p.name])}))});
+  if(window.NGApp&&!NGApp.guest){[["cham-cong","Chấm công","att"],["cham-cong-don","Đơn từ","inbox"]].concat(typeof atMgr==="function"&&atMgr()?[["cham-cong-bang","Bảng công","rep"],["cham-cong-ca","Phân ca","prog"]]:[]).concat(typeof atAdm==="function"&&atAdm()?[["cham-cong-cd","Cài đặt chấm công","hr"]]:[]).forEach(x=>L.push([x[0],x[1],"",x[2],"cc","Chấm công"]));
+    (NGApp.board?[["quan-tri","Tài khoản & vai trò","hr"],["quan-tri-pq","Phân quyền","rose"],["quan-tri-wf","Luồng duyệt","pyc"],["quan-tri-ai","Kết nối AI","sky"],["quan-tri-do","Đo lường AI","rev"],["quan-tri-bc","Bản chữ tài liệu","files"],["quan-tri-bh","Bài học cho AI","brief"]]:[]).concat([["quan-tri-mk","Mật khẩu & chữ ký","inbox"],["quan-tri-hd","Hướng dẫn sử dụng","rep"]]).forEach(x=>L.push([x[0],x[1],"",x[2],"qt","Quản trị"]))}
   return L}
 const ngNz=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/gi,"d").toLowerCase();
 let NGG={L:[],R:[],a:0};
 function ngGoOpen(){let d=document.getElementById("nggo");if(!d){d=document.createElement("div");d.id="nggo";d.className="nggod";d.innerHTML=`<div class="nggob" role="dialog" aria-label="Đi tới"><label class="nggoq">${ic("find",2.2)}<input id="nggoq" autocomplete="off" placeholder="Gõ tên màn, dự án… ví dụ: báo giá, phân ca, công nợ" aria-label="Đi tới"></label><div class="nggor" id="nggor"></div><div class="nggof">↑ ↓ chọn · Enter mở · Esc đóng</div></div>`;document.body.appendChild(d);
     d.addEventListener("mousedown",e=>{if(e.target===d)d.hidden=true});d.querySelector("input").addEventListener("input",e=>ngGoFill(e.target.value))}
   NGG.L=ngGoList();d.hidden=false;const q=d.querySelector("input");q.value="";ngGoFill("");setTimeout(()=>q.focus(),0)}
-function ngGoFill(v){const W=ngNz(v).split(/\s+/).filter(Boolean);NGG.R=NGG.L.filter(x=>{const z=ngNz(x[1]+" "+x[2]);return W.every(w=>z.includes(w))}).slice(0,60);NGG.a=0;
-  document.getElementById("nggor").innerHTML=NGG.R.map((x,i)=>`<button type="button" class="${i?"":"act"}" data-ngr="${i}" style="${sv(x[3])}"><span class="ngii">${icc(NGSI[x[0]]||x[3],2)}</span><b>${esc(x[1])}</b><small>${esc(x[2])}</small></button>`).join("")||`<p class="sub" style="padding:10px 14px">Không có màn nào khớp</p>`}
+function ngGoFill(v){const W=ngNz(v).split(/\s+/).filter(Boolean),cur=(location.hash.match(/^#da-([a-z0-9]+)/i)||[])[1];
+  const R=NGG.L.filter(x=>{if(!W.length)return !x[4].startsWith("p:")||x[4]==="p:"+cur;const z=ngNz(x[1]+" "+x[2]+" "+x[5]);return W.every(w=>z.includes(w))});
+  const G=[];R.forEach(x=>{let g=G.find(y=>y.k===x[4]);if(!g)G.push(g={k:x[4],t:x[5],L:[]});g.L.push(x)});
+  G.sort((a,b)=>{const o=k=>k==="app"?0:k==="p:"+cur?1:k==="pj"?2:k.startsWith("p:")?3:k==="cc"?4:5;return o(a.k)-o(b.k)});
+  NGG.R=[];const it=(x,sub)=>{const i=NGG.R.push(x)-1;return`<button type="button" data-ngr="${i}" style="${sv(x[3])}"><span class="ngii">${icc(NGSI[x[0]]||x[3],2)}</span><b>${esc(x[1])}</b>${sub&&x[2]?`<small>${esc(x[2])}</small>`:""}</button>`};
+  const T={app:"Ứng dụng",pj:"Dự án",cc:"Chấm công",qt:"Quản trị"};
+  document.getElementById("nggor").innerHTML=G.map(g=>{const pg=g.k.startsWith("p:");
+    let body;if(pg){const P=[];g.L.forEach(x=>{let q=P.find(y=>y.t===x[2]);if(!q)P.push(q={t:x[2],L:[]});q.L.push(x)});body=`<div class="nggph">${P.map(q=>`<div class="nggpc"><div class="nggpt">${esc(q.t)}</div>${q.L.map(x=>it(x)).join("")}</div>`).join("")}</div>`}
+    else body=`<div class="nggl${g.k==="pj"?" pj":""}">${g.L.map(x=>it(x,g.k==="pj")).join("")}</div>`;
+    return`<section class="nggs"><h4>${pg?"Dự án · ":""}${esc(T[g.k]||g.t)}<span>${g.L.length}</span></h4>${body}</section>`}).join("")||`<p class="sub" style="padding:10px 14px">Không có màn nào khớp</p>`;
+  NGG.a=0;const f=document.querySelector('#nggor [data-ngr="0"]');if(f)f.classList.add("act")}
 function ngGoPick(i){const x=NGG.R[i];if(!x)return;document.getElementById("nggo").hidden=true;location.hash=x[0];scrollTo({top:0})}
 /* Thanh dưới trên điện thoại */
 function ngBot(top){let b=document.getElementById("ngbot");if(!b){b=document.createElement("nav");b.id="ngbot";b.className="ngbot";b.setAttribute("aria-label","Điều hướng nhanh");document.body.appendChild(b)}
