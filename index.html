@@ -1752,6 +1752,15 @@ body.ngmsg-on .ngmsg{display:none!important}
 .ngnote{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:10070;background:#16171C;color:#fff;font:600 14px var(--f);padding:12px 20px;border-radius:14px;box-shadow:0 14px 30px -12px rgba(0,0,0,.5)}
 .nggod .ngsh h4{white-space:nowrap;flex:none}.nggod .ngadd{flex:none;padding:8px 14px}
 .nggod .nggor button.ngadd{width:auto!important;display:inline-flex!important;flex-direction:row!important;gap:6px!important;color:#fff!important}
+
+/* Bỏ nút quay lại danh sách dự án (đã bỏ màn danh sách) */
+.pbk{display:none!important}
+/* Mục đang mở trong bảng chọn mục: ô sáng bao quanh + nhãn "Đang xem" thay cho dấu chấm */
+@media(min-width:1001px){
+ body.ngboard .ngside .ngg .ngit[aria-current="true"]{position:relative;background:rgba(255,255,255,.26)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.85),0 10px 24px -12px rgba(0,0,0,.5)!important;border-radius:18px!important;padding:6px 4px 8px!important}
+ body.ngboard .ngside .ngg .ngit[aria-current="true"] .ngii{box-shadow:0 12px 24px -10px rgba(0,0,0,.55)!important}
+ body.ngboard .ngside .ngg .ngit[aria-current="true"]:after{content:"Đang xem"!important;width:auto!important;height:auto!important;border-radius:99px!important;background:#fff!important;color:#0A2486;font:800 10.5px var(--f);padding:2px 8px;margin:2px 0 0!important;position:static}
+}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
