@@ -1761,6 +1761,14 @@ body.ngmsg-on .ngmsg{display:none!important}
  body.ngboard .ngside .ngg .ngit[aria-current="true"] .ngii{box-shadow:0 12px 24px -10px rgba(0,0,0,.55)!important}
  body.ngboard .ngside .ngg .ngit[aria-current="true"]:after{content:"Đang xem"!important;width:auto!important;height:auto!important;border-radius:99px!important;background:#fff!important;color:#0A2486;font:800 10.5px var(--f);padding:2px 8px;margin:2px 0 0!important;position:static}
 }
+
+/* Thanh cuộn bảng: to hơn, nằm sát mép phải khung bảng, màu navy dễ thấy (anh Chung 08/11/2026) */
+html body .tw.tw.tw.tw,html body .gw.gw.gw.gw{scrollbar-width:auto!important;scrollbar-color:auto!important}
+html body .tw.tw.tw.tw::-webkit-scrollbar,html body .gw.gw.gw.gw::-webkit-scrollbar{width:14px!important;height:14px!important}
+html body .tw.tw.tw.tw::-webkit-scrollbar-track,html body .gw.gw.gw.gw::-webkit-scrollbar-track{background:#EEF1FA!important;margin:0!important;border-radius:0!important}
+html body .tw.tw.tw.tw::-webkit-scrollbar-thumb,html body .gw.gw.gw.gw::-webkit-scrollbar-thumb{background:#9AA8DE;border-radius:99px;border:3px solid #EEF1FA}
+html body .tw.tw.tw.tw::-webkit-scrollbar-thumb:hover,html body .gw.gw.gw.gw::-webkit-scrollbar-thumb:hover{background:#0A2486}
+html body .tw.tw.tw.tw::-webkit-scrollbar-corner,html body .gw.gw.gw.gw::-webkit-scrollbar-corner{background:#EEF1FA!important}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -2567,8 +2575,8 @@ function gantt(p,tl){const S=p.sched,mob=innerWidth<760,W=mob?Math.min(GZ[gZoom]
 const LD=(p,n)=>p&&p.leads&&p.leads[n]>0?p.leads[n]:LEAD(n);const LEAD=n=>/Kết cấu thép/i.test(n)?30:/Thiết bị|MMTB|^Máy|Tủ điện|MBA|bơm/i.test(n)?45:/Cửa/i.test(n)?21:/Cọc bê|Tôn(?![a-zà-ỹ])|Cáp|Đèn|^Ống/i.test(n)?14:/^Bê tông/i.test(n)?3:7;
 
 /* ---------- Danh sách sheet ---------- */
-const SHEETS=[["home","Tổng quan"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
-const BSHEETS=[["home","Tổng quan"],["lk","Tra cứu liên kết"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Phân tách gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["cl","Claim CĐT"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán NCC – TP"],["hr","Nhân sự"]];
+const SHEETS=[["home","Tình hình dự án"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
+const BSHEETS=[["home","Tình hình dự án"],["lk","Tra cứu liên kết"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Phân tách gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["cl","Claim CĐT"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán NCC – TP"],["hr","Nhân sự"]];
 /* Tab Hồ sơ: file lưu ở Google Drive qua api/drive; bảng quyền này chỉ để gọn màn hình, máy chủ kiểm tra lại (supabase/schema.sql) */
 /* Thư mục hồ sơ: 6 nhóm lớn (DG), file lưu ở thư mục con (DF: mã, tên, gợi ý, vai trò được xem); máy chủ kiểm tra lại quyền */
 const DG=[["01","Pháp lý – Hợp đồng"],["02","Kỹ thuật – Tiến độ"],["03","Chất lượng – An toàn"],["04","Thanh toán CĐT"],["05","NCC – TP"],["06","Hiện trường – Văn bản"]];
@@ -4318,7 +4326,7 @@ const HD=[
  s:["Bấm Trò chuyện trên thanh menu (số đỏ là tin chưa đọc)","Chọn hội thoại bên trái, gõ tin rồi Enter để gửi (Shift+Enter xuống dòng)","Bấm ＋ để nhắn riêng một người hoặc tạo nhóm"],
  b:[["Ô Tìm hội thoại, người","Tìm hội thoại; gõ tên người chưa từng nhắn sẽ hiện ở mục Danh bạ để nhắn ngay"],["Tất cả · Chưa đọc · Dự án · Nhóm · Riêng","Lọc danh sách hội thoại"],["😊 · 📎","Chèn biểu tượng cảm xúc · gửi ảnh, tệp (tối đa 50 MB; dán ảnh hoặc kéo thả vào khung chat cũng được)"],["@tên · @Tất cả","Nhắc tên một người, hoặc chọn Tất cả để nhắc cả nhóm; người được nhắc nhận thông báo kể cả khi đã tắt thông báo nhóm"],["🎤 Ghi âm","Bấm để ghi tin nhắn thoại, bấm Gửi để gửi hoặc Huỷ (lần đầu trình duyệt hỏi quyền dùng micro)"],["📊 Bình chọn","Tạo câu hỏi với 2–10 phương án, chọn một hay nhiều; mọi người bấm để chọn, thấy ngay số phiếu, rê chuột vào phương án để xem ai đã chọn"],["⋯ › ↪ Chuyển tiếp","Gửi tin, ảnh, tệp sang một hoặc nhiều hội thoại khác"],["Chấm xanh trên ảnh đại diện","Người đó đang mở web"],["Mời ra (trong ⓘ Thông tin)","Trưởng nhóm mời một thành viên ra khỏi nhóm tự lập"],["Rê chuột vào tin: 😊 · ↩ · ⋯","Bày tỏ cảm xúc · trả lời trích dẫn · sao chép, ghim, sửa, thu hồi (tin của mình, trong 24 giờ); trên điện thoại bấm giữ vào tin"],["🔍 · 🖼 · ⓘ đầu hội thoại","Tìm tin nhắn · xem ảnh, tệp đã gửi · thông tin, thành viên, tắt thông báo, ghim hội thoại, thêm người, đổi tên, rời nhóm"],["Thanh 📌 Tin đã ghim","Bấm để nhảy tới tin, ✕ để bỏ ghim"],["Đã xem / Đã gửi","Dưới tin cuối của mình: ai đã đọc"]]},
 {g:"top",k:"bc",t:"Báo cáo",go:"bao-cao",pa:"t:bao-cao",d:"So sánh các dự án toàn công ty: giá trị HĐ, nghiệm thu, chi phí, công nợ, tiến độ.",b:[["Tên công trình","Bấm để mở dự án"]]},
-{g:"home",k:"ptq",t:"Tổng quan dự án",go:"@home",pa:"p:home",d:"Trang đầu của từng dự án: giá trị hợp đồng, giá vốn, lãi gộp, doanh thu và giá vốn theo hạng mục, việc cần chú ý.",
+{g:"home",k:"ptq",t:"Tình hình dự án",go:"@home",pa:"p:home",d:"Trang đầu của từng dự án: giá trị hợp đồng, giá vốn, lãi gộp, doanh thu và giá vốn theo hạng mục, việc cần chú ý.",
  b:[["Doanh thu và giá vốn theo hạng mục","Thanh màu: giá vốn so với doanh thu, vạch đen là 100%"],["Việc cần chú ý","Dòng chưa nhập giá vốn, khoản trọn gói, vốn cần ứng"]]},
 {g:"home",k:"cv",t:"Việc cần xử lý",go:"@cv",pa:"p:home",d:"Các việc cần xử lý trong dự án theo vai trò của tài khoản đang dùng: quá hạn, sắp hạn, phiếu chờ duyệt; bấm một dòng để mở đúng chỗ.",
  b:[["Bảng Công việc cần xử lý","Việc quá hạn, sắp hạn của anh/chị; bấm một dòng để mở đúng chỗ"]]},
