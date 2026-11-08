@@ -1551,6 +1551,15 @@ label.search:has(> #q){visibility:hidden!important;flex:1 1 0!important;min-widt
 .nghgo2 b{display:block;font-size:15.5px;font-weight:700}.nghgo2 small{display:block;font-size:12.5px;color:#5B6380;font-weight:500}
 .nghgo2 kbd{margin-left:auto;font:700 11.5px var(--f);background:#fff;color:#0A2486;border-radius:8px;padding:4px 9px;box-shadow:inset 0 0 0 1px rgba(10,36,134,.15)}
 @media(max-width:760px){.nghgo2 kbd{display:none}}
+
+/* Logo giữa thanh trên là nút Trang chủ (máy tính); nút Trang chủ dạng viên chỉ giữ khi logo bị ẩn */
+@media(min-width:1181px){#pills>.pill[data-go="trang-chu"]{display:none}}
+.tlogo img{transition:transform .18s,box-shadow .18s;border-radius:50%}
+.tlogo:hover img{transform:translateY(-2px) scale(1.06);box-shadow:0 10px 22px -10px rgba(10,36,134,.55),0 0 0 3px rgba(225,20,27,.18)}
+.tlogo:active img{transform:scale(.96)}
+body.nghome-on .tlogo img{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(225,20,27,.55),0 10px 22px -10px rgba(10,36,134,.5)}
+.tlogo:after{content:"Trang chủ";position:absolute;top:calc(100% + 2px);left:50%;transform:translateX(-50%);font:700 11px var(--f);color:#0A2486;background:#fff;border-radius:99px;padding:2px 9px;box-shadow:0 4px 10px -6px rgba(10,36,134,.5);opacity:0;pointer-events:none;transition:opacity .15s;white-space:nowrap}
+.tlogo:hover:after{opacity:1}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -1622,12 +1631,11 @@ label.search:has(> #q){visibility:hidden!important;flex:1 1 0!important;min-widt
     </div>
     <div class="top">
       <div class="pills" id="pills"></div>
-      <div class="tlogo" data-go="trang-chu" title="Trang chủ" style="cursor:pointer"><img src="img/logo-round.svg?v=2" alt=""></div>
+      <div class="tlogo" data-go="trang-chu" title="Về Trang chủ" role="button" tabindex="0" aria-label="Trang chủ" style="cursor:pointer"><img src="img/logo-round.svg?v=2" alt=""></div>
       <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" name="ng-tim" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="Tìm công trình, vật tư, nhân sự"></label>
       <button class="round" id="asBtn" hidden aria-label="Xem như người dùng khác" title="Xem như người dùng khác (kiểm tra quyền, chỉ xem)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="round" id="fs" aria-label="Xem toàn màn hình" title="Xem toàn màn hình"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
       <button class="round" aria-label="Thông báo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15zM10 20a2 2 0 004 0"/></svg><span class="badge"></span></button>
-      <button class="round" aria-label="Cài đặt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 00-2-1.2L14 3h-4l-.6 2.6a7 7 0 00-2 1.2l-2.3-.9-2 3.4 2 1.5a7 7 0 000 2.4l-2 1.5 2 3.4 2.3-.9a7 7 0 002 1.2L10 21h4l.6-2.6a7 7 0 002-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></button>
       <button class="round" title="Đăng xuất" aria-label="Đăng xuất" onclick="showIntro()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg></button>
       <div class="avatar tav" title="Nguyễn Văn Chung">C</div>
     </div>
@@ -3938,7 +3946,7 @@ window.renderHello=function(){homeReal();const box=document.getElementById("hp")
   const sub=document.querySelector(".hello .sub");if(sub)sub.textContent=`${DB.projects.length+SAMPLES().length} công trình · ${np} việc chờ anh duyệt`;
   const wait=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().length:0,emp=rows.length?"":`<div class="sub" style="padding:14px 4px">${wait?`Trình duyệt này còn ${wait} dự án chưa đưa lên hệ thống.`:"Chưa có dự án nào."}</div>${wait?`<button class="pill" data-go="du-an" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Đưa ${wait} dự án lên hệ thống</button>`:`<button class="pill" data-go="du-an" style="${sv("boq")}"><span class="dot">${ic("up",2)}</span>Tải BOQ tạo dự án</button>`}`;
   box.innerHTML=emp+rows.map(r=>`<button class="hpr" data-go="da-${r.id}">${ring(r.v,r.c)}<div class="hn"><b>${esc(r.name)}${r.demo?' <small class="mau">Mẫu</small>':""}</b><span>${esc(r.sub)}</span></div><div class="hv"><b class="num">${fm(r.val)} tỷ</b>${r.tag}</div></button>`).join("")+
-    `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div><button type="button" class="nghgo2" data-nggo><span class="ngat">${icc("apps",2)}</span><span><b>Ứng dụng &amp; đi tới màn</b><small>Mở nhanh mọi ứng dụng, dự án, màn làm việc</small></span><kbd>Ctrl K</kbd></button>`};
+    `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div>`};
 /* ---------- Điều hướng ---------- */
 const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["chat","Trò chuyện","tro-chuyen"],["att","Chấm công","cham-cong"],["rep","Báo cáo","bao-cao"],["adm","Quản trị","quan-tri"]];
 const topFor=()=>TOP.filter(t=>t[2]!=="tong-quan").filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"||t[2]==="tro-chuyen"||t[2]==="cham-cong"?window.NGApp&&!NGApp.guest:t[2]==="tong-quan"?canOv():pqTop(t[2])>0));
@@ -4197,6 +4205,7 @@ function hdView(){const bd=window.NGApp&&NGApp.board,pid=(DB.projects[0]||{}).id
 function hdRe(focus){const b=document.getElementById("adm");if(!b)return;const sl=(b.querySelector(".hdlist")||{}).scrollTop||0;b.innerHTML=hdView();const l=b.querySelector(".hdlist");if(l)l.scrollTop=sl;if(focus){const i=document.getElementById("hdq");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}}
 document.addEventListener("click",e=>{const j=e.target.closest("[data-hdj]");if(j){HDS.sel=j.dataset.hdj;hdRe();const m=document.getElementById("hdmain");if(m){const r=m.getBoundingClientRect();if(r.top<70||r.top>innerHeight*.6)scrollTo({top:scrollY+r.top-90,behavior:"smooth"});m.firstElementChild&&m.firstElementChild.classList.add("hdin")}return}
   if(e.target.closest('.top .round[aria-label="Cài đặt"]')){location.hash=window.NGApp&&NGApp.board?"quan-tri":"quan-tri-mk"}});
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest(".tlogo")){e.preventDefault();location.hash="trang-chu"}});
 document.addEventListener("input",e=>{if(e.target.id!=="hdq")return;HDS.q=e.target.value;clearTimeout(HDS.t);HDS.t=setTimeout(()=>hdRe(1),200)});
 /* ---------- Trò chuyện kiểu Zalo (anh Chung 07/11/2026) ----------
    Phòng: Cả công ty · mỗi dự án (ai có vai trò ở dự án) · nhóm tự lập · nhắn riêng 1-1. Bảng chat_rooms, chat_members, chat_messages; file ở bucket "chat".
@@ -4855,7 +4864,7 @@ function ngHome(){const nm=(window.NGApp&&(NGApp.name||"").split(" ").pop())||""
    <section class="card nghgo"><label class="nggoq nghq">${ic("find",2.2)}<input id="nghq" autocomplete="off" placeholder="Tìm nhanh màn, dự án… ví dụ: báo giá, phân ca, công nợ" aria-label="Tìm nhanh"><kbd>Ctrl K</kbd></label><div class="nggor" id="nghr"></div></section></div>`}
 /* Thanh trên: Trang chủ · ứng dụng đang mở · Ứng dụng · Đi tới */
 function ngTopBar(top){const T=TOP.find(t=>t[2]===top),np=canOv()?waiting(decisions()).length:0;
-  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}`}
+  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}<button type="button" class="ngtb" data-ngapps aria-label="Ứng dụng"><span>${icc("apps",2)}</span>Ứng dụng</button><button type="button" class="ngtb nggo" data-nggo aria-label="Đi tới"><span>${icc("find",2.2)}</span>Đi tới màn…<kbd>Ctrl K</kbd></button>`}
 function ngAppsPop(btn){let d=document.getElementById("ngpop");if(d){d.remove();return}const np=canOv()?waiting(decisions()).length:0,chu=typeof CH!=="undefined"?CH.un||0:0;d=document.createElement("div");d.id="ngpop";d.className="ngpop";
   d.innerHTML=`<div class="ngapps">${[["cyan","Trang chủ","trang-chu"],...topFor()].map(t=>{const n=t[2]==="duyet"?np:t[2]==="tro-chuyen"?chu:0;return`<button type="button" class="ngapp" data-go="${t[2]}" style="${sv(t[0])}"><span class="ngat">${icc(t[0]==="cyan"?"house":t[0],2)}</span>${esc(t[1])}${n?`<i>${n}</i>`:""}</button>`}).join("")}</div>`;
   document.body.appendChild(d);const r=btn.getBoundingClientRect();d.style.top=(r.bottom+8)+"px";d.style.left=Math.max(12,Math.min(r.left,innerWidth-d.offsetWidth-12))+"px"}
@@ -4924,7 +4933,7 @@ function route(){let h=(location.hash||"#trang-chu").slice(1);if(["ban-tin","duy
   else if(/^quan-tri(-ai|-mk|-do|-bh|-wf|-bc|-pq|-hd)?$/.test(h)&&window.NGApp&&!NGApp.guest){top="quan-tri";html=adminView(h==="quan-tri-hd"?"hd":h==="quan-tri-pq"?"pq":h==="quan-tri-ai"?"ai":h==="quan-tri-mk"?"mk":h==="quan-tri-do"?"do":h==="quan-tri-bh"?"bh":h==="quan-tri-wf"?"wf":h==="quan-tri-bc"?"bc":"tk")}
   else if(h.startsWith("da-")){const [,id,s,sub]=h.split("-");const p=allPJ().find(x=>x.id===id);if(p){window.NG_PID=p.code||id;top="du-an";const L=p.boq?sheetsFor(DB.projects.find(x=>x.id===id)):SHEETS;html=projView(p,L.some(x=>x[0]===s)?s:L[0][0],sub);cur=p.boq?DB.projects.find(x=>x.id===id):null}}
   if(!html&&!canOv()){top="du-an";html=projList()}
-  {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=ngTopBar(top);try{ngBot(top)}catch(e){console.error(e)}document.body.classList.remove("ngsideopen","ngpeek");setTimeout(ngTab,0);try{chBadge()}catch(e){}}
+  {const np=canOv()?waiting(decisions()).length:0;document.getElementById("pills").innerHTML=ngTopBar(top);document.body.classList.toggle("nghome-on",top==="trang-chu");try{ngBot(top)}catch(e){console.error(e)}document.body.classList.remove("ngsideopen","ngpeek");setTimeout(ngTab,0);try{chBadge()}catch(e){}}
   const isHome=!html;home.hidden=!isHome;view.hidden=isHome;if(note)note.hidden=true;document.body.classList.toggle("scroll",!isHome);
   if(!isHome){view.innerHTML=html;subLay(view);if(top==="cham-cong"||top==="quan-tri")try{ngWrapSheets(top)}catch(e){console.error(e)}if(document.getElementById("att"))try{atMount()}catch(e){console.error(e)}if(document.getElementById("ngchat"))try{chMount()}catch(e){console.error(e)}try{pqApply(h,top)}catch(e){console.error(e)}dashZeros(view);bqApply();try{tsSync()}catch(e){}if(top==="quan-tri"&&admTab!=="mk"&&admTab!=="hd")adminLoad();if(document.getElementById("sgbox")&&window.NGApp)sigSync([NGApp.uid]);if(document.getElementById("fls"))filesLoad();if(document.getElementById("wx"))wxLoad();if(document.getElementById("qmsg"))qFilesLoad();if(document.getElementById("ctsel"))ctFilesLoad();if(/-(pyc|tt|dc|goi|kh|files|lk|bn|bg)(-|$)/.test(location.hash)&&cur&&(PY.pid!==cur.id||!PY.list||Date.now()-(PY.at||0)>30000))pyLoad();if(!NGApp.guest&&NGApp.uid)try{kbAuto(cur&&/^#?da-/.test(location.hash)?(DB.projects.find(x=>x.id===cur.id)||cur):null)}catch(e){}}else{try{drawMap()}catch(e){console.error(e)}try{if(!NGApp.guest&&NGApp.uid)kbAuto(null)}catch(e){}}
 }
