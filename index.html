@@ -1716,6 +1716,28 @@ body.ngmsg-on .ngmsg{display:none!important}
 @media(max-width:1500px){.nggod .nglg{grid-template-columns:repeat(2,minmax(0,420px))!important}}
 @media(max-width:760px){.nggod .nglg{grid-template-columns:1fr!important}}
 .nggod .nglg .nggl button b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Bảng chọn mục vừa 1 màn 16:9, không phải cuộn (anh Chung 08/11/2026) */
+@media(min-width:1001px){
+ body.ngboard .ngside{padding:clamp(20px,4.5vh,56px) 40px 20px!important;gap:clamp(12px,2.4vh,26px) clamp(20px,2.4vw,40px)!important;grid-template-columns:repeat(3,minmax(0,440px))!important;align-content:start}
+ body.ngboard .ngside>.ngph{max-width:none!important;width:100%!important;justify-self:stretch;padding:clamp(8px,1.4vh,14px) 20px!important;margin:0!important}
+ body.ngboard .ngside>.ngph .ngpn{flex:1;min-width:0}
+ body.ngboard .ngside>.ngph .ngpsel{width:100%!important;max-width:none!important;text-overflow:ellipsis}
+ body.ngboard .ngside>.ngph .ngpt{width:clamp(38px,5vh,52px)!important;height:clamp(38px,5vh,52px)!important}
+ body.ngboard .ngside .ngg{grid-template-columns:repeat(4,1fr)!important;gap:clamp(4px,1vh,12px) 4px!important;padding:clamp(10px,1.5vh,16px) 12px!important}
+ body.ngboard .ngside .ngg .nggh{padding:clamp(4px,.8vh,9px) 18px!important;font-size:clamp(15px,1.9vh,19px)!important;margin-bottom:clamp(2px,.6vh,8px)!important}
+ body.ngboard .ngside .ngg .ngit{gap:clamp(3px,.6vh,8px)!important;padding:2px!important;font-size:clamp(12px,1.45vh,14px)!important}
+ body.ngboard .ngside .ngg .ngit .ngii{width:clamp(44px,6.2vh,70px)!important;height:clamp(44px,6.2vh,70px)!important;border-radius:clamp(12px,1.8vh,19px)!important}
+ body.ngboard .ngside .ngg .ngit .ngii svg{width:clamp(26px,3.7vh,42px)!important;height:clamp(26px,3.7vh,42px)!important}
+ body.ngboard .ngside .ngg .ngit .ngtx{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+}
+@media(min-width:1001px){
+ body.ngboard .ngside{align-content:center!important;padding-right:84px!important;padding-left:84px!important}
+ body.ngboard .ngside .ngg .ngit .ngii{width:clamp(44px,7.6vh,84px)!important;height:clamp(44px,7.6vh,84px)!important;border-radius:clamp(12px,2.1vh,22px)!important}
+ body.ngboard .ngside .ngg .ngit .ngii svg{width:clamp(26px,4.5vh,50px)!important;height:clamp(26px,4.5vh,50px)!important}
+ body.ngboard .ngside .ngg .ngit{font-size:clamp(12px,1.6vh,15px)!important}
+ body.ngboard .ngside .ngg .nggh{font-size:clamp(15px,2.1vh,20px)!important}
+}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
