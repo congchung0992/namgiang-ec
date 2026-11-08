@@ -5044,8 +5044,8 @@ function ngGoFill(v,box){const inl=!!box;box=box||document.getElementById("nggor
   const RR=[];if(!inl)NGG.R=RR;const BD=ngBadges();const it=(x,sub)=>{const i=RR.push(x)-1;return`<button type="button" ${inl?`data-go="${esc(x[0])}"`:`data-ngr="${i}"`} style="${sv(x[3])}"><span class="ngii">${icc(NGSI[x[0]]||x[3],2)}</span><b>${esc(x[1])}</b>${BD[x[0]]?`<i class="nggbd">${BD[x[0]]>99?"99+":BD[x[0]]}</i>`:""}${sub&&x[2]?`<small>${esc(x[2])}</small>`:""}</button>`};
   const T={app:"Ứng dụng",pj:"Dự án",cc:"Chấm công",qt:"Quản trị"};
   if(!inl&&!W.length){/* Bảng Ứng dụng kiểu bảng chọn mục: ô đầu + các nhóm thẻ kính màu (anh Chung 08/11/2026) */
-    const A=R.filter(x=>x[4]==="app"),GP=[["Điều hành","#94A3B8",["trang-chu","ban-tin","duyet","bao-cao"]],["Dự án & công trường","#F59E0B",["du-an","cham-cong"]],["Trao đổi & hệ thống","#22B8E8",["tro-chuyen","quan-tri"]]];
-    const used=new Set();const grp=GP.map(([t,c,K])=>{const L=K.map(k=>A.find(x=>x[0]===k)).filter(Boolean);L.forEach(x=>used.add(x));return[t,c,L]});const rest=A.filter(x=>!used.has(x));if(rest.length)grp[grp.length-1][2].push(...rest);
+    const A=R.filter(x=>x[4]==="app"),GP=[["Điều hành","#94A3B8",["trang-chu","ban-tin","duyet","bao-cao"]],["Dự án & công trường","#F59E0B",["du-an","cham-cong"]],["Hệ thống","#22B8E8",["quan-tri"]]];
+    const used=new Set();const grp=GP.map(([t,c,K])=>{const L=K.map(k=>A.find(x=>x[0]===k)).filter(Boolean);L.forEach(x=>used.add(x));return[t,c,L]});const rest=A.filter(x=>!used.has(x)&&x[0]!=="tro-chuyen");if(rest.length)grp[grp.length-1][2].push(...rest);
     box.innerHTML=`<div class="nglh"><span class="nglhi"><img src="img/logo-round.svg?v=2" alt=""></span><span><b>Nam Giang E&amp;C</b><small>Chọn ứng dụng · Esc để đóng</small></span></div><div class="nglg">${grp.filter(g=>g[2].length).map(([t,c,L])=>`<section class="nggs" style="--g:${c}"><h4>${esc(t)}</h4><div class="nggl">${L.map(x=>it(x)).join("")}</div></section>`).join("")}</div>`;
     NGG.a=0;const f0=box.querySelector('[data-ngr="0"]');if(f0)f0.classList.add("act");return}
   box.innerHTML=G.map(g=>{const pg=g.k.startsWith("p:");
