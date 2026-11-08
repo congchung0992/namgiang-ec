@@ -1322,6 +1322,19 @@ html.atlock,html.atlock body{overflow:hidden}
 .rvempty{flex:1;display:grid;place-items:center;color:var(--muted);font-size:14px;min-height:150px}
 .seg button[aria-pressed="true"]{background:linear-gradient(135deg,#2D3CE6,#7FA2FF)!important;color:#fff;font-weight:700}
 @media(max-width:760px){.rvk b{font-size:18px}.rvk>div{padding:8px 10px}.rvc{min-height:180px}}
+/* Ô chọn toàn app (anh Chung chốt 08/11/2026): mũi tên trong ô vuông bo nền xanh nhạt (mẫu 9) · danh sách bật ra tự vẽ (mẫu 10) */
+html body select:not([multiple]):not([size]){-webkit-appearance:none!important;appearance:none!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect width='26' height='26' rx='7' fill='%23EEF1FA'/%3E%3Cpath d='M8.5 11l4.5 4.5 4.5-4.5' fill='none' stroke='%232D3CE6' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 6px center!important;background-size:24px 24px!important;padding-right:38px!important;cursor:pointer}
+html body select:not([multiple]):not([size]):disabled{opacity:.6;cursor:not-allowed}
+html body select::-ms-expand{display:none}
+.ngdm{position:fixed;z-index:10050;background:#fff;border-radius:14px;padding:6px;box-shadow:0 18px 40px -14px rgba(10,36,134,.38),inset 0 0 0 1px #E2E4EC;overflow:auto;overscroll-behavior:contain;font-family:var(--f)}
+.ngdm .ngdq{position:sticky;top:-6px;background:#fff;padding:2px 0 6px;margin-top:-2px;z-index:1}.ngdm .ngdq input{width:100%;border:0;border-radius:10px;padding:8px 10px;font:500 14px var(--f);background:#F4F5FA;outline:0}
+.ngdm .ngdg{padding:8px 10px 4px;font-size:12px;font-weight:700;color:var(--muted)}
+.ngdm button{width:100%;display:flex;align-items:center;gap:10px;border:0;background:none;border-radius:10px;padding:8px 10px;font:500 14px/1.35 var(--f);color:#16171C;cursor:pointer;text-align:left}
+.ngdm button i{width:10px;height:10px;border-radius:50%;flex:none;background:var(--c)}
+.ngdm button:hover,.ngdm button.act{background:#F1F3FA}
+.ngdm button[aria-selected="true"]{background:#EEF1FA;font-weight:700;color:#0A2486}
+.ngdm button:disabled{color:#A9AEBB;cursor:default;background:none}
+.ngdm .ngde{padding:10px;color:var(--muted);font-size:13px}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -4419,7 +4432,7 @@ async function atXl(){try{await needXJ();const wb=new ExcelJS.Workbook(),ws=wb.a
 /* ----- Tab Phân ca ----- */
 function atCa(){const w0=atWeek(AT.wk),DS=[...Array(7)].map((_,i)=>atYmd(new Date(+w0+i*864e5))),P=atStaff(),S=AT.shifts.filter(s=>s.active),def=atDefShift();
   const cell=(u,ds)=>{const r=AT.ros.find(x=>x.user_id===u&&x.d===ds),sun=new Date(ds+"T00:00").getDay()===0,cur=r?(r.off?"off":r.shift_id||""):"",sh=r?(r.off?null:S.find(s=>s.id===r.shift_id)):(sun?null:def),c=sh?sh.color:"#9AA0B4";
-    return`<td class="tc"><select class="fi sel atsel${r?" set":""}" data-atros="${u}|${ds}" style="--k:${c}"><option value="">${sun?"Nghỉ":"Mặc định"}</option>${S.map(s=>`<option value="${s.id}"${cur===s.id?" selected":""}>${esc(s.name)}</option>`).join("")}<option value="off"${cur==="off"?" selected":""}>Nghỉ</option></select></td>`};
+    return`<td class="tc"><select class="fi sel atsel${r?" set":""}" data-atros="${u}|${ds}" style="--k:${c}"><option value="" data-c="#C9CEDA">${sun?"Nghỉ":"Mặc định"}</option>${S.map(s=>`<option value="${s.id}" data-c="${esc(s.color||"#2D3CE6")}"${cur===s.id?" selected":""}>${esc(s.name)}</option>`).join("")}<option data-c="#8A8FA0" value="off"${cur==="off"?" selected":""}>Nghỉ</option></select></td>`};
   return`<section class="card span3"><div class="bh"><div><h3>Phân ca tuần ${atFmtD(DS[0]).slice(0,5)} – ${atFmtD(DS[6])}</h3><span class="sub">Chọn ca cho từng người từng ngày, lưu ngay · ô để mặc định: thứ Hai – thứ Bảy theo ca mặc định, Chủ nhật nghỉ</span></div><div class="fla"><button type="button" class="back sm" data-atwk="-1" style="margin:0">‹ Tuần trước</button><button type="button" class="back sm" data-atwk="0" style="margin:0">Tuần này</button><button type="button" class="back sm" data-atwk="1" style="margin:0">Tuần sau ›</button><button type="button" class="back sm" data-atcopy style="margin:0">Chép ca tuần trước</button></div></div>
     <div class="tw atdesk" style="margin-top:12px"><table class="t atca"><thead><tr><th>Họ tên</th>${DS.map(ds=>{const d=new Date(ds+"T00:00");return`<th>${["CN","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7"][d.getDay()]}<small>${atFmtD(ds).slice(0,5)}</small></th>`}).join("")}</tr></thead><tbody>${P.map(p=>`<tr><td><b>${esc(p.name)}</b></td>${DS.map(ds=>cell(p.id,ds)).join("")}</tr>`).join("")||`<tr><td colspan="8" class="sub">Chưa có nhân viên</td></tr>`}</tbody></table></div>
     <div class="atmb"><div class="atdays">${DS.map((ds,i)=>{const d=new Date(ds+"T00:00");return`<button type="button" class="${i===(AT.caDay||0)?"on":""}${d.getDay()===0?" sun":""}" data-atcaday="${i}"><small>${["CN","T2","T3","T4","T5","T6","T7"][d.getDay()]}</small><b>${+ds.slice(8)}</b></button>`}).join("")}</div>
@@ -6787,6 +6800,35 @@ document.getElementById("askf")?.addEventListener("submit",e=>{e.preventDefault(
 (()=>{let h0=null,shown=0;const hs=t=>{let h=0;for(let i=0;i<t.length;i+=7)h=(h*31+t.charCodeAt(i))|0;return t.length+":"+h};
   const chk=async()=>{if(shown)return;try{const r=await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"});if(!r.ok)return;const h=hs(await r.text());if(h0===null){h0=h;return}if(h!==h0){shown=1;const b=document.createElement("div");b.id="ngupd";b.innerHTML='<span>Web vừa có bản cập nhật mới</span><button type="button">Tải lại</button>';b.querySelector("button").onclick=()=>location.reload();document.body.appendChild(b)}}catch(e){}};
   chk();setInterval(chk,5*60e3);document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()})})();
+</script>
+<script>
+/* Ô chọn: mở bằng chuột thì hiện danh sách tự vẽ (giữ select gốc để mọi xử lý cũ chạy như trước); chạm trên điện thoại vẫn dùng bảng chọn của máy */
+(()=>{let pt="mouse",M=null,S=null,act=-1;
+  addEventListener("pointerdown",e=>{pt=e.pointerType||"mouse"},true);
+  const items=()=>M?[...M.querySelectorAll("button[data-i]:not([hidden]):not(:disabled)")]:[];
+  const mark=i=>{const L=items();L.forEach(b=>b.classList.remove("act"));act=Math.max(0,Math.min(L.length-1,i));if(L[act]){L[act].classList.add("act");L[act].scrollIntoView({block:"nearest"})}};
+  function close(){if(M){M.remove();M=null}if(S){S.removeAttribute("aria-expanded");S=null}act=-1}
+  function choose(i){const s=S;close();if(!s||s.selectedIndex===i)return s&&s.focus();s.selectedIndex=i;s.dispatchEvent(new Event("input",{bubbles:true}));s.dispatchEvent(new Event("change",{bubbles:true}));s.focus()}
+  function place(){if(!M||!S)return;const r=S.getBoundingClientRect(),vh=innerHeight,below=vh-r.bottom-12,above=r.top-12,up=below<220&&above>below,h=Math.min(360,Math.max(120,up?above:below));
+    M.style.minWidth=Math.max(r.width,180)+"px";M.style.maxWidth=Math.min(460,innerWidth-24)+"px";M.style.maxHeight=h+"px";const w=M.offsetWidth;M.style.left=Math.max(12,Math.min(r.left,innerWidth-w-12))+"px";
+    if(up){M.style.top="";M.style.bottom=(vh-r.top+6)+"px"}else{M.style.bottom="";M.style.top=(r.bottom+6)+"px"}}
+  function open(s){close();S=s;s.setAttribute("aria-expanded","true");const m=document.createElement("div");m.className="ngdm";m.setAttribute("role","listbox");
+    const opt=(o,i)=>{if(o.hidden||o.style.display==="none")return"";const c=o.dataset.c;return`<button type="button" role="option" data-i="${i}" aria-selected="${o.selected}"${o.disabled?" disabled":""}>${c?`<i style="--c:${c}"></i>`:""}<span></span></button>`};
+    let h="",n=0;const all=[...s.options];[...s.children].forEach(ch=>{if(ch.tagName==="OPTGROUP"){h+=`<div class="ngdg"></div>`;[...ch.children].forEach(o=>{h+=opt(o,all.indexOf(o));n++})}else if(ch.tagName==="OPTION"){h+=opt(ch,all.indexOf(ch));n++}});
+    m.innerHTML=(n>12?`<div class="ngdq"><input type="search" placeholder="Tìm trong danh sách…" aria-label="Tìm trong danh sách"></div>`:"")+h;
+    let gi=0;const G=[...s.children].filter(x=>x.tagName==="OPTGROUP");m.querySelectorAll(".ngdg").forEach(d=>{d.textContent=G[gi++].label});m.querySelectorAll("button[data-i]").forEach(b=>{b.querySelector("span").textContent=all[+b.dataset.i].textContent});
+    document.body.appendChild(m);M=m;place();const sel=m.querySelector('[aria-selected="true"]');const L=items();mark(Math.max(0,L.indexOf(sel)));
+    const q=m.querySelector(".ngdq input");if(q){q.addEventListener("input",()=>{const v=q.value.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/gi,"d").toLowerCase();m.querySelectorAll("button[data-i]").forEach(b=>{b.hidden=!!v&&!b.textContent.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/gi,"d").toLowerCase().includes(v)});m.querySelectorAll(".ngdg").forEach(g=>{let x=g.nextElementSibling,any=false;while(x&&x.tagName==="BUTTON"){if(!x.hidden)any=true;x=x.nextElementSibling}g.hidden=!any});mark(0)});setTimeout(()=>q.focus(),0)}
+    m.addEventListener("mousedown",e=>{if(!e.target.closest("input"))e.preventDefault()});
+    m.addEventListener("click",e=>{const b=e.target.closest("button[data-i]");if(b&&!b.disabled)choose(+b.dataset.i)})}
+  document.addEventListener("mousedown",e=>{const s=e.target.closest&&e.target.closest("select");
+    if(M&&!e.target.closest(".ngdm")&&s!==S)close();
+    if(!s||s.multiple||s.size>1||s.disabled||pt==="touch"||pt==="pen"||e.button!==0)return;e.preventDefault();s.focus();if(S===s){close();return}open(s)},true);
+  document.addEventListener("keydown",e=>{if(!M)return;if(e.key==="Escape"){e.preventDefault();e.stopPropagation();const s=S;close();s&&s.focus();return}
+    if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();mark(act+(e.key==="ArrowDown"?1:-1));return}
+    if(e.key==="Enter"){e.preventDefault();const b=items()[act];if(b)choose(+b.dataset.i);return}
+    if(e.key==="Tab")close()},true);
+  addEventListener("scroll",e=>{if(M&&!M.contains(e.target))close()},true);addEventListener("resize",close);addEventListener("hashchange",close)})();
 </script>
 </body>
 </html>
