@@ -1468,6 +1468,17 @@ img.nglogo{display:block;border-radius:50%;object-fit:cover;width:24px;height:24
 .ngat img.nglogo{width:42px!important;height:42px!important}
 .ngbot button img.nglogo{width:24px;height:24px}
 @media(max-width:760px){.ngat img.nglogo{width:36px!important;height:36px!important}}
+
+/* Bảng Đi tới: khung 16:9 lớn, kết quả chia 3 cột */
+.nggod{align-items:center;padding:4vh 24px}
+.nggob{width:min(1400px,100%,calc(88vh*16/9));aspect-ratio:16/9;display:flex;flex-direction:column}
+.nggoq input{font-size:18px;padding:20px 0}
+.nggor{flex:1;max-height:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-content:start;gap:4px 10px;padding:12px 14px}
+.nggor button{padding:10px 12px;font-size:14.5px;min-width:0}
+.nggor button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nggor button small{max-width:40%}
+@media(max-width:1100px){.nggor{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.nggob{aspect-ratio:auto;max-height:88vh}.nggor{grid-template-columns:1fr;max-height:70vh}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -4785,7 +4796,7 @@ let NGG={L:[],R:[],a:0};
 function ngGoOpen(){let d=document.getElementById("nggo");if(!d){d=document.createElement("div");d.id="nggo";d.className="nggod";d.innerHTML=`<div class="nggob" role="dialog" aria-label="Đi tới"><label class="nggoq">${ic("find",2.2)}<input id="nggoq" autocomplete="off" placeholder="Gõ tên màn, dự án… ví dụ: báo giá, phân ca, công nợ" aria-label="Đi tới"></label><div class="nggor" id="nggor"></div><div class="nggof">↑ ↓ chọn · Enter mở · Esc đóng</div></div>`;document.body.appendChild(d);
     d.addEventListener("mousedown",e=>{if(e.target===d)d.hidden=true});d.querySelector("input").addEventListener("input",e=>ngGoFill(e.target.value))}
   NGG.L=ngGoList();d.hidden=false;const q=d.querySelector("input");q.value="";ngGoFill("");setTimeout(()=>q.focus(),0)}
-function ngGoFill(v){const W=ngNz(v).split(/\s+/).filter(Boolean);NGG.R=NGG.L.filter(x=>{const z=ngNz(x[1]+" "+x[2]);return W.every(w=>z.includes(w))}).slice(0,14);NGG.a=0;
+function ngGoFill(v){const W=ngNz(v).split(/\s+/).filter(Boolean);NGG.R=NGG.L.filter(x=>{const z=ngNz(x[1]+" "+x[2]);return W.every(w=>z.includes(w))}).slice(0,60);NGG.a=0;
   document.getElementById("nggor").innerHTML=NGG.R.map((x,i)=>`<button type="button" class="${i?"":"act"}" data-ngr="${i}" style="${sv(x[3])}"><span class="ngii">${icc(NGSI[x[0]]||x[3],2)}</span><b>${esc(x[1])}</b><small>${esc(x[2])}</small></button>`).join("")||`<p class="sub" style="padding:10px 14px">Không có màn nào khớp</p>`}
 function ngGoPick(i){const x=NGG.R[i];if(!x)return;document.getElementById("nggo").hidden=true;location.hash=x[0];scrollTo({top:0})}
 /* Thanh dưới trên điện thoại */
