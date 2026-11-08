@@ -1540,6 +1540,17 @@ body.ngcol .ngg .nggh{display:flex!important}
 .nggbd{position:absolute;top:4px;left:30px;min-width:18px;height:18px;border-radius:99px;background:#E1141B;color:#fff;font:700 10.5px/18px var(--f);text-align:center;padding:0 5px;font-style:normal;box-shadow:0 0 0 2px #fff}
 @media(max-width:1100px){.nghome{grid-template-columns:1fr!important}}
 @media(max-width:760px){#nghr .nggl{grid-template-columns:1fr 1fr}#nghr .nggl.pj{grid-template-columns:1fr}#nghr button b{white-space:normal;line-height:1.25}.nghq kbd{display:none}.nggs{padding:10px 8px!important}}
+
+/* Bỏ ô tìm bên phải thanh trên (anh Chung 08/11/2026) */
+label.search:has(> #q){visibility:hidden!important;flex:1 1 0!important;min-width:0!important;width:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}
+@media(max-width:760px){label.search:has(> #q){display:none!important}}
+/* Thẻ mở bảng Đi tới ở Trang chủ */
+.nghgo2{margin-top:12px;width:100%;display:flex;align-items:center;gap:14px;border:0;cursor:pointer;text-align:left;padding:12px 16px;border-radius:18px;background:linear-gradient(120deg,#EEF1FF,#F5EEFF);box-shadow:inset 0 0 0 1px rgba(10,36,134,.12);font-family:var(--f);color:#0A2486}
+.nghgo2:hover{background:linear-gradient(120deg,#E3E9FF,#EEE3FF)}
+.nghgo2 .ngat{width:40px;height:40px;border-radius:12px;background:#fff;display:grid;place-items:center;box-shadow:0 4px 10px -6px rgba(10,36,134,.5);flex:none}.nghgo2 .ngat svg{width:26px;height:26px}
+.nghgo2 b{display:block;font-size:15.5px;font-weight:700}.nghgo2 small{display:block;font-size:12.5px;color:#5B6380;font-weight:500}
+.nghgo2 kbd{margin-left:auto;font:700 11.5px var(--f);background:#fff;color:#0A2486;border-radius:8px;padding:4px 9px;box-shadow:inset 0 0 0 1px rgba(10,36,134,.15)}
+@media(max-width:760px){.nghgo2 kbd{display:none}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -3927,7 +3938,7 @@ window.renderHello=function(){homeReal();const box=document.getElementById("hp")
   const sub=document.querySelector(".hello .sub");if(sub)sub.textContent=`${DB.projects.length+SAMPLES().length} công trình · ${np} việc chờ anh duyệt`;
   const wait=window.NGApp&&NGApp.board&&!NGApp.guest?localOld().length:0,emp=rows.length?"":`<div class="sub" style="padding:14px 4px">${wait?`Trình duyệt này còn ${wait} dự án chưa đưa lên hệ thống.`:"Chưa có dự án nào."}</div>${wait?`<button class="pill" data-go="du-an" style="${sv("rev")}"><span class="dot">${ic("proj",2)}</span>Đưa ${wait} dự án lên hệ thống</button>`:`<button class="pill" data-go="du-an" style="${sv("boq")}"><span class="dot">${ic("up",2)}</span>Tải BOQ tạo dự án</button>`}`;
   box.innerHTML=emp+rows.map(r=>`<button class="hpr" data-go="da-${r.id}">${ring(r.v,r.c)}<div class="hn"><b>${esc(r.name)}${r.demo?' <small class="mau">Mẫu</small>':""}</b><span>${esc(r.sub)}</span></div><div class="hv"><b class="num">${fm(r.val)} tỷ</b>${r.tag}</div></button>`).join("")+
-    `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div>`};
+    `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div><button type="button" class="nghgo2" data-nggo><span class="ngat">${icc("apps",2)}</span><span><b>Ứng dụng &amp; đi tới màn</b><small>Mở nhanh mọi ứng dụng, dự án, màn làm việc</small></span><kbd>Ctrl K</kbd></button>`};
 /* ---------- Điều hướng ---------- */
 const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["chat","Trò chuyện","tro-chuyen"],["att","Chấm công","cham-cong"],["rep","Báo cáo","bao-cao"],["adm","Quản trị","quan-tri"]];
 const topFor=()=>TOP.filter(t=>t[2]!=="tong-quan").filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"||t[2]==="tro-chuyen"||t[2]==="cham-cong"?window.NGApp&&!NGApp.guest:t[2]==="tong-quan"?canOv():pqTop(t[2])>0));
@@ -4844,7 +4855,7 @@ function ngHome(){const nm=(window.NGApp&&(NGApp.name||"").split(" ").pop())||""
    <section class="card nghgo"><label class="nggoq nghq">${ic("find",2.2)}<input id="nghq" autocomplete="off" placeholder="Tìm nhanh màn, dự án… ví dụ: báo giá, phân ca, công nợ" aria-label="Tìm nhanh"><kbd>Ctrl K</kbd></label><div class="nggor" id="nghr"></div></section></div>`}
 /* Thanh trên: Trang chủ · ứng dụng đang mở · Ứng dụng · Đi tới */
 function ngTopBar(top){const T=TOP.find(t=>t[2]===top),np=canOv()?waiting(decisions()).length:0;
-  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}<button type="button" class="ngtb" data-ngapps aria-label="Ứng dụng"><span>${icc("apps",2)}</span>Ứng dụng</button><button type="button" class="ngtb nggo" data-nggo aria-label="Đi tới"><span>${icc("find",2.2)}</span>Đi tới màn…<kbd>Ctrl K</kbd></button>`}
+  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}`}
 function ngAppsPop(btn){let d=document.getElementById("ngpop");if(d){d.remove();return}const np=canOv()?waiting(decisions()).length:0,chu=typeof CH!=="undefined"?CH.un||0:0;d=document.createElement("div");d.id="ngpop";d.className="ngpop";
   d.innerHTML=`<div class="ngapps">${[["cyan","Trang chủ","trang-chu"],...topFor()].map(t=>{const n=t[2]==="duyet"?np:t[2]==="tro-chuyen"?chu:0;return`<button type="button" class="ngapp" data-go="${t[2]}" style="${sv(t[0])}"><span class="ngat">${icc(t[0]==="cyan"?"house":t[0],2)}</span>${esc(t[1])}${n?`<i>${n}</i>`:""}</button>`}).join("")}</div>`;
   document.body.appendChild(d);const r=btn.getBoundingClientRect();d.style.top=(r.bottom+8)+"px";d.style.left=Math.max(12,Math.min(r.left,innerWidth-d.offsetWidth-12))+"px"}
@@ -4874,7 +4885,8 @@ function ngBadges(){const np=typeof canOv==="function"&&canOv()?waiting(decision
 function ngHomeGo(){const b=document.getElementById("nghr");if(!b)return;NGG.L=ngGoList();ngGoFill("",b);const q=document.getElementById("nghq");if(q&&!q.dataset.on){q.dataset.on=1;q.addEventListener("input",()=>ngGoFill(q.value,b));q.addEventListener("keydown",e=>{if(e.key==="Enter"){const f=b.querySelector("[data-go]");if(f){e.preventDefault();f.click()}}})}}
 function ngGoPick(i){const x=NGG.R[i];if(!x)return;document.getElementById("nggo").hidden=true;location.hash=x[0];scrollTo({top:0})}
 /* Thanh dưới trên điện thoại */
-function ngTab(){let t=document.getElementById("ngtab");const has=!!document.querySelector(".ngside");if(!has){if(t)t.remove();return}if(!t){t=document.createElement("button");t.type="button";t.id="ngtab";t.className="ngtab";t.setAttribute("data-ngtab","");t.setAttribute("aria-label","Mở cột mục");t.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Mục</span>`;document.body.appendChild(t)}}
+const ngHasSide=()=>[...document.querySelectorAll(".ngside")].some(x=>!x.closest("[hidden]"));
+function ngTab(){let t=document.getElementById("ngtab");const has=ngHasSide();if(!has){if(t)t.remove();return}if(!t){t=document.createElement("button");t.type="button";t.id="ngtab";t.className="ngtab";t.setAttribute("data-ngtab","");t.setAttribute("aria-label","Mở cột mục");t.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Mục</span>`;document.body.appendChild(t)}}
 function ngBot(top){let b=document.getElementById("ngbot");if(!b){b=document.createElement("nav");b.id="ngbot";b.className="ngbot";b.setAttribute("aria-label","Điều hướng nhanh");document.body.appendChild(b)}
   const np=canOv()?waiting(decisions()).length:0,chu=typeof CH!=="undefined"?CH.un||0:0,ip=/^#?da-/.test(location.hash);
   const L=[["trang-chu","Trang chủ","house",0],...(canOv()||pqTop("duyet")>0?[["duyet","Duyệt","inbox",np]]:[]),["du-an","Dự án","proj",0],...(window.NGApp&&!NGApp.guest?[["tro-chuyen","Trò chuyện","chat",chu]]:[]),["#menu","Mục","apps",0]];
@@ -4894,7 +4906,7 @@ document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLower
   if(e.key==="Enter"){e.preventDefault();ngGoPick(NGG.a)}},true);
 /* Máy tính: cột trái ẩn, đưa chuột sát mép trái (hoặc bấm tab "Mục") thì trượt ra đè lên nội dung */
 const ngWide=()=>matchMedia("(min-width:1001px)").matches;let ngPT=0;
-document.addEventListener("mousemove",e=>{if(!ngWide()||!document.querySelector(".ngside"))return;const B=document.body,on=B.classList.contains("ngpeek");
+document.addEventListener("mousemove",e=>{if(!ngWide()||!ngHasSide())return;const B=document.body,on=B.classList.contains("ngpeek");
   if(!on&&(e.clientX<=8||(e.clientX<=26&&Math.abs(e.clientY-innerHeight/2)<60))){clearTimeout(ngPT);B.classList.add("ngpeek")}
   else if(on&&e.clientX>330){clearTimeout(ngPT);ngPT=setTimeout(()=>B.classList.remove("ngpeek"),180)}
   else if(on)clearTimeout(ngPT)},{passive:true});
@@ -7147,9 +7159,9 @@ document.getElementById("askf")?.addEventListener("submit",e=>{e.preventDefault(
   new MutationObserver(()=>{clearTimeout(t);t=setTimeout(sync,40)}).observe(document.body,{childList:true,subtree:true});setTimeout(sync,500)})();
 
 /* Logo đầu trang nằm giữa màn hình nếu đủ chỗ, không đè thanh menu và ô tìm (anh Chung 07/11/2026) */
-(function(){const fit=()=>{const t=document.querySelector(".top"),l=document.querySelector(".tlogo"),p=document.getElementById("pills"),q=document.querySelector(".top .search");if(!t||!l||!p||!q)return;
+(function(){const fit=()=>{const t=document.querySelector(".top"),l=document.querySelector(".tlogo"),p=document.getElementById("pills"),q=[...document.querySelectorAll(".top > button")].find(x=>x.offsetWidth>0);if(!t||!l||!p||!q||!p.offsetWidth)return;
   l.classList.add("mid");l.classList.remove("nolg");const c=innerWidth/2,a=p.getBoundingClientRect(),b=q.getBoundingClientRect();if(a.right+12>c-30||b.left-12<c+30){l.classList.remove("mid");if(b.left-a.right<66)l.classList.add("nolg")}};
-  addEventListener("resize",fit);new MutationObserver(fit).observe(document.getElementById("pills"),{childList:true});setTimeout(fit,300);
+  addEventListener("resize",fit);addEventListener("hashchange",()=>setTimeout(fit,60));document.addEventListener("click",()=>setTimeout(fit,400),true);new MutationObserver(fit).observe(document.getElementById("pills"),{childList:true});setTimeout(fit,300);
   addEventListener("keydown",e=>{if(e.key!=="Escape")return;const B=[...document.querySelectorAll("#fvc,#ctx,[data-x],[data-lkclose],[data-nhgx],[data-nhrx],[data-asclose]")].filter(b=>b.offsetParent);if(B.length)B[B.length-1].click()})})();
 
 try{ngIcons();route()}catch(e){}
