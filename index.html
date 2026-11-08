@@ -1769,6 +1769,16 @@ html body .tw.tw.tw.tw::-webkit-scrollbar-track,html body .gw.gw.gw.gw::-webkit-
 html body .tw.tw.tw.tw::-webkit-scrollbar-thumb,html body .gw.gw.gw.gw::-webkit-scrollbar-thumb{background:#9AA8DE;border-radius:99px;border:3px solid #EEF1FA}
 html body .tw.tw.tw.tw::-webkit-scrollbar-thumb:hover,html body .gw.gw.gw.gw::-webkit-scrollbar-thumb:hover{background:#0A2486}
 html body .tw.tw.tw.tw::-webkit-scrollbar-corner,html body .gw.gw.gw.gw::-webkit-scrollbar-corner{background:#EEF1FA!important}
+
+/* Nút ứng dụng đang mở trên thanh trên chỉ để hiển thị, bấm không làm gì */
+#pills .pill[data-cur],#pills .pill.on[data-go="trang-chu"]{pointer-events:none;cursor:default}
+/* Mục đang mở trong bảng chọn mục: vòng màu quanh biểu tượng + tên trên nền trắng (thay nhãn Đang xem) */
+@media(min-width:1001px){
+ body.ngboard .ngside .ngg .ngit[aria-current="true"]{background:none!important;box-shadow:none!important;padding:2px!important}
+ body.ngboard .ngside .ngg .ngit[aria-current="true"]:after{content:none!important;display:none!important}
+ body.ngboard .ngside .ngg .ngit[aria-current="true"] .ngii{box-shadow:0 0 0 3px #fff,0 0 0 7px color-mix(in srgb,var(--g) 85%,#fff),0 14px 26px -10px rgba(0,0,0,.6)!important;transform:translateY(-2px)}
+ body.ngboard .ngside .ngg .ngit[aria-current="true"] .ngtx{background:#fff;color:#0A2486!important;text-shadow:none!important;border-radius:10px;padding:2px 8px;margin-top:4px;font-weight:700}
+}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5076,7 +5086,7 @@ function ngHome(){const nm=(window.NGApp&&(NGApp.name||"").split(" ").pop())||""
    <section class="card nghgo"><label class="nggoq nghq">${ic("find",2.2)}<input id="nghq" autocomplete="off" placeholder="Tìm nhanh màn, dự án… ví dụ: báo giá, phân ca, công nợ" aria-label="Tìm nhanh"><kbd>Ctrl K</kbd></label><div class="nggor" id="nghr"></div></section></div>`}
 /* Thanh trên: Trang chủ · ứng dụng đang mở · Ứng dụng · Đi tới */
 function ngTopBar(top){const T=TOP.find(t=>t[2]===top),np=canOv()?waiting(decisions()).length:0;
-  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}`}
+  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/ data-go="[^"]*"/," data-cur").replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}`}
 function ngAppsPop(btn){let d=document.getElementById("ngpop");if(d){d.remove();return}const np=canOv()?waiting(decisions()).length:0,chu=typeof CH!=="undefined"?CH.un||0:0;d=document.createElement("div");d.id="ngpop";d.className="ngpop";
   d.innerHTML=`<div class="ngapps">${[["cyan","Trang chủ","trang-chu"],...topFor()].map(t=>{const n=t[2]==="duyet"?np:t[2]==="tro-chuyen"?chu:0;return`<button type="button" class="ngapp" data-go="${t[2]}" style="${sv(t[0])}"><span class="ngat">${icc(t[0]==="cyan"?"house":t[0],2)}</span>${esc(t[1])}${n?`<i>${n}</i>`:""}</button>`}).join("")}</div>`;
   document.body.appendChild(d);const r=btn.getBoundingClientRect();d.style.top=(r.bottom+8)+"px";d.style.left=Math.max(12,Math.min(r.left,innerWidth-d.offsetWidth-12))+"px"}
