@@ -1781,6 +1781,11 @@ html body .tw.tw.tw.tw::-webkit-scrollbar-corner,html body .gw.gw.gw.gw::-webkit
  body.ngboard .ngside .ngg .ngit[aria-current="true"] .ngtx{background:#fff;color:#0A2486!important;text-shadow:none!important;border-radius:10px;padding:2px 8px;margin-top:4px;font-weight:700}
 }
 .cvp{display:inline-block;font:700 12px var(--f);color:#fff;background:var(--pc);border-radius:99px;padding:2px 9px;white-space:nowrap}
+
+/* Chú thích chỉ sang logo giữa (anh Chung 08/11/2026) */
+.nglhint{display:inline-flex;align-items:center;gap:6px;align-self:center;white-space:nowrap;border:0;cursor:pointer;font:700 13.5px var(--f);color:#0A2486;background:#E3E9FF;border-radius:99px;padding:8px 14px;transition:background .15s}
+.nglhint:hover{background:#D3DCFF}.nglhint svg{transition:transform .2s}.nglhint:hover svg{transform:translateX(3px)}
+@media(max-width:760px){.nglhint{display:none}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5099,7 +5104,7 @@ function ngHome(){const nm=(window.NGApp&&(NGApp.name||"").split(" ").pop())||""
    <section class="card nghgo"><label class="nggoq nghq">${ic("find",2.2)}<input id="nghq" autocomplete="off" placeholder="Tìm nhanh màn, dự án… ví dụ: báo giá, phân ca, công nợ" aria-label="Tìm nhanh"><kbd>Ctrl K</kbd></label><div class="nggor" id="nghr"></div></section></div>`}
 /* Thanh trên: Trang chủ · ứng dụng đang mở · Ứng dụng · Đi tới */
 function ngTopBar(top){const T=TOP.find(t=>t[2]===top),np=canOv()?waiting(decisions()).length:0;
-  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/ data-go="[^"]*"/," data-cur").replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}`}
+  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/ data-go="[^"]*"/," data-cur").replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}${top==="trang-chu"?`<button type="button" class="nglhint" data-nggo title="Mở bảng ứng dụng (Ctrl K)">Chìa khoá vạn năng ở đây<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:""}`}
 function ngAppsPop(btn){let d=document.getElementById("ngpop");if(d){d.remove();return}const np=canOv()?waiting(decisions()).length:0,chu=typeof CH!=="undefined"?CH.un||0:0;d=document.createElement("div");d.id="ngpop";d.className="ngpop";
   d.innerHTML=`<div class="ngapps">${[["cyan","Trang chủ","trang-chu"],...topFor()].map(t=>{const n=t[2]==="duyet"?np:t[2]==="tro-chuyen"?chu:0;return`<button type="button" class="ngapp" data-go="${t[2]}" style="${sv(t[0])}"><span class="ngat">${icc(t[0]==="cyan"?"house":t[0],2)}</span>${esc(t[1])}${n?`<i>${n}</i>`:""}</button>`}).join("")}</div>`;
   document.body.appendChild(d);const r=btn.getBoundingClientRect();d.style.top=(r.bottom+8)+"px";d.style.left=Math.max(12,Math.min(r.left,innerWidth-d.offsetWidth-12))+"px"}
