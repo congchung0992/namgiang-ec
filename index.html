@@ -1669,6 +1669,23 @@ body.ngboard .ngmuc .ngcaret svg{transform:rotate(180deg)}
 .nggod .nggbd{left:calc(50% + 22px)!important;top:0!important}
 .nggod .nggl button{position:relative}
 @media(max-width:760px){.nggod .nggl,.nggod .nggl.pj{grid-template-columns:repeat(3,1fr)!important}.nggod .nggl .ngii{width:60px!important;height:60px!important}.nggod .nggl .ngii svg.fcc{width:36px!important;height:36px!important}}
+
+/* Nút và khung Trò chuyện nổi */
+.ngmsg{position:fixed;right:max(24px,env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:10030;width:60px;height:60px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:linear-gradient(145deg,#3B82F6,#7C3AED 70%,#EC4899);box-shadow:0 14px 30px -10px rgba(91,52,190,.7),inset 0 1px 0 rgba(255,255,255,.4);transition:transform .18s cubic-bezier(.3,1.6,.5,1)}
+.ngmsg:hover{transform:translateY(-3px) scale(1.06)}.ngmsg:active{transform:scale(.94)}
+.ngmsg svg{width:34px;height:34px;filter:brightness(0) invert(1)}
+.ngmsg i{position:absolute;top:-3px;right:-3px;min-width:22px;height:22px;border-radius:99px;background:#E1141B;color:#fff;font:700 11.5px/22px var(--f);text-align:center;padding:0 6px;font-style:normal;box-shadow:0 0 0 2px #fff}
+.ngmsgp{position:fixed;right:max(24px,env(safe-area-inset-right,0px));bottom:calc(98px + env(safe-area-inset-bottom,0px));z-index:10031;width:min(1000px,calc(100vw - 48px));height:min(680px,calc(100vh - 130px));background:#fff;border-radius:24px;box-shadow:0 40px 90px -30px rgba(10,20,60,.6),0 0 0 1px rgba(10,36,134,.08);overflow:hidden;display:flex;flex-direction:column;transform-origin:bottom right}
+.ngmsgb{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.ngmsgb>.vh{display:none}
+.ngmsgb>*{flex:1;min-height:0}
+.ngmsgb #ngchat{height:100%!important;max-height:none!important;margin:0!important;border-radius:0!important;box-shadow:none!important}
+.ngmsgx{position:absolute;top:12px;right:12px;z-index:3;width:34px;height:34px;border-radius:50%;border:0;background:#F1F3F9;color:#16171C;font:700 14px var(--f);cursor:pointer}
+.ngmsgx:hover{background:#E4E8F3}
+@media (prefers-reduced-motion:no-preference){.ngmsgp{animation:ngMsgIn .32s cubic-bezier(.2,.9,.3,1.15) both}}
+@keyframes ngMsgIn{from{opacity:0;transform:scale(.3) translateY(40px)}to{opacity:1;transform:none}}
+@media(max-width:760px){.ngmsg{bottom:calc(84px + env(safe-area-inset-bottom,0px));right:16px;width:54px;height:54px}.ngmsgp{inset:0;right:0;bottom:0;width:100vw;height:100%;border-radius:0}}
+#ngmsgp #chhd{padding-right:58px!important}.ngmsgx{top:16px!important;right:14px!important}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -4344,7 +4361,7 @@ async function chUrl(path){if(CH.urls.has(path))return CH.urls.get(path);const {
 async function chLoad(){if(!window.NGApp||NGApp.guest||!chMe()||NGApp.as)return;try{
   if(!CH.ppl.size){const {data}=await chSb().rpc("chat_people");(data||[]).forEach(p=>CH.ppl.set(p.id,p))}
   const {data,error}=await chSb().rpc("chat_list");if(error)throw error;CH.rooms=data||[];CH.ld=1;chBadge();if(document.getElementById("ngchat")){chDrawList();if(CH.cur&&!document.getElementById("chhd")&&CH.rooms.some(r=>r.id===CH.cur))chOpen(CH.cur)}}catch(e){CH.err=e.message||"lỗi";if(document.getElementById("ngchat"))chDrawList()}}
-function chBadge(){CH.un=CH.rooms.filter(r=>!r.muted).reduce((s,r)=>s+(r.unread||0),0);const b=document.querySelector('#pills [data-go="tro-chuyen"]');if(b){let x=b.querySelector(".chbd");if(!x){x=document.createElement("i");x.className="chbd";b.appendChild(x)}x.textContent=CH.un>99?"99+":CH.un;x.hidden=!CH.un}}
+function chBadge(){CH.un=CH.rooms.filter(r=>!r.muted).reduce((s,r)=>s+(r.unread||0),0);try{ngMsgFab()}catch(e){}const b=document.querySelector('#pills [data-go="tro-chuyen"]');if(b){let x=b.querySelector(".chbd");if(!x){x=document.createElement("i");x.className="chbd";b.appendChild(x)}x.textContent=CH.un>99?"99+":CH.un;x.hidden=!CH.un}}
 function chBoot(){if(CH.boot||!window.NGApp||NGApp.guest||!chMe())return;CH.boot=1;chLoad();chPresence();
   try{chSb().channel("chat-db").on("postgres_changes",{event:"*",schema:"public",table:"chat_messages"},p=>chOnMsg(p)).on("postgres_changes",{event:"UPDATE",schema:"public",table:"chat_members"},p=>{const m=p.new;if(!m)return;const L=CH.mem[m.room_id];if(L){const i=L.findIndex(x=>x.user_id===m.user_id);if(i>=0)L[i]=m;else L.push(m);if(m.room_id===CH.cur)chDrawMsgs(1)}}).on("postgres_changes",{event:"UPDATE",schema:"public",table:"chat_rooms"},p=>{const r=CH.rooms.find(x=>x.id===p.new.id);if(r){Object.assign(r,{name:p.new.name,pinned_msg:p.new.pinned_msg});if(r.id===CH.cur){chDrawHead();chDrawPin()}}}).subscribe()}catch(e){}
   setInterval(()=>{if(document.visibilityState==="visible")chLoad()},120000)}
@@ -4458,7 +4475,7 @@ function chNew(mode){let w=document.getElementById("chdlg");if(!w){w=document.cr
     ${N.mode==="dm"&&!add?"":`<div class="chdf"><span class="sub">Đã chọn ${N.sel.size}</span><button type="button" class="pill" data-chnok style="${sv("chat")}"${N.sel.size?"":" disabled"}><span class="dot">✓</span>${add?"Thêm vào nhóm":"Tạo nhóm"}</button></div>`}</div>`;
   const q=document.getElementById(N.foc||"chnq");if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length)}}
 function chNewX(){const w=document.getElementById("chdlg");if(w)w.hidden=true;CH.newc=null;CH.fw=null;CH.pd=null}
-async function chGo(rid){await chLoad();location.hash="tro-chuyen-"+rid;if(document.getElementById("ngchat"))chOpen(rid)}
+async function chGo(rid){await chLoad();if(document.getElementById("ngmsgp")){chOpen(rid);return}location.hash="tro-chuyen-"+rid;if(document.getElementById("ngchat"))chOpen(rid)}
 function chMenAuto(i){const m=document.getElementById("chmen");if(!m)return;const v=i.value.slice(0,i.selectionStart),k=v.match(/@([^\s@]{0,20})$/);if(!k){m.hidden=true;return}
   const W=BOQ.nz(k[1]),rr=CH.rooms.find(x=>x.id===CH.cur),P=(rr&&rr.kind!=="direct"&&BOQ.nz("tat ca all").includes(W)?[{id:CHALL,name:"Tất cả"}]:[]).concat((CH.rp[CH.cur]||[]).filter(p=>p.id!==chMe()&&BOQ.nz(p.name).includes(W))).slice(0,7);if(!P.length){m.hidden=true;return}
   m.hidden=false;m.innerHTML=P.map((p,j)=>`<button type="button" class="chr sm${j?"":" on"}" data-chmen="${p.id}">${p.id===CHALL?`<span class="chav chavg" style="--a:#0068FF;width:28px;height:28px;font-size:14px">@</span>`:chAv(p.id,p.name,28)}<div class="chrt"><b>${esc(p.name)}</b>${p.id===CHALL?"<span>Nhắc mọi người trong nhóm</span>":""}</div></button>`).join("")}
@@ -4478,7 +4495,7 @@ document.addEventListener("click",async e=>{const t=e.target;if(!t.closest)retur
   if(t.closest("#chemo")){const x=t.closest("[data-chei]");if(x){const i=document.getElementById("chin");const c=i.selectionStart||i.value.length;i.value=i.value.slice(0,c)+x.dataset.chei+i.value.slice(c);i.focus();i.setSelectionRange(c+x.dataset.chei.length,c+x.dataset.chei.length)}return}
   if(!t.closest("[data-chemo]")){const em=document.getElementById("chemo");if(em)em.hidden=true}
   let b;
-  if(b=t.closest("[data-chroom]")){location.hash="tro-chuyen-"+b.dataset.chroom;return}
+  if(b=t.closest("[data-chroom]")){if(b.closest("#ngmsgp")){chOpen(b.dataset.chroom);return}location.hash="tro-chuyen-"+b.dataset.chroom;return}
   if(b=t.closest("[data-chtab]")){CH.tab=b.dataset.chtab;document.querySelectorAll("[data-chtab]").forEach(x=>x.classList.toggle("on",x===b));chDrawList();return}
   if(b=t.closest("[data-chdm]")){try{const {data,error}=await chSb().rpc("chat_direct",{other:b.dataset.chdm});if(error)throw error;chNewX();CH.q="";chGo(data)}catch(er){NGB.warn("Chưa mở được: "+er.message)}return}
   if(t.closest("[data-chback]")){CH.cur="";location.hash="tro-chuyen";return}
@@ -5012,6 +5029,18 @@ function ngHomeGo(){const b=document.getElementById("nghr");if(!b)return;NGG.L=n
 function ngGoPick(i){const x=NGG.R[i];if(!x)return;document.getElementById("nggo").hidden=true;location.hash=x[0];scrollTo({top:0})}
 /* Thanh dưới trên điện thoại */
 const ngHasSide=()=>[...document.querySelectorAll(".ngside")].some(x=>!x.closest("[hidden]"));
+
+/* Trò chuyện nổi kiểu Messenger: nút tròn góc phải ở mọi màn, bấm mở khung chat, Esc để thoát (anh Chung 08/11/2026) */
+function ngMsgFab(){const ok=window.NGApp&&!NGApp.guest&&!NGApp.as,onChat=/^#?tro-chuyen/.test(location.hash);let f=document.getElementById("ngmsg");
+  if(!ok||onChat){if(f)f.hidden=true;if(onChat)ngMsgClose();return}
+  if(!f){f=document.createElement("button");f.type="button";f.id="ngmsg";f.className="ngmsg";f.setAttribute("aria-label","Trò chuyện");f.title="Trò chuyện";document.body.appendChild(f);f.addEventListener("click",()=>document.getElementById("ngmsgp")?ngMsgClose():ngMsgOpen())}
+  f.hidden=false;const n=typeof CH!=="undefined"?CH.un||0:0;f.innerHTML=`${icc("chat",2)}${n?`<i>${n>99?"99+":n}</i>`:""}`}
+function ngMsgOpen(){if(document.getElementById("ngmsgp"))return;const p=document.createElement("div");p.id="ngmsgp";p.className="ngmsgp";
+  p.innerHTML=`<button type="button" class="ngmsgx" aria-label="Đóng trò chuyện" title="Đóng (Esc)">✕</button><div class="ngmsgb">${chView(CH.cur||"")}</div>`;document.body.appendChild(p);
+  p.querySelector(".ngmsgx").onclick=ngMsgClose;document.body.classList.add("ngmsg-on");try{chMount()}catch(e){console.error(e)}}
+function ngMsgClose(){const p=document.getElementById("ngmsgp");if(p)p.remove();document.body.classList.remove("ngmsg-on")}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.getElementById("ngmsgp")){const t=e.target;if(t&&t.closest&&t.closest("#chemo,#chmen,#chdlg"))return;ngMsgClose()}});
+addEventListener("hashchange",()=>setTimeout(()=>{try{ngMsgFab()}catch(e){}},50));setTimeout(()=>{try{ngMsgFab()}catch(e){}},1500);
 function ngTab(){const o=document.getElementById("ngtab");if(o)o.remove();const P=document.getElementById("pills");if(!P)return;let m=P.querySelector(".ngmuc");if(!ngHasSide()){if(m)m.remove();return}
   const a=[...document.querySelectorAll(".ngside .ngit")].find(x=>x.getAttribute("aria-current")==="true"&&!x.closest("[hidden]")),lab=a?a.textContent.replace(/★/g,"").trim():"Chọn mục";
   if(!m){m=document.createElement("button");m.type="button";m.className="ngtb ngmuc";m.setAttribute("data-ngboard","");m.setAttribute("aria-label","Chọn mục");P.appendChild(m)}
