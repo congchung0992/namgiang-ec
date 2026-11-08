@@ -1456,6 +1456,10 @@ svg.fcc{stroke:none}
 .ngtdi svg.fcc{width:24px;height:24px}
 .ngbot button svg.fcc{width:24px;height:24px}
 .ngbot button:not([aria-current="true"]) svg.fcc{filter:saturate(.8)}
+
+/* Thanh trên: biểu tượng màu trong vòng tròn trắng */
+#pills .pill>.dot:has(svg.fcc),.ngtb>span{background:#fff!important;box-shadow:0 2px 6px -2px rgba(10,36,134,.25),inset 0 0 0 1px rgba(10,36,134,.08)!important}
+#pills .pill>.dot svg.fcc,.ngtb svg.fcc{width:19px!important;height:19px!important}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -4758,7 +4762,7 @@ function ngHome(){const nm=(window.NGApp&&(NGApp.name||"").split(" ").pop())||""
     ${P.length?`<h3 style="margin-top:6px">Dự án</h3><div class="ngtodo">${P.map(p=>`<button type="button" class="ngtd" data-go="da-${esc(p.id)}" style="${sv("proj")}"><span class="ngtdi">${icc("proj",2)}</span><span class="ngtdt"><b>${esc(p.name)}</b><small>${esc(p.code||"")}${p.cdt?" · "+esc(p.cdt):""}</small></span>${p.value?`<em class="st ok">${fm(p.value/1e9,1)} tỷ</em>`:""}</button>`).join("")}</div>`:""}</section></div>`}
 /* Thanh trên: Trang chủ · ứng dụng đang mở · Ứng dụng · Đi tới */
 function ngTopBar(top){const T=TOP.find(t=>t[2]===top),np=canOv()?waiting(decisions()).length:0;
-  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${ic("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true):""}<button type="button" class="ngtb" data-ngapps aria-label="Ứng dụng"><span>${icc("apps",2)}</span>Ứng dụng</button><button type="button" class="ngtb nggo" data-nggo aria-label="Đi tới"><span>${icc("find",2.2)}</span>Đi tới màn…<kbd>Ctrl K</kbd></button>`}
+  return`<button type="button" class="pill${top==="trang-chu"?" on":""}" data-go="trang-chu" aria-current="${top==="trang-chu"}" style="${sv("cyan")}"><span class="dot">${icc("house",2)}</span>Trang chủ</button>${T?pill(T[0],T[1]+(T[2]==="duyet"&&np?" ("+np+")":""),T[2],true).replace(/<span class="dot">[\s\S]*?<\/span>/,`<span class="dot">${icc(T[0],2)}</span>`):""}<button type="button" class="ngtb" data-ngapps aria-label="Ứng dụng"><span>${icc("apps",2)}</span>Ứng dụng</button><button type="button" class="ngtb nggo" data-nggo aria-label="Đi tới"><span>${icc("find",2.2)}</span>Đi tới màn…<kbd>Ctrl K</kbd></button>`}
 function ngAppsPop(btn){let d=document.getElementById("ngpop");if(d){d.remove();return}const np=canOv()?waiting(decisions()).length:0,chu=typeof CH!=="undefined"?CH.un||0:0;d=document.createElement("div");d.id="ngpop";d.className="ngpop";
   d.innerHTML=`<div class="ngapps">${[["cyan","Trang chủ","trang-chu"],...topFor()].map(t=>{const n=t[2]==="duyet"?np:t[2]==="tro-chuyen"?chu:0;return`<button type="button" class="ngapp" data-go="${t[2]}" style="${sv(t[0])}"><span class="ngat">${icc(t[0]==="cyan"?"house":t[0],2)}</span>${esc(t[1])}${n?`<i>${n}</i>`:""}</button>`}).join("")}</div>`;
   document.body.appendChild(d);const r=btn.getBoundingClientRect();d.style.top=(r.bottom+8)+"px";d.style.left=Math.max(12,Math.min(r.left,innerWidth-d.offsetWidth-12))+"px"}
