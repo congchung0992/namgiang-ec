@@ -1698,6 +1698,18 @@ body.ngboard .ngmuc .ngcaret svg{transform:rotate(180deg)}
 /* Trò chuyện nổi: phóng to hết màn hình, Esc để thoát */
 .ngmsgp{inset:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;border-radius:0!important;transform-origin:calc(100% - 54px) calc(100% - 54px)}
 body.ngmsg-on .ngmsg{display:none!important}
+
+.nggod .nglh{display:flex;align-items:center;gap:16px;max-width:620px;margin:0 auto 26px;padding:14px 20px;border-radius:22px;background:linear-gradient(130deg,rgba(29,59,184,.92),rgba(91,52,190,.88));box-shadow:0 20px 44px -22px rgba(10,20,60,.8),inset 0 0 0 1px rgba(255,255,255,.28),inset 0 1px 0 rgba(255,255,255,.35);color:#fff}
+.nggod .nglhi{width:52px;height:52px;border-radius:16px;background:#fff;display:grid;place-items:center;box-shadow:0 8px 16px -8px rgba(0,0,0,.5);flex:none}.nggod .nglhi img{width:42px;height:42px}
+.nggod .nglh b{display:block;font:700 20px/1.25 var(--f)}.nggod .nglh small{display:block;font:600 13px var(--f);color:rgba(255,255,255,.78)}
+.nggod .nglg{display:grid;grid-template-columns:repeat(3,minmax(0,380px));justify-content:center;gap:34px 56px;align-items:stretch}
+.nggod .nglg .nggs{margin:0!important;padding:16px 14px 18px!important}
+.nggod .nglg .nggl{grid-template-columns:repeat(3,1fr)!important}
+.nggod .nggob{width:min(1400px,100%)!important}
+@media(max-width:1300px){.nggod .nglg{gap:24px 28px}}
+@media(max-width:760px){.nggod .nglg{grid-template-columns:1fr}}
+.nggod{align-items:flex-start!important;padding-top:96px!important}
+@media(max-height:900px){.nggod{padding-top:64px!important}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -5031,6 +5043,11 @@ function ngGoFill(v,box){const inl=!!box;box=box||document.getElementById("nggor
   G.sort((a,b)=>{const o=k=>k==="app"?0:k==="p:"+cur?1:k==="pj"?2:k.startsWith("p:")?3:k==="cc"?4:5;return o(a.k)-o(b.k)});
   const RR=[];if(!inl)NGG.R=RR;const BD=ngBadges();const it=(x,sub)=>{const i=RR.push(x)-1;return`<button type="button" ${inl?`data-go="${esc(x[0])}"`:`data-ngr="${i}"`} style="${sv(x[3])}"><span class="ngii">${icc(NGSI[x[0]]||x[3],2)}</span><b>${esc(x[1])}</b>${BD[x[0]]?`<i class="nggbd">${BD[x[0]]>99?"99+":BD[x[0]]}</i>`:""}${sub&&x[2]?`<small>${esc(x[2])}</small>`:""}</button>`};
   const T={app:"Ứng dụng",pj:"Dự án",cc:"Chấm công",qt:"Quản trị"};
+  if(!inl&&!W.length){/* Bảng Ứng dụng kiểu bảng chọn mục: ô đầu + các nhóm thẻ kính màu (anh Chung 08/11/2026) */
+    const A=R.filter(x=>x[4]==="app"),GP=[["Điều hành","#94A3B8",["trang-chu","ban-tin","duyet","bao-cao"]],["Dự án & công trường","#F59E0B",["du-an","cham-cong"]],["Trao đổi & hệ thống","#22B8E8",["tro-chuyen","quan-tri"]]];
+    const used=new Set();const grp=GP.map(([t,c,K])=>{const L=K.map(k=>A.find(x=>x[0]===k)).filter(Boolean);L.forEach(x=>used.add(x));return[t,c,L]});const rest=A.filter(x=>!used.has(x));if(rest.length)grp[grp.length-1][2].push(...rest);
+    box.innerHTML=`<div class="nglh"><span class="nglhi"><img src="img/logo-round.svg?v=2" alt=""></span><span><b>Nam Giang E&amp;C</b><small>Chọn ứng dụng · Esc để đóng</small></span></div><div class="nglg">${grp.filter(g=>g[2].length).map(([t,c,L])=>`<section class="nggs" style="--g:${c}"><h4>${esc(t)}</h4><div class="nggl">${L.map(x=>it(x)).join("")}</div></section>`).join("")}</div>`;
+    NGG.a=0;const f0=box.querySelector('[data-ngr="0"]');if(f0)f0.classList.add("act");return}
   box.innerHTML=G.map(g=>{const pg=g.k.startsWith("p:");
     let body;if(pg){const P=[];g.L.forEach(x=>{let q=P.find(y=>y.t===x[2]);if(!q)P.push(q={t:x[2],L:[]});q.L.push(x)});body=`<div class="nggph">${P.map(q=>`<div class="nggpc"><div class="nggpt">${esc(q.t)}</div>${q.L.map(x=>it(x)).join("")}</div>`).join("")}</div>`}
     else body=`<div class="nggl${g.k==="pj"?" pj":""}">${g.L.map(x=>it(x,g.k==="pj")).join("")}</div>`;
