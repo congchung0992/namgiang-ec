@@ -1779,6 +1779,7 @@ html body .tw.tw.tw.tw::-webkit-scrollbar-corner,html body .gw.gw.gw.gw::-webkit
  body.ngboard .ngside .ngg .ngit[aria-current="true"] .ngii{box-shadow:0 0 0 3px #fff,0 0 0 7px color-mix(in srgb,var(--g) 85%,#fff),0 14px 26px -10px rgba(0,0,0,.6)!important;transform:translateY(-2px)}
  body.ngboard .ngside .ngg .ngit[aria-current="true"] .ngtx{background:#fff;color:#0A2486!important;text-shadow:none!important;border-radius:10px;padding:2px 8px;margin-top:4px;font-weight:700}
 }
+.cvp{display:inline-block;font:700 12px var(--f);color:#fff;background:var(--pc);border-radius:99px;padding:2px 9px;white-space:nowrap}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -3933,7 +3934,7 @@ function pqTop(a){if(pqFull())return 2;let v=0;DB.projects.forEach(p=>{if(p._rol
 function pqTbl(p){if(pqFull())return{b:1,s:1,c:1};const o={};Object.keys(PQT).forEach(t=>o[t]=PQT[t].some(k=>pqP(p,k)===2));return o}
 async function pqLoad(){try{const {data,error}=await NGB.sb().from("role_perms").select("role,area,lvl");if(error)throw error;const m={};(data||[]).forEach(x=>{(m[x.role]=m[x.role]||{})[x.area]=x.lvl});PQ.m=m;PQ.ok=1}catch(e){PQ.ok=0}}
 const canOv=()=>!window.NGApp||NGApp.board||pqTop("tong-quan")>0;
-const sheetsFor=b=>{if(!b)return BSHEETS;const L=(b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS).filter(x=>pqP(b,x[0])>0);const M=L.length?L:[BSHEETS[0]];const hi=M.findIndex(x=>x[0]==="home");if(hi>=0&&!M.some(x=>x[0]==="cv"))M.splice(hi+1,0,["cv","Việc cần xử lý"]);return M};
+const sheetsFor=b=>{if(!b)return BSHEETS;const L=(b._noCost?FIELD.map(k=>BSHEETS.find(x=>x[0]===k)):BSHEETS).filter(x=>pqP(b,x[0])>0);const M=L.length?L:[BSHEETS[0]];return M};
 /* Màu riêng của dự án: theo thứ tự mã dự án (NG-26-01, 02…), bảng màu thương hiệu; cố định theo mã nên không đổi khi thêm dự án khác */
 const PRJC=["#0A2486","#12A150","#C21FC9","#F08A24","#0E9F9A","#2D3CE6","#8B5CF6","#B45309","#0369A1","#BE185D"];
 const prjColor=p=>{if(p.color)return p.color;const m=String(p.code||"").match(/(\d+)\s*$/);let i=m?+m[1]-1:0;if(!m){let h=0;for(const ch of String(p.id))h=(h*31+ch.charCodeAt(0))>>>0;i=h}return PRJC[((i%PRJC.length)+PRJC.length)%PRJC.length]};
@@ -4071,17 +4072,28 @@ function weekView(p){const k=curWeek||wk(new Date());curWeek=k;const w=W(p,k),r=
 /* ---------- Công việc cần xử lý của người đang dùng trong dự án (trang Tổng quan dự án) ----------
    Phiếu chờ mình duyệt (đúng bước, đúng vai trò) · phiếu của mình còn nháp hoặc bị trả về · gói giao thầu quá hạn / sắp hạn so sánh giá (người lập so sánh giá)
    · việc trong Hộp quyết định của dự án (Ban giám đốc). Việc chờ duyệt lên đầu, còn lại xếp theo hạn */
-function todoCard(p){if(!NGApp.guest&&(PY.pid!==p.id||!PY.list))setTimeout(()=>{if(cur&&cur.id===p.id&&(PY.pid!==p.id||!PY.list)&&!PY.busy)pyLoad()},0);
-  const L=[],today=new Date(new Date().toDateString()),loaded=PY.pid===p.id&&PY.list,KN={pyc:"Phiếu yêu cầu vật tư",tt:"Đề nghị thanh toán",ssg:"Bảng so sánh giá"},GO={pyc:"pyc",tt:"tt",ssg:"goi"};
-  if(loaded)PY.list.forEach(r=>{const go=`da-${p.id}-${GO[r.kind]||r.kind}-${r.id}`,nm=`${KN[r.kind]||"Phiếu"} ${r.no||""}${r.title?" · "+r.title:""}`;
+function todoList(p,list){  const L=[],today=new Date(new Date().toDateString()),loaded=list,KN={pyc:"Phiếu yêu cầu vật tư",tt:"Đề nghị thanh toán",ssg:"Bảng so sánh giá"},GO={pyc:"pyc",tt:"tt",ssg:"goi"};
+  if(loaded)list.forEach(r=>{const go=`da-${p.id}-${GO[r.kind]||r.kind}-${r.id}`,nm=`${KN[r.kind]||"Phiếu"} ${r.no||""}${r.title?" · "+r.title:""}`;
     if(r.status==="pending"&&pyMine(p,r))L.push({o:0,ty:"Duyệt phiếu",t:nm,sub:`Bước ${esc((pyStep(r)||{}).name||"")} · lập bởi ${esc(r.created_name||"")} ${r.created_at?"· "+fdt(r.created_at):""}`,due:null,go,s:st("warn","Chờ duyệt")});
     else if((r.status==="draft"||r.status==="returned")&&r.created_by===NGApp.uid)L.push({o:1,ty:r.status==="returned"?"Sửa lại phiếu":"Gửi duyệt phiếu",t:nm,sub:r.status==="returned"?"Bị trả về · xem ý kiến trong lịch sử phiếu":"Đang là bản nháp",due:null,go,s:r.status==="returned"?st("bad","Bị trả về"):st("warn","Nháp")})});
   if(NGApp.board||pyCan(p,"ssg"))try{const {D}=gtRows(p);D.R.filter(o=>o.s!=="hd"&&o.s!=="ok"&&o.s!=="run"&&o.dss&&(o.dss-today)/864e5<=14).forEach(o=>L.push({o:2,ty:o.s==="need"?"Tìm NCC / thầu phụ":"Lập so sánh giá",t:"Gói "+o.g.name,sub:`${o.H.map(h=>h.c).join(", ")} · giá trị BOQ ${n0(o.g.tb)} đ · cần trên công trường ${o.need?fd(o.need):"-"}`,due:o.dss,go:`da-${p.id}-bg`,s:st(GTS[o.s][1],GTS[o.s][0])}))}catch(e){}
   if(NGApp.board)try{waiting(decisions()).filter(x=>x.p&&x.p.id===p.id).forEach(x=>L.push({o:2,ty:(TYP[x.t]||["",""])[1],t:x.title,sub:x.why||"",due:x.due||null,go:x.go,s:""}))}catch(e){}
+  return L}
+function todoCard(p){if(!NGApp.guest&&(PY.pid!==p.id||!PY.list))setTimeout(()=>{if(cur&&cur.id===p.id&&(PY.pid!==p.id||!PY.list)&&!PY.busy)pyLoad()},0);
+  const today=new Date(new Date().toDateString()),loaded=PY.pid===p.id&&PY.list,L=todoList(p,loaded?PY.list:null);
   L.sort((a,b)=>a.o-b.o||(a.due?+a.due:9e15)-(b.due?+b.due:9e15));const N=L.length,S=L.slice(0,40);
   const late=L.filter(x=>x.due&&x.due<today).length,ap=L.filter(x=>x.o===0).length;
   return card("Công việc cần xử lý",`${!loaded&&!NGApp.guest?"Đang tải phiếu…":N?`${N} việc${ap?` · ${ap} phiếu chờ duyệt`:""}${late?` · <b style="color:#C0141B">${late} việc quá hạn</b>`:""}`:"Không có việc nào cần xử lý"} · theo vai trò của tài khoản đang dùng · bấm một dòng để mở`,
     N?`<div class="tw" style="max-height:62vh;overflow:auto"><table class="t tdo"><thead><tr><th>STT</th><th>Việc cần làm</th><th>Loại việc</th><th>Hạn</th><th>Tình hình</th></tr></thead><tbody>${S.map((x,i)=>`<tr data-go="${esc(x.go)}" style="cursor:pointer"><td class="tc num">${String(i+1).padStart(2,"0")}</td><td><b>${esc(x.t)}</b>${x.sub?`<small class="spec">${x.sub}</small>`:""}</td><td>${esc(x.ty)}</td><td class="tc">${x.due?fd(x.due)+"<div>"+dueTxt(x.due)+"</div>":"-"}</td><td>${x.s||""}</td></tr>`).join("")}</tbody></table></div>${N>S.length?`<div class="sub" style="margin-top:8px">Còn ${N-S.length} việc khác</div>`:""}`:`<div class="sub">${loaded||NGApp.guest?"Hiện chưa có việc nào cần anh xử lý trong dự án này.":"Đang tải…"}</div>`,"span3")}
+
+/* Việc cần xử lý của tài khoản đang dùng, gom mọi dự án (anh Chung 08/11/2026) */
+let CVA={at:0,list:null,busy:false};
+async function cvLoad(){if(CVA.busy)return;CVA.busy=true;try{if(NGApp.guest){CVA.list=[];return}const ids=DB.projects.map(p=>p.id);const [{data,error}]=await Promise.all([ids.length?NGB.sb().from("material_requests").select("*").in("project_id",ids).order("created_at",{ascending:false}):Promise.resolve({data:[]}),wfGet()]);if(error)throw error;CVA.list=data||[];CVA.err=""}catch(e){CVA.list=[];CVA.err=pyErr(e)}finally{CVA.busy=false;CVA.at=Date.now()}if(location.hash==="#viec-can-xu-ly")keep(route)}
+function cvView(){if(!CVA.list||Date.now()-CVA.at>60000)setTimeout(cvLoad,0);const today=new Date(new Date().toDateString()),loaded=!!CVA.list;
+  const L=[];DB.projects.forEach(p=>{let x=[];try{x=todoList(p,loaded?CVA.list.filter(r=>r.project_id===p.id):null)}catch(e){}x.forEach(y=>L.push({...y,p}))});
+  L.sort((a,b)=>a.o-b.o||(a.due?+a.due:9e15)-(b.due?+b.due:9e15));const N=L.length,late=L.filter(x=>x.due&&x.due<today).length,ap=L.filter(x=>x.o===0).length;
+  return`<div class="vh"><div><h1>Việc cần xử lý</h1><p>${loaded?`${N} việc${ap?` · ${ap} phiếu chờ duyệt`:""}${late?` · <b style="color:#C0141B">${late} việc quá hạn</b>`:""}`:"Đang tải phiếu…"} · mọi dự án, theo vai trò của tài khoản đang dùng · bấm một dòng để mở</p></div></div>
+  <div class="vgrid">${card("Danh sách việc",CVA.err?esc(CVA.err):"Sắp theo: phiếu chờ anh/chị duyệt → phiếu của anh/chị → việc có hạn gần nhất",N?`<div class="tw"><table class="t tdo"><thead><tr><th>STT</th><th>Dự án</th><th>Việc cần làm</th><th>Loại việc</th><th>Hạn</th><th>Tình hình</th></tr></thead><tbody>${L.map((x,i)=>`<tr data-go="${esc(x.go)}" style="cursor:pointer"><td class="tc num">${String(i+1).padStart(2,"0")}</td><td><span class="cvp" style="--pc:${prjColor(x.p)}">${esc(x.p.code||"")}</span><small class="spec">${esc(x.p.name)}</small></td><td><b>${esc(x.t)}</b>${x.sub?`<small class="spec">${x.sub}</small>`:""}</td><td>${esc(x.ty)}</td><td class="tc">${x.due?fd(x.due)+"<div>"+dueTxt(x.due)+"</div>":"-"}</td><td>${x.s||""}</td></tr>`).join("")}</tbody></table></div>`:`<div class="sub">${loaded?"Hiện không có việc nào cần anh/chị xử lý.":"Đang tải…"}</div>`,"span3")}</div>`}
 /* ---------- Doanh nghiệp một người: Bản tin sáng + Hộp quyết định ---------- */
 if(!DB.dec)DB.dec={};
 const delayCost=(p,tl)=>{const ind=p.hms.filter(h=>h.code[0]==="B").reduce((a,h)=>a+h.total,0);return tl.end?ind/tl.end:0};
@@ -4168,8 +4180,8 @@ window.renderHello=function(){homeReal();const box=document.getElementById("hp")
   box.innerHTML=emp+rows.map(r=>`<button class="hpr" data-go="da-${r.id}">${ring(r.v,r.c)}<div class="hn"><b>${esc(r.name)}${r.demo?' <small class="mau">Mẫu</small>':""}</b><span>${esc(r.sub)}</span></div><div class="hv"><b class="num">${fm(r.val)} tỷ</b>${r.tag}</div></button>`).join("")+
     `<div class="hpf"><button class="back sm" data-go="ban-tin">☀ Bản tin hôm nay</button><button class="back sm" data-go="duyet">Hộp quyết định${np?" ("+np+")":""}</button><button class="back sm" data-go="du-an">Tất cả dự án</button></div>`};
 /* ---------- Điều hướng ---------- */
-const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["proj","Dự án","du-an"],["chat","Trò chuyện","tro-chuyen"],["att","Chấm công","cham-cong"],["rep","Báo cáo","bao-cao"],["adm","Quản trị","quan-tri"]];
-const topFor=()=>TOP.filter(t=>t[2]!=="tong-quan").filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"||t[2]==="tro-chuyen"||t[2]==="cham-cong"?window.NGApp&&!NGApp.guest:t[2]==="tong-quan"?canOv():pqTop(t[2])>0));
+const TOP=[["home","Tổng quan","tong-quan"],["brief","Bản tin","ban-tin"],["inbox","Duyệt","duyet"],["cv","Việc cần xử lý","viec-can-xu-ly"],["proj","Dự án","du-an"],["chat","Trò chuyện","tro-chuyen"],["att","Chấm công","cham-cong"],["rep","Báo cáo","bao-cao"],["adm","Quản trị","quan-tri"]];
+const topFor=()=>TOP.filter(t=>t[2]!=="tong-quan").filter(t=>t[2]==="du-an"||(t[2]==="quan-tri"||t[2]==="tro-chuyen"||t[2]==="cham-cong"||t[2]==="viec-can-xu-ly"?window.NGApp&&!NGApp.guest:t[2]==="tong-quan"?canOv():pqTop(t[2])>0));
 /* Màn quản trị: Tổng giám đốc phân quyền; máy chủ tự từ chối nếu không đủ quyền */
 const ROLES=[["cht","Chỉ huy trưởng"]];let admPid="";
 /* Vai trò toàn công ty (áp cho mọi dự án); riêng Chỉ huy trưởng phân theo từng công trường */
@@ -4338,7 +4350,7 @@ const HD=[
 {g:"top",k:"bc",t:"Báo cáo",go:"bao-cao",pa:"t:bao-cao",d:"So sánh các dự án toàn công ty: giá trị HĐ, nghiệm thu, chi phí, công nợ, tiến độ.",b:[["Tên công trình","Bấm để mở dự án"]]},
 {g:"home",k:"ptq",t:"Tình hình dự án",go:"@home",pa:"p:home",d:"Trang đầu của từng dự án: giá trị hợp đồng, giá vốn, lãi gộp, doanh thu và giá vốn theo hạng mục, việc cần chú ý.",
  b:[["Doanh thu và giá vốn theo hạng mục","Thanh màu: giá vốn so với doanh thu, vạch đen là 100%"],["Việc cần chú ý","Dòng chưa nhập giá vốn, khoản trọn gói, vốn cần ứng"]]},
-{g:"home",k:"cv",t:"Việc cần xử lý",go:"@cv",pa:"p:home",d:"Các việc cần xử lý trong dự án theo vai trò của tài khoản đang dùng: quá hạn, sắp hạn, phiếu chờ duyệt; bấm một dòng để mở đúng chỗ.",
+{g:"top",k:"cv",t:"Việc cần xử lý",go:"viec-can-xu-ly",d:"Các việc cần xử lý ở mọi dự án theo vai trò của tài khoản đang dùng: quá hạn, sắp hạn, phiếu chờ duyệt; bấm một dòng để mở đúng chỗ.",
  b:[["Bảng Công việc cần xử lý","Việc quá hạn, sắp hạn của anh/chị; bấm một dòng để mở đúng chỗ"]]},
 {g:"files",k:"files",t:"Thư mục dự án",go:"@files",pa:"p:files",d:"Kho hồ sơ của dự án, lưu trên Google Drive, chia 6 nhóm: 01 Pháp lý – Hợp đồng · 02 Kỹ thuật – Tiến độ · 03 Chất lượng – An toàn · 04 Thanh toán CĐT · 05 NCC – TP · 06 Hiện trường – Văn bản.",
  s:["Bấm Tải file lên · tự gợi ý thư mục, chọn file","Kiểm tra thư mục web gợi ý (AI đọc tên, nội dung) rồi lưu","Hoặc mở đúng thư mục con rồi bấm ＋ Tải file vào đây"],
@@ -5047,7 +5059,7 @@ const NGSI={"cham-cong":"att","cham-cong-don":"xform","cham-cong-bang":"week","c
 var NGC={kh:["#9333EA","#B97AF1","#F4EBFD","#602198"],nt:["#155E75","#6796A5","#E8EFF1","#0E3D4C"],lk:["#14B8A6","#66D1C5","#E8F8F6","#0D786C"],week:["#06B6D4","#5DD0E3","#E6F8FB","#04768A"],pyc:["#3B82F6","#80AEF9","#EBF2FE","#2654A0"],cl:["#854D0E","#B08B62","#F3EDE7","#563209"],dc:["#831843","#AE6985","#F3E8EC","#55102C"]};
 window.NGI=NGI;window.NGC=NGC;if(typeof COL!=="undefined"&&!COL.cv)COL.cv=COL.inbox;if(typeof FCI!=="undefined"&&!FCI.cv)FCI.cv=FCI.nt;
 function ngIcons(){Object.assign(I,NGI);if(typeof COL!=="undefined")Object.assign(COL,NGC);I.cyan=I.house;I.adm=I.xgear;if(typeof COL!=="undefined"&&!COL.adm)COL.adm=COL.hr}ngIcons();
-const NGPG=[["Tổng quan",["home","cv"]],["Hồ sơ",["files","lk"]],["1. Dự toán & giao thầu",["boq","goi","kh","bg"]],["2. Thi công",["prog","week","bcn","pyc","mat","hr"]],["3. Doanh thu – chủ đầu tư",["rev","nt","cl","dc"]],["4. Chi phí – NCC, NTP",["cost","tt"]]];
+const NGPG=[["Tổng quan",["home"]],["Hồ sơ",["files","lk"]],["1. Dự toán & giao thầu",["boq","goi","kh","bg"]],["2. Thi công",["prog","week","bcn","pyc","mat","hr"]],["3. Doanh thu – chủ đầu tư",["rev","nt","cl","dc"]],["4. Chi phí – NCC, NTP",["cost","tt"]]];
 const NGATT={"":"Hằng ngày","don":"Hằng ngày","bang":"Quản lý","ca":"Quản lý","cd":"Quản lý"};
 const NGADM={"quan-tri":"Người dùng","quan-tri-pq":"Người dùng","quan-tri-wf":"Người dùng","quan-tri-mk":"Người dùng","quan-tri-ai":"Trí tuệ nhân tạo","quan-tri-do":"Trí tuệ nhân tạo","quan-tri-bc":"Trí tuệ nhân tạo","quan-tri-bh":"Trí tuệ nhân tạo","quan-tri-hd":"Trợ giúp"};
 const ngLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
@@ -5114,7 +5126,7 @@ function ngGoFill(v,box){const inl=!!box;box=box||document.getElementById("nggor
   const T={app:"Ứng dụng",pj:"Dự án",cc:"Chấm công",qt:"Quản trị"};
   if(!inl&&!W.length){/* Bảng Ứng dụng kiểu bảng chọn mục: ô đầu + các nhóm thẻ kính màu (anh Chung 08/11/2026) */
     /* Ứng dụng chỉ có 1 màn gom chung một nhóm; ứng dụng nhiều màn mỗi cái một nhóm, hiện sẵn các màn bên trong (anh Chung 08/11/2026) */
-    const L0=NGG.L,A=L0.filter(x=>x[4]==="app"),one=["trang-chu","ban-tin","duyet","bao-cao"];
+    const L0=NGG.L,A=L0.filter(x=>x[4]==="app"),one=["trang-chu","viec-can-xu-ly","ban-tin","duyet","bao-cao"];
     const grp=[["Màn hình chung","#94A3B8",one.map(k=>A.find(x=>x[0]===k)).filter(Boolean)],["Dự án","#F59E0B",L0.filter(x=>x[4]==="pj"),1],["Chấm công","#84CC16",L0.filter(x=>x[4]==="cc")],["Quản trị","#A78BFA",L0.filter(x=>x[4]==="qt")]];
     box.innerHTML=`<div class="nglh"><span class="nglhi"><img src="img/logo-round.svg?v=2" alt=""></span><span><b>Nam Giang E&amp;C</b><small>Chọn ứng dụng · Esc để đóng</small></span></div><div class="nglg" style="--n:${grp.filter(g=>g[2].length).length}">${grp.filter(g=>g[2].length).map(([t,c,L,pj])=>`<section class="nggs${pj?" nggpjs":""}" style="--g:${c}"><div class="ngsh"><h4>${esc(t)}</h4>${pj&&(!window.NGApp||NGApp.board)?`<button type="button" class="ngadd" data-ngaddp>＋ Thêm dự án</button>`:""}</div>${pj?`<div class="nggpjl">${L.map(x=>{const i=RR.push(x)-1,p=DB.projects.find(y=>"da-"+y.id===x[0])||allPJ().find(y=>"da-"+y.id===x[0])||{},pc=(typeof prjColor==="function"&&p.id?prjColor(p):"#0A2486");return`<button type="button" data-ngr="${i}" class="nggpj" style="--pc:${pc}"><em>${esc(p.code||x[2]||"")}</em><b>${esc(x[1])}</b></button>`}).join("")}</div>`:`<div class="nggl">${L.map(x=>it(x)).join("")}</div>`}</section>`).join("")}</div>`;
     NGG.a=0;const f0=box.querySelector('[data-ngr="0"]');if(f0)f0.classList.add("act");return}
@@ -5187,6 +5199,7 @@ function route(){let h=(location.hash||"#trang-chu").slice(1);if(h==="du-an"){h=
   else if(/^cham-cong(-|$)/.test(h)){top="cham-cong";html=attView(h.slice(10))}
   else if(/^tro-chuyen(-|$)/.test(h)){top="tro-chuyen";html=chView(h.slice(11))}
   else if(h==="bao-cao"){top="bao-cao";html=report()}
+  else if(h==="viec-can-xu-ly"&&window.NGApp&&!NGApp.guest){top="viec-can-xu-ly";html=cvView()}
   else if(h==="ban-tin"){top="ban-tin";html=brief()}
   else if(h==="duyet"){top="duyet";html=inbox()}
   else if(/^quan-tri(-ai|-mk|-do|-bh|-wf|-bc|-pq|-hd)?$/.test(h)&&window.NGApp&&!NGApp.guest){top="quan-tri";html=adminView(h==="quan-tri-hd"?"hd":h==="quan-tri-pq"?"pq":h==="quan-tri-ai"?"ai":h==="quan-tri-mk"?"mk":h==="quan-tri-do"?"do":h==="quan-tri-bh"?"bh":h==="quan-tri-wf"?"wf":h==="quan-tri-bc"?"bc":"tk")}
