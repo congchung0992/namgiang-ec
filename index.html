@@ -1296,6 +1296,7 @@ html.atlock,html.atlock body{overflow:hidden}
  .atdays button.on{background:linear-gradient(135deg,#0E9F9A,#4FD8C9);color:#fff}.atdays button.on small{color:#D7F3F1}
  .atcar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.atcar b{font-weight:600}.atcar .atsel{width:auto;min-width:140px;max-width:55%}
 }
+#ngupd{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9500;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 18px;border-radius:99px;background:linear-gradient(135deg,#0A2486,#2D3CE6);color:#fff;font-weight:700;box-shadow:0 14px 30px -12px #0A2486;white-space:nowrap}#ngupd button{border:0;border-radius:99px;padding:8px 16px;background:#fff;color:#0A2486;font:700 15px var(--f);cursor:pointer}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -6701,5 +6702,11 @@ document.getElementById("askf")?.addEventListener("submit",e=>{e.preventDefault(
   addEventListener("keydown",e=>{if(e.key!=="Escape")return;const B=[...document.querySelectorAll("#fvc,#ctx,[data-x],[data-lkclose],[data-nhgx],[data-nhrx],[data-asclose]")].filter(b=>b.offsetParent);if(B.length)B[B.length-1].click()})})();
 </script>
 
+<script>
+/* Tự báo khi web có bản mới: tab mở lâu ngày (app chuyển trang bằng #, không tải lại) vẫn biết để tải lại */
+(()=>{let h0=null,shown=0;const hs=t=>{let h=0;for(let i=0;i<t.length;i+=7)h=(h*31+t.charCodeAt(i))|0;return t.length+":"+h};
+  const chk=async()=>{if(shown)return;try{const r=await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"});if(!r.ok)return;const h=hs(await r.text());if(h0===null){h0=h;return}if(h!==h0){shown=1;const b=document.createElement("div");b.id="ngupd";b.innerHTML='<span>Web vừa có bản cập nhật mới</span><button type="button">Tải lại</button>';b.querySelector("button").onclick=()=>location.reload();document.body.appendChild(b)}}catch(e){}};
+  chk();setInterval(chk,5*60e3);document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()})})();
+</script>
 </body>
 </html>
