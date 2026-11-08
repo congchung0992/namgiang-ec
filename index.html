@@ -1686,6 +1686,18 @@ body.ngboard .ngmuc .ngcaret svg{transform:rotate(180deg)}
 @keyframes ngMsgIn{from{opacity:0;transform:scale(.3) translateY(40px)}to{opacity:1;transform:none}}
 @media(max-width:760px){.ngmsg{bottom:calc(84px + env(safe-area-inset-bottom,0px));right:16px;width:54px;height:54px}.ngmsgp{inset:0;right:0;bottom:0;width:100vw;height:100%;border-radius:0}}
 #ngmsgp #chhd{padding-right:58px!important}.ngmsgx{top:16px!important;right:14px!important}
+
+/* Bảng Ứng dụng: bỏ ô tìm; tên nhóm là viên màu chữ to như bảng chọn mục */
+.nggod .nggoq{display:none!important}
+.nggod .nggof{display:none!important}
+.nggod{align-items:center!important}
+.nggod #nggor{max-height:calc(100vh - 80px)!important}
+.nggod .nggs h4{padding:9px 20px!important;border-radius:99px!important;font:700 19px/1.2 var(--f)!important;margin:0 0 14px!important;background:linear-gradient(120deg,color-mix(in srgb,var(--g) 80%,#fff),var(--g))!important;box-shadow:0 10px 22px -10px var(--g),inset 0 1px 0 rgba(255,255,255,.35)!important}
+.nggod .nggs h4 span{display:none!important}
+.nggod .nggbd{z-index:2}
+/* Trò chuyện nổi: phóng to hết màn hình, Esc để thoát */
+.ngmsgp{inset:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;border-radius:0!important;transform-origin:calc(100% - 54px) calc(100% - 54px)}
+body.ngmsg-on .ngmsg{display:none!important}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
