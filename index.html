@@ -1648,6 +1648,27 @@ body.ngboard .ngmuc .ngcaret svg{transform:rotate(180deg)}
  body.ngboard .ngside>.ngph .ngpsel option{color:#16171C}
 }
 @media(min-width:1001px) and (max-height:900px){body.ngboard .ngside .ngg{padding:12px 12px 14px!important}body.ngboard .ngside>.ngph{padding:10px 16px!important}body.ngboard .ngside>.ngph .ngpt{width:42px!important;height:42px!important}body.ngboard .ngside>.ngph .ngpn b,body.ngboard .ngside>.ngph .ngpsel{font-size:17px!important}}
+
+/* Bảng Ứng dụng (logo giữa / Ctrl K) kiểu Launchpad: nền kính mờ toàn màn, biểu tượng lớn (anh Chung 08/11/2026) */
+.nggod{background:rgba(18,24,52,.55)!important;backdrop-filter:blur(34px) saturate(1.5)!important;-webkit-backdrop-filter:blur(34px) saturate(1.5)!important;align-items:flex-start!important;padding:70px 24px 24px!important}
+.nggod .nggob{background:none!important;box-shadow:none!important;aspect-ratio:auto!important;width:min(1100px,100%)!important;max-height:calc(100vh - 100px);overflow:visible}
+.nggod .nggoq{border:0!important;margin:0 auto 22px;max-width:560px;width:100%;border-radius:99px;background:rgba(255,255,255,.18);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);color:#fff!important;padding:0 20px!important}
+.nggod .nggoq input{color:#fff;font-size:17px!important;padding:13px 0!important}.nggod .nggoq input::placeholder{color:rgba(255,255,255,.7)}
+.nggod .nggof{border:0!important;color:rgba(255,255,255,.65)!important;text-align:center}
+.nggod #nggor{overflow:auto!important;max-height:calc(100vh - 220px)!important;padding:0 4px!important}
+.nggod .nggs{background:linear-gradient(160deg,color-mix(in srgb,var(--g) 34%,transparent),color-mix(in srgb,var(--g) 14%,transparent))!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--g) 45%,rgba(255,255,255,.2)),0 18px 40px -24px rgba(0,0,0,.5)!important;border-radius:26px!important;padding:16px 18px 18px!important;margin:0 0 16px!important}
+.nggod .nggl,.nggod .nggl.pj{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))!important;gap:18px 8px!important}
+.nggod .nggl button,.nggod .nggpc button{flex-direction:column;align-items:center!important;text-align:center!important;gap:9px!important;background:none!important;color:#fff!important;padding:6px 4px!important}
+.nggod .nggl button b,.nggod .nggpc button b{white-space:normal!important;font:600 14px/1.3 var(--f)!important;text-shadow:0 1px 5px rgba(0,0,0,.4)}
+.nggod .nggl button small{margin:0!important;color:rgba(255,255,255,.7)!important;max-width:100%!important}
+.nggod .nggl .ngii{width:76px!important;height:76px!important;border-radius:21px!important;background:linear-gradient(180deg,#fff,#EEF1F8)!important;box-shadow:0 12px 24px -10px rgba(0,0,0,.55),inset 0 1px 0 #fff!important;transition:transform .16s}
+.nggod .nggl .ngii svg.fcc,.nggod .nggl .ngii img{width:46px!important;height:46px!important}
+.nggod .nggl button:hover .ngii,.nggod .nggl button.act .ngii{transform:translateY(-3px) scale(1.06)}
+.nggod .nggl button.act .ngii{box-shadow:0 0 0 3px #fff,0 12px 24px -10px rgba(0,0,0,.55)!important}
+.nggod .nggpc{background:rgba(255,255,255,.12)!important;box-shadow:none!important}.nggod .nggpt{color:#fff!important}
+.nggod .nggbd{left:calc(50% + 22px)!important;top:0!important}
+.nggod .nggl button{position:relative}
+@media(max-width:760px){.nggod .nggl,.nggod .nggl.pj{grid-template-columns:repeat(3,1fr)!important}.nggod .nggl .ngii{width:60px!important;height:60px!important}.nggod .nggl .ngii svg.fcc{width:36px!important;height:36px!important}}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -4976,10 +4997,10 @@ function ngGoOpen(){let d=document.getElementById("nggo");if(!d){d=document.crea
   d.querySelectorAll("#nggor button,#nggor .nggs h4").forEach((b,i)=>b.style.setProperty("--i",Math.min(i,40)));
   d.classList.remove("ngin");void d.offsetWidth;d.classList.add("ngin");setTimeout(()=>q.focus(),0)}
 function ngGoFill(v,box){const inl=!!box;box=box||document.getElementById("nggor");const W=ngNz(v).split(/\s+/).filter(Boolean),cur=(location.hash.match(/^#da-([a-z0-9]+)/i)||[])[1];
-  const R=NGG.L.filter(x=>{if(!W.length)return !x[4].startsWith("p:")||x[4]==="p:"+cur;const z=ngNz(x[1]+" "+x[2]+" "+x[5]);return W.every(w=>z.includes(w))});
+  const R=NGG.L.filter(x=>{if(!W.length)return inl?(!x[4].startsWith("p:")||x[4]==="p:"+cur):x[4]==="app";const z=ngNz(x[1]+" "+x[2]+" "+x[5]);return W.every(w=>z.includes(w))});
   const G=[];R.forEach(x=>{let g=G.find(y=>y.k===x[4]);if(!g)G.push(g={k:x[4],t:x[5],L:[]});g.L.push(x)});
   G.sort((a,b)=>{const o=k=>k==="app"?0:k==="p:"+cur?1:k==="pj"?2:k.startsWith("p:")?3:k==="cc"?4:5;return o(a.k)-o(b.k)});
-  const RR=[];if(!inl)NGG.R=RR;const BD=inl?ngBadges():{};const it=(x,sub)=>{const i=RR.push(x)-1;return`<button type="button" ${inl?`data-go="${esc(x[0])}"`:`data-ngr="${i}"`} style="${sv(x[3])}"><span class="ngii">${icc(NGSI[x[0]]||x[3],2)}</span><b>${esc(x[1])}</b>${BD[x[0]]?`<i class="nggbd">${BD[x[0]]>99?"99+":BD[x[0]]}</i>`:""}${sub&&x[2]?`<small>${esc(x[2])}</small>`:""}</button>`};
+  const RR=[];if(!inl)NGG.R=RR;const BD=ngBadges();const it=(x,sub)=>{const i=RR.push(x)-1;return`<button type="button" ${inl?`data-go="${esc(x[0])}"`:`data-ngr="${i}"`} style="${sv(x[3])}"><span class="ngii">${icc(NGSI[x[0]]||x[3],2)}</span><b>${esc(x[1])}</b>${BD[x[0]]?`<i class="nggbd">${BD[x[0]]>99?"99+":BD[x[0]]}</i>`:""}${sub&&x[2]?`<small>${esc(x[2])}</small>`:""}</button>`};
   const T={app:"Ứng dụng",pj:"Dự án",cc:"Chấm công",qt:"Quản trị"};
   box.innerHTML=G.map(g=>{const pg=g.k.startsWith("p:");
     let body;if(pg){const P=[];g.L.forEach(x=>{let q=P.find(y=>y.t===x[2]);if(!q)P.push(q={t:x[2],L:[]});q.L.push(x)});body=`<div class="nggph">${P.map(q=>`<div class="nggpc"><div class="nggpt">${esc(q.t)}</div>${q.L.map(x=>it(x)).join("")}</div>`).join("")}</div>`}
