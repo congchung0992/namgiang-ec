@@ -1493,6 +1493,13 @@ img.nglogo{display:block;border-radius:50%;object-fit:cover;width:24px;height:24
 .nggor button small{max-width:none}
 @media(max-width:1100px){.nggl{grid-template-columns:repeat(3,minmax(0,1fr))}.nggph{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.nggl,.nggl.pj,.nggph{grid-template-columns:1fr}}
+
+/* Tiêu đề nhóm trong bảng Đi tới: mỗi nhóm một màu riêng, chữ to */
+.nggs{border-bottom:0!important;margin:10px 0;padding:10px 12px 12px!important;border-radius:18px;background:color-mix(in srgb,var(--g) 6%,#fff);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--g) 14%,transparent)}
+.nggs h4{display:inline-flex!important;margin:0 0 10px!important;padding:6px 8px 6px 14px;border-radius:99px;background:linear-gradient(135deg,color-mix(in srgb,var(--g) 75%,#fff),var(--g));color:#fff!important;font:700 15.5px var(--f)!important;box-shadow:0 6px 14px -8px var(--g)}
+.nggs h4 span{background:rgba(255,255,255,.25)!important;color:#fff!important;font:700 12.5px var(--f)!important;padding:2px 9px!important}
+.nggpc{background:#fff!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--g) 12%,transparent)}
+.nggpt{font-size:12.5px!important;color:color-mix(in srgb,var(--g) 80%,#000)!important}
 </style>
 
 <script>/* chặn phóng to bằng hai ngón (Safari iPhone bỏ qua user-scalable=no) và chạm đúp */
@@ -4819,7 +4826,7 @@ function ngGoFill(v){const W=ngNz(v).split(/\s+/).filter(Boolean),cur=(location.
   document.getElementById("nggor").innerHTML=G.map(g=>{const pg=g.k.startsWith("p:");
     let body;if(pg){const P=[];g.L.forEach(x=>{let q=P.find(y=>y.t===x[2]);if(!q)P.push(q={t:x[2],L:[]});q.L.push(x)});body=`<div class="nggph">${P.map(q=>`<div class="nggpc"><div class="nggpt">${esc(q.t)}</div>${q.L.map(x=>it(x)).join("")}</div>`).join("")}</div>`}
     else body=`<div class="nggl${g.k==="pj"?" pj":""}">${g.L.map(x=>it(x,g.k==="pj")).join("")}</div>`;
-    return`<section class="nggs"><h4>${pg?"Dự án · ":""}${esc(T[g.k]||g.t)}<span>${g.L.length}</span></h4>${body}</section>`}).join("")||`<p class="sub" style="padding:10px 14px">Không có màn nào khớp</p>`;
+    const gc={app:"#0A2486",pj:"#D9480F",cc:"#65A30D",qt:"#8B5CF6"}[g.k]||(g.k==="p:"+cur?"#0F766E":"#B45309");return`<section class="nggs" style="--g:${gc}"><h4>${pg?"Dự án · ":""}${esc(T[g.k]||g.t)}<span>${g.L.length}</span></h4>${body}</section>`}).join("")||`<p class="sub" style="padding:10px 14px">Không có màn nào khớp</p>`;
   NGG.a=0;const f=document.querySelector('#nggor [data-ngr="0"]');if(f)f.classList.add("act")}
 function ngGoPick(i){const x=NGG.R[i];if(!x)return;document.getElementById("nggo").hidden=true;location.hash=x[0];scrollTo({top:0})}
 /* Thanh dưới trên điện thoại */
