@@ -1795,7 +1795,11 @@ html body .tw.tw.tw.tw::-webkit-scrollbar-corner,html body .gw.gw.gw.gw::-webkit
 /* Bảng chính vừa màn: kéo sát mép phải màn hình, thanh cuộn nằm ở góc phải (anh Chung 09/11/2026) */
 @media(min-width:761px){
  body.sfit .card.cfit{overflow:visible!important}
- body.sfit .twfit{margin-right:calc(-22px - max(16px,env(safe-area-inset-right,0px)))!important}
+ body.sfit .twfit{margin-right:calc(-22px - max(16px,env(safe-area-inset-right,0px)))!important;margin-left:calc(-22px - max(16px,env(safe-area-inset-left,0px)))!important}
+ body.sfit .twfit,body.sfit .twfit>table{border-left:0!important;border-right:0!important;border-radius:0!important}
+ body.sfit .card.cfit{border-radius:26px 26px 0 0!important}
+ html body.sfit .tw.twfit>table.t tr>:first-child{border-left:0!important;border-top-left-radius:0!important;border-bottom-left-radius:0!important}
+ html body.sfit .tw.twfit>table.t tr>:last-child{border-right:0!important;border-top-right-radius:0!important;border-bottom-right-radius:0!important}
  body.sfit .twfit>table{border-top-right-radius:0!important;border-bottom-right-radius:0!important}
 }
 </style>
@@ -7342,11 +7346,11 @@ view.addEventListener("click",async e=>{const p=P();if(!p)return;const b=e.targe
   /* Toàn màn hình tab con: bảng chính (Phân tách gói thầu) kéo cao vừa khít phần màn hình còn lại, trang không cuộn nữa, chỉ còn một thanh cuộn của bảng (anh chốt 07/11/2026) */
   let fr=0;const fit=()=>{fr=0;const B=document.body,V=document.getElementById("view");
     /* trả lại chiều cao cũ cho bảng đã kéo trước đó */
-    document.querySelectorAll(".cfit,.twfit").forEach(x=>x.classList.remove("cfit","twfit"));document.querySelectorAll(".tw[data-fit],.gw[data-fit]").forEach(t=>{t.style.maxHeight=t.dataset.mh0||"";delete t.dataset.fit;delete t.dataset.mh0});
+    document.querySelectorAll(".cfit,.twfit").forEach(x=>{x.classList.remove("cfit","twfit");if(x.classList.contains("tw")||x.classList.contains("gw"))x.style.overflowX=""});document.querySelectorAll(".tw[data-fit],.gw[data-fit]").forEach(t=>{t.style.maxHeight=t.dataset.mh0||"";delete t.dataset.fit;delete t.dataset.mh0});
     const set=w=>{if(B.classList.contains("sfit")!==w)B.classList.toggle("sfit",w)};if(!V||innerWidth<=760||!/^#da-/.test(location.hash)){set(false);return}
     /* bảng chính của tab = bảng cuộn dọc cuối cùng còn nằm trong nửa trên màn hình; kéo cao vừa khít phần còn lại, trang thôi cuộn nếu không còn gì bên dưới */
     const T=[...V.querySelectorAll(".tw,.gw")].filter(t=>t.offsetParent&&t.scrollHeight>t.clientHeight+4);const t=T[T.length-1];if(!t){set(false);return}const top=t.getBoundingClientRect().top+scrollY;if(top>innerHeight*.62){set(false);return}
-    t.dataset.mh0=t.style.maxHeight||"";t.dataset.fit=1;t.style.maxHeight=Math.max(260,innerHeight-top-14)+"px";{const ov=document.documentElement.scrollHeight-innerHeight;if(ov>0){const h=Math.max(260,parseFloat(t.style.maxHeight)-ov-2);t.style.maxHeight=h+"px"}}const w=document.documentElement.scrollHeight<=innerHeight+2;if(!w&&!B.classList.contains("sfull")){t.style.maxHeight=t.dataset.mh0;delete t.dataset.fit;delete t.dataset.mh0}set(w);if(w){t.classList.add("twfit");const c=t.closest(".card");if(c)c.classList.add("cfit")}if(w&&scrollY)scrollTo(0,0)};
+    t.dataset.mh0=t.style.maxHeight||"";t.dataset.fit=1;t.style.maxHeight=Math.max(260,innerHeight-top-14)+"px";{const ov=document.documentElement.scrollHeight-innerHeight;if(ov>0){const h=Math.max(260,parseFloat(t.style.maxHeight)-ov-2);t.style.maxHeight=h+"px"}}const w=document.documentElement.scrollHeight<=innerHeight+2;if(!w&&!B.classList.contains("sfull")){t.style.maxHeight=t.dataset.mh0;delete t.dataset.fit;delete t.dataset.mh0}set(w);if(w){t.classList.add("twfit");const c=t.closest(".card");if(c)c.classList.add("cfit");requestAnimationFrame(()=>{t.style.overflowX=t.scrollWidth-t.clientWidth<=3?"hidden":""})}if(w&&scrollY)scrollTo(0,0)};
   const qf=()=>{if(!fr)fr=requestAnimationFrame(fit)};new MutationObserver(qf).observe(document.body,{attributes:true,attributeFilter:["class"]});addEventListener("resize",qf);addEventListener("hashchange",()=>setTimeout(qf,50));
   {const v=document.getElementById("view");if(v)new MutationObserver(qf).observe(v,{childList:true,subtree:true})}
   addEventListener("keydown",e=>{if(e.key!=="Escape"||!document.body.classList.contains("sfull")||document.body.classList.contains("edmode"))return;if(document.getElementById("fview")||document.getElementById("lkp"))return;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){a.blur();return}off()});
