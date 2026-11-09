@@ -1030,9 +1030,9 @@ html body .tw > table.t tfoot tr:last-child>td:last-child::before{right:-1px;bot
 /* Bảng không có dòng tổng: bo 2 góc dưới ở dòng cuối; bảng ẩn tiêu đề (cây báo giá, kế hoạch tuần): dòng đầu có viền trên, bo 2 góc trên (anh Chung 07/11/2026) */
 html body table.t:not(:has(tfoot))>tbody:last-of-type>tr:last-child>td:first-child{border-bottom-left-radius:14px}
 html body table.t:not(:has(tfoot))>tbody:last-of-type>tr:last-child>td:last-child{border-bottom-right-radius:14px}
-html body table.t.bgtree>tbody:first-of-type>tr:first-child>td,html body table.t.wt>tbody:first-of-type>tr:first-child>td{border-top:1px solid #4F535E!important}
-html body table.t.bgtree>tbody:first-of-type>tr:first-child>td:first-child,html body table.t.wt>tbody:first-of-type>tr:first-child>td:first-child{border-top-left-radius:14px}
-html body table.t.bgtree>tbody:first-of-type>tr:first-child>td:last-child,html body table.t.wt>tbody:first-of-type>tr:first-child>td:last-child{border-top-right-radius:14px}
+html body table.t.bgtree:not(:has(>thead))>tbody:first-of-type>tr:first-child>td,html body table.t.wt:not(:has(>thead))>tbody:first-of-type>tr:first-child>td{border-top:1px solid #4F535E!important}
+html body table.t.bgtree:not(:has(>thead))>tbody:first-of-type>tr:first-child>td:first-child,html body table.t.wt:not(:has(>thead))>tbody:first-of-type>tr:first-child>td:first-child{border-top-left-radius:14px}
+html body table.t.bgtree:not(:has(>thead))>tbody:first-of-type>tr:first-child>td:last-child,html body table.t.wt:not(:has(>thead))>tbody:first-of-type>tr:first-child>td:last-child{border-top-right-radius:14px}
 html body table.t:not(.tw > table){border:0!important}
 html body table.t:not(.tw > table) tr>*:first-child{border-left:1px solid #4F535E!important}
 html body table.t:not(.tw > table)>thead>tr:first-child>th:first-child{border-top-left-radius:14px}
@@ -1815,6 +1815,10 @@ html body .gtfw .pvp.bqk.bqkf>.bqf{margin-left:0!important}
 .ngphh{font-size:16px}.ngphx{display:flex;flex-direction:column;gap:6px;color:var(--muted)}.ngphx b{color:#16171C;font-weight:600}.ngphx .gloc{display:inline-flex;gap:6px;align-items:flex-start;white-space:normal}.ngphx .gloc b,.ngphx span{white-space:normal;overflow:visible;text-overflow:clip}
 .ngphp .ngdesc{display:flex!important;margin:0}
 @media(min-width:761px){body.phtop #view .phd,body.phtop #view .ngdesc{display:none!important}}
+.ngphn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal!important;line-height:1.22;font-size:16px!important;overflow:hidden}
+@media(min-width:761px){.top{position:relative}.top .tlogo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);flex:none}.top #pills{margin-right:auto}body:not(.sfull) .sgsub.sgemp{display:none!important}}
+.sgq.sgqin{margin:0 0 0 auto!important;flex:none;width:280px}.bh:has(>.sgqin){flex-wrap:nowrap!important;align-items:flex-start;gap:16px}.bh:has(>.sgqin)>:first-child{flex:1 1 auto;min-width:0}.lkf .sgq.sgqin{align-self:center}.sgq.sgqfl{float:right;margin:0 0 8px 16px!important}
+@media(min-width:761px) and (max-width:1500px){body.phtop #pills .pill[data-go="trang-chu"]{font-size:0!important;gap:0!important;padding-right:5px!important}body.phtop #pills .pill[data-go="trang-chu"] .dot{margin:0}.ngph>.code{display:none}.ngph{padding-left:12px}}
 @media(max-width:760px){.ngph{display:none!important}}
 @media(min-width:761px) and (max-width:1600px){.gtd .sgq{width:190px;min-width:0}.gtd .gtfl2 .gdd:not(.gunw) .gddb{max-width:200px;min-width:200px}.gtd .pvb{font-size:14px;padding:0 10px 0 13px}.gtd .gtls .bqf{padding:6px 10px!important}.ngph .st{display:none}}
 </style>
@@ -5206,10 +5210,18 @@ function ngTab(){const o=document.getElementById("ngtab");if(o)o.remove();const 
   m.innerHTML=`<span>${a&&a.querySelector(".ngii")?a.querySelector(".ngii").innerHTML:icc("apps",2)}</span><b>${esc(lab)}</b><i class="ngcaret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></i>`}
 /* Phương án D (anh Chung 09/11/2026): mã + tên dự án lên thanh trên cùng, ⓘ mở địa chỉ, chủ đầu tư, hồ sơ và giải thích màn; ô bật/tắt chung data-pvo */
 function ngPh(){const P=document.getElementById("pills");if(!P)return;let m=P.querySelector(".ngph");const h=view.hidden?null:view.querySelector(".phd .pht h1");document.body.classList.toggle("phtop",!!h);if(!h){if(m)m.remove();return}
-  const w=h.closest(".phd"),c=w.querySelector(".pht .code"),st=w.querySelector(".pht .st:not(.pqbd)"),x=w.querySelector(".phx"),d=view.querySelector(".ngdesc"),ro=w.querySelector(".pqbd");
-  if(!m){m=document.createElement("div");m.className="ngph pvw";P.appendChild(m)}
-  m.innerHTML=`${c?c.outerHTML:""}<b class="ngphn">${esc(h.textContent)}</b>${st?st.outerHTML:""}${ro?ro.outerHTML:""}<button type="button" class="ngphi" data-pvo aria-label="Thông tin dự án" title="Thông tin dự án"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5v.01"/></svg></button><div class="pvp ngphp" hidden><b class="ngphh">${esc(h.textContent)}</b><div class="ngphx">${x?x.innerHTML:""}</div>${d?d.outerHTML:""}</div>`;
-  const nm=m.querySelector(".ngphn");nm.title=h.textContent}
+  const w=h.closest(".phd"),c=w.querySelector(".pht .code"),x=w.querySelector(".phx"),ro=w.querySelector(".pqbd");
+  if(!m){m=document.createElement("div");m.className="ngph";P.appendChild(m)}
+  m.innerHTML=`${c?c.outerHTML:""}<b class="ngphn">${esc(h.textContent)}</b>${ro?ro.outerHTML:""}`;
+  m.querySelector(".ngphn").title=h.textContent+(x?"\n"+[...x.children].map(e=>e.textContent.trim()).join("\n"):"");ngPhFit();[120,400,1200].forEach(t=>setTimeout(ngPhFit,t));if(document.fonts)document.fonts.ready.then(ngPhFit);ngSgMove()}
+/* tên dự án dài thì xuống 2 dòng, không lấn sang logo giữa màn */
+function ngPhFit(){const n=document.querySelector("#pills .ngphn"),lg=document.querySelector(".tlogo img");if(!n||!lg||!lg.offsetWidth)return;n.style.maxWidth="";const a=n.getBoundingClientRect().left,b=lg.getBoundingClientRect().left;n.style.maxWidth=Math.max(100,b-a-24)+"px"}
+addEventListener("resize",()=>{clearTimeout(ngPhFit.t);ngPhFit.t=setTimeout(ngPhFit,80)});
+/* ô "Tìm trong …" của tab dự án: đưa xuống hàng công cụ trong khung, bỏ hàng riêng phía trên (anh Chung 09/11/2026) */
+function ngSgMove(){if(innerWidth<761)return;const q=view.querySelector(".sgsub .sgq");if(!q)return;const c=view.querySelector(".card");if(!c)return;
+  const lk=c.querySelector(".lkf"),bh=c.firstElementChild&&c.firstElementChild.classList.contains("bh")?c.firstElementChild:null;q.classList.add("sgqin");
+  if(lk&&lk.getBoundingClientRect().top-c.getBoundingClientRect().top<160)lk.appendChild(q);else if(bh)bh.appendChild(q);else{q.classList.add("sgqfl");c.insertBefore(q,c.firstChild)}
+  const sg=view.querySelector(".sgsub");if(sg)sg.classList.add("sgemp");dispatchEvent(new Event("resize"))}
 document.addEventListener("click",e=>{const o=e.target.closest("[data-pvo]");document.querySelectorAll(".pvp:not([hidden])").forEach(p=>{if(!o||p!==o.parentNode.querySelector(":scope>.pvp"))if(!p.contains(e.target)||e.target.closest("button"))p.hidden=true});if(o){const p=o.parentNode.querySelector(":scope>.pvp");if(p){p.hidden=!p.hidden;if(!p.hidden){const r=o.getBoundingClientRect(),W=p.offsetWidth;p.style.position="fixed";p.style.top=r.bottom+8+"px";p.style.right="auto";p.style.left=Math.max(8,Math.min(r.left,innerWidth-W-12))+"px"}}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".pvp:not([hidden])").forEach(p=>p.hidden=true)});
 function ngBoard(on){const B=document.body;on=on===undefined?!B.classList.contains("ngboard"):on;let k=document.getElementById("ngbk");
