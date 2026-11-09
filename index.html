@@ -7440,7 +7440,7 @@ document.addEventListener("change",async e=>{const s=e.target;if(!s.matches||!s.
     const to=t.dataset.fsel,L=D.items;D=null;let ok=0,bad=[];for(const x of L){flMsg(`Đang chuyển ${ok+bad.length+1}/${L.length} file sang ${to}…`);try{await NGB.drive.move(x.id,to,to==="06.2"&&x.img?x.at:"");ok++}catch(er){bad.push(er.message||er)}}
     const p=DB.projects.find(x=>x.id===cur.id);if(p)p._f05=undefined;await filesLoad();flMsg(bad.length?`Đã chuyển ${ok}/${L.length} file · lỗi: ${bad[0]}`:`Đã chuyển ${ok} file sang ${to}`,!!bad.length)})})();
 
-/* Đặt tên vật tư / nhân công cho từng phần giao: bấm đúp vào tên (hoặc bấm ✎) để sửa ngay tại ô; Enter lưu, Esc huỷ, để trống = tên tự động */
+/* Đặt tên vật tư / nhân công cho từng phần giao: bấm đúp vào tên (hoặc bấm biểu tượng bút) để sửa ngay tại ô; Enter lưu, Esc huỷ, để trống = tên tự động */
 function gtPnEdit(b){if(!b||!cur||b.querySelector("input"))return;const p=DB.projects.find(x=>x.id===cur.id);if(!p)return;const k=b.dataset.gtpn,pn=(p.pk||{}).pn||{},auto=((b.querySelector(".gtpt")||b).textContent).replace(/[✎✨]/g,"").trim();
   const old=b.innerHTML,od=b.style.display,i=document.createElement("textarea");i.className="gtpni";i.rows=1;i.value=pn[k]||auto;i.placeholder=auto;const h=document.createElement("small");h.className="gtpnh";h.textContent="Enter lưu · Esc huỷ · xoá trắng = dùng tên tự động";
   const pill=b.querySelector(".gvn"),w=document.createElement("span");w.className="gtpnw";if(pill)w.append(pill.cloneNode(true));w.append(i);b.innerHTML="";b.style.display="block";b.append(w,h);const fit=()=>{i.style.height="auto";i.style.height=i.scrollHeight+"px"};fit();i.addEventListener("input",fit);caretEnd(i);let done=false;
