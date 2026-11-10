@@ -1840,6 +1840,7 @@ html body .gtd .sgq input{height:100%!important;padding-top:0!important;padding-
 html body table.pqt{table-layout:fixed;width:100%}html body table.pqt col.pqc0{width:24%}
 html body .pqtw{max-height:calc(100vh - 150px);overflow:auto}
 html body table.pqt>thead th{position:sticky;top:0;z-index:3}
+html body table.pqt>thead th.pqh{background:color-mix(in srgb,var(--rc) 15%,#fff);color:color-mix(in srgb,var(--rc) 80%,#000);box-shadow:inset 0 -3px 0 var(--rc)}html body table.pqt>thead th.pqh small{color:color-mix(in srgb,var(--rc) 65%,#555)}
 .gtfl2{display:contents}.gtnh .gtfl2{display:none}
 html body .gtd .gtls.bqk.bqkf{margin:0;display:inline-flex;gap:6px;flex-wrap:nowrap}
 .gtd .gdd{margin:0}.gtd .gtfl2 .gdd:not(.gunw) .gddb{min-width:240px;max-width:240px}.gtd .gddb>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gtd .sgq{width:260px}
@@ -5095,7 +5096,8 @@ function pqAdmDraw(){const box=document.getElementById("adm");if(!box)return;con
   const rows=(t,L)=>L.map(([k,n])=>`<tr><td>${esc(n)}</td>${PQR.map(([r])=>`<td class="tc">${pqCell(r,t+":"+k)}</td>`).join("")}</tr>`).join("");
   const grp=n=>`<tr class="pqg"><td colspan="${N+1}">${n}</td></tr>`;
   const nChg=Object.values(PQ.m).reduce((s,o)=>s+Object.keys(o).length,0);
-  const head=`<thead><tr><th>Màn hình / tab</th>${PQR.map(([r,n])=>{const w=pqWho(r);return`<th title="${esc(w.join(", ")||"Chưa có ai giữ chức danh này")}">${esc(n)}<small>${w.length?w.length+" người":"chưa có ai"}</small></th>`}).join("")}</tr></thead>`;
+  const PQRC={gd:"#12A150",qs:"#C21FC9",kt:"#8B5CF6",ktvt:"#F08A24",hcns:"#0E9F9A",cht:"#2D3CE6"};
+  const head=`<thead><tr><th>Màn hình / tab</th>${PQR.map(([r,n])=>{const w=pqWho(r);return`<th class="pqh" style="--rc:${PQRC[r]||"#0A2486"}" title="${esc(w.join(", ")||"Chưa có ai giữ chức danh này")}">${esc(n)}<small>${w.length?w.length+" người":"chưa có ai"}</small></th>`}).join("")}</tr></thead>`;
   const t1=card("Quyền theo chức danh",`Chọn Ẩn / Xem / Sửa trong ô, lưu ngay · Ẩn: không thấy · Xem: thấy số liệu, không sửa được · Sửa: được nhập, sửa · Admin, Tổng giám đốc luôn toàn quyền · ô viền cam là đã đổi khác mặc định`,
    `<div class="pqbar"><span class="sub" id="pqmsg">${PQA.msg||(nChg?nChg+" ô đã đổi khác mặc định":"Đang dùng quyền mặc định")}</span>${nChg?`<button type="button" class="back sm" data-pqrst style="margin:0${PQA.rst?";background:#FDECEC;color:#C0141B":""}">${PQA.rst?"Bấm lần nữa để khôi phục mặc định":"Khôi phục mặc định"}</button>`:""}</div>
    <div class="tw pqtw"><table class="t pqt"><colgroup><col class="pqc0">${PQR.map(()=>`<col class="pqcr">`).join("")}</colgroup>${head}<tbody>${grp("Màn hình chung")}${rows("t",PQTOP)}<tr><td>Quản trị (tài khoản, phân quyền, luồng duyệt, AI)</td><td colspan="${N}" class="tc sub">Chỉ Admin, Tổng giám đốc · người khác chỉ thấy Tài khoản của tôi</td></tr>${grp("Chấm công · theo chức danh")}${rows("c",PQC)}${grp("Trong từng dự án · theo sheet, tab")}${SGRP.map(g=>{const L=g[2].map(k=>BSHEETS.find(x=>x[0]===k)).filter(Boolean);return L.length===1?rows("p",[[L[0][0],g[1]]]).replace("<tr><td>","<tr class=\"pqs1\"><td>"):`<tr class="pqs"><td colspan="${N+1}">${esc(g[1])}</td></tr>`+rows("p",L).replace(/<tr><td>/g,"<tr class=\"pqi\"><td>")}).join("")}${rows("p",BSHEETS.filter(x=>!SGRP.some(g=>g[2].includes(x[0]))))}</tbody></table></div>
