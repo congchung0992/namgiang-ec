@@ -1841,6 +1841,8 @@ html body table.pqt{table-layout:fixed;width:100%}html body table.pqt col.pqc0{w
 html body .pqtw{max-height:calc(100vh - 150px);overflow:auto}
 html body table.pqt>thead th{position:sticky;top:0;z-index:3}
 html body table.pqt>thead th.pqh{background:color-mix(in srgb,var(--rc) 15%,#fff);color:color-mix(in srgb,var(--rc) 80%,#000);box-shadow:inset 0 -3px 0 var(--rc)}html body table.pqt>thead th.pqh small{color:color-mix(in srgb,var(--rc) 65%,#555)}
+/* Tên địa điểm chấm công hiện đủ chữ, tự xuống dòng (anh Chung 10/11/2026) */
+html body .atfch{flex-wrap:wrap;align-items:flex-start}html body textarea.atsn{flex:1 1 100%;width:100%!important;max-width:none!important;min-width:0;resize:none;field-sizing:content;min-height:40px;line-height:1.35;font:inherit;font-weight:600;white-space:pre-wrap;overflow:hidden;padding-top:9px;padding-bottom:9px}html body .atfch .atrad{margin-left:auto}
 .gtfl2{display:contents}.gtnh .gtfl2{display:none}
 html body .gtd .gtls.bqk.bqkf{margin:0;display:inline-flex;gap:6px;flex-wrap:nowrap}
 .gtd .gdd{margin:0}.gtd .gtfl2 .gdd:not(.gunw) .gddb{min-width:240px;max-width:240px}.gtd .gddb>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gtd .sgq{width:260px}
@@ -5017,7 +5019,7 @@ function atShiftCard(){return`<section class="card span3"><div class="bh"><div><
 /* ----- Tab Cài đặt ----- */
 function atCd(){const P=[...AT.ppl.values()].sort((a,b)=>a.name.localeCompare(b.name,"vi")),FL=new Map(AT.flist.map(x=>[x.user_id,x.at]));
   return`<section class="card span3"><div class="bh"><div><h3>Địa điểm chấm công</h3><span class="sub">Văn phòng và từng công trường · người chấm phải đứng trong bán kính của địa điểm gần nhất · đứng tại chỗ bấm "Lấy vị trí hiện tại" cho chính xác</span></div></div>
-    <div class="atgrid">${AT.sites.map(s=>`<div class="atfc" style="--k:#65A30D"><div class="atfch"><input class="fi" data-atsf="${s.id}|name" value="${esc(s.name)}" aria-label="Tên địa điểm"><label class="atrad"><input type="checkbox" data-atsf="${s.id}|active"${s.active?" checked":""}><span>Đang dùng</span></label></div>
+    <div class="atgrid">${AT.sites.map(s=>`<div class="atfc" style="--k:#65A30D"><div class="atfch"><textarea class="fi atsn" data-atsf="${s.id}|name" rows="1" aria-label="Tên địa điểm">${esc(s.name)}</textarea><label class="atrad"><input type="checkbox" data-atsf="${s.id}|active"${s.active?" checked":""}><span>Đang dùng</span></label></div>
       <div class="atfg"><label class="full"><span>Dự án</span><select class="fi sel" data-atsf="${s.id}|project_id"><option value="">Văn phòng / khác</option>${DB.projects.map(p=>`<option value="${p.id}"${p.id===s.project_id?" selected":""}>${esc(p.code||"")} · ${esc(p.name)}</option>`).join("")}</select></label>
       <label><span>Vĩ độ</span><input class="fi r" inputmode="decimal" data-atsf="${s.id}|lat" value="${s.lat}"></label><label><span>Kinh độ</span><input class="fi r" inputmode="decimal" data-atsf="${s.id}|lng" value="${s.lng}"></label>
       <label><span>Bán kính (m)</span><input class="fi r" inputmode="numeric" data-atsf="${s.id}|radius" value="${s.radius}"></label>
@@ -7173,6 +7175,7 @@ document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!t.c
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-bqmg]");if(!b)return;BQS.mg=!BQS.mg;keep(route)});
 document.addEventListener("mouseover",e=>{const t=e.target.closest&&e.target.closest(".mgtag");let tp=document.getElementById("mgtip");if(!t){if(tp&&!e.target.closest("#mgtip"))tp.remove();return}if(tp&&tp.dataset.k===t.dataset.mgk)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;
   if(tp)tp.remove();tp=document.createElement("div");tp.id="mgtip";tp.dataset.k=t.dataset.mgk;tp.innerHTML=ctTip(p,t.dataset.mgk);document.body.appendChild(tp);const r=t.getBoundingClientRect(),W=tp.offsetWidth,H=tp.offsetHeight;tp.style.left=Math.max(8,Math.min(r.left,innerWidth-W-12))+"px";tp.style.top=(r.bottom+8+H>innerHeight-8?r.top-H-8:r.bottom+8)+"px"});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches&&e.target.matches("textarea.atsn")){e.preventDefault();e.target.blur()}});
 /* Sửa hệ số, tên, đơn vị chung trong bảng gợi ý gộp: Enter lưu, Esc huỷ */
 document.addEventListener("keydown",e=>{const i=e.target.closest&&e.target.closest(".mgpan input.fi");if(!i)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p||!NH.mg)return;
   if(e.key==="Escape"){e.preventDefault();e.stopPropagation();NH.mge="";gtRe(p);return}if(e.key!=="Enter")return;e.preventDefault();ctEdit(p,i)},true);
