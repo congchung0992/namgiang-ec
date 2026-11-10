@@ -4010,9 +4010,12 @@ const FIELD=["prog","lk","kh","week","bcn","mat","pyc","tt","hr","files"];
    Admin, Tổng giám đốc luôn toàn quyền và là người được đổi bảng. Máy chủ cộng thêm quyền ghi/đọc khi cho Sửa/Xem (perm_can); ẩn tab, khoá chỉ xem làm trên web. */
 const PQR=[["gd","GDDA - QS tổng"],["qs","QS dự án"],["kt","Kế toán tổng hợp"],["ktvt","Kế toán vật tư"],["hcns","Hành chính nhân sự"],["cht","Chỉ huy trưởng"]];
 const PQTOP=[["tong-quan","Tổng quan công ty"],["ban-tin","Bản tin"],["duyet","Hộp quyết định (duyệt)"],["bao-cao","Báo cáo"]];
+/* Chấm công theo chức danh (anh Chung 10/11/2026): khu vực "c:" trong role_perms */
+const PQC=[["cc","Chấm công của mình"],["don","Đơn từ"],["bang","Bảng công"],["ca","Phân ca"],["cd","Cài đặt chấm công"]];
 const PQT={b:["home","boq","goi","bg","rev","dc","mat","pyc","tt","hr"],s:["prog","week","bcn","lk","kh"],c:["boq","goi","kh","bg","rev","nt","cl","dc","cost","tt"]};
 var PQ={m:{},ok:0};
 function pqDef(r,a){const [t,k]=a.split(":");
+  if(t==="c"){if(k==="cc"||k==="don")return 2;if(r==="gd"||r==="hcns")return 2;if(r==="cht")return k==="bang"?1:k==="ca"?2:0;return 0}
   if(t==="t")return r==="gd"?(k==="duyet"?2:1):0;
   if(r==="gd")return 2;if(r==="qs")return k==="cl"?1:2;if(r==="kt")return["cl","tt","files"].includes(k)?2:1;
   if(!FIELD.includes(k))return 0;
@@ -4383,6 +4386,7 @@ function pqLock(){if(!view.classList.contains("pqro"))return;
 function pqApply(h,top){view.classList.remove("pqro");let lv=2;
   if(top==="du-an"&&/^da-/.test(h)&&cur){const k=h.split("-")[2]||"",L=sheetsFor(cur);lv=pqP(cur,L.some(x=>x[0]===k)?k:L[0][0])}
   else if(top==="duyet")lv=pqTop("duyet");
+  else if(top==="cham-cong"&&typeof atPq==="function"){const k=h.replace(/^cham-cong-?/,"")||"cc";lv=atPq(["don","bang","ca","cd"].includes(k)?k:"cc")}
   if(lv!==1)return;view.classList.add("pqro");
   const t=view.querySelector(".pht")||view.querySelector(".vh h1");if(t&&!t.querySelector(".pqbd"))t.insertAdjacentHTML("beforeend",'<span class="st pqbd" title="Chức danh của anh/chị chỉ được xem tab này · muốn sửa, liên hệ Admin">Chỉ xem</span>');
   pqLock()}
@@ -4819,9 +4823,13 @@ document.addEventListener("change",e=>{if(e.target.classList&&e.target.classList
 var AT={tab:"cc",ld:0,cfg:{},sites:[],shifts:[],face:null,logs:[],ros:[],lv:[],ppl:new Map(),mine:null,flist:[],mon:"",wk:0,msg:"",ok:0,busy:"",geo:null,form:{kind:"phep",part:"",d1:"",d2:""},sel:null};
 const ATLV=[["phep","Nghỉ phép năm","#12A150","P"],["om","Nghỉ ốm","#0E9F9A","Ô"],["kl","Nghỉ không lương","#5B6170","KL"],["cd","Nghỉ chế độ (cưới, tang, thai sản…)","#8B5CF6","CĐ"],["muon","Đi muộn / về sớm","#F08A24",""],["ct","Công tác, làm ngoài địa điểm","#2D3CE6","CT"],["quen","Quên chấm công / giải trình","#C21FC9",""],["doica","Đổi ca","#0A2486",""]];
 const atLv=k=>ATLV.find(x=>x[0]===k)||[k,k,"#5B6170",""];
-const atAdm=()=>window.NGApp&&!NGApp.as&&(NGApp.board||["hcns","gd","admin"].includes(NGApp.crole));
+const atRole=()=>{if(!window.NGApp)return"";if(["gd","kt","ktvt","hcns"].includes(NGApp.crole))return NGApp.crole;const R=DB.projects.map(p=>p._role);return R.includes("qs")?"qs":R.includes("cht")?"cht":""};
+/* Mức quyền chấm công của người đang dùng (0 Ẩn · 1 Xem · 2 Sửa) theo bảng Phân quyền; Admin, Tổng giám đốc luôn toàn quyền */
+const atPq=k=>{if(!window.NGApp||NGApp.guest||NGApp.board||NGApp.crole==="admin"||NGApp.crole==="tgd")return 2;const r=atRole();if(!r)return k==="cc"||k==="don"?2:0;return pqLv(r,"c:"+k)};
+const atAdm=()=>window.NGApp&&!NGApp.as&&(NGApp.board||["hcns","gd","admin"].includes(NGApp.crole)||atPq("cd")===2);
 const atCht=()=>window.NGApp&&DB.projects.some(p=>p._role==="cht");
-const atMgr=()=>atAdm()||atCht();
+const atMgr=()=>atAdm()||atPq("bang")>0||atPq("ca")>0;
+const atAll=()=>atAdm()||(atRole()!=="cht"&&(atPq("bang")>0||atPq("ca")>0));
 const atYmd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const atHm=d=>String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
 const atMin=t=>{const m=String(t||"").match(/(\d+):(\d+)/);return m?+m[1]*60+ +m[2]:0};
@@ -4838,9 +4846,9 @@ async function atLoad(){const sb=NGB.sb(),me=NGApp.uid;if(!AT.mon)AT.mon=atYmd(n
     AT.cfg={};(Q[0].data||[]).forEach(x=>AT.cfg[x.k]=x.v);AT.sites=Q[1].data||[];AT.shifts=Q[2].data||[];AT.face=Q[3].data;AT.logs=Q[4].data||[];AT.ros=Q[5].data||[];AT.lv=Q[6].data||[];
     if(Q[7].data)Q[7].data.forEach(p=>AT.ppl.set(p.id,p));
     if(atAdm()){const f=await sb.rpc("att_face_list");AT.flist=f.data||[]}
-    if(!atAdm()&&atCht()&&!AT.mine){const P=[...AT.ppl.keys()],R=await Promise.all(P.map(u=>sb.rpc("att_mgr_of",{uid:u})));AT.mine=new Set(P.filter((u,i)=>R[i].data))}
+    if(!atAll()&&atCht()&&!AT.mine){const P=[...AT.ppl.keys()],R=await Promise.all(P.map(u=>sb.rpc("att_mgr_of",{uid:u})));AT.mine=new Set(P.filter((u,i)=>R[i].data))}
     AT.ld=1;AT.err=""}catch(e){AT.err=e.message||String(e)}atDraw()}
-const atStaff=()=>[...AT.ppl.values()].filter(p=>atAdm()?true:(AT.mine&&AT.mine.has(p.id))).sort((a,b)=>(typeof crOrd==="function"?crOrd({role:a.role,is_board:a.board})-crOrd({role:b.role,is_board:b.board}):0)||a.name.localeCompare(b.name,"vi"));
+const atStaff=()=>[...AT.ppl.values()].filter(p=>atAll()?true:(AT.mine&&AT.mine.has(p.id))).sort((a,b)=>(typeof crOrd==="function"?crOrd({role:a.role,is_board:a.board})-crOrd({role:b.role,is_board:b.board}):0)||a.name.localeCompare(b.name,"vi"));
 function atWeek(k){const d=new Date();d.setHours(0,0,0,0);const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w+7*(k||0));return d}
 /* Ngày bắt đầu dùng chấm công: ngày tạo địa điểm đầu tiên; trước ngày này không tính vắng */
 const atStart=()=>{const D=AT.sites.map(s=>String(s.created_at||"").slice(0,10)).filter(Boolean).sort();return D[0]||atYmd(new Date())};
@@ -4860,7 +4868,7 @@ function atDay(uid,ds){const dt=new Date(ds+"T00:00:00"),sun=dt.getDay()===0,r=A
 const atLeaveUsed=uid=>{const y=String(new Date().getFullYear());return AT.lv.filter(x=>x.user_id===uid&&x.kind==="phep"&&x.status==="approved"&&x.d1.startsWith(y)).reduce((a,x)=>a+(+x.days||0),0)};
 function attView(tab){if(!window.NGApp||NGApp.guest)return`<div class="vh"><div><h1>Chấm công</h1><p>Cần đăng nhập để chấm công</p></div></div>`;
   if(NGApp.as)return`<div class="vh"><div><h1>Chấm công</h1><p>Đang xem như người dùng khác · chấm công chỉ dùng bằng tài khoản của mình</p></div></div>`;
-  const T=[["cc","Chấm công","att"],["don","Đơn từ","inbox"]].concat(atMgr()?[["bang","Bảng công","rep"],["ca","Phân ca","prog"]]:[]).concat(atAdm()?[["cd","Cài đặt","hr"]]:[]);
+  const T=[["cc","Chấm công","att"],["don","Đơn từ","inbox"],["bang","Bảng công","rep"],["ca","Phân ca","prog"],["cd","Cài đặt","hr"]].filter(t=>atPq(t[0])>0||(t[0]==="cd"&&atAdm()));
   if(!T.some(t=>t[0]===tab))tab="cc";if(AT.tab!==tab)AT.msg="";AT.tab=tab;
   return`<div class="vh"><div><h1>Chấm công</h1><p>Chấm bằng khuôn mặt tại công trường, văn phòng · phân ca · đơn nghỉ, đổi ca, giải trình</p></div></div><div class="sheets" role="tablist">${T.map(t=>pill(t[2],t[1],"cham-cong"+(t[0]==="cc"?"":"-"+t[0]),t[0]===tab)).join("")}</div><div class="vgrid" id="att"><section class="card span3"><span class="sub">Đang tải…</span></section></div>`}
 function atMount(){if(!AT.ld)atLoad();else{atDraw();atLoad()}}
@@ -5078,7 +5086,7 @@ const pqNm=x=>x.full_name||String(x.email||"").split("@")[0];
 function pqWho(r){const P=PQA.P,MA=PQA.MA;if(["gd","kt","ktvt","hcns"].includes(r))return P.filter(x=>x.role===r&&!x.is_board).map(pqNm);
   return[...new Set(MA.filter(m=>m.role===r).map(m=>{const x=P.find(y=>y.id===m.user_id);return x?pqNm(x):"?"}))]}
 function pqCell(r,a){const v=pqLv(r,a),d=pqDef(r,a),C=["#A9AEBB","#2D3CE6","#12A150"];return`<select class="pqc pqs l${v}${v!==d?" chg":""}" data-pqr="${r}" data-pqa="${a}" title="${PQL[v]}${v!==d?" · mặc định: "+PQL[d]:" · mặc định"}" aria-label="Quyền">${[0,1,2].map(k=>`<option value="${k}" data-c="${C[k]}"${k===v?" selected":""}>${PQL[k]}</option>`).join("")}</select>`}
-function pqDo(r){const t=v=>PQTOP.filter(([k])=>pqLv(r,"t:"+k)===v).map(x=>x[1]).concat(BSHEETS.filter(([k])=>pqLv(r,"p:"+k)===v).map(x=>x[1])).join(", ")||"-";return[t(2),t(1)]}
+function pqDo(r){const t=v=>PQTOP.filter(([k])=>pqLv(r,"t:"+k)===v).map(x=>x[1]).concat(PQC.filter(([k])=>pqLv(r,"c:"+k)===v).map(x=>x[1])).concat(BSHEETS.filter(([k])=>pqLv(r,"p:"+k)===v).map(x=>x[1])).join(", ")||"-";return[t(2),t(1)]}
 function pqAdmDraw(){const box=document.getElementById("adm");if(!box)return;const N=PQR.length;
   const rows=(t,L)=>L.map(([k,n])=>`<tr><td>${esc(n)}</td>${PQR.map(([r])=>`<td class="tc">${pqCell(r,t+":"+k)}</td>`).join("")}</tr>`).join("");
   const grp=n=>`<tr class="pqg"><td colspan="${N+1}">${n}</td></tr>`;
@@ -5086,8 +5094,8 @@ function pqAdmDraw(){const box=document.getElementById("adm");if(!box)return;con
   const head=`<thead><tr><th>Màn hình / tab</th>${PQR.map(([r,n])=>{const w=pqWho(r);return`<th title="${esc(w.join(", ")||"Chưa có ai giữ chức danh này")}">${esc(n)}<small>${w.length?w.length+" người":"chưa có ai"}</small></th>`}).join("")}</tr></thead>`;
   const t1=card("Quyền theo chức danh",`Chọn Ẩn / Xem / Sửa trong ô, lưu ngay · Ẩn: không thấy · Xem: thấy số liệu, không sửa được · Sửa: được nhập, sửa · Admin, Tổng giám đốc luôn toàn quyền · ô viền cam là đã đổi khác mặc định`,
    `<div class="pqbar"><span class="sub" id="pqmsg">${PQA.msg||(nChg?nChg+" ô đã đổi khác mặc định":"Đang dùng quyền mặc định")}</span>${nChg?`<button type="button" class="back sm" data-pqrst style="margin:0${PQA.rst?";background:#FDECEC;color:#C0141B":""}">${PQA.rst?"Bấm lần nữa để khôi phục mặc định":"Khôi phục mặc định"}</button>`:""}</div>
-   <div class="tw pqtw"><table class="t pqt">${head}<tbody>${grp("Màn hình chung")}${rows("t",PQTOP)}<tr><td>Quản trị (tài khoản, phân quyền, luồng duyệt, AI)</td><td colspan="${N}" class="tc sub">Chỉ Admin, Tổng giám đốc · người khác chỉ thấy Tài khoản của tôi</td></tr>${grp("Trong từng dự án · theo sheet, tab")}${SGRP.map(g=>{const L=g[2].map(k=>BSHEETS.find(x=>x[0]===k)).filter(Boolean);return L.length===1?rows("p",[[L[0][0],g[1]]]).replace("<tr><td>","<tr class=\"pqs1\"><td>"):`<tr class="pqs"><td colspan="${N+1}">${esc(g[1])}</td></tr>`+rows("p",L).replace(/<tr><td>/g,"<tr class=\"pqi\"><td>")}).join("")}${rows("p",BSHEETS.filter(x=>!SGRP.some(g=>g[2].includes(x[0]))))}</tbody></table></div>
-   <div class="sub" style="margin-top:10px">Chỉ huy trưởng, QS dự án áp theo dự án được phân; các chức danh khác áp cho mọi dự án. Chức danh không xem giá vốn (Chỉ huy trưởng, Kế toán vật tư, Hành chính nhân sự) chỉ thấy các tab công trường; cho Xem một tab có giá vốn thì máy chủ mở cho đọc giá vốn của dự án.</div>`,"span3");
+   <div class="tw pqtw"><table class="t pqt">${head}<tbody>${grp("Màn hình chung")}${rows("t",PQTOP)}<tr><td>Quản trị (tài khoản, phân quyền, luồng duyệt, AI)</td><td colspan="${N}" class="tc sub">Chỉ Admin, Tổng giám đốc · người khác chỉ thấy Tài khoản của tôi</td></tr>${grp("Chấm công · theo chức danh")}${rows("c",PQC)}${grp("Trong từng dự án · theo sheet, tab")}${SGRP.map(g=>{const L=g[2].map(k=>BSHEETS.find(x=>x[0]===k)).filter(Boolean);return L.length===1?rows("p",[[L[0][0],g[1]]]).replace("<tr><td>","<tr class=\"pqs1\"><td>"):`<tr class="pqs"><td colspan="${N+1}">${esc(g[1])}</td></tr>`+rows("p",L).replace(/<tr><td>/g,"<tr class=\"pqi\"><td>")}).join("")}${rows("p",BSHEETS.filter(x=>!SGRP.some(g=>g[2].includes(x[0]))))}</tbody></table></div>
+   <div class="sub" style="margin-top:10px">Chấm công: Chỉ huy trưởng xem, xếp ca cho người ở công trường được phân; chức danh khác được cho Xem/Sửa Bảng công, Phân ca thì thấy cả công ty; Sửa Cài đặt chấm công là quyền quản trị chấm công. Chỉ huy trưởng, QS dự án áp theo dự án được phân; các chức danh khác áp cho mọi dự án. Chức danh không xem giá vốn (Chỉ huy trưởng, Kế toán vật tư, Hành chính nhân sự) chỉ thấy các tab công trường; cho Xem một tab có giá vốn thì máy chủ mở cho đọc giá vốn của dự án.</div>`,"span3");
   const pr=[];PQA.P.forEach(x=>{const cr=x.role||(x.is_board?"tgd":""),ms=PQA.MA.filter(m=>m.user_id===x.id);
     if(x.is_board||cr==="admin"||cr==="tgd"){pr.push([pqNm(x),crName(cr),"Mọi dự án","Toàn quyền · cài đặt phân quyền","-",1]);return}
     if(["gd","kt","ktvt","hcns"].includes(cr))pr.push([pqNm(x),crName(cr),"Mọi dự án",...pqDo(cr)]);
@@ -5195,7 +5203,7 @@ function ngAppsPop(btn){let d=document.getElementById("ngpop");if(d){d.remove();
 /* Đi tới (Ctrl K) */
 function ngGoList(){const L=[["trang-chu","Trang chủ","","cyan","app","Ứng dụng"]];topFor().forEach(t=>L.push([t[2],t[1],"",t[0],"app","Ứng dụng"]));
   allPJ().forEach(p=>{L.push(["da-"+p.id,p.name,p.code||"","proj","pj","Dự án"]);const b=p.boq?DB.projects.find(x=>x.id===p.id):null;if(!b)return;const S=sheetsFor(b);NGPG.forEach(g=>g[1].forEach(k=>{const x=S.find(y=>y[0]===k);if(x&&k!=="home")L.push(["da-"+p.id+"-"+k,x[1],g[0],k,"p:"+p.id,(p.code?p.code+" · ":"")+p.name])}))});
-  if(window.NGApp&&!NGApp.guest){[["cham-cong","Chấm công","att"],["cham-cong-don","Đơn từ","inbox"]].concat(typeof atMgr==="function"&&atMgr()?[["cham-cong-bang","Bảng công","rep"],["cham-cong-ca","Phân ca","prog"]]:[]).concat(typeof atAdm==="function"&&atAdm()?[["cham-cong-cd","Cài đặt chấm công","hr"]]:[]).forEach(x=>L.push([x[0],x[1],"",x[2],"cc","Chấm công"]));
+  if(window.NGApp&&!NGApp.guest){[["cham-cong","Chấm công","att","cc"],["cham-cong-don","Đơn từ","inbox","don"],["cham-cong-bang","Bảng công","rep","bang"],["cham-cong-ca","Phân ca","prog","ca"],["cham-cong-cd","Cài đặt chấm công","hr","cd"]].filter(x=>typeof atPq!=="function"||atPq(x[3])>0||(x[3]==="cd"&&atAdm())).forEach(x=>L.push([x[0],x[1],"",x[2],"cc","Chấm công"]));
     (NGApp.board?[["quan-tri","Tài khoản & vai trò","hr"],["quan-tri-pq","Phân quyền","rose"],["quan-tri-wf","Luồng duyệt","pyc"],["quan-tri-ai","Kết nối AI","sky"],["quan-tri-do","Đo lường AI","rev"],["quan-tri-bc","Bản chữ tài liệu","files"],["quan-tri-bh","Bài học cho AI","brief"]]:[]).concat([["quan-tri-mk","Mật khẩu & chữ ký","inbox"],["quan-tri-hd","Hướng dẫn sử dụng","rep"]]).forEach(x=>L.push([x[0],x[1],"",x[2],"qt","Quản trị"]))}
   return L}
 const ngNz=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/gi,"d").toLowerCase();
