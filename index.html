@@ -1874,6 +1874,9 @@ html body .gtfw .pvp.bqk.bqkf>.bqf{justify-content:space-between}html body .gtfw
 html body .gtd .gtseg{height:38px;box-sizing:border-box;align-items:center;padding:0}html body .gtd .gtseg button{height:38px}
 html body .gtd .gddb,html body .gtd .sgq,html body .gtd .gunbt,html body .gtd .pvb,html body .gtd .gtls.bqk.bqkf>.bqf,html body .gtd .gtxa{height:38px!important;min-height:38px!important;box-sizing:border-box!important;padding-top:0!important;padding-bottom:0!important;display:inline-flex!important;align-items:center!important}
 html body .gtd .sgq input{height:100%!important;padding-top:0!important;padding-bottom:0!important}
+.nhpan{position:relative}.nhpan>b:first-of-type,.nhpan>.mgtop{padding-right:120px}
+.nhpx{position:absolute;top:10px;right:12px;z-index:2;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:0;border-radius:99px;background:#FDE7E8;color:#C0141B;font:700 12px var(--f);cursor:pointer;transition:background .15s,color .15s}
+.nhpx svg{width:13px;height:13px}.nhpx kbd{font:700 12px var(--fn);background:rgba(255,255,255,.7);border-radius:6px;padding:0 5px}.nhpx:hover{background:#C0141B;color:#fff}.nhpx:hover kbd{background:rgba(255,255,255,.25)}
 /* Công cụ bước 1 · Sắp xếp công tác (anh Chung 10/11/2026, phương án 2) */
 .nhst{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 10px}
 .nhsb{border-radius:18px;padding:12px 14px;background:#fff;box-shadow:inset 0 0 0 1px #E3E7F3;display:grid;gap:6px;align-content:start}
@@ -7313,13 +7316,20 @@ function gtNhom(p){if(!DMRL&&!NGApp.guest){DMRL=1;dmrLoad().then(()=>gtRe(p))}
   const bar=col?`<div class="nhbar nhbar1"><span class="nhgp g1"><em>Xếp vào<br>đầu mục</em>${bA}${bG}${bR}</span><span class="nhgp g2"><em>Gộp công<br>tác trùng</em>${bM}${bL}</span><span class="nhsp"></span><span class="sub">Kéo thả công tác sang đầu mục khác cũng được</span>${tg}</div>`
     :`<div class="nhst"><div class="nhsb s1${NH.guide||NH.rl||NH.ai||NH.busy?" on":""}"><h4><i>a</i>Xếp công tác vào đúng đầu mục</h4><p>Để AI xếp, hoặc kéo thả từng công tác sang đầu mục bên trái (bấm ⇄ nếu không kéo được). AI nhớ lời dặn và các lần anh sửa để lần sau xếp đúng, cho mọi dự án.</p><div class="nhsr">${bA}${bG}${bR}</div></div>
       <div class="nhsb s2${NH.mg||NH.mgl?" on":""}"><h4><i>b</i>Gộp công tác giống nhau</h4><p>Cùng một công tác nhưng khác tên hoặc khác vị trí (khu vực, tầng, trục) thì gộp làm một để giao thầu một lần. Thành tiền giữ nguyên.</p><div class="nhsr">${bM}${bL}${nDone?`<span class="nhok">${nDone} nhóm đã duyệt</span>`:""}<span class="nhsp"></span>${tg}</div></div></div>`;
-  return`${bar}
+  return nhX(`${bar}
     ${NH.msg?`<div class="sub nhmsg" style="color:${NH.ok?"#0B6B34":"#C0141B"}">${esc(NH.msg)}</div>`:""}
     ${NH.mgl?ctList(p):""}${ctPanel(p)}
     ${NH.guide?`<div class="nhpan"><b>Dặn AI cách xếp nhóm</b><small class="spec">Viết như dặn người: "Nilon lót thuộc Công tác kết cấu", "Sơn tường để ở Công tác xây trát"… AI đọc lời dặn này và các lần anh kéo thả mỗi khi xếp nhóm, cho mọi dự án.</small><textarea class="fi" id="nhgtx" rows="4">${esc(DMG)}</textarea><div class="nhact"><button type="button" class="back sm" data-nhgx>Đóng</button><button type="button" class="pill" data-nhgs style="${sv("rev")}"><span class="dot">✓</span>Lưu lời dặn</button></div></div>`:""}
     ${NH.rl?`<div class="nhpan"><b>AI đã học: ${rl.length} cách xếp đầu mục</b>${rl.length?`<div class="nhrl">${rl.sort((a,b)=>String(a.dm).localeCompare(b.dm,"vi")).map(r=>`<div><span>${esc(r.name||r.k)}</span><i>→</i><b>${esc(r.dm)}</b><em class="${r.src}">${r.src==="ai"?"AI":"đã dạy"}</em><button type="button" class="back sm" data-nhdel="${esc(r.k)}">Bỏ</button></div>`).join("")}</div>`:`<small class="spec">Chưa có quy tắc nào · kéo thả công tác để dạy</small>`}${CTM.size?(()=>{const B=new Map();CTM.forEach((r,sk)=>{const k=r.n+"|"+r.u;if(!B.has(k))B.set(k,{r,L:[]});B.get(k).L.push(r)});return`<b style="margin-top:10px">Gộp công tác (${B.size})</b><div class="nhrl">${[...B.values()].map(({r,L})=>`<div><span>${L.map(x=>esc(x.name||"")).join(" · ")}</span><i>→</i><b>${esc(r.n)} (${esc(r.u)})</b><em class="${r.src}">${r.src==="ai"?"AI":"đã dạy"}</em><button type="button" class="back sm" data-mgdel="${esc(L.map(x=>x.k).join("\u0002"))}">Bỏ</button></div>`).join("")}</div>`})():""}<div class="nhact"><button type="button" class="back sm" data-nhrx>Đóng</button></div></div>`:""}
     ${A?`<div class="nhpan nhai"><b>AI đề xuất chuyển ${A.length} công tác</b><small class="spec">Bỏ chọn dòng không đúng rồi bấm Áp dụng · áp dụng xong hệ thống nhớ cho mọi dự án</small>${A.length?`<div class="tw" style="max-height:44vh;overflow:auto;margin-top:8px"><table class="t"><thead><tr><th><input type="checkbox" data-nhall checked aria-label="Chọn tất cả"></th><th>Công tác</th><th>Đang ở</th><th>Chuyển sang</th><th>Lý do</th></tr></thead><tbody>${A.map((m,i)=>`<tr><td class="tc"><input type="checkbox" data-nhsel="${i}"${m.on?" checked":""}></td><td><b>${esc(m.n)}</b><small class="spec">${esc(m.sub)}</small></td><td>${esc(m.from)}</td><td><b>${esc(m.dm)}</b></td><td>${esc(m.why||"")}</td></tr>`).join("")}</tbody></table></div>`:""}<div class="nhact"><button type="button" class="back sm" data-nhax>Bỏ qua</button>${A.length?`<button type="button" class="pill" data-nhap style="${sv("rev")}"><span class="dot">✓</span>Áp dụng đã chọn</button>`:""}</div></div>`:""}
-    <div class="nh2">${left}${right}</div>`}
+    <div class="nh2">${left}${right}</div>`)}
+
+/* Mọi bảng công cụ mở ra ở bước Sắp xếp công tác có nút "✕ Đóng" góc trên phải và phím Esc để về màn ban đầu (anh Chung 10/11/2026) */
+const NHX='<button type="button" class="nhpx" data-nhpx title="Đóng, về màn ban đầu (phím Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Đóng <kbd>Esc</kbd></button>';
+const nhX=h=>h.replace(/<div class="nhpan([^"]*)">/g,(m)=>m+NHX);
+const nhOpen=()=>!!(NH.mg||NH.mgl||NH.rl||NH.guide||NH.ai);
+function nhCloseAll(p){NH.mg=null;NH.mge="";NH.mgl=0;NH.mgdc="";NH.rl=0;NH.guide=0;NH.ai=null;gtRe(p);const b=document.querySelector("#gtc .nhst,#gtc .nhbar1");if(b)b.scrollIntoView({block:"nearest",behavior:"smooth"})}
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!cur||typeof GT==="undefined"||GT.by!=="nhom"||!nhOpen())return;const a=document.activeElement;if(a&&a.matches&&a.matches("input.fi.mgni,input#nhrenin,.ge,textarea#nhgtx,input.mgfi,input.mgui")&&a.value!==a.defaultValue)return;const p=DB.projects.find(x=>x.id===cur.id);if(!p||!document.querySelector("#gtc .nhpan"))return;e.preventDefault();e.stopImmediatePropagation();nhCloseAll(p)},true);
 /* Chuyển công tác sang đầu mục: lưu quy tắc (trùng đầu mục tự động thì xoá quy tắc), đổi khoá cách giao đã chọn của dự án đang mở cho khớp */
 async function nhMove(p,keys,to,src){to=String(to||"").trim();if(!to)return;const G=nhData(p),F=new Map();G.forEach(g=>g.C.forEach(c=>F.set(nhKey(g,c),{g,c})));
   const up=new Map(),del=new Set(),mc={...((p.pk||{}).mc||{})};let mch=0;
@@ -7354,7 +7364,8 @@ document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!t.c
   if(t.closest("[data-mgdcx]")){NH.mgdc="";gtRe(p);return}
   if(b=t.closest("[data-mgbq]")){const [code,hc]=b.dataset.mgbq.split("|");const tw=document.querySelector("#gtc .nhtw"),dl=document.querySelector("#gtc .nhdl");BQS.back={hash:location.hash,by:GT.by,cur:NH.cur,q:GT.q,y:scrollY,ty:tw?tw.scrollTop:0,dy:dl?dl.scrollTop:0,k:"",name:code};
     bq=code;BQS.hl=new Set([code]);if(!BQS.ho)BQS.ho=new Set();BQS.ho.add(hc);location.hash="da-"+p.id+"-boq";return}
-  if(t.closest("[data-mgopen]")){if(NH.mg&&NH.mg.busy)return;ctOpen(p);return}
+  if(t.closest("[data-nhpx]")){nhCloseAll(p);return}
+  if(t.closest("[data-mgopen]")){if(NH.mg&&NH.mg.busy)return;if(NH.mg){nhCloseAll(p);return}ctOpen(p);return}
   if(t.closest("[data-mgclose]")){NH.mg=null;NH.mge="";gtRe(p);return}
   if(b=t.closest("[data-mgfe]")){NH.mge=b.dataset.mgfe;gtRe(p);setTimeout(()=>{const i=document.querySelector(".mgpan input.mgfi,.mgpan input.mgni,.mgpan input.mgui");if(i){i.focus();const n=i.value.length;try{i.setSelectionRange(n,n)}catch(_){}}},30);return}
   if(b=t.closest("[data-mgx]")){const [id,i]=b.dataset.mgx.split("|"),g=NH.mg&&NH.mg.list.find(x=>x.id===id);if(g){g.S[+i].on=b.checked;gtRe(p)}return}
