@@ -263,6 +263,11 @@ table.t.thtb{table-layout:fixed}table.t.thtb{min-width:1000px}@media(max-width:1
 @media (max-width:760px){.thv{grid-template-columns:minmax(0,1fr);gap:12px}.ths{grid-template-columns:1fr auto;gap:12px;padding:14px 16px}.ths .thtl{grid-column:1/-1;grid-row:2}.thd b{font-size:30px}
  .thk{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;padding:4px 2px 14px;scrollbar-width:none}.thk::-webkit-scrollbar{display:none}.thk>.kc{flex:0 0 84%;scroll-snap-align:center}
  .thc,.thtd,.thm,.thhm,.thgt,.thsd2{grid-column:1/-1}.thm .thtg{grid-template-columns:1fr 1fr}}
+/* Hình vẽ thay ký tự phông không có (anh Chung 10/11/2026) */
+svg.gly{width:1em;height:1em;vertical-align:-.14em;flex:none;display:inline-block}
+i.gly.cnum{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:currentColor;font:700 .75em/1 var(--fn);font-style:normal;vertical-align:.05em;margin-right:.15em}
+i.gly.cnum{color:inherit;background:none;box-shadow:inset 0 0 0 1.5px currentColor}
+i.gly.grip3{display:inline-block;width:10px;height:16px;vertical-align:-3px;background:radial-gradient(circle,currentColor 1.3px,transparent 1.7px) 0 0/5px 5.3px;opacity:.6}
 </style>
 
 
@@ -1234,7 +1239,7 @@ html body .bqk.bqkf>.bqf:hover{transform:translateY(-1px);filter:none;box-shadow
 .nhdh{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}.nhdh .gtpe{opacity:0;margin-left:0;flex:none}.nhd:hover .nhdh .gtpe,.nhd.on .nhdh .gtpe{opacity:1}.nhd[draggable=true]{cursor:grab}.nhd.drag{opacity:.4}.nhc.ovt{box-shadow:0 -3px 0 #0068FF!important}.nhc.ovb{box-shadow:0 3px 0 #0068FF!important}.nhedit input{width:100%;box-sizing:border-box;margin:0}.nhedit small{display:block;margin-top:5px;font-size:12px;color:rgba(255,255,255,.85)}
 /* Viên lọc Phân tách gói thầu kiểu nút báo cáo BOQ (anh Chung 07/11/2026): gradient đậm, chữ trắng, số to */
 html body .bqk.bqkf{gap:7px}html body .bqk.bqkf>.bqf{--c:#16171C;--c2:#4A4D5C;display:inline-flex;align-items:baseline;gap:6px;padding:6px 13px;min-height:0;border:0;border-radius:999px;color:#fff!important;background:linear-gradient(135deg,var(--c),var(--c2))!important;box-shadow:0 6px 14px -8px var(--c)!important;white-space:nowrap;transition:transform .12s,opacity .12s,box-shadow .12s}
-html body .bqk.bqkf>.bqf.pt{--c:#7C3AED;--c2:#B794F6}html body .bqk.bqkf>.bqf.all{--c:#0A2486;--c2:#3D5BFF}html body .bqk.bqkf>.bqf.npt{--c:#0369A1;--c2:#38BDF8}html body .bqk.bqkf>.bqf.need{--c:#C21FC9;--c2:#EE7CEE}html body .bqk.bqkf>.bqf.soon{--c:#B7791F;--c2:#F6C343}html body .bqk.bqkf>.bqf .bqfl{font-size:13px!important}html body .bqk.bqkf>.bqf.ok{--c:#12A150;--c2:#4FD889}html body .bqk.bqkf>.bqf.warn{--c:#E8780F;--c2:#FFB061}html body .bqk.bqkf>.bqf.bad{--c:#E1141B;--c2:#FF6B70}
+html body .bqk.bqkf>.bqf.pt{--c:#7C3AED;--c2:#B794F6}html body .bqk.bqkf>.bqf.all{--c:#0A2486;--c2:#3D5BFF}html body .bqk.bqkf>.bqf.npt{--c:#0369A1;--c2:#38BDF8}html body .bqk.bqkf>.bqf.need{--c:#C21FC9;--c2:#EE7CEE}html body .bqk.bqkf>.bqf.soon{--c:#B7791F;--c2:#F6C343}html body .bqk.bqkf>.bqf .bqfl{font-size:12px!important}html body .bqk.bqkf>.bqf.ok{--c:#12A150;--c2:#4FD889}html body .bqk.bqkf>.bqf.warn{--c:#E8780F;--c2:#FFB061}html body .bqk.bqkf>.bqf.bad{--c:#E1141B;--c2:#FF6B70}
 html body .bqk.bqkf>.bqf *{color:#fff!important}html body .bqk.bqkf>.bqf .bqfl{font-style:normal;font-size:12px;opacity:.95;order:0}
 html body .bqk.bqkf>.bqf .bqfn{order:0;align-self:center;min-width:0;height:auto;padding:1px 8px;border-radius:99px;background:rgba(255,255,255,.24);box-shadow:none;font-size:12px;font-style:normal;display:inline-block}
 html body .bqk.bqkf>.bqf .bqfv{font-size:17px;letter-spacing:-.01em}html body .bqk.bqkf>.bqf .bqfv small{font-size:12px;margin-left:3px;opacity:.85}
@@ -1844,7 +1849,7 @@ html body .tw.tw.tw.tw::-webkit-scrollbar-corner,html body .gw.gw.gw.gw::-webkit
 @media(max-width:760px){.nglhint{display:none}}
 
 .nggod .nggpjw{display:flex;align-items:stretch;gap:6px}.nggod .nggpjw .nggpj{flex:1;min-width:0}
-.nggod .nggor button.nggpjx{flex:none;width:34px!important;display:grid!important;place-items:center;border:0;border-radius:12px!important;background:rgba(255,255,255,.2)!important;color:#fff!important;font:700 13px var(--f)!important;cursor:pointer;padding:0!important;opacity:.55;transition:opacity .15s,background .15s}
+.nggod .nggor button.nggpjx{flex:none;width:34px!important;display:grid!important;place-items:center;border:0;border-radius:12px!important;background:rgba(255,255,255,.2)!important;color:#fff!important;font:700 12px var(--f)!important;cursor:pointer;padding:0!important;opacity:.55;transition:opacity .15s,background .15s}
 .nggod .nggpjw:hover .nggpjx{opacity:1}.nggod .nggor button.nggpjx:hover{background:#E1141B!important}
 .nggod .nggor button.nggpjx.ok{width:auto!important;padding:0 10px!important;background:#E1141B!important;opacity:1;font-size:12px!important;white-space:nowrap}
 
@@ -1936,6 +1941,11 @@ html body .gtfw .pvp.bqk.bqkf>.bqf{margin-left:0!important}
 @media(max-width:760px){.ngph{display:none!important}}
 @media(min-width:761px) and (max-width:1600px){.gtd .sgq{width:190px;min-width:0}.gtd .gtfl2 .gdd:not(.gunw) .gddb{max-width:200px;min-width:200px}.gtd .pvb{font-size:14px;padding:0 10px 0 13px}.gtd .gtls .bqf{padding:6px 10px!important}.gtseg button{padding:0 11px;font-size:13.5px}.gtd .sgq{width:170px!important}.gtd .gtfl2 .gdd:not(.gunw) .gddb{max-width:175px!important;min-width:175px!important}.gtd{gap:6px}}
 @media(min-width:761px) and (max-width:1500px){html body .gtd .gtxa{font-size:0!important;gap:0;padding:0 6px!important;width:38px;justify-content:center}.gtd .sgq{width:150px!important}.gtd .gunbt>span{display:none}.gtd .gtfl2 .gdd:not(.gunw) .gddb{max-width:130px!important;min-width:130px!important}.gtd .gtfl2 .sgq{width:125px!important}.gtseg button{padding:0 9px!important;font-size:13px!important}.ngph .st{display:none}}
+/* Cỡ chữ chỉ 12 / 15 / 22 (anh Chung 10/11/2026): các chỗ còn lệch quy về đúng cỡ */
+html body .nggbd,html body .wfn2 small,html body #ngmsg i,html body .gtseg button>i,html body .nggpj em,html body td.nhhm div,html body td.nhhm b,html body .nglhint,html body .rvk em,html body .rvk small,html body .rvs span,html body .rvl span,html body .nglh small,html body .athome small,html body .atgo small,html body .atchip span,html body .atchip .atlink,html body .atkp em,html body .atkp small,html body .gtd .bqfl,html body .bcimh small,html body .wfhint span,html body .nggpjw .nggpjx,html body td .atcode{font-size:12px!important}
+html body .gtseg button,html body .gtd .gddb>span,html body .gtd .gunbt b.guncn,html body .hdbt,html body .nggl button b,html body .ngadd,html body .gtd .pvb>span,html body .gtd .gtxl,html body .nhdh b,html body .nggpj b,html body .bt tr.hmr td,html body .bt tr.hmr td b,html body .bt tr.hmr .bqx,html body .athd b,html body .ngphn,html body .nhrh b,html body .gtd .bqfv,html body .wfn2,html body .hdh h3{font-size:15px!important}
+html body .ngsh h4,html body .atgo>span,html body .nglh b,html body .athx,html body .kpb b.num{font-size:22px!important}
+html body section.nggs .nggl button b,html body .nggpjw button.nggpj>b{font-size:15px!important}html body section.nggs .ngsh h4{font-size:22px!important}html body .gtd button.bqf>em.bqfl,html body .nggpjw button.nggpjx,html body i.gly.cnum{font-size:12px!important}html body .nhdl .nhc.nhd>b{font-size:15px!important}html body .gtseg button,html body .gtd .gddb>span,html body .gtd .pvb>span,html body .gtd .gtxl,html body .gtd .gunbt b.guncn{font-size:12px!important}
 </style>
 
 <script>/* Tăng tốc (09/11/2026): định dạng số dùng lại bộ Intl.NumberFormat thay vì tạo mới mỗi lần gọi toLocaleString */
@@ -2023,7 +2033,7 @@ html body .gtfw .pvp.bqk.bqkf>.bqf{margin-left:0!important}
     <div class="grid">
       <section class="card hello">
                 <div>
-          <h1 id="hihi">Xin chào 👋</h1>
+          <h1 id="hihi">Xin chào</h1>
           <p class="sub" style="margin:6px 0 0;position:relative">4 công trình đang thi công</p>
         </div>
         <div class="hp" id="hp"></div>
@@ -2257,6 +2267,19 @@ NGB.ai=b=>NGB.drive.ai(b);
 /* Biểu tượng bút sửa dùng chung (anh Chung 07/11/2026): nút tròn xanh nhạt như ở Trò chuyện */
 /* Biểu tượng sửa (anh Chung chốt 08/11/2026): bút có gạch chân */
 const PENI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>';
+
+/* Ký tự phông Arial không có (✓ ⇄ ＋ ✨ ★ ✎ ↶ ↷ ①–④ ⠿ và biểu tượng cảm xúc) tự đổi thành hình vẽ SVG cùng màu chữ, áp toàn app (anh Chung 10/11/2026); trừ ô nhập và tin nhắn Trò chuyện */
+(function(){const P=d=>`<svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const G={"✓":P('<path d="M5 12.5l4.5 4.5L19 7"/>'),"⇄":P('<path d="M4 8h15M15 4l4 4-4 4M20 16H5M9 12l-4 4 4 4"/>'),"＋":P('<path d="M12 5v14M5 12h14"/>'),"✨":P('<path d="M12 3l1.8 4.7L18.5 9.5 13.8 11.3 12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" fill="currentColor" stroke="none"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" fill="currentColor" stroke="none"/>'),
+    "★":P('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="currentColor" stroke="none"/>'),"✎":PENI.replace('<svg ','<svg class="gly" '),"↶":P('<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>'),"↷":P('<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>'),
+    "⠿":'<i class="gly grip3" aria-hidden="true"></i>',"🔗":P('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),"📄":P('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>'),"👁":P('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),"👋":"","🔔":P('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>')};
+  ["①","②","③","④","⑤"].forEach((c,i)=>G[c]=`<i class="gly cnum">${i+1}</i>`);
+  const RX=/[✓⇄＋✨★✎↶↷⠿①②③④⑤]|🔗|📄|👁|👋|🔔/u,RG=/[✓⇄＋✨★✎↶↷⠿①②③④⑤]|🔗|📄|👁|👋|🔔/gu,SKIP="INPUT,TEXTAREA,SCRIPT,STYLE,OPTION,TITLE,svg".split(",");
+  const fix=root=>{if(!root||!RX.test(root.textContent||""))return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),L=[];let n;while(n=w.nextNode())if(RX.test(n.nodeValue))L.push(n);
+    L.forEach(t=>{const pe=t.parentElement;if(!pe||SKIP.includes(pe.tagName)||pe.closest("#ngchat,.chmsg,[contenteditable],svg,title"))return;const sp=document.createElement("span");sp.className="glw";sp.innerHTML=String(t.nodeValue).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"})[c]).replace(RG,m=>G[m]);t.replaceWith(...sp.childNodes)})};
+  const go=()=>{fix(document.body);new MutationObserver(M=>{for(const m of M){if(m.type==="characterData"){if(RX.test(m.target.nodeValue||""))fix(m.target.parentElement)}else m.addedNodes.forEach(x=>{if(x.nodeType===1)fix(x);else if(x.nodeType===3&&RX.test(x.nodeValue))fix(x.parentElement)})}}).observe(document.body,{childList:true,subtree:true,characterData:true});
+    /* tiêu đề nút (title) cũng bỏ ký tự lạ */};
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go()})();
 const caretEnd=i=>{if(!i)return;i.focus();try{const n=i.value.length;i.setSelectionRange(n,n)}catch(e){}if(window.getSelection&&document.activeElement!==i)getSelection().removeAllRanges()};
 /* ===== Biểu tượng ===== */
 const I={
@@ -2747,7 +2770,7 @@ const LD=(p,n)=>p&&p.leads&&p.leads[n]>0?p.leads[n]:LEAD(n);const LEAD=n=>/Kết
 
 /* ---------- Danh sách sheet ---------- */
 const SHEETS=[["home","Tình hình dự án"],["rev","Doanh thu"],["cost","Chi phí"],["prog","Tiến độ"],["mat","Vật liệu"],["hr","Nhân sự"]];
-const BSHEETS=[["home","Tình hình dự án"],["lk","Tra cứu liên kết"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Phân tách gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["cl","Claim CĐT"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán NCC – TP"],["hr","Nhân sự"]];
+const BSHEETS=[["home","Tình hình dự án"],["lk","Tra cứu liên kết"],["files","Thư mục dự án"],["boq","BOQ & Giá vốn"],["goi","Phân tách gói thầu"],["kh","Kế hoạch giao thầu"],["bg","Báo giá"],["rev","Doanh thu"],["nt","Nghiệm thu"],["cl","Claim chủ đầu tư"],["dc","Đối chiếu 4 lớp"],["cost","Chi phí"],["prog","Tiến độ"],["week","Kế hoạch tuần"],["bcn","Báo cáo ngày"],["mat","Vật liệu"],["pyc","Yêu cầu vật tư"],["tt","Thanh toán nhà cung cấp, thầu phụ"],["hr","Nhân sự"]];
 /* Tab Hồ sơ: file lưu ở Google Drive qua api/drive; bảng quyền này chỉ để gọn màn hình, máy chủ kiểm tra lại (supabase/schema.sql) */
 /* Thư mục hồ sơ: 6 nhóm lớn (DG), file lưu ở thư mục con (DF: mã, tên, gợi ý, vai trò được xem); máy chủ kiểm tra lại quyền */
 const DG=[["01","Pháp lý – Hợp đồng"],["02","Kỹ thuật – Tiến độ"],["03","Chất lượng – An toàn"],["04","Thanh toán CĐT"],["05","NCC – TP"],["06","Hiện trường – Văn bản"]];
@@ -3708,7 +3731,7 @@ function totalSec(p,c){const G=[],ix={},key=k=>BOQ.nz(k).replace(/^[ivxlc]+[.\s]
 /* Bảng các đợt thanh toán theo hợp đồng: điều kiện để được thu tiền, hồ sơ, số tiền, tháng dự kiến thu */
 function msTable(p,M,lab){const KN={tam_ung:"Tạm ứng",giai_doan:"Theo giai đoạn",quyet_toan:"Quyết toán",bao_hanh:"Hoàn trả bảo hành"},sum=M.reduce((a,m)=>a+m.pc,0);
   return`<div class="mst"><div class="bh" style="margin-bottom:8px"><div><b>Các đợt thanh toán theo hợp đồng</b><span class="sub"> · tổng ${fm(sum,0)}%${Math.abs(sum-100)>.5?` <b style="color:#C0141B">(chưa đủ 100%, anh kiểm tra lại)</b>`:""} · dòng tiền thu tính theo đúng các đợt này · sửa được % và mốc khối lượng</span></div></div>
-  <div class="tw"><table class="t"><thead><tr><th>Đợt</th><th>Điều kiện để được thanh toán</th><th>Hồ sơ cần nộp</th><th class="r">% giá trị</th><th class="r">Số tiền (tỷ)</th><th class="r">Đạt khi KL hoàn thành</th><th class="r">CĐT trả sau (ngày)</th><th>Dự kiến thu</th></tr></thead><tbody>
+  <div class="tw"><table class="t"><thead><tr><th>Đợt</th><th>Điều kiện để được thanh toán</th><th>Hồ sơ cần nộp</th><th class="r">% giá trị</th><th class="r">Số tiền (tỷ)</th><th class="r">Đạt khi khối lượng hoàn thành</th><th class="r">Chủ đầu tư trả sau (ngày)</th><th>Dự kiến thu</th></tr></thead><tbody>
   ${M.map((m,i)=>`<tr><td style="min-width:150px"><b>${esc(m.name||("Đợt "+(i+1)))}</b><small class="spec">${KN[m.kind]||""}${m.clause?" · "+esc(m.clause):""}${m.basis?" · "+esc(m.basis):""}</small></td><td style="min-width:260px;max-width:420px">${esc(m.condition||"-")}</td><td style="max-width:240px">${esc(m.documents||"-")}</td>
     <td class="r"><input class="ci" data-ms="${i}|percent" value="${fm(m.pc,0)}" style="width:52px"> %</td><td class="r"><b>${fm(m.amt/1e9,2)}</b></td>
     <td class="r">${m.kind==="giai_doan"?`<input class="ci" data-ms="${i}|prog" value="${m.trig!=null?fm(m.trig,0):""}" style="width:52px"> %`:m.kind==="tam_ung"?"Khi khởi công":m.kind==="quyet_toan"?"100%":"Hết bảo hành"}</td>
@@ -4218,13 +4241,13 @@ function projList(){const B=DB.projects,SP=canOv()?SAMPLES():[];return `<div cla
     <div class="row"><div><h3><span class="pdot"></span>${esc(p.name)}</h3><div class="loc">${esc(p.loc)} · ${esc(p.cdt)}</div></div><span class="code">${esc(p.code)}</span></div>
     <div><div class="row" style="font-size:15px;margin-bottom:8px">${p._noCost?"<span></span>":`<span>Giá vốn đã nhập <b>${fm(pct(c.ent,c.cnt),0)}%</b> <span style="color:var(--muted)">/ ${n0(c.cnt)} dòng</span></span>`}${st("ok","Chuẩn bị thi công")}</div>
       ${p._noCost?"":`<div class="pbar" style="--c:${pc};--c2:color-mix(in srgb,${pc} 45%,#fff)"><i style="width:${pct(c.ent,c.cnt)}%"></i></div>`}</div>
-    <div class="nums"><div><span>Giá trị HĐ</span><b>${fm(c.rev/1e9)} tỷ</b></div>${p._noCost?"":`<div><span>Giá vốn</span><b>${fm(c.cost/1e9)} tỷ</b></div><div><span>Lãi gộp</span><b>${fm(pct(c.gp,c.rev))}%</b></div>`}</div>
+    <div class="nums"><div><span>Giá trị hợp đồng</span><b>${fm(c.rev/1e9)} tỷ</b></div>${p._noCost?"":`<div><span>Giá vốn</span><b>${fm(c.cost/1e9)} tỷ</b></div><div><span>Lãi gộp</span><b>${fm(pct(c.gp,c.rev))}%</b></div>`}</div>
   </button>`}).join("")}
   ${SP.map(p=>{const [l,lt]=lv(p);return `<button class="card pc" data-go="da-${p.id}">
     <div class="row"><div><h3>${p.name}</h3><div class="loc">${p.loc} · ${p.cdt}</div></div><span class="code">${p.code} · Mẫu</span></div>
     <div><div class="row" style="font-size:15px;margin-bottom:8px"><span>Tiến độ <b>${p.actual}%</b> <span style="color:var(--muted)">/ KH ${p.plan}%</span></span>${st(l,lt)}</div>
       <div class="pbar" style="${l==="bad"?"--c:#E1141B;--c2:#F37A7E":""}"><i style="width:${p.actual}%"></i><em style="left:${p.plan}%"></em></div></div>
-    <div class="nums"><div><span>Giá trị HĐ</span><b>${fm(p.value)} tỷ</b></div><div><span>Nghiệm thu</span><b>${fm(p.billed)} tỷ</b></div><div><span>Chi phí</span><b>${fm(p.cost)} tỷ</b></div></div>
+    <div class="nums"><div><span>Giá trị hợp đồng</span><b>${fm(p.value)} tỷ</b></div><div><span>Nghiệm thu</span><b>${fm(p.billed)} tỷ</b></div><div><span>Chi phí</span><b>${fm(p.cost)} tỷ</b></div></div>
   </button>`}).join("")}</div>`}
 
 /* chữ hoa → chữ thường có viết hoa hợp lý */
@@ -4304,7 +4327,7 @@ function projView(p,s,sub){const b=p.boq?DB.projects.find(x=>x.id===p.id):null,L
 const SGRP=[["home","Tổng quan",["home"]],["files","Hồ sơ",["files","lk"]],["goi","Giá vốn & giao thầu",["boq","goi","kh","bg"]],["rev","Doanh thu – CĐT",["rev","nt","cl","dc"]],["cost","Chi phí – NTP/NCC",["cost","pyc","tt","mat"]],["prog","Hiện trường",["prog","week","bcn","hr"]]],SGL={};
 function report(){const A=allPJ(),T=k=>A.reduce((a,p)=>a+p[k],0);return `<div class="vh"><div><h1>Báo cáo tổng hợp</h1><p>Toàn công ty · ${DB.projects.length} dự án từ BOQ</p></div></div>
   <div class="vgrid">${kc("proj","Tổng giá trị hợp đồng",fm(T("value")),"tỷ",A.length+" công trình")}${kc("rev","Tổng nghiệm thu",fm(T("billed")),"tỷ","Đã thu "+fm(T("collected"))+" tỷ")}${kc("cost","Tổng chi phí",fm(T("cost")),"tỷ",(T("billed")?Math.round(T("cost")/T("billed")*100)+"% giá trị nghiệm thu":"Chưa có phiếu chi thực tế"))}
-  ${card("So sánh các dự án","Bấm vào tên để mở dự án",`<div class="tw"><table class="t"><thead><tr><th>Công trình</th><th class="r">Giá trị HĐ</th><th class="r">Nghiệm thu</th><th class="r">Chi phí</th><th class="r">Công nợ</th><th style="min-width:130px">Tiến độ</th></tr></thead><tbody>${A.map(p=>`<tr data-go="da-${p.id}" style="cursor:pointer"><td><b>${esc(p.name)}</b><div style="font-size:15px;color:var(--muted)">${esc(p.code)}${p.demo?" · Mẫu":""}</div></td><td class="r">${fm(p.value)}</td><td class="r">${fm(p.billed)}</td><td class="r">${fm(p.cost)}</td><td class="r">${fm(p.billed-p.collected)}</td><td>${p.boq?`<span class="sub">Chưa lập tiến độ</span>`:`<div class="mbar" style="--c:${lv(p)[0]==="bad"?"#E1141B":"#2D3CE6"}"><i style="width:${p.actual}%"></i><em style="left:${p.plan}%"></em></div>`}</td></tr>`).join("")}</tbody></table></div>`,"span3")}</div>`}
+  ${card("So sánh các dự án","Bấm vào tên để mở dự án",`<div class="tw"><table class="t"><thead><tr><th>Công trình</th><th class="r">Giá trị hợp đồng</th><th class="r">Nghiệm thu</th><th class="r">Chi phí</th><th class="r">Công nợ</th><th style="min-width:130px">Tiến độ</th></tr></thead><tbody>${A.map(p=>`<tr data-go="da-${p.id}" style="cursor:pointer"><td><b>${esc(p.name)}</b><div style="font-size:15px;color:var(--muted)">${esc(p.code)}${p.demo?" · Mẫu":""}</div></td><td class="r">${fm(p.value)}</td><td class="r">${fm(p.billed)}</td><td class="r">${fm(p.cost)}</td><td class="r">${fm(p.billed-p.collected)}</td><td>${p.boq?`<span class="sub">Chưa lập tiến độ</span>`:`<div class="mbar" style="--c:${lv(p)[0]==="bad"?"#E1141B":"#2D3CE6"}"><i style="width:${p.actual}%"></i><em style="left:${p.plan}%"></em></div>`}</td></tr>`).join("")}</tbody></table></div>`,"span3")}</div>`}
 
 /* ---------- Kế hoạch tuần + PPC (Last Planner) ---------- */
 const REASONS=["Việc trước chưa xong","Thiếu bản vẽ, thông tin","Thiếu vật tư","Thiếu nhân lực","Thiếu máy, thiết bị","Mặt bằng, thời tiết","Chờ phê duyệt, nghiệm thu","Cam kết quá sức","Khác"];
@@ -4408,7 +4431,7 @@ function brief(){const now=new Date(),L=decisions(),P=waiting(L),B=DB.projects.m
   <div class="vgrid">${kc("cost","Việc chờ anh quyết",P.length,"việc",mit.length?"3 việc quan trọng nhất ở bên dưới":"Không có việc tồn")}${kc(peak>0?"mat":"rev","Vốn cần ứng tối đa",ty(peak),"tỷ",peak>0?"Cộng các dự án":"Dòng tiền chưa âm")}${kc("prog","Vật tư phải đặt trong 14 ngày",ord14,"loại",ord14?"Xem trong hộp quyết định":"Chưa có hạn gần")}
   ${card("3 việc quan trọng nhất hôm nay","Chỉ làm 3 việc này cho xong · việc vặt để agent lo",mit.length?mit.map((x,i)=>`<div class="ms mit"><i style="background:${COL[TYP[x.t][0]][0]}"></i><div><b>${i+1}. ${esc(x.title)}</b><span>${esc(x.p.name)} · ${esc(x.why)}</span></div>${dueTxt(x.due)}</div>`).join(""):`<div class="sub">Hôm nay không có việc gấp.</div>`,"span2")}
   ${card("Đang đỏ","Tin xấu đưa lên trước",exc.length?ms(exc.slice(0,7)):`<div class="sub">Không có cảnh báo.</div>`)}
-  ${card("Tình hình từng dự án","Bấm vào dự án để mở",`<div class="tw"><table class="t"><thead><tr><th>Dự án</th><th class="r">Giá trị HĐ</th><th class="r">Lãi gộp</th><th class="r">Vốn ứng tối đa</th><th class="r">1 ngày chậm ≈</th><th>Đặt hàng gần nhất</th><th>Khởi công</th></tr></thead><tbody>${B.map(({p,c,tl,cf,ord})=>{const o=ord.find(o=>o.od>=addD(now,-1))||ord[0];return`<tr data-go="da-${p.id}" style="cursor:pointer"><td><b>${esc(p.name)}</b><div style="font-size:15px;color:var(--muted)">${esc(p.code)}</div></td><td class="r">${ty(c.rev)} tỷ</td><td class="r">${fm(pct(c.gp,c.rev))}%</td><td class="r">${ty(cf.peak)} tỷ</td><td class="r">${n0(delayCost(p,tl)/1e6)} tr</td><td>${o?esc(o.n)+" · "+dueTxt(o.od):"–"}</td><td class="num">${fd(tl.st)}</td></tr>`}).join("")||`<tr><td colspan="7" class="sub">Chưa có dự án từ BOQ.</td></tr>`}</tbody></table></div>`,"span3")}
+  ${card("Tình hình từng dự án","Bấm vào dự án để mở",`<div class="tw"><table class="t"><thead><tr><th>Dự án</th><th class="r">Giá trị hợp đồng</th><th class="r">Lãi gộp</th><th class="r">Vốn ứng tối đa</th><th class="r">1 ngày chậm ≈</th><th>Đặt hàng gần nhất</th><th>Khởi công</th></tr></thead><tbody>${B.map(({p,c,tl,cf,ord})=>{const o=ord.find(o=>o.od>=addD(now,-1))||ord[0];return`<tr data-go="da-${p.id}" style="cursor:pointer"><td><b>${esc(p.name)}</b><div style="font-size:15px;color:var(--muted)">${esc(p.code)}</div></td><td class="r">${ty(c.rev)} tỷ</td><td class="r">${fm(pct(c.gp,c.rev))}%</td><td class="r">${ty(cf.peak)} tỷ</td><td class="r">${n0(delayCost(p,tl)/1e6)} tr</td><td>${o?esc(o.n)+" · "+dueTxt(o.od):"–"}</td><td class="num">${fd(tl.st)}</td></tr>`}).join("")||`<tr><td colspan="7" class="sub">Chưa có dự án từ BOQ.</td></tr>`}</tbody></table></div>`,"span3")}
   ${card("Agent sẽ tự lo khi được kết nối","Phần việc lặp lại, không cần anh làm tay",ms([["#7C3AED","Học theo các lần anh sửa","Mỗi lần anh sửa báo giá, hợp đồng, thư mục, AI ghi nhớ và làm theo ở lần sau · xem ở Quản trị → Bài học cho AI"],["#0E9F9A","Phân loại hồ sơ mới vào đúng thư mục dự án","Hợp đồng, báo giá, biên bản, ảnh hiện trường"],["#2D3CE6","Đọc ảnh, ghi âm từ hiện trường","Ra khối lượng, quân số, vật tư đã về"],["#12A150","Soạn sẵn đơn đặt hàng, hồ sơ thanh toán","Anh chỉ bấm duyệt"],["#C21FC9","Nhắc công nợ chủ đầu tư đến hạn","Soạn nội dung, anh tự gửi"]]),"span3")}</div>`}
 
 /* ---------- Thẻ chào: tình hình dự án thay bản đồ ---------- */
@@ -4650,7 +4673,7 @@ const HD=[
 {g:"rev",k:"nt",t:"Nghiệm thu",go:"@nt",pa:"p:nt",d:"Các đợt nghiệm thu khối lượng với chủ đầu tư và phát sinh tăng/giảm.",
  s:["Mỗi đợt ghi khối lượng lũy kế, web tự tính khối lượng kỳ này","Giá trị = khối lượng × đơn giá hợp đồng, chưa VAT; so với kế hoạch theo tiến độ"],
  b:[["↑ Tải file nghiệm thu đợt mới","Tải file khối lượng nghiệm thu để web đọc"],["Nhập tay đợt mới","Tạo đợt và nhập khối lượng trực tiếp"],["+ Lập phát sinh mới","QS lập phát sinh; Tổng giám đốc duyệt ở Hộp quyết định; chỉ phát sinh đã duyệt mới cộng vào giá trị hợp đồng"]]},
-{g:"rev",k:"cl",t:"Claim CĐT",go:"@cl",pa:"p:cl",d:"Theo dõi hồ sơ đề nghị thanh toán gửi chủ đầu tư và tiền về.",
+{g:"rev",k:"cl",t:"Claim chủ đầu tư",go:"@cl",pa:"p:cl",d:"Theo dõi hồ sơ đề nghị thanh toán gửi chủ đầu tư và tiền về.",
  s:["Kế toán tổng hợp tải hồ sơ đề nghị thanh toán (lưu vào 04.3), Claude đọc số liệu","Kiểm số liệu rồi lưu; hạn thu tính theo điều khoản","Khi tiền về: bấm Ghi tiền về ở đợt đó, ghi ngày (dd/mm/yyyy) và số tiền"],
  b:[["Bảng Dòng tiền thu theo tháng","KH ban đầu · KH cập nhật · Thực thu · lũy kế"]]},
 {g:"rev",k:"dc",t:"Đối chiếu 4 lớp",go:"@dc",pa:"p:dc",d:"So 4 lớp số liệu theo hạng mục: ① Doanh thu dự thầu · ② Giá vốn dự thầu · ③ Doanh thu nghiệm thu · ④ Chi phí thực tế; kèm so với kế hoạch tiến độ.",
@@ -4659,7 +4682,7 @@ const HD=[
 {g:"cost",k:"pyc",t:"Yêu cầu vật tư",go:"@pyc",pa:"p:pyc",d:"Phiếu yêu cầu vật tư: Chỉ huy trưởng lập, đi lần lượt qua các bước duyệt (xem Quản trị › Luồng duyệt), mỗi bước có thông báo.",
  s:["Bấm + Lập phiếu mới, chọn vật tư, khối lượng, ngày cần","Gửi duyệt; người duyệt nhận thông báo, ghi đơn giá (bước được phép), duyệt hoặc trả lại","Theo dõi trạng thái phiếu ở từng bước ngay trong danh sách"],
  b:[["+ Lập phiếu mới","Tạo phiếu yêu cầu"],["Bấm vào phiếu","Xem, sửa (khi còn nháp), duyệt / trả lại theo bước của mình"]]},
-{g:"cost",k:"tt",t:"Thanh toán NCC – TP",go:"@tt",pa:"p:tt",d:"Đề nghị thanh toán cho nhà thầu phụ, tổ đội, nhà cung cấp theo mẫu Thông báo thanh toán; đi qua các bước duyệt như phiếu vật tư.",
+{g:"cost",k:"tt",t:"Thanh toán nhà cung cấp, thầu phụ",go:"@tt",pa:"p:tt",d:"Đề nghị thanh toán cho nhà thầu phụ, tổ đội, nhà cung cấp theo mẫu Thông báo thanh toán; đi qua các bước duyệt như phiếu vật tư.",
  b:[["+ Lập đề nghị thanh toán","Tạo đề nghị; có thể tải hồ sơ để Claude đọc số liệu"],["Bấm vào đề nghị","Xem, duyệt / trả lại theo bước; xuất PDF, Excel có chữ ký"]]},
 {g:"cost",k:"mat",t:"Vật liệu",go:"@mat",pa:"p:mat",d:"Giá trị vật tư cần theo tháng và kế hoạch cấp vật tư theo gói vật tư ở Phân tách gói thầu.",
  b:[["Bấm dòng gói (+)","Xem từng vật tư trong gói"],["Cột Cần từ · Chờ · Đặt trước","Ngày cần đầu tiên, thời gian chờ nhà cung cấp, ngày phải đặt hàng (đỏ: quá hạn, cam: sắp hạn)"],["Cột tháng","Khối lượng cần theo tháng"]]},
@@ -5369,7 +5392,7 @@ function ngHome(){const nm=(window.NGApp&&(NGApp.name||"").split(" ").pop())||""
   const todo=[...(np?[["inbox",`${np} việc chờ duyệt`,"Hộp quyết định · bấm để xử lý","duyet","Chờ duyệt","warn"]]:[]),...N.map(x=>[x.kind==="att"?"att":/pyc|vat tu/i.test(x.kind||"")?"pyc":/tt|thanh toan/i.test(x.kind||"")?"tt":/ssg|so sanh/i.test(x.kind||"")?"bg":"inbox",x.title||"Thông báo",x.body||"",String(x.link||"").replace(/^#/,""),"Mới","ok"]),...(chu?[["chat",`${chu} tin nhắn chưa đọc`,"Trò chuyện","tro-chuyen","Chưa đọc","warn"]]:[])];
   const apps=topFor().map(t=>[t[0],t[1],t[2],t[2]==="duyet"?np:t[2]==="tro-chuyen"?chu:0]);
   const P=DB.projects.slice(0,6);
-  return`<div class="vh ngvh"><div><h1>Chào ${window.NGApp&&NGApp.name?mePro(NGApp.name)+" "+esc(nm):"anh/chị"} 👋</h1><p>Việc cần anh/chị xử lý, các ứng dụng và dự án đang theo dõi<span class="ngkh"> · gõ Ctrl K để nhảy thẳng tới màn bất kỳ</span></p></div></div>
+  return`<div class="vh ngvh"><div><h1>Chào ${window.NGApp&&NGApp.name?mePro(NGApp.name)+" "+esc(nm):"anh/chị"}</h1><p>Việc cần anh/chị xử lý, các ứng dụng và dự án đang theo dõi<span class="ngkh"> · gõ Ctrl K để nhảy thẳng tới màn bất kỳ</span></p></div></div>
   <div class="nghome"><section class="card"><h3>Việc của tôi</h3><span class="sub">${todo.length?todo.length+" việc · bấm để mở thẳng đúng màn":"Không có việc tồn"}</span>
     <div class="ngtodo">${todo.map(t=>`<button type="button" class="ngtd" data-go="${esc(t[3]||"trang-chu")}" style="${sv(t[0])}"><span class="ngtdi">${icc(t[0],2)}</span><span class="ngtdt"><b>${esc(t[1])}</b><small>${esc(t[2])}</small></span><em class="st ${t[5]}">${t[4]}</em></button>`).join("")||`<p class="sub">Mọi việc đã xử lý xong.</p>`}</div></section>
    <section class="card nghgo"><label class="nggoq nghq">${ic("find",2.2)}<input id="nghq" autocomplete="off" placeholder="Tìm nhanh màn, dự án… ví dụ: báo giá, phân ca, công nợ" aria-label="Tìm nhanh"><kbd>Ctrl K</kbd></label><div class="nggor" id="nghr"></div></section></div>`}
@@ -5904,7 +5927,7 @@ view.addEventListener("click",async e=>{const sel=e.target.closest("[data-fsel]"
 const meNm=()=>String(NGApp.name||"").trim()||String(NGApp.email||"").split("@")[0],meGiven=n=>{const w=String(n||"").trim().split(/\s+/);return w[w.length-1]||""},
   mePro=n=>NGApp.gender==="nu"?"chị":NGApp.gender==="nam"?"anh":/(^|\s)thị(\s|$)/i.test(String(n||""))?"chị":"anh";
 function meUI(){const n=meNm(),real=String(NGApp.name||"").trim(),g=meGiven(n),h=document.getElementById("hihi");
-  if(h)h.textContent=real?`Chào ${mePro(real)} ${g} 👋`:`Xin chào ${n} 👋`;
+  if(h)h.textContent=real?`Chào ${mePro(real)} ${g}`:`Xin chào ${n}`;
   const ini=(real?g:n).charAt(0).toUpperCase()||"?";document.querySelectorAll(".avatar").forEach(a=>{a.textContent=ini;a.title=(real||n)+(a.tagName==="BUTTON"?" · Đăng xuất":"")})}
 /* Sửa họ tên tài khoản ngay tại ô (Quản trị → Tài khoản và vai trò): bấm đúp hoặc ✎, Enter lưu, Esc huỷ */
 function auNmEdit(sp){if(!sp||sp.querySelector("input"))return;const tr=sp.closest("tr[data-au]"),uid=tr&&tr.dataset.au;if(!uid)return;const old=sp.innerHTML,cur=sp.classList.contains("none")?"":sp.textContent.replace("✎","").trim(),fd=sp.dataset.aunm||"full_name";
@@ -6867,7 +6890,7 @@ function lkView(p,sub){if(!NGApp.guest&&(PY.pid!==p.id||!PY.list)&&!PY.busy)pyLo
   const G=lkGraph(p),RA=LK.q?lkSearch(G,LK.q,""):[],R=LK.ty?RA.filter(n=>n.t===LK.ty):RA,cnt={};RA.forEach(n=>cnt[n.t]=(cnt[n.t]||0)+1);
   const it=n=>{const nx=n.t==="pk"?lkNext(lkChain(G,n.id)):null;return`<button class="lki" data-lkopen="${esc(n.id)}"><span>${lkChip(n.t)} <b>${esc(n.name)}</b>${n.sub?`<small>${esc(n.sub)}${n.t==="pk"&&n.g?" · gốc "+fm(n.g.tg/1e6,1)+" tr":""}</small>`:""}${nx?`<small class="lknx"><span class="lkd ${nx.s}">${nx.k==="Đã xong"?"Đã xong mọi bước":"Bước tiếp: "+esc(nx.k)+(nx.v?" · "+esc(nx.v):"")}</span></small>`:""}</span><em>${(G.E.get(n.id)||new Map()).size} liên kết ›</em></button>`};
   const pks=[...G.N.values()].filter(n=>n.t==="pk").sort((a,b)=>(a.plan&&a.plan.need?a.plan.need-0:9e15)-(b.plan&&b.plan.need?b.plan.need-0:9e15));
-  const map=`<div class="tw" style="margin-top:12px"><table class="t lkt"><thead><tr><th>Gói thầu</th><th>Giá gốc (tr)</th><th>Ngày cần</th><th>Báo giá</th><th>So sánh giá</th><th>Hợp đồng</th><th>Yêu cầu VT</th><th>CO/CQ, thí nghiệm</th><th>Nghiệm thu</th><th>Thanh toán</th></tr></thead><tbody>${pks.map(n=>[n,lkChain(G,n.id)]).filter(([n,C])=>!LK.issue||C.some(x=>x[2]==="bad"||x[2]==="warn")).map(([n,C])=>{const c=k=>{const x=C.find(y=>y[0]===k);return x?`<span class="lkd ${x[2]}">${esc(x[1]||"–")}</span>`:`<span class="sub">không cần</span>`};
+  const map=`<div class="tw" style="margin-top:12px"><table class="t lkt"><thead><tr><th>Gói thầu</th><th>Giá gốc (tr)</th><th>Ngày cần</th><th>Báo giá</th><th>So sánh giá</th><th>Hợp đồng</th><th>Yêu cầu vật tư</th><th>CO/CQ, thí nghiệm</th><th>Nghiệm thu</th><th>Thanh toán</th></tr></thead><tbody>${pks.map(n=>[n,lkChain(G,n.id)]).filter(([n,C])=>!LK.issue||C.some(x=>x[2]==="bad"||x[2]==="warn")).map(([n,C])=>{const c=k=>{const x=C.find(y=>y[0]===k);return x?`<span class="lkd ${x[2]}">${esc(x[1]||"–")}</span>`:`<span class="sub">không cần</span>`};
     return`<tr data-lkopen="${esc(n.id)}" style="cursor:pointer"><td><b>${esc(n.name)}</b><small class="spec">${esc(n.sub)}</small></td><td class="r num">${n.g?fm(n.g.tg/1e6,1):"-"}</td><td class="tc num">${n.plan&&n.plan.need?fd(n.plan.need):"-"}</td><td>${c("Báo giá")}</td><td>${c("So sánh giá")}</td><td>${c("Hợp đồng")}</td><td>${c("Yêu cầu vật tư")}</td><td>${c("CO/CQ, thí nghiệm")}</td><td>${c("Nghiệm thu")}</td><td>${c("Thanh toán")}</td></tr>`}).join("")||`<tr><td colspan="10" class="sub">Không có gói nào cần xử lý.</td></tr>`}</tbody></table></div>`;
   const res=LK.q?`<div class="lkf">${[["","Tất cả",RA.length],...LKO.filter(t=>cnt[t]).map(t=>[t,LKT[t][0],cnt[t]])].map(([t,l,n])=>`<button class="lkfb${LK.ty===t?" on":""}" data-lkty="${t}">${l} · ${n}</button>`).join("")}</div>
     ${R.length?(LK.ty?`<div class="lkr">${R.map(it).join("")}</div>`:LKO.filter(t=>cnt[t]).map(t=>{const L=R.filter(n=>n.t===t),k=t==="bq"?6:8;return`<div class="lkgs"><div class="lkgsh">${lkChip(t)}<span class="sub">${L.length} kết quả</span>${L.length>k?`<button class="lkfb" data-lkty="${t}">Xem tất cả ${L.length} ›</button>`:""}</div><div class="lkr">${L.slice(0,k).map(it).join("")}</div></div>`}).join("")):`<div class="sub">Không thấy mục nào khớp.</div>`}
