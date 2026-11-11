@@ -24,7 +24,8 @@ const SCHEMA = {
   additionalProperties: false
 };
 
-const SYS_MG = `Bạn là QS của tổng thầu xây dựng Nam Giang. Nhiệm vụ: tìm các CÔNG TÁC BOQ THỰC CHẤT LÀ CÙNG MỘT LOẠI (cùng vật liệu, cùng quy cách, cùng cách thi công) nhưng ghi tên khác nhau, khác vị trí (khu vực, tầng, nhà) hoặc khác đơn vị (tấn/kg, m2/gói…), để gộp thành một công tác khi giao thầu.
+const SYS_MG = `Nếu có "loi_dan" (lời dặn của anh Chung) thì làm đúng theo lời dặn, lời dặn ưu tiên hơn mọi quy tắc dưới đây. Luôn bỏ các nhóm cùng đơn vị tính mà đơn giá (dg_vt + dg_nc) lệch nhau quá 3%.
+Bạn là QS của tổng thầu xây dựng Nam Giang. Nhiệm vụ: tìm các CÔNG TÁC BOQ THỰC CHẤT LÀ CÙNG MỘT LOẠI (cùng vật liệu, cùng quy cách, cùng cách thi công) nhưng ghi tên khác nhau, khác vị trí (khu vực, tầng, nhà) hoặc khác đơn vị (tấn/kg, m2/gói…), để gộp thành một công tác khi giao thầu.
 QUY TẮC:
 - Chỉ gom khi chắc chắn cùng loại; đơn giá vật tư "dg_vt" và nhân công "dg_nc" sau khi quy đổi đơn vị phải xấp xỉ nhau (ví dụ 24.500.000 đ/tấn và 24.500 đ/kg là cùng loại).
 - Khác quy cách (kích thước, mác, chiều dày, chủng loại) thì KHÔNG gom.
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
   if (MG) {
     const it = (Array.isArray(b.items) ? b.items : []).slice(0, 900).map((x: any) => ({ k: s(x.k, 300), ten: s(x.name, 200), quy_cach: s(x.spec, 120), dvt: s(x.unit, 20), dg_vt: Number(x.uv) || 0, dg_nc: Number(x.un) || 0, dau_muc: s(x.dm, 120) }));
     if (it.length < 2) return json({ groups: [] });
-    const r: any = { model, max_tokens: 32000, system: SYS_MG, messages: [{ role: "user", content: JSON.stringify({ cong_tac: it }) }], output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA_MG } } };
+    const r: any = { model, max_tokens: 32000, system: SYS_MG, messages: [{ role: "user", content: JSON.stringify({ loi_dan: s(b.guide, 4000), cong_tac: it }) }], output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA_MG } } };
     if (model !== "claude-haiku-5-5") { r.betas = ["server-side-fallback-2026-07-01"]; r.fallbacks = "default"; }
     let out: any = null, err = "", used = model, tin = 0, tout = 0;
     try {
