@@ -3353,14 +3353,14 @@ const DMR=new Map();let DMG="",DMRL=0,DMRS=0,DMO=[];
 const dmRk=(h,l)=>(PKMEP(h)?"m:"+BOQ.nz(PKHN(h))+"|":"")+BOQ.nz(l.name||"").replace(/\s+/g," ").trim()+"|"+BOQ.nz(l.unit||"").trim();
 const dmRule=(h,l)=>{if(DMRS||!DMR.size)return null;const r=DMR.get(dmRk(h,l));return r&&r.dm?r.dm:null};
 /* Gộp công tác cùng loại (anh Chung 09/11/2026): quy tắc "#mg:<tên|quy cách|đvt gốc>" trong dm_rules, note = {n tên chung, u đơn vị chung, f hệ số quy đổi} */
-const CTM=new Map(),CTNO=new Set();/* CTNO: nhóm gợi ý gộp anh đã bấm Bỏ gợi ý (lưu dm_rules k="#mgno:…"), không gợi ý lại */
+const CTM=new Map(),CTNO=new Set(),CTAI=new Map(),CTAIP=new Map();/* CTAI: kết quả AI tìm gộp lần trước theo dự án (dm_rules k="#mgai:<id dự án>"), mở lại dùng luôn, không gọi AI *//* CTNO: nhóm gợi ý gộp anh đã bấm Bỏ gợi ý (lưu dm_rules k="#mgno:…"), không gợi ý lại */
 const ctSk=l=>BOQ.nz(l.name||"")+"|"+BOQ.nz(l.spec||"")+"|"+BOQ.nz(l.unit||"");
 const ctR=l=>CTM.size?CTM.get(ctSk(l))||null:null;
 const CTLOC=/\s+(?:tại\s+)?(khu vực|vị trí|tầng\s*\S+|trục)\s+(.+)$/i;
 const ctCore=n=>{const s=String(n||"").replace(/\s+/g," ").trim(),m=s.match(CTLOC);if(!m)return{n:s,loc:""};const lc=((/^(khu vực|vị trí)$/i.test(m[1])?"":m[1]+" ")+m[2]).trim();return{n:s.slice(0,m.index).trim(),loc:lc.charAt(0).toUpperCase()+lc.slice(1)}};
 const CTU={kg:["w",1],tan:["w",1000],t:["w",1000],g:["w",.001],m:["l",1],md:["l",1],km:["l",1000],cm:["l",.01],mm:["l",.001],m3:["v",1],l:["v",.001],lit:["v",.001],m2:["a",1]};
 const ctU=u=>CTU[BOQ.nz(String(u||"").replace(/²/g,"2").replace(/³/g,"3")).replace(/[^a-z0-9]/g,"")]||null;
-async function dmrLoad(){try{const {data,error}=await NGB.sb().from("dm_rules").select("k,dm,src,note,name,at");if(error)throw error;DMR.clear();CTM.clear();CTNO.clear();DMG="";(data||[]).forEach(x=>{if(String(x.k).startsWith("#mgno:"))CTNO.add(x.k.slice(6));else if(String(x.k).startsWith("#mg:")){try{CTM.set(x.k.slice(4),{at:x.at,...JSON.parse(x.note||"{}"),src:x.src,name:x.name,k:x.k})}catch(_){}}else if(x.k==="#guide")DMG=x.note||"";else if(x.k==="#order"){try{DMO=JSON.parse(x.note||"[]")||[]}catch(_){DMO=[]}}else if(x.dm)(window.DMRV=(window.DMRV||0)+1,DMR).set(x.k,x)})}catch(e){}DMRL=2}
+async function dmrLoad(){try{const {data,error}=await NGB.sb().from("dm_rules").select("k,dm,src,note,name,at");if(error)throw error;DMR.clear();CTM.clear();CTNO.clear();CTAI.clear();DMG="";(data||[]).forEach(x=>{if(String(x.k).startsWith("#mgai:")){try{CTAI.set(x.k.slice(6),JSON.parse(x.note||"{}"))}catch(_){}}else if(String(x.k).startsWith("#mgno:"))CTNO.add(x.k.slice(6));else if(String(x.k).startsWith("#mg:")){try{CTM.set(x.k.slice(4),{at:x.at,...JSON.parse(x.note||"{}"),src:x.src,name:x.name,k:x.k})}catch(_){}}else if(x.k==="#guide")DMG=x.note||"";else if(x.k==="#order"){try{DMO=JSON.parse(x.note||"[]")||[]}catch(_){DMO=[]}}else if(x.dm)(window.DMRV=(window.DMRV||0)+1,DMR).set(x.k,x)})}catch(e){}DMRL=2}
 const dmName=(h,l)=>{const rr=dmRule(h,l);if(rr)return rr;const d=dmName0(h,l);return d==="Phần xây dựng"&&!PKMEP(h)?"Công tác kết cấu":d}; /* anh chốt 07/11/2026: đầu mục "Phần xây dựng" gọi là "Công tác kết cấu" */
 const dmName0=(h,l)=>{const g=[l.g1,l.g2].filter(Boolean).join(" "),z=BOQ.nz(g),zl=BOQ.nz(l.name||"");if(/\bcu\b.*(larsen|lasel|lars)|ep cu\b/.test(zl))return"Công tác cừ";if(/\bcoc tre\b/.test(zl))return"Công tác cọc tre";if(/^cong tac coc,? cu$/.test(z.trim()))return"Công tác cọc";if(PKMEP(h)){const r=MEPSYS.find(x=>x[0].test(z));return r?r[1]:tcase(String(l.g1||h.name).replace(/^h[aạ]ng m[uụ]c\s+/i,""))}
   /* Nhóm BOQ theo hạng mục (Hàng rào, Đường và cảnh quan…) chứ không theo loại công việc: đất, bê tông, xây trát đưa về đúng đầu mục chung (anh chốt 07/11/2026) */
@@ -7288,15 +7288,21 @@ function ctPanel(p){const M=NH.mg;if(!M)return"";const LA=M.list,nBad=LA.filter(
       <tfoot><tr><td></td><td colspan="4">Sau khi gộp: 1 công tác, đơn vị ${esc(g.u)} · thành tiền giữ nguyên ${n0(C.v)}</td><td class="r num">${new Set(C.S.map(a=>BOQ.nz(a.u))).size===1?nq(C.S.reduce((x,a)=>x+(+a.q||0),0)):"-"}</td><td colspan="3"></td><td></td><td class="r num">${nq(C.q)}</td><td class="r num">${C.q&&C.vt?n0(C.vt/C.q):"-"}</td><td class="r num">${C.q&&C.nc?n0(C.nc/C.q):"-"}</td><td class="r num">${C.q&&(C.vt||C.nc)?n0((C.vt+C.nc)/C.q):"-"}</td><td></td></tr></tfoot></table></div>
     <div class="nhact mgact"><button type="button" class="pill" data-mgok="${g.id}" style="${sv(C.ok?"rev":"pyc")}"${sel<2?" disabled":""}><span class="dot">✓</span>${C.ok?"Duyệt gộp":"Vẫn gộp"}</button><button type="button" class="back sm" data-mgno="${g.id}">Bỏ gợi ý</button></div></div>`};
   return`<div class="nhpan mgpan"><div class="mgtop"><b>Gộp công tác cùng loại (${LA.length-nBad} nhóm khớp đơn giá)</b>${nBad?`<span class="mgnoh">${M.all?`Đang hiện cả ${nBad} nhóm lệch giá`:`Ẩn ${nBad} nhóm lệch giá trên 3%`} <button type="button" class="mglk" data-mgall2>${M.all?"Ẩn đi":"Xem"}</button></span>`:""}${CTNO.size?`<span class="mgnoh">Đã bỏ ${CTNO.size} gợi ý <button type="button" class="mglk" data-mgnor>Hiện lại</button></span>`:""}${L.some(g=>ctCalc(g).ok)?`<button type="button" class="pill" data-mgall style="${sv("rev")}"><span class="dot">✓</span>Duyệt tất cả nhóm khớp</button>`:""}</div><small class="spec">Hệ thống tách vị trí (khu vực, tầng, trục…) khỏi tên và nhờ AI tìm công tác cùng loại khác tên. Quy về một đơn vị rồi so đơn giá: lệch ≤ 3% là cùng loại. Duyệt xong thành tiền giữ nguyên, hệ thống nhớ cho mọi dự án.</small>
-    ${M.busy?`<div class="sub mgbusy">AI đang tìm thêm công tác cùng loại khác tên…</div>`:M.err?`<div class="sub" style="color:#C0141B">${esc(M.err)}</div>`:""}
+    ${M.busy?`<div class="sub mgbusy">AI đang tìm thêm công tác cùng loại khác tên…</div>`:M.err?`<div class="sub" style="color:#C0141B">${esc(M.err)}</div>`:M.at?`<div class="sub mgaiat">Gợi ý AI tìm lúc ${fd(new Date(M.at))} ${new Date(M.at).toTimeString().slice(0,5)} ${M.cached?" · đang dùng lại, không tốn lượt AI":""} <button type="button" class="mglk" data-mgre>Tìm lại bằng AI</button></div>`:""}
     ${L.map(G).join("")||(M.busy?"":`<div class="sub">${nBad?"Không có nhóm nào khớp đơn giá · bấm Xem ở trên để xem các nhóm lệch giá":"Không thấy công tác nào nên gộp."}</div>`)}<div class="nhact"><button type="button" class="back sm" data-mgclose>Đóng</button></div></div>`}
 function ctSort(L){const w=g=>{const C=ctCalc(g);return(C.ok?0:4)+(g.src==="ai"?0:1)+(g.S.some(a=>a.core.loc)||new Set(g.S.map(a=>BOQ.nz(a.u))).size>1?0:2)};return L.sort((a,b)=>w(a)-w(b))}
 const ctGid=g=>g.S.map(a=>a.sk).sort().join("§");
-async function ctOpen(p){const auto=ctSort(ctAuto(p).filter(g=>!CTNO.has(ctGid(g))));NH.mg={list:auto,busy:1,err:""};NH.rl=0;NH.guide=0;NH.ai=null;NH.mgl=0;gtRe(p);
-  const A=ctSrc(p),items=A.map(a=>({k:a.sk,name:a.n,spec:a.sp,unit:a.u,uv:Math.round(a.uv),un:Math.round(a.un),dm:a.dm})),guide=typeof DMG==="string"?DMG:"";
-  try{const r=await NGB.ai({action:"ct_merge",items,guide,pid:p.id}),F=new Map(A.map(a=>[a.sk,a])),have=new Set(auto.map(g=>g.S.map(a=>a.sk).sort().join("§")));
-    (r.groups||[]).forEach(x=>{const S=(x.ks||[]).map(k=>F.get(k)).filter(Boolean);if(S.length<2)return;const id=S.map(a=>a.sk).sort().join("§");if(have.has(id)||CTNO.has(id))return;have.add(id);if(NH.mg)NH.mg.list.push(ctGrp(S,{n:x.n,u:x.u,why:x.why,src:"ai"}))});
-    if(NH.mg){NH.mg.busy=0}}catch(er){if(NH.mg){NH.mg.busy=0;NH.mg.err="AI chưa tìm được: "+(er.message||er)+" · các gợi ý tự dò vẫn dùng được"}}
+async function ctOpen(p,force){const auto=ctSort(ctAuto(p).filter(g=>!CTNO.has(ctGid(g))));const A=ctSrc(p),F=new Map(A.map(a=>[a.sk,a])),have=new Set(auto.map(g=>ctGid(g))),C0=CTAI.get(p.id);
+  const addAI=G=>(G||[]).forEach(x=>{const S=(x.ks||[]).map(k=>F.get(k)).filter(Boolean);if(S.length<2)return;const id=S.map(a=>a.sk).sort().join("§");if(have.has(id)||CTNO.has(id))return;have.add(id);if(NH.mg)NH.mg.list.push(ctGrp(S,{n:x.n,u:x.u,why:x.why,src:"ai"}))});
+  /* đã có kết quả AI lần trước: dùng luôn, không tốn lượt AI; bấm "Tìm lại bằng AI" mới gọi lại */
+  if(!force&&C0&&Array.isArray(C0.groups)){NH.mg={list:auto,busy:0,err:"",at:C0.at||"",cached:1};NH.rl=0;NH.guide=0;NH.ai=null;NH.mgl=0;addAI(C0.groups);ctSort(NH.mg.list);gtRe(p);return}
+  NH.mg={list:auto,busy:1,err:"",at:""};NH.rl=0;NH.guide=0;NH.ai=null;NH.mgl=0;gtRe(p);
+  const items=A.map(a=>({k:a.sk,name:a.n,spec:a.sp,unit:a.u,uv:Math.round(a.uv),un:Math.round(a.un),dm:a.dm})),guide=typeof DMG==="string"?DMG:"";
+  /* đang chờ AI (vd anh đóng rồi mở lại): dùng chung lượt đang chạy, không gọi thêm */
+  let run=CTAIP.get(p.id);if(!run){run=NGB.ai({action:"ct_merge",items,guide,pid:p.id}).then(async r=>{const at=new Date().toISOString();CTAI.set(p.id,{at,groups:r.groups||[]});
+      if(!(typeof NGApp!=="undefined"&&NGApp.guest)){try{await NGB.sb().from("dm_rules").upsert([{k:"#mgai:"+p.id,dm:"",src:"ai",name:"AI tìm công tác để gộp",note:JSON.stringify({at,groups:r.groups||[]}),at}])}catch(_){}}return{...r,at}}).finally(()=>CTAIP.delete(p.id));CTAIP.set(p.id,run)}
+  try{const r=await run;if(!NH.mg)return;addAI(r.groups);NH.mg.busy=0;NH.mg.at=r.at}
+  catch(er){if(NH.mg){NH.mg.busy=0;NH.mg.err="AI chưa tìm được: "+(er.message||er)+" · các gợi ý tự dò vẫn dùng được"}}
   if(NH.mg)ctSort(NH.mg.list);gtRe(p)}
 /* Bỏ gợi ý: nhớ lại để lần sau không gợi ý nhóm này nữa (mọi dự án); khách xem thử chỉ nhớ trong phiên */
 async function ctNo(g){const id=ctGid(g);CTNO.add(id);if(typeof NGApp!=="undefined"&&NGApp.guest)return;const now=new Date().toISOString();
@@ -7399,6 +7405,7 @@ document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!t.c
     bq=code;BQS.hl=new Set([code]);if(!BQS.ho)BQS.ho=new Set();BQS.ho.add(hc);location.hash="da-"+p.id+"-boq";return}
   if(t.closest("[data-nhpx]")){nhCloseAll(p);return}
   if(t.closest("[data-mgnor]")){ctNoReset(p);return}
+  if(t.closest("[data-mgre]")){ctOpen(p,1);return}
   if(t.closest("[data-mgall2]")){if(NH.mg){NH.mg.all=!NH.mg.all;gtRe(p)}return}
   if(t.closest("[data-mgopen]")){if(NH.mg&&NH.mg.busy)return;if(NH.mg){nhCloseAll(p);return}ctOpen(p);return}
   if(t.closest("[data-mgclose]")){NH.mg=null;NH.mge="";gtRe(p);return}
