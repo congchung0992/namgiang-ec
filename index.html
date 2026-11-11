@@ -1958,6 +1958,7 @@ html body button.xb.xb.xb.sclr{width:20px!important;height:20px!important}html b
 html body button.xb.xb.xb.bcx{width:28px!important;height:28px!important}html body button.xb.xb.xb.chib{width:30px!important;height:30px!important}
 html body button.xb.xb.xb.nglpx{width:40px!important;height:40px!important}html body button.xb.xb.xb.ngmsgx{width:30px!important;height:30px!important}
 html body button.xb.xb.xb.nggpjx{width:28px!important;height:28px!important;align-self:center}
+svg.xmul{display:inline-block;width:.62em;height:.62em;vertical-align:.02em;margin:0 .12em;flex:none}
 i.xi{display:inline-grid;place-items:center;width:1.3em;height:1.3em;border-radius:50%;background:#FFE7E5;color:#FF3B30;vertical-align:-.3em;margin-right:.35em;font-style:normal;flex:none}
 i.xi>svg.xsv{width:42%;height:42%;display:block}
 button i.xi{background:none;width:1em;height:1em;margin-right:.3em;color:inherit}button i.xi>svg.xsv{width:80%;height:80%}
@@ -2291,13 +2292,13 @@ const PENI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
   const G={"✓":P('<path d="M5 12.5l4.5 4.5L19 7"/>'),"⇄":P('<path d="M4 8h15M15 4l4 4-4 4M20 16H5M9 12l-4 4 4 4"/>'),"＋":P('<path d="M12 5v14M5 12h14"/>'),"✨":P('<path d="M12 3l1.8 4.7L18.5 9.5 13.8 11.3 12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" fill="currentColor" stroke="none"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" fill="currentColor" stroke="none"/>'),
     "★":P('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="currentColor" stroke="none"/>'),"✎":PENI.replace('<svg ','<svg class="gly" '),"↶":P('<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>'),"↷":P('<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>'),
     "⠿":'<i class="gly grip3" aria-hidden="true"></i>',"🔗":P('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),"📄":P('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>'),"👁":P('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),"👋":"","🔔":P('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>')};
-  G["✕"]='<i class="xi">'+XSV+"</i>";["①","②","③","④","⑤"].forEach((c,i)=>G[c]=`<i class="gly cnum">${i+1}</i>`);
-  const RX=/[✓⇄＋✨★✎↶↷⠿①②③④⑤✕×]|🔗|📄|👁|👋|🔔/u,RG=/[✓⇄＋✨★✎↶↷⠿①②③④⑤✕]|🔗|📄|👁|👋|🔔/gu,SKIP="INPUT,TEXTAREA,SCRIPT,STYLE,OPTION,TITLE,svg".split(",");
+  G["✕"]='<i class="xi">'+XSV+"</i>";G["×"]='<svg class="xmul" viewBox="0 0 12 12" aria-label="nhân"><path d="M2.6 2.6l6.8 6.8M9.4 2.6l-6.8 6.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';["①","②","③","④","⑤"].forEach((c,i)=>G[c]=`<i class="gly cnum">${i+1}</i>`);
+  const RX=/[✓⇄＋✨★✎↶↷⠿①②③④⑤✕×]|🔗|📄|👁|👋|🔔/u,RG=/[✓⇄＋✨★✎↶↷⠿①②③④⑤✕×]|🔗|📄|👁|👋|🔔/gu,SKIP="INPUT,TEXTAREA,SCRIPT,STYLE,OPTION,TITLE,svg".split(",");
   const fix=root=>{if(!root||!RX.test(root.textContent||""))return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),L=[];let n;while(n=w.nextNode())if(RX.test(n.nodeValue))L.push(n);
     L.forEach(t=>{const pe=t.parentElement;if(!pe||SKIP.includes(pe.tagName)||pe.closest(".chmsg,.chemo,.chre,[contenteditable],svg,title,#ngchat [class*=bub]"))return;const v=t.nodeValue.trim();
       /* nút chỉ có dấu ✕ hoặc × → nút tròn đỏ nhạt kiểu iPhone */
       if((v==="✕"||v==="×")&&pe.tagName==="BUTTON"&&pe.textContent.trim()===v){pe.classList.add("xb");if(!pe.title&&pe.getAttribute("aria-label"))pe.title=pe.getAttribute("aria-label");t.replaceWith(document.createRange().createContextualFragment(XSV));return}
-      if(!/[✓⇄＋✨★✎↶↷⠿①②③④⑤✕]|🔗|📄|👁|👋|🔔/u.test(t.nodeValue))return;const sp=document.createElement("span");sp.className="glw";sp.innerHTML=String(t.nodeValue).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"})[c]).replace(RG,m=>G[m]);t.replaceWith(...sp.childNodes)})};
+      if(!/[✓⇄＋✨★✎↶↷⠿①②③④⑤✕×]|🔗|📄|👁|👋|🔔/u.test(t.nodeValue))return;const sp=document.createElement("span");sp.className="glw";sp.innerHTML=String(t.nodeValue).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"})[c]).replace(RG,m=>G[m]);t.replaceWith(...sp.childNodes)})};
   const go=()=>{fix(document.body);new MutationObserver(M=>{for(const m of M){const te=m.target.nodeType===1?m.target:m.target.parentElement,bx=te&&te.closest&&te.closest("button.xb");if(bx&&bx.textContent.trim())bx.classList.remove("xb");if(m.type==="characterData"){if(RX.test(m.target.nodeValue||""))fix(m.target.parentElement)}else m.addedNodes.forEach(x=>{if(x.nodeType===1)fix(x);else if(x.nodeType===3&&RX.test(x.nodeValue))fix(x.parentElement)})}}).observe(document.body,{childList:true,subtree:true,characterData:true});
     /* tiêu đề nút (title) cũng bỏ ký tự lạ */};
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go()})();
