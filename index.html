@@ -3353,7 +3353,7 @@ const DMR=new Map();let DMG="",DMRL=0,DMRS=0,DMO=[];
 const dmRk=(h,l)=>(PKMEP(h)?"m:"+BOQ.nz(PKHN(h))+"|":"")+BOQ.nz(l.name||"").replace(/\s+/g," ").trim()+"|"+BOQ.nz(l.unit||"").trim();
 const dmRule=(h,l)=>{if(DMRS||!DMR.size)return null;const r=DMR.get(dmRk(h,l));return r&&r.dm?r.dm:null};
 /* Gộp công tác cùng loại (anh Chung 09/11/2026): quy tắc "#mg:<tên|quy cách|đvt gốc>" trong dm_rules, note = {n tên chung, u đơn vị chung, f hệ số quy đổi} */
-const CTM=new Map(),CTNO=new Set(),CTAI=new Map(),CTAIP=new Map();
+const CTM=new Map(),CTNO=new Set(),CTAI=new Map(),CTAIP=new Map(),CTDR=new Map();/* CTDR: chỉnh sửa trên gợi ý chưa duyệt (tên, đơn vị, hệ số, bỏ tick dòng) theo dự án, k="#mgdr:<id>:<phần>" */
 /* khoá dm_rules tối đa 400 ký tự, ghi chú tối đa 4000: nhóm dài thì lưu mã băm, kết quả AI chia nhiều dòng (anh Chung 11/11/2026) */
 const ctH=s=>{let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
 const ctNoK=id=>id.length>380?"h:"+ctH(id):id,ctNoHas=id=>CTNO.has(id)||CTNO.has("h:"+ctH(id));/* CTAI: kết quả AI tìm gộp lần trước theo dự án (dm_rules k="#mgai:<id dự án>"), mở lại dùng luôn, không gọi AI *//* CTNO: nhóm gợi ý gộp anh đã bấm Bỏ gợi ý (lưu dm_rules k="#mgno:…"), không gợi ý lại */
@@ -3363,7 +3363,7 @@ const CTLOC=/\s+(?:tại\s+)?(khu vực|vị trí|tầng\s*\S+|trục)\s+(.+)$/i
 const ctCore=n=>{const s=String(n||"").replace(/\s+/g," ").trim(),m=s.match(CTLOC);if(!m)return{n:s,loc:""};const lc=((/^(khu vực|vị trí)$/i.test(m[1])?"":m[1]+" ")+m[2]).trim();return{n:s.slice(0,m.index).trim(),loc:lc.charAt(0).toUpperCase()+lc.slice(1)}};
 const CTU={kg:["w",1],tan:["w",1000],t:["w",1000],g:["w",.001],m:["l",1],md:["l",1],km:["l",1000],cm:["l",.01],mm:["l",.001],m3:["v",1],l:["v",.001],lit:["v",.001],m2:["a",1]};
 const ctU=u=>CTU[BOQ.nz(String(u||"").replace(/²/g,"2").replace(/³/g,"3")).replace(/[^a-z0-9]/g,"")]||null;
-async function dmrLoad(){try{const {data,error}=await NGB.sb().from("dm_rules").select("k,dm,src,note,name,at");if(error)throw error;DMR.clear();CTM.clear();CTNO.clear();CTAI.clear();DMG="";const CHK={};(data||[]).forEach(x=>{if(String(x.k).startsWith("#mgai:")){const m=x.k.slice(6).split(":");(CHK[m[0]]=CHK[m[0]]||[])[+(m[1]||0)]=x.note||""}else if(String(x.k).startsWith("#mgno:"))CTNO.add(x.k.slice(6));else if(String(x.k).startsWith("#mg:")){try{CTM.set(x.k.slice(4),{at:x.at,...JSON.parse(x.note||"{}"),src:x.src,name:x.name,k:x.k})}catch(_){}}else if(x.k==="#guide")DMG=x.note||"";else if(x.k==="#order"){try{DMO=JSON.parse(x.note||"[]")||[]}catch(_){DMO=[]}}else if(x.dm)(window.DMRV=(window.DMRV||0)+1,DMR).set(x.k,x)});Object.entries(CHK).forEach(([pid,L])=>{try{CTAI.set(pid,JSON.parse(L.join("")))}catch(_){}})}catch(e){}DMRL=2}
+async function dmrLoad(){try{const {data,error}=await NGB.sb().from("dm_rules").select("k,dm,src,note,name,at");if(error)throw error;DMR.clear();CTM.clear();CTNO.clear();CTAI.clear();CTDR.clear();DMG="";const CHK={},CHD={};(data||[]).forEach(x=>{if(String(x.k).startsWith("#mgai:")){const m=x.k.slice(6).split(":");(CHK[m[0]]=CHK[m[0]]||[])[+(m[1]||0)]=x.note||""}else if(String(x.k).startsWith("#mgdr:")){const m=x.k.slice(6).split(":");(CHD[m[0]]=CHD[m[0]]||[])[+(m[1]||0)]=x.note||""}else if(String(x.k).startsWith("#mgno:"))CTNO.add(x.k.slice(6));else if(String(x.k).startsWith("#mg:")){try{CTM.set(x.k.slice(4),{at:x.at,...JSON.parse(x.note||"{}"),src:x.src,name:x.name,k:x.k})}catch(_){}}else if(x.k==="#guide")DMG=x.note||"";else if(x.k==="#order"){try{DMO=JSON.parse(x.note||"[]")||[]}catch(_){DMO=[]}}else if(x.dm)(window.DMRV=(window.DMRV||0)+1,DMR).set(x.k,x)});Object.entries(CHK).forEach(([pid,L])=>{try{CTAI.set(pid,JSON.parse(L.join("")))}catch(_){}});Object.entries(CHD).forEach(([pid,L])=>{try{CTDR.set(pid,JSON.parse(L.join("")))}catch(_){}})}catch(e){}DMRL=2}
 const dmName=(h,l)=>{const rr=dmRule(h,l);if(rr)return rr;const d=dmName0(h,l);return d==="Phần xây dựng"&&!PKMEP(h)?"Công tác kết cấu":d}; /* anh chốt 07/11/2026: đầu mục "Phần xây dựng" gọi là "Công tác kết cấu" */
 const dmName0=(h,l)=>{const g=[l.g1,l.g2].filter(Boolean).join(" "),z=BOQ.nz(g),zl=BOQ.nz(l.name||"");if(/\bcu\b.*(larsen|lasel|lars)|ep cu\b/.test(zl))return"Công tác cừ";if(/\bcoc tre\b/.test(zl))return"Công tác cọc tre";if(/^cong tac coc,? cu$/.test(z.trim()))return"Công tác cọc";if(PKMEP(h)){const r=MEPSYS.find(x=>x[0].test(z));return r?r[1]:tcase(String(l.g1||h.name).replace(/^h[aạ]ng m[uụ]c\s+/i,""))}
   /* Nhóm BOQ theo hạng mục (Hàng rào, Đường và cảnh quan…) chứ không theo loại công việc: đất, bê tông, xây trát đưa về đúng đầu mục chung (anh chốt 07/11/2026) */
@@ -7296,12 +7296,12 @@ function ctPanel(p){const M=NH.mg;if(!M)return"";const LA=M.list,nBad=LA.filter(
 function ctSort(L){const w=g=>{const C=ctCalc(g);return(C.ok?0:4)+(g.src==="ai"?0:1)+(g.S.some(a=>a.core.loc)||new Set(g.S.map(a=>BOQ.nz(a.u))).size>1?0:2)};return L.sort((a,b)=>w(a)-w(b))}
 const ctGid=g=>g.S.map(a=>a.sk).sort().join("§");
 /* gợi ý hiện có khi chưa mở bảng: tự dò + kết quả AI đã lưu (không gọi AI) */
-function ctCached(p){const L=ctAuto(p).filter(g=>!ctNoHas(ctGid(g))),C0=CTAI.get(p.id);if(!C0||!Array.isArray(C0.groups))return L;const F=new Map(ctSrc(p).map(a=>[a.sk,a])),have=new Set(L.map(ctGid));
-  C0.groups.forEach(x=>{const S=(x.ks||[]).map(k=>F.get(k)).filter(Boolean);if(S.length<2)return;const id=S.map(a=>a.sk).sort().join("§");if(have.has(id)||ctNoHas(id))return;have.add(id);L.push(ctGrp(S,{n:x.n,u:x.u,why:x.why,src:"ai"}))});return L}
-async function ctOpen(p,force){const auto=ctSort(ctAuto(p).filter(g=>!ctNoHas(ctGid(g))));const A=ctSrc(p),F=new Map(A.map(a=>[a.sk,a])),have=new Set(auto.map(g=>ctGid(g))),C0=CTAI.get(p.id);
+function ctCached(p){const L=ctAuto(p).filter(g=>!ctNoHas(ctGid(g))),C0=CTAI.get(p.id);if(!C0||!Array.isArray(C0.groups)){L.forEach(g=>ctDrApply(p,g));return L}const F=new Map(ctSrc(p).map(a=>[a.sk,a])),have=new Set(L.map(ctGid));
+  C0.groups.forEach(x=>{const S=(x.ks||[]).map(k=>F.get(k)).filter(Boolean);if(S.length<2)return;const id=S.map(a=>a.sk).sort().join("§");if(have.has(id)||ctNoHas(id))return;have.add(id);L.push(ctGrp(S,{n:x.n,u:x.u,why:x.why,src:"ai"}))});L.forEach(g=>ctDrApply(p,g));return L}
+async function ctOpen(p,force){const auto=ctAuto(p).filter(g=>!ctNoHas(ctGid(g)));auto.forEach(g=>ctDrApply(p,g));ctSort(auto);const A=ctSrc(p),F=new Map(A.map(a=>[a.sk,a])),have=new Set(auto.map(g=>ctGid(g))),C0=CTAI.get(p.id);
   const addAI=G=>(G||[]).forEach(x=>{const S=(x.ks||[]).map(k=>F.get(k)).filter(Boolean);if(S.length<2)return;const id=S.map(a=>a.sk).sort().join("§");if(have.has(id)||ctNoHas(id))return;have.add(id);if(NH.mg)NH.mg.list.push(ctGrp(S,{n:x.n,u:x.u,why:x.why,src:"ai"}))});
   /* đã có kết quả AI lần trước: dùng luôn, không tốn lượt AI; bấm "Tìm lại bằng AI" mới gọi lại */
-  if(!force&&C0&&Array.isArray(C0.groups)){NH.mg={list:auto,busy:0,err:"",at:C0.at||"",cached:1};NH.rl=0;NH.guide=0;NH.ai=null;NH.mgl=0;addAI(C0.groups);ctSort(NH.mg.list);gtRe(p);return}
+  if(!force&&C0&&Array.isArray(C0.groups)){NH.mg={list:auto,busy:0,err:"",at:C0.at||"",cached:1};NH.rl=0;NH.guide=0;NH.ai=null;NH.mgl=0;addAI(C0.groups);NH.mg.list.forEach(g=>ctDrApply(p,g));ctSort(NH.mg.list);gtRe(p);return}
   NH.mg={list:auto,busy:1,err:"",at:""};NH.rl=0;NH.guide=0;NH.ai=null;NH.mgl=0;gtRe(p);
   const items=A.map(a=>({k:a.sk,name:a.n,spec:a.sp,unit:a.u,uv:Math.round(a.uv),un:Math.round(a.un),dm:a.dm})),guide=typeof DMG==="string"?DMG:"";
   /* đang chờ AI (vd anh đóng rồi mở lại): dùng chung lượt đang chạy, không gọi thêm */
@@ -7310,7 +7310,7 @@ async function ctOpen(p,force){const auto=ctSort(ctAuto(p).filter(g=>!ctNoHas(ct
         const d=await NGB.sb().from("dm_rules").delete().like("k","#mgai:"+p.id+"%");if(d.error)throw d.error;const {error}=await NGB.sb().from("dm_rules").insert(rows);if(error)throw error}catch(e){NH.ok=0;NH.msg="Chưa lưu được kết quả AI, lần sau sẽ phải tìm lại: "+(e.message||e)}}return{...r,at}}).finally(()=>CTAIP.delete(p.id));CTAIP.set(p.id,run)}
   try{const r=await run;if(!NH.mg)return;addAI(r.groups);NH.mg.busy=0;NH.mg.at=r.at}
   catch(er){if(NH.mg){NH.mg.busy=0;NH.mg.err="AI chưa tìm được: "+(er.message||er)+" · các gợi ý tự dò vẫn dùng được"}}
-  if(NH.mg)ctSort(NH.mg.list);gtRe(p)}
+  if(NH.mg){NH.mg.list.forEach(g=>ctDrApply(p,g));ctSort(NH.mg.list)}gtRe(p)}
 /* Bỏ gợi ý: nhớ lại để lần sau không gợi ý nhóm này nữa (mọi dự án); khách xem thử chỉ nhớ trong phiên */
 async function ctNo(g){const id=ctNoK(ctGid(g));CTNO.add(id);if(typeof NGApp!=="undefined"&&NGApp.guest)return;const now=new Date().toISOString();
   try{const {error}=await NGB.sb().from("dm_rules").upsert([{k:"#mgno:"+id,dm:"",src:"tay",name:g.n+(g.u?" ("+g.u+")":""),note:JSON.stringify({by:(typeof NGApp!=="undefined"&&(NGApp.name||(NGApp.me&&(NGApp.me.name||NGApp.me.full_name))))||"",at:now}),at:now}]);if(error)throw error}catch(e){NH.ok=0;NH.msg="Đã ẩn gợi ý trong phiên này nhưng chưa lưu được: "+(e.message||e)}}
@@ -7417,7 +7417,7 @@ document.addEventListener("click",async e=>{const t=e.target;if(!t.closest||!t.c
   if(t.closest("[data-mgopen]")){if(NH.mg&&NH.mg.busy)return;if(NH.mg){nhCloseAll(p);return}ctOpen(p);return}
   if(t.closest("[data-mgclose]")){NH.mg=null;NH.mge="";gtRe(p);return}
   if(b=t.closest("[data-mgfe]")){NH.mge=b.dataset.mgfe;gtRe(p);setTimeout(()=>{const i=document.querySelector(".mgpan input.mgfi,.mgpan input.mgni,.mgpan input.mgui");if(i){i.focus();const n=i.value.length;try{i.setSelectionRange(n,n)}catch(_){}}},30);return}
-  if(b=t.closest("[data-mgx]")){const [id,i]=b.dataset.mgx.split("|"),g=NH.mg&&NH.mg.list.find(x=>x.id===id);if(g){g.S[+i].on=b.checked;gtRe(p)}return}
+  if(b=t.closest("[data-mgx]")){const [id,i]=b.dataset.mgx.split("|"),g=NH.mg&&NH.mg.list.find(x=>x.id===id);if(g){g.S[+i].on=b.checked;ctDrSave(p,g);gtRe(p)}return}
   if(b=t.closest("[data-mgno]")){const g=NH.mg.list.find(x=>x.id===b.dataset.mgno);NH.mg.list=NH.mg.list.filter(x=>x!==g);if(g)ctNo(g);gtRe(p);return}
   if(t.closest("[data-mgall]")){const G=NH.mg.list.filter(g=>ctCalc(g).ok&&ctCalc(g).S.length>1);let n=0;for(const g of G){if(!NH.mg.list.includes(g))continue;await ctSave(p,g);if(!NH.ok)return;n++}NH.msg=`Đã duyệt gộp ${n} nhóm · hệ thống nhớ cho mọi dự án`;gtRe(p);return}
   if(b=t.closest("[data-mgok]")){const g=NH.mg&&NH.mg.list.find(x=>x.id===b.dataset.mgok);if(g)await ctSave(p,g);return}
@@ -7463,12 +7463,18 @@ document.addEventListener("keydown",e=>{const i=e.target.closest&&e.target.close
   if(e.key==="Escape"){e.preventDefault();e.stopPropagation();NH.mgle="";gtRe(p);return}if(e.key==="Enter"){e.preventDefault();ctLeSave(p,i)}},true);
 document.addEventListener("focusout",e=>{const i=e.target.closest&&e.target.closest(".mglpan input.mgle");if(!i||!NH.mgle)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(p)setTimeout(()=>{if(NH.mgle&&document.contains(i))ctLeSave(p,i)},0)});
 document.addEventListener("input",e=>{const i=e.target.closest&&e.target.closest(".mglpan input.mglqi");if(!i)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;NH.mglq=i.value;const pos=i.selectionStart;gtRe(p);const j=document.querySelector(".mglpan input.mglqi");if(j){j.focus();try{j.setSelectionRange(pos,pos)}catch(_){}}});
+
+/* Lưu chỉnh sửa trên gợi ý gộp chưa duyệt (anh Chung 11/11/2026): F5 hay mở lại vẫn giữ tên, đơn vị chung, hệ số, dòng bỏ tick */
+function ctDrApply(p,g){const D=CTDR.get(p.id),d=D&&D[ctNoK(ctGid(g))];if(!d)return;if(d.n)g.n=d.n;if(d.u)g.u=d.u;g.S.forEach(a=>{if(d.f&&d.f[a.sk]>0){a.f=d.f[a.sk];a.est=0}if(d.off&&d.off.includes(a.sk))a.on=false})}
+let CTDRT=0;function ctDrSave(p,g){const D=CTDR.get(p.id)||{};D[ctNoK(ctGid(g))]={n:g.n,u:g.u,f:Object.fromEntries(g.S.filter(a=>!a.est).map(a=>[a.sk,a.f])),off:g.S.filter(a=>!a.on).map(a=>a.sk)};CTDR.set(p.id,D);
+  clearTimeout(CTDRT);CTDRT=setTimeout(async()=>{if(typeof NGApp!=="undefined"&&NGApp.guest)return;try{const J=JSON.stringify(CTDR.get(p.id)||{}),now=new Date().toISOString(),rows=[];for(let i=0;i*3800<J.length;i++)rows.push({k:"#mgdr:"+p.id+":"+i,dm:"",src:"tay",name:"Chỉnh sửa gợi ý gộp",note:J.slice(i*3800,(i+1)*3800),at:now});
+    const d=await NGB.sb().from("dm_rules").delete().like("k","#mgdr:"+p.id+"%");if(d.error)throw d.error;const {error}=await NGB.sb().from("dm_rules").insert(rows);if(error)throw error}catch(e){NH.ok=0;NH.msg="Chưa lưu được chỉnh sửa gợi ý: "+(e.message||e);gtRe(p)}},800)}
 /* Sửa hệ số, tên, đơn vị chung trong bảng gợi ý gộp: Enter lưu, Esc huỷ */
 document.addEventListener("keydown",e=>{const i=e.target.closest&&e.target.closest(".mgpan input.fi");if(!i)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p||!NH.mg)return;
   if(e.key==="Escape"){e.preventDefault();e.stopPropagation();NH.mge="";gtRe(p);return}if(e.key!=="Enter")return;e.preventDefault();ctEdit(p,i)},true);
 document.addEventListener("focusout",e=>{const i=e.target.closest&&e.target.closest(".mgpan input.fi");if(!i||!NH.mge)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(p)setTimeout(()=>{if(NH.mge)ctEdit(p,i)},0)});
 function ctEdit(p,i){const v=i.value.trim();if(i.dataset.mgf){const [id,k]=i.dataset.mgf.split("|"),g=NH.mg.list.find(x=>x.id===id),f=parseFloat(v.replace(/\./g,"").replace(",","."));if(g&&f>0){g.S[+k].f=f;g.S[+k].est=0}}
-  else if(i.dataset.mgn){const g=NH.mg.list.find(x=>x.id===i.dataset.mgn);if(g&&v)g.n=v}else if(i.dataset.mgu){const g=NH.mg.list.find(x=>x.id===i.dataset.mgu);if(g&&v)g.u=v}NH.mge="";gtRe(p)}
+  else if(i.dataset.mgn){const g=NH.mg.list.find(x=>x.id===i.dataset.mgn);if(g&&v)g.n=v}else if(i.dataset.mgu){const g=NH.mg.list.find(x=>x.id===i.dataset.mgu);if(g&&v)g.u=v}const gg=NH.mg.list.find(x=>x.id===(i.dataset.mgn||i.dataset.mgu||(i.dataset.mgf||"").split("|")[0]));if(gg)ctDrSave(p,gg);NH.mge="";gtRe(p)}
 /* Bấm đúp công tác ở Nhóm đầu mục: mở BOQ & Giá vốn, tìm sẵn công tác đó và tô sáng các dòng BOQ gốc (anh Chung 07/11/2026) */
 document.addEventListener("dblclick",e=>{const it=e.target.closest&&e.target.closest(".gtnh tr.nhi");if(!it||e.target.closest("input,button"))return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;
   let hit=null;nhData(p).forEach(g=>g.C.forEach(c=>{if(nhKey(g,c)===it.dataset.nhk)hit=c}));if(!hit)return;window.getSelection&&getSelection().removeAllRanges();
