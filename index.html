@@ -1961,6 +1961,9 @@ html body button.xb.xb.xb.nggpjx{width:28px!important;height:28px!important;alig
 i.xi{display:inline-grid;place-items:center;width:1.3em;height:1.3em;border-radius:50%;background:#FFE7E5;color:#FF3B30;vertical-align:-.3em;margin-right:.35em;font-style:normal;flex:none}
 i.xi>svg.xsv{width:42%;height:42%;display:block}
 button i.xi{background:none;width:1em;height:1em;margin-right:.3em;color:inherit}button i.xi>svg.xsv{width:80%;height:80%}
+/* Dòng nhóm bấm được cả dòng (anh Chung 11/11/2026) */
+tr:has(>td button.mglx,>td button.olb,>td button.gtg[data-dcx],>td button.gtg[data-gc],>td button[aria-expanded]){cursor:pointer}
+tr:has(>td button.mglx,>td button.olb,>td button.gtg[data-dcx],>td button[aria-expanded]):hover>td{background-image:linear-gradient(rgba(10,36,134,.035),rgba(10,36,134,.035))}
 </style>
 
 <script>/* Tăng tốc (09/11/2026): định dạng số dùng lại bộ Intl.NumberFormat thay vì tạo mới mỗi lần gọi toLocaleString */
@@ -7339,6 +7342,15 @@ function gtNhom(p){if(!DMRL&&!NGApp.guest){DMRL=1;dmrLoad().then(()=>gtRe(p))}
     ${A?`<div class="nhpan nhai"><b>AI đề xuất chuyển ${A.length} công tác</b><small class="spec">Bỏ chọn dòng không đúng rồi bấm Áp dụng · áp dụng xong hệ thống nhớ cho mọi dự án</small>${A.length?`<div class="tw" style="max-height:44vh;overflow:auto;margin-top:8px"><table class="t"><thead><tr><th><input type="checkbox" data-nhall checked aria-label="Chọn tất cả"></th><th>Công tác</th><th>Đang ở</th><th>Chuyển sang</th><th>Lý do</th></tr></thead><tbody>${A.map((m,i)=>`<tr><td class="tc"><input type="checkbox" data-nhsel="${i}"${m.on?" checked":""}></td><td><b>${esc(m.n)}</b><small class="spec">${esc(m.sub)}</small></td><td>${esc(m.from)}</td><td><b>${esc(m.dm)}</b></td><td>${esc(m.why||"")}</td></tr>`).join("")}</tbody></table></div>`:""}<div class="nhact"><button type="button" class="back sm" data-nhax>Bỏ qua</button>${A.length?`<button type="button" class="pill" data-nhap style="${sv("rev")}"><span class="dot">✓</span>Áp dụng đã chọn</button>`:""}</div></div>`:""}
     <div class="nh2">${left}${right}</div>`)}
 
+
+/* Bấm vào dòng nhóm (chỗ trống, tên) là mở hoặc thu nhóm, không cần bấm đúng nút + / ▸; áp toàn web (anh Chung 11/11/2026) */
+const TGSEL='button.mglx,button.olb,button.gtg[data-dcx],button.gtg[data-gc],button[aria-expanded]';
+document.addEventListener("click",e=>{if(e.defaultPrevented||e.button!==0)return;const t=e.target;if(!t.closest)return;
+  if(t.closest('button,a,input,select,textarea,label,summary,[contenteditable],[data-go],[role=button],.gtpe,.pvp,svg.gly'))return;
+  const s=getSelection&&String(getSelection());if(s&&s.trim())return;
+  const tr=t.closest("tr");if(!tr||tr.closest("thead,tfoot"))return;
+  if([...tr.attributes].some(a=>a.name.startsWith("data-")))return;
+  const B=[...tr.querySelectorAll(TGSEL)].filter(b=>b.closest("tr")===tr);if(B.length!==1)return;B[0].click()});
 /* Mọi bảng công cụ mở ra ở bước Sắp xếp công tác có nút "✕ Đóng" góc trên phải và phím Esc để về màn ban đầu (anh Chung 10/11/2026) */
 const NHX='<button type="button" class="nhpx xb" data-nhpx title="Đóng, về màn ban đầu (phím Esc)" aria-label="Đóng"><svg class="xsv" viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>';
 const nhX=h=>h.replace(/<div class="nhpan([^"]*)">/g,(m)=>m+NHX);
