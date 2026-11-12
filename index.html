@@ -1972,6 +1972,13 @@ tr:has(>td button.mglx,>td button.olb,>td button.gtg[data-dcx],>td button[aria-e
 .dlit b{color:#0A2486;font-weight:700;background:#FFF1C2;border-radius:3px}.dlit small{font-size:12px;color:var(--muted)}
 .dlno{padding:10px;font-size:12px;color:var(--muted)}
 input.dlin{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B7090' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px!important}
+/* Dặn AI phân quyền */
+.pqaiin{display:grid;gap:8px}.pqaiin textarea{width:100%;min-height:76px;resize:vertical}
+.pqaibar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pqup{cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.pqim{position:relative;display:inline-block;width:72px;height:52px;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px #DDE2EE}.pqim img{width:100%;height:100%;object-fit:cover;display:block}
+html body .pqim button.xb.xb.xb{position:absolute;top:3px;right:3px;width:20px!important;height:20px!important}
+.pqlv{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700}.pqlv.l0{background:#EEF0F6;color:#6B7090}.pqlv.l1{background:#E4E9FC;color:#2D3CE6}.pqlv.l2{background:#E3F6EA;color:#0B6B34}
+table.pqai{margin-top:10px}
 </style>
 
 <script>/* Tăng tốc (09/11/2026): định dạng số dùng lại bộ Intl.NumberFormat thay vì tạo mới mỗi lần gọi toLocaleString */
@@ -2273,7 +2280,7 @@ window.NGB=(function(){
       /* Máy chủ bận hoặc quá giờ: tự thử lại 1 lần sau 15 giây rồi mới báo anh */
       async ai(body){for(let k=0;;k++){try{return await this.ai1(body)}catch(e){if(k>=1||!/^(qua_tai|timeout|net)$/.test(e.code))throw e;await new Promise(r=>setTimeout(r,15000))}}},
       async ai1(body){body={pid:window.NG_PID||"",...body};const {data:{session}}=await need().auth.getSession();if(!session)throw Object.assign(new Error("Phiên đăng nhập đã hết, anh đăng nhập lại"),{code:"auth"});let r;
-        try{r=await fetch(SB_URL+"/functions/v1/"+(body.action==="peek"?"ai-peek":body.action==="name_parts"?"ai-name":body.action==="dm_group"||body.action==="ct_merge"?"ai-dm":"ai"),{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,authorization:"Bearer "+session.access_token},body:JSON.stringify(body)})}catch(e){throw Object.assign(new Error("Mất kết nối tới máy chủ"),{code:"net"})}
+        try{r=await fetch(SB_URL+"/functions/v1/"+(body.action==="peek"?"ai-peek":body.action==="name_parts"?"ai-name":body.action==="dm_group"||body.action==="ct_merge"||body.action==="pq_set"?"ai-dm":"ai"),{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,authorization:"Bearer "+session.access_token},body:JSON.stringify(body)})}catch(e){throw Object.assign(new Error("Mất kết nối tới máy chủ"),{code:"net"})}
         let j={};try{j=await r.json()}catch(e){}if(r.ok)return j;if(!j.error&&[502,503,504,546].includes(r.status))j.error="timeout";
         throw Object.assign(new Error({timeout:"Claude trả lời quá lâu, máy chủ đã dừng · anh tải lại file này",chua_ket_noi:"Chưa có khoá Claude · Tổng giám đốc dán khoá ở Quản trị → Kết nối AI",sai_khoa:"Khoá Claude không đúng hoặc đã bị thu hồi · kiểm tra lại ở Quản trị → Kết nối AI",het_luot:"Claude báo vượt giới hạn số lượt mỗi phút · đợi 1 phút rồi thử lại",het_tien:"Tài khoản Claude hết tiền · nạp thêm ở platform.claude.com (Billing)",tu_choi:"Claude từ chối xử lý nội dung này",qua_dai:"File quá dài, Claude chưa đọc hết · anh tách file nhỏ hơn",auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",qua_tai:"Máy chủ Claude đang bận · anh thử lại sau ít phút",ai_error:"Claude đang lỗi, anh thử lại sau ít phút"}[j.error]||"Máy chủ đang lỗi"),{code:j.error||"server"})},
       async geocode(q){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("auth");
@@ -4566,7 +4573,7 @@ const LOGIN_DOMAIN="namgiang-ec.pages.dev";
 const genPw=()=>{const c="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=crypto.getRandomValues(new Uint32Array(10));return [...a].map(x=>c[x%c.length]).join("")};
 /* ---------- Đo lường AI: đọc bảng ai_usage, gom theo tác vụ, mẫu, ngày ---------- */
 let aiDays=30;
-const AIJOB={contract:"Đọc hợp đồng",ct_merge:"Gộp công tác cùng loại",extract:"Đọc báo giá",match_lines:"Ghép báo giá với BOQ",match:"Ghép báo giá thầu phụ",classify:"Gợi ý thư mục khi tải file",chat:"Trợ lý chat",ping:"Kiểm tra kết nối khoá",digest:"Tóm tắt tài liệu vào kho kiến thức",kb_batch:"Tóm tắt tài liệu vào kho (chạy nền)",ocr:"Đọc chữ file scan (OCR)",name_parts:"Gợi ý tên phần giao",dm_group:"Xếp nhóm đầu mục công việc",peek:"Đọc nhanh, đổi tên báo giá khi tải lên",claim:"Đọc hồ sơ đề nghị thanh toán"};
+const AIJOB={contract:"Đọc hợp đồng",ct_merge:"Gộp công tác cùng loại",pq_set:"Dặn AI phân quyền",extract:"Đọc báo giá",match_lines:"Ghép báo giá với BOQ",match:"Ghép báo giá thầu phụ",classify:"Gợi ý thư mục khi tải file",chat:"Trợ lý chat",ping:"Kiểm tra kết nối khoá",digest:"Tóm tắt tài liệu vào kho kiến thức",kb_batch:"Tóm tắt tài liệu vào kho (chạy nền)",ocr:"Đọc chữ file scan (OCR)",name_parts:"Gợi ý tên phần giao",dm_group:"Xếp nhóm đầu mục công việc",peek:"Đọc nhanh, đổi tên báo giá khi tải lên",claim:"Đọc hồ sơ đề nghị thanh toán"};
 /* Mẫu Claude chọn được cho từng tác vụ (giá so với Haiku 5.5 theo bảng giá niêm yết) */
 const AIMOD=[["claude-haiku-5-5","Haiku 5.5","nhanh, rẻ nhất"],["claude-sonnet-5-5","Sonnet 5.5","giá ≈ 20× Haiku"],["claude-opus-5-5","Opus 5.5","giỏi nhất, giá ≈ 40× Haiku"]],aiMl=m=>{const x=AIMOD.find(y=>y[0]===m);return x?x[1]:String(m||"").replace(/^claude-/,"")};
 /* Giá tham khảo USD / 1 triệu token (vào, ra) theo dòng mẫu, chỉ để ước tính; khoá miễn phí thực tế chưa mất tiền */
@@ -5338,7 +5345,7 @@ document.addEventListener("change",async e=>{const t=e.target;if(!document.getEl
 setInterval(()=>{const c=document.getElementById("atclock");if(c)c.textContent=atHm(new Date())},15000);
 addEventListener("hashchange",()=>{if(!/^#cham-cong/.test(location.hash))atCamOff()});
 
-var PQA={P:[],MA:[],rst:0,msg:""};const PQL=["Ẩn","Xem","Sửa"];
+var PQA={P:[],MA:[],rst:0,msg:"",ai:{t:"",img:[],busy:0,err:"",res:null,sel:null}};const PQL=["Ẩn","Xem","Sửa"];
 async function pqAdmLoad(){const box=document.getElementById("adm");if(!box)return;
   try{await pqLoad();const A=NGB.admin,[P,MA]=await Promise.all([A.people(),A.allMembers()]);PQA.P=P||[];PQA.MA=MA||[];pqAdmDraw()}
   catch(e){box.innerHTML=`<section class="card span3" style="color:#C0141B;font-size:15px">Không tải được: ${esc(e.message)}</section>`}}
@@ -5363,7 +5370,7 @@ function pqAdmDraw(){const box=document.getElementById("adm");if(!box)return;con
     ms.forEach(m=>{const pj=DB.projects.find(p=>p.id===m.project_id);pr.push([pqNm(x),prName(m.role),pj?pj.code:m.project_id,...pqDo(m.role)])});
     if(!cr&&!ms.length)pr.push([pqNm(x),"Chưa có vai trò","-","-","Chỉ Tài khoản của tôi"])});
   const t2=card("Ai được làm gì","Theo từng tài khoản · đổi chức danh, phân dự án ở tab Tài khoản & vai trò",`<div class="tw"><table class="t pqp"><thead><tr><th>Người</th><th>Chức danh</th><th>Dự án</th><th>Được sửa</th><th>Chỉ xem</th></tr></thead><tbody>${pr.map(r=>`<tr><td><b>${esc(r[0])}</b></td><td>${esc(r[1])}</td><td class="tc">${esc(r[2])}</td><td>${r[5]?"<b>"+esc(r[3])+"</b>":esc(r[3])}</td><td>${esc(r[4])}</td></tr>`).join("")}</tbody></table></div>`,"span3");
-  box.innerHTML=t1+t2}
+  box.innerHTML=pqAiCard()+t1+t2}
 document.addEventListener("change",async e=>{const b=e.target.closest&&e.target.closest("select[data-pqr]");if(!b)return;
     if(!(window.NGApp&&NGApp.board)||NGApp.as){NGB.warn("Chỉ Admin, Tổng giám đốc được đổi phân quyền");pqAdmDraw();return}
     const r=b.dataset.pqr,a=b.dataset.pqa,v=+b.value,d=pqDef(r,a),m=PQ.m[r]=PQ.m[r]||{},old=m[a];if(v===pqLv(r,a))return;if(v===d)delete m[a];else m[a]=v;PQA.msg="Đang lưu…";pqAdmDraw();
@@ -5373,6 +5380,45 @@ document.addEventListener("change",async e=>{const b=e.target.closest&&e.target.
 document.addEventListener("click",async e=>{
   if(e.target.closest("[data-pqrst]")){if(!PQA.rst){PQA.rst=1;pqAdmDraw();clearTimeout(PQA.t);PQA.t=setTimeout(()=>{PQA.rst=0;pqAdmDraw()},5000);return}
     PQA.rst=0;try{const {error}=await NGB.sb().from("role_perms").delete().neq("role","");if(error)throw error;PQ.m={};PQA.msg="Đã khôi phục quyền mặc định"}catch(er){NGB.warn("Chưa khôi phục được: "+er.message)}pqAdmDraw()}});
+
+/* Dặn AI phân quyền (anh Chung 12/11/2026): gõ hoặc dán ảnh có ghi chú → AI đề xuất thay đổi bảng quyền → anh tick, bấm Áp dụng mới lưu */
+const pqArea=a=>{const [t,k]=a.split(":");return((t==="t"?PQTOP:t==="c"?PQC:BSHEETS).find(x=>x[0]===k)||[0,k])[1]};
+const pqRole=r=>(PQR.find(x=>x[0]===r)||[0,r])[1];
+const pqAreas=()=>PQTOP.map(([k,n])=>["t:"+k,n,"Màn hình chung"]).concat(PQC.map(([k,n])=>["c:"+k,n,"Chấm công"])).concat(BSHEETS.map(([k,n])=>["p:"+k,n,"Trong dự án"]));
+function pqAiCard(){const A=PQA.ai,R=A.res;
+  const imgs=A.img.map((m,i)=>`<span class="pqim"><img src="data:${m.media_type};base64,${m.data}" alt="Ảnh ${i+1}"><button type="button" class="xb" data-pqimx="${i}" aria-label="Bỏ ảnh">×</button></span>`).join("");
+  const res=R?(R.ch.length?`<div class="tw"><table class="t pqai"><colgroup><col style="width:44px"><col style="width:18%"><col style="width:24%"><col style="width:10%"><col style="width:10%"><col></colgroup><thead><tr><th><input type="checkbox" data-pqaiall${A.sel.size===R.ch.length?" checked":""} aria-label="Chọn tất cả"></th><th>Chức danh</th><th>Màn hình / tab</th><th>Hiện tại</th><th>Đề xuất</th><th>Lý do</th></tr></thead><tbody>${R.ch.map((c,i)=>`<tr><td class="tc"><input type="checkbox" data-pqaic="${i}"${A.sel.has(i)?" checked":""} aria-label="Chọn"></td><td><b>${esc(pqRole(c.role))}</b></td><td>${esc(pqArea(c.area))}</td><td class="tc"><span class="pqlv l${pqLv(c.role,c.area)}">${PQL[pqLv(c.role,c.area)]}</span></td><td class="tc"><span class="pqlv l${c.lvl}">${PQL[c.lvl]}</span></td><td class="sub">${esc(c.why||"")}</td></tr>`).join("")}</tbody></table></div>
+    <div class="nhact">${R.note?`<span class="sub" style="margin-right:auto">${esc(R.note)}</span>`:""}<button type="button" class="back sm" data-pqaix>Bỏ đề xuất</button><button type="button" class="pill" data-pqaiok style="${sv("rev")}"${A.sel.size?"":" disabled"}><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>Áp dụng ${A.sel.size} thay đổi</button></div>`
+    :`<div class="sub">AI thấy bảng quyền hiện tại đã đúng như anh dặn, không cần đổi.${R.note?" "+esc(R.note):""}</div>`):"";
+  return card("Dặn AI phân quyền",`Gõ như dặn người, hoặc dán (Ctrl V) / kéo ảnh chụp bảng quyền có khoanh, ghi chú vào khung · AI đề xuất thay đổi, anh xem lại rồi bấm Áp dụng mới lưu`,
+   `<div class="pqaiin" data-pqdrop><textarea class="fi" id="pqaitx" rows="3" placeholder="Ví dụ: Chỉ huy trưởng được sửa Phân ca và xem Bảng công; Kế toán vật tư ẩn Bản tin; QS dự án chỉ xem Claim chủ đầu tư…">${esc(A.t)}</textarea>
+    <div class="pqaibar">${imgs}<label class="back sm pqup"><input type="file" id="pqaif" accept="image/*" multiple hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg> Thêm ảnh</label><span class="sub">${A.img.length?A.img.length+"/4 ảnh":"Tối đa 4 ảnh"}</span>
+    <button type="button" class="pill" data-pqaigo style="${sv("rose")};margin-left:auto"${A.busy?" disabled":""}><span class="dot">${ic("xai",2)}</span>${A.busy?"AI đang đọc…":"AI đề xuất"}</button></div></div>
+    ${A.err?`<div class="sub" style="color:#C0141B">${esc(A.err)}</div>`:""}${res}`,"span3")}
+async function pqImg(f){if(!f||!/^image\//.test(f.type)||PQA.ai.img.length>=4)return;const url=URL.createObjectURL(f);try{const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=url});
+  const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+  PQA.ai.img.push({media_type:"image/jpeg",data:c.toDataURL("image/jpeg",.85).split(",")[1]})}finally{URL.revokeObjectURL(url)}}
+async function pqAiGo(){const A=PQA.ai,tx=document.getElementById("pqaitx");if(tx)A.t=tx.value;if(!A.t.trim()&&!A.img.length){A.err="Anh gõ lời dặn hoặc thêm ảnh trước";pqAdmDraw();return}
+  A.busy=1;A.err="";A.res=null;pqAdmDraw();
+  try{const areas=pqAreas(),cur={};PQR.forEach(([r])=>{cur[r]={};areas.forEach(([a])=>cur[r][a]=pqLv(r,a))});
+    const r=await NGB.ai({action:"pq_set",text:A.t,images:A.img,roles:PQR,areas,cur});
+    const ch=(r.changes||[]).filter(c=>PQR.some(x=>x[0]===c.role)&&areas.some(x=>x[0]===c.area)&&[0,1,2].includes(+c.lvl)&&+c.lvl!==pqLv(c.role,c.area)).map(c=>({...c,lvl:+c.lvl}));
+    A.res={ch,note:r.note||""};A.sel=new Set(ch.map((_,i)=>i))}catch(e){A.err="AI chưa đọc được: "+(e.message||e)}A.busy=0;pqAdmDraw()}
+async function pqAiApply(){const A=PQA.ai;if(!A.res)return;if(!(window.NGApp&&NGApp.board)||NGApp.as){NGB.warn("Chỉ Admin, Tổng giám đốc được đổi phân quyền");return}
+  const L=A.res.ch.filter((_,i)=>A.sel.has(i)),now=new Date().toISOString(),up=[],del=[];L.forEach(c=>{const d=pqDef(c.role,c.area);if(c.lvl===d)del.push(c);else up.push({role:c.role,area:c.area,lvl:c.lvl,at:now})});
+  try{const q=()=>NGB.sb().from("role_perms");if(up.length){const {error}=await q().upsert(up);if(error)throw error}for(const c of del){const {error}=await q().delete().eq("role",c.role).eq("area",c.area);if(error)throw error}
+    L.forEach(c=>{const m=PQ.m[c.role]=PQ.m[c.role]||{};if(c.lvl===pqDef(c.role,c.area))delete m[c.area];else m[c.area]=c.lvl});PQA.msg=`Đã áp dụng ${L.length} thay đổi theo lời dặn · áp dụng khi người đó tải lại trang`;A.res=null;A.t="";A.img=[]}
+  catch(e){NGB.warn("Chưa lưu được: "+(e.message||e));await pqLoad()}pqAdmDraw()}
+document.addEventListener("click",e=>{const t=e.target;if(!t.closest||!t.closest("#adm"))return;let b;
+  if(t.closest("[data-pqaigo]")){pqAiGo();return}if(t.closest("[data-pqaiok]")){pqAiApply();return}if(t.closest("[data-pqaix]")){PQA.ai.res=null;pqAdmDraw();return}
+  if(b=t.closest("[data-pqimx]")){const tx=document.getElementById("pqaitx");if(tx)PQA.ai.t=tx.value;PQA.ai.img.splice(+b.dataset.pqimx,1);pqAdmDraw();return}});
+document.addEventListener("change",async e=>{const t=e.target;if(!t.closest||!t.closest("#adm"))return;const A=PQA.ai;
+  if(t.id==="pqaif"){const tx=document.getElementById("pqaitx");if(tx)A.t=tx.value;for(const f of t.files)await pqImg(f);pqAdmDraw();return}
+  if(t.matches("[data-pqaic]")){const i=+t.dataset.pqaic;t.checked?A.sel.add(i):A.sel.delete(i);pqAdmDraw();return}
+  if(t.matches("[data-pqaiall]")){A.sel=t.checked?new Set(A.res.ch.map((_,i)=>i)):new Set();pqAdmDraw()}});
+document.addEventListener("paste",async e=>{if(!document.getElementById("pqaitx")||!e.target.closest||!e.target.closest("#adm .pqaiin"))return;const F=[...(e.clipboardData||{}).files||[]].filter(f=>/^image\//.test(f.type));if(!F.length)return;e.preventDefault();const tx=document.getElementById("pqaitx");if(tx)PQA.ai.t=tx.value;for(const f of F)await pqImg(f);pqAdmDraw()});
+document.addEventListener("dragover",e=>{if(e.target.closest&&e.target.closest("[data-pqdrop]"))e.preventDefault()});
+document.addEventListener("drop",async e=>{const z=e.target.closest&&e.target.closest("[data-pqdrop]");if(!z)return;e.preventDefault();const tx=document.getElementById("pqaitx");if(tx)PQA.ai.t=tx.value;for(const f of e.dataTransfer.files)await pqImg(f);pqAdmDraw()});
 /* ===== Điều hướng mới (anh Chung chốt 08/11/2026, bản B): Trang chủ (Việc của tôi + ứng dụng + dự án) · cột trái gom nhánh phụ theo nhóm việc, ghim ★ · ô Đi tới (Ctrl K) · thanh dưới trên điện thoại ===== */
 /* Biểu tượng theo ngành xây dựng */
 var NGI={

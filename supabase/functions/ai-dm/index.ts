@@ -2,6 +2,7 @@
 // Xếp công tác BOQ vào đầu mục công việc (anh Chung 07/11/2026): Claude đọc danh sách công tác, đầu mục hiện có, các lần anh đã
 // kéo thả (quy tắc) và lời dặn, trả về các công tác nên chuyển đầu mục. Web chỉ gợi ý, anh duyệt mới lưu. Người gọi phải đăng nhập.
 // action "ct_merge" (09/11/2026): tìm các công tác cùng loại nhưng khác tên / đơn vị để gộp; web tự tính hệ số và so đơn giá, anh duyệt mới lưu.
+// action "pq_set" (12/11/2026): đọc lời dặn và ảnh chụp bảng quyền có ghi chú, trả về các ô quyền cần đổi; web cho anh tick rồi mới lưu.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import Anthropic from "npm:@anthropic-ai/sdk@1.5.0";
 
@@ -38,6 +39,21 @@ const SCHEMA_MG = {
   additionalProperties: false
 };
 
+const SYS_PQ = `Bạn là trợ lý quản trị hệ thống của tổng thầu xây dựng Nam Giang. Nhiệm vụ: đọc lời dặn (và ảnh chụp bảng phân quyền có khoanh, ghi chú nếu có) của anh Chung, đổi thành danh sách THAY ĐỔI quyền.
+Mức quyền: 0 = Ẩn (không thấy), 1 = Xem (thấy số liệu, không sửa), 2 = Sửa (được nhập, sửa).
+"chuc_danh" là danh sách mã chức danh và tên; "khu_vuc" là danh sách mã màn hình/tab, tên và nhóm; "hien_tai" là mức đang dùng theo [chức danh][khu vực].
+QUY TẮC:
+- Chỉ dùng đúng mã chức danh và mã khu vực có trong danh sách; tên trong lời dặn/ảnh có thể viết tắt hoặc khác chữ, hãy ghép với mục gần nghĩa nhất.
+- Chỉ trả các ô CẦN ĐỔI so với "hien_tai". Lời dặn dạng "chỉ X được…" nghĩa là các chức danh khác về mức thấp hơn nếu đang cao hơn.
+- Ảnh: đọc chữ ghi chú, mũi tên, khoanh đỏ để hiểu ý; ô bị gạch hoặc ghi "ẩn" là mức 0.
+- Không chắc thì không đổi, ghi điều chưa rõ vào "ghi_chu" (tối đa 40 chữ). "ly_do" tối đa 12 chữ.`;
+const SCHEMA_PQ = {
+  type: "object",
+  properties: { thay_doi: { type: "array", items: { type: "object", properties: { chuc_danh: { type: "string" }, khu_vuc: { type: "string" }, muc: { type: "integer", enum: [0, 1, 2] }, ly_do: { type: "string" } }, required: ["chuc_danh", "khu_vuc", "muc", "ly_do"], additionalProperties: false } }, ghi_chu: { type: "string" } },
+  required: ["thay_doi", "ghi_chu"],
+  additionalProperties: false
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return json({ error: "bad_request" }, 405);
@@ -52,9 +68,31 @@ Deno.serve(async (req) => {
   const get = (n: string) => (S || []).find((x: any) => x.name === n)?.value || "";
   const key = Deno.env.get("ANTHROPIC_API_KEY") || get("claude");
   if (!key) return json({ error: "chua_ket_noi" }, 503);
-  const MG = b.action === "ct_merge", ACT = MG ? "ct_merge" : "dm_group";
+  const MG = b.action === "ct_merge", PQ = b.action === "pq_set", ACT = PQ ? "pq_set" : MG ? "ct_merge" : "dm_group";
   const model = pickModel(ACT, get("claude_models"), get("claude_model")), t0 = Date.now();
   const s = (v: any, n: number) => String(v ?? "").slice(0, n);
+  if (PQ) {
+    const roles = (Array.isArray(b.roles) ? b.roles : []).slice(0, 30).map((x: any) => ({ ma: s(x?.[0], 30), ten: s(x?.[1], 80) }));
+    const areas = (Array.isArray(b.areas) ? b.areas : []).slice(0, 120).map((x: any) => ({ ma: s(x?.[0], 40), ten: s(x?.[1], 80), nhom: s(x?.[2], 40) }));
+    const R = new Set(roles.map((x: any) => x.ma)), A = new Set(areas.map((x: any) => x.ma));
+    const imgs = (Array.isArray(b.images) ? b.images : []).slice(0, 4).filter((m: any) => /^image\/(jpeg|png|webp|gif)$/.test(m?.media_type) && typeof m?.data === "string" && m.data.length < 3000000);
+    const content: any[] = imgs.map((m: any) => ({ type: "image", source: { type: "base64", media_type: m.media_type, data: m.data } }));
+    content.push({ type: "text", text: JSON.stringify({ loi_dan: s(b.text, 4000), chuc_danh: roles, khu_vuc: areas, hien_tai: b.cur && typeof b.cur === "object" ? b.cur : {} }) });
+    const r: any = { model, max_tokens: 16000, system: SYS_PQ, messages: [{ role: "user", content }], output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA_PQ } } };
+    if (model !== "claude-haiku-5-5") { r.betas = ["server-side-fallback-2026-07-01"]; r.fallbacks = "default"; }
+    let out: any = null, err = "", used = model, tin = 0, tout = 0;
+    try {
+      const msg: any = await new Anthropic({ apiKey: key, timeout: 140000, maxRetries: 1 }).beta.messages.stream(r).finalMessage();
+      const u = msg.usage || {}; used = msg.model || model; tin = (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0); tout = u.output_tokens || 0;
+      out = JSON.parse((msg.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").trim());
+    } catch (e) {
+      err = e instanceof Anthropic.AuthenticationError ? "sai_khoa" : e instanceof Anthropic.RateLimitError ? "het_luot" : e instanceof Anthropic.APIError && (e.status || 0) >= 500 ? "qua_tai" : "ai_error";
+      console.error("pq_set", err, String((e as Error)?.message || e).slice(0, 200));
+    }
+    try { await admin.from("ai_usage").insert({ user_id: who.user.id, provider: "claude", action: "pq_set", model: used, in_tok: tin, out_tok: tout, ms: Date.now() - t0, ok: !err, err: err || null, project_id: null }); } catch (_) { /* bỏ qua */ }
+    if (err || !out) return json({ error: err || "ai_error" }, 502);
+    return json({ changes: (out.thay_doi || []).filter((c: any) => R.has(String(c.chuc_danh)) && A.has(String(c.khu_vuc)) && [0, 1, 2].includes(Number(c.muc))).map((c: any) => ({ role: String(c.chuc_danh), area: String(c.khu_vuc), lvl: Number(c.muc), why: s(c.ly_do, 120) })), note: s(out.ghi_chu, 300), model: used });
+  }
   if (MG) {
     const it = (Array.isArray(b.items) ? b.items : []).slice(0, 900).map((x: any) => ({ k: s(x.k, 300), ten: s(x.name, 200), quy_cach: s(x.spec, 120), dvt: s(x.unit, 20), dg_vt: Number(x.uv) || 0, dg_nc: Number(x.un) || 0, dau_muc: s(x.dm, 120) }));
     if (it.length < 2) return json({ groups: [] });
