@@ -1965,6 +1965,13 @@ button i.xi{background:none;width:1em;height:1em;margin-right:.3em;color:inherit
 /* Dòng nhóm bấm được cả dòng (anh Chung 11/11/2026) */
 tr:has(>td button.mglx,>td button.olb,>td button.gtg[data-dcx],>td button.gtg[data-gc],>td button[aria-expanded]){cursor:pointer}
 tr:has(>td button.mglx,>td button.olb,>td button.gtg[data-dcx],>td button[aria-expanded]):hover>td{background-image:linear-gradient(rgba(10,36,134,.035),rgba(10,36,134,.035))}
+/* Ô gợi ý có tìm kiếm (thay datalist) */
+.dlbox{position:fixed;z-index:9999;background:#fff;border-radius:16px;box-shadow:0 18px 40px -12px rgba(20,30,90,.35),0 0 0 1px #DDE2EE;padding:6px;overflow:auto;font:400 15px var(--f)}
+.dlhd{position:sticky;top:-6px;background:#fff;font-size:12px;color:var(--muted);padding:6px 10px 6px;margin:-6px -6px 4px;border-bottom:1px solid #EEF0F6;z-index:1}
+.dlit{display:flex;flex-direction:column;gap:1px;padding:7px 10px;border-radius:10px;cursor:pointer;color:#16171C}.dlit:hover,.dlit.on{background:#EEF1FA}
+.dlit b{color:#0A2486;font-weight:700;background:#FFF1C2;border-radius:3px}.dlit small{font-size:12px;color:var(--muted)}
+.dlno{padding:10px;font-size:12px;color:var(--muted)}
+input.dlin{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B7090' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px!important}
 </style>
 
 <script>/* Tăng tốc (09/11/2026): định dạng số dùng lại bộ Intl.NumberFormat thay vì tạo mới mỗi lần gọi toLocaleString */
@@ -2287,6 +2294,33 @@ NGB.ai=b=>NGB.drive.ai(b);
 /* Biểu tượng sửa (anh Chung chốt 08/11/2026): bút có gạch chân */
 const PENI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h8"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>';
 
+
+/* Ô gợi ý có tìm kiếm thay cho danh sách thả xuống mặc định của trình duyệt (datalist), áp toàn web (anh Chung 12/11/2026):
+   gõ chữ không dấu vẫn tìm được, tô đậm chữ khớp, phím lên/xuống/Enter/Esc, chọn xong báo cho ô như khi gõ tay */
+(function(){const nz=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/g,"d");
+  const H=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+  let box=null,inp=null,L=[],act=-1;
+  const strip=root=>{(root.matches&&root.matches("input[list]")?[root]:[]).concat([...(root.querySelectorAll?root.querySelectorAll("input[list]"):[])]).forEach(i=>{i.dataset.dl=i.getAttribute("list");i.removeAttribute("list");i.setAttribute("autocomplete","off");i.classList.add("dlin")})};
+  const opts=i=>{const d=document.getElementById(i.dataset.dl);return d?[...d.options].map(o=>({v:o.value,l:(o.label&&o.label!==o.value)?o.label:(o.textContent||"").trim()!==o.value?(o.textContent||"").trim():""})):[]};
+  const hl=(t,W)=>{let h=H(t);if(!W.length)return h;const n=nz(t),M=[];W.forEach(w=>{let k=n.indexOf(w);while(k>=0){if(k===0||/[^a-z0-9]/.test(n[k-1]))M.push([k,k+w.length]);k=n.indexOf(w,k+1)}});if(!M.length)return h;M.sort((a,b)=>a[0]-b[0]);let o="",p=0;M.forEach(([a,b])=>{if(a<p)return;o+=H(t.slice(p,a))+"<b>"+H(t.slice(a,b))+"</b>";p=b});return o+H(t.slice(p))};
+  const close=()=>{if(box){box.remove();box=null}inp=null;L=[];act=-1};
+  const place=()=>{if(!box||!inp)return;const r=inp.getBoundingClientRect(),w=Math.max(r.width,380),below=innerHeight-r.bottom-12,up=below<220&&r.top>below;box.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+"px";box.style.width=w+"px";box.style.maxHeight=Math.min(340,(up?r.top:below)-8)+"px";if(up){box.style.top="";box.style.bottom=(innerHeight-r.top+6)+"px"}else{box.style.bottom="";box.style.top=(r.bottom+6)+"px"}};
+  const draw=()=>{if(!inp)return;const q=nz(inp.value).trim(),W=q.split(/\s+/).filter(Boolean),A=opts(inp);const ws=t=>nz(t).split(/[^a-z0-9.]+/).filter(Boolean),pre=o=>{const T=ws(o.v+" "+o.l);return W.every(w=>T.some(x=>x.startsWith(w)))};
+    let F=W.length?A.filter(pre):A;if(W.length&&!F.length)F=A.filter(o=>{const t=nz(o.v+" "+o.l);return W.every(w=>t.includes(w))});
+    if(W.length){const sc=o=>{const n=nz(o.v);return(n.startsWith(W[0])?0:1)*1000+o.v.length};F=F.slice().sort((a,b)=>sc(a)-sc(b))}L=F.slice(0,200);
+    if(!box){box=document.createElement("div");box.className="dlbox";box.setAttribute("role","listbox");document.body.appendChild(box);box.addEventListener("mousedown",e=>{e.preventDefault();const it=e.target.closest(".dlit");if(it)pick(+it.dataset.i)})}
+    if(act>=L.length)act=L.length-1;
+    box.innerHTML=`<div class="dlhd">${W.length?`${L.length>=200?"200+":L.length} kết quả cho "${H(inp.value.trim())}"`:`${A.length} gợi ý · gõ để tìm`}</div>`+(L.length?L.map((o,i)=>`<div class="dlit${i===act?" on":""}" data-i="${i}" role="option"><span>${hl(o.v,W)}</span>${o.l?`<small>${hl(o.l,W)}</small>`:""}</div>`).join(""):`<div class="dlno">Không có gợi ý khớp · cứ gõ tiếp để nhập tên mới</div>`);place()};
+  const pick=i=>{const o=L[i];if(!o||!inp)return;const el=inp;el.value=o.v;close();el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));el.focus()};
+  document.addEventListener("focusin",e=>{const i=e.target;if(i.matches&&i.matches("input[list]"))strip(i);if(i.matches&&i.matches("input.dlin")){inp=i;act=-1;draw()}});
+  document.addEventListener("pointerdown",e=>{const i=e.target;if(i.matches&&i.matches("input[list]"))strip(i)},true);
+  document.addEventListener("input",e=>{if(e.target===inp){act=-1;draw()}});
+  document.addEventListener("focusout",e=>{if(e.target===inp)setTimeout(()=>{if(document.activeElement!==inp)close()},120)});
+  document.addEventListener("keydown",e=>{if(!inp||e.target!==inp||!box)return;if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();act=Math.max(0,Math.min(L.length-1,act+(e.key==="ArrowDown"?1:-1)));draw();const a=box.querySelector(".dlit.on");a&&a.scrollIntoView({block:"nearest"})}
+    else if(e.key==="Enter"&&act>=0){e.preventDefault();e.stopPropagation();pick(act)}else if(e.key==="Escape"){e.preventDefault();e.stopImmediatePropagation();close()}},true);
+  addEventListener("scroll",e=>{if(box&&!(e.target&&e.target.closest&&e.target.closest(".dlbox")))place()},true);addEventListener("resize",place);
+  const go=()=>{strip(document.body);new MutationObserver(M=>M.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)strip(n)}))).observe(document.body,{childList:true,subtree:true})};
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go()})();
 /* Ký tự phông Arial không có (✓ ⇄ ＋ ✨ ★ ✎ ↶ ↷ ①–④ ⠿ và biểu tượng cảm xúc) tự đổi thành hình vẽ SVG cùng màu chữ, áp toàn app (anh Chung 10/11/2026); trừ ô nhập và tin nhắn Trò chuyện */
 (function(){const XSV='<svg class="xsv" viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';window.XSV=XSV;const P=d=>`<svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const G={"✓":P('<path d="M5 12.5l4.5 4.5L19 7"/>'),"⇄":P('<path d="M4 8h15M15 4l4 4-4 4M20 16H5M9 12l-4 4 4 4"/>'),"＋":P('<path d="M12 5v14M5 12h14"/>'),"✨":P('<path d="M12 3l1.8 4.7L18.5 9.5 13.8 11.3 12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" fill="currentColor" stroke="none"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" fill="currentColor" stroke="none"/>'),
