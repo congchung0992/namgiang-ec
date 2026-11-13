@@ -5581,10 +5581,11 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-ngdelp]");
   const p=DB.projects.find(x=>x.id===b.dataset.ngdelp);if(!p)return;
   if(!b.dataset.ok){b.dataset.ok=1;b.classList.add("ok");b.textContent="Xoá?";b.title="Bấm lần nữa để xoá hẳn";clearTimeout(b._t);b._t=setTimeout(()=>{delete b.dataset.ok;b.classList.remove("ok");b.textContent="✕"},4000);return}
   DB.projects=DB.projects.filter(x=>x!==p);if(cur&&cur.id===p.id){cur=null;location.hash="trang-chu"}persist();ngNote("Đã xoá dự án "+(p.code||"")+" · "+p.name);NGG.L=ngGoList();ngGoFill("")},true);
+/* Bản sao biểu tượng trên thanh trên đổi id gradient, tránh trùng id làm mất icon mục đang mở trong Mục trên điện thoại (anh Chung 13/11/2026) */
 function ngTab(){const o=document.getElementById("ngtab");if(o)o.remove();const P=document.getElementById("pills");if(!P)return;let m=P.querySelector(".ngmuc");if(!ngHasSide()){if(m)m.remove();return}
   const a=[...document.querySelectorAll(".ngside .ngit")].find(x=>x.getAttribute("aria-current")==="true"&&!x.closest("[hidden]")),lab=a?a.textContent.replace(/★/g,"").trim():"Chọn mục";
   if(!m){m=document.createElement("button");m.type="button";m.className="ngtb ngmuc";m.setAttribute("data-ngboard","");m.setAttribute("aria-label","Chọn mục");P.appendChild(m)}
-  m.innerHTML=`<span>${a&&a.querySelector(".ngii")?a.querySelector(".ngii").innerHTML:icc("apps",2)}</span><b>${esc(lab)}</b><i class="ngcaret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></i>`}
+  m.innerHTML=`<span>${a&&a.querySelector(".ngii")?a.querySelector(".ngii").innerHTML.replace(/(id="|url\(#)([^")]+)/g,"$1$2_m"):icc("apps",2)}</span><b>${esc(lab)}</b><i class="ngcaret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></i>`}
 /* Phương án D (anh Chung 09/11/2026): mã + tên dự án lên thanh trên cùng, ⓘ mở địa chỉ, chủ đầu tư, hồ sơ và giải thích màn; ô bật/tắt chung data-pvo */
 function ngPh(){const P=document.getElementById("pills");if(!P)return;let m=P.querySelector(".ngph");const h=view.hidden?null:view.querySelector(".phd .pht h1");document.body.classList.toggle("phtop",!!h);if(!h){if(m)m.remove();return}
   const w=h.closest(".phd"),c=w.querySelector(".pht .code"),x=w.querySelector(".phx"),ro=w.querySelector(".pqbd");
