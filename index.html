@@ -2187,7 +2187,7 @@ window.NGB=(function(){
     /* Claim chủ đầu tư (bảng cdt_claims): chưa có bảng thì _cl = null để màn Claim báo chưa bật */
     let CL=null;try{const r=await c.from("cdt_claims").select("*");if(r.error)throw r.error;CL=r.data||[]}catch(e){}projects.forEach(p=>{p._cl=CL?CL.filter(x=>x.project_id===p.id):null});
     const dec={};ok(D).forEach(x=>dec[x.item_id]={s:x.status,at:x.at});savedDec=JSON.parse(J(dec));
-    const mine=ok(await c.from("project_members").select("project_id,role").eq("user_id",session.user.id));const cr=((ok(me)||{}).role)||"";projects.forEach(p=>{const r=mine.find(x=>x.project_id===p.id);if(r)p._role=r.role;else if(["gd","kt","ktvt","hcns"].includes(cr))p._role=cr});
+    const mine=ok(await c.from("project_members").select("project_id,role").eq("user_id",session.user.id));const cr=((ok(me)||{}).role)||"";projects.forEach(p=>{const r=mine.find(x=>x.project_id===p.id);if(r)p._role=r.role;else if(["gd","qs","kt","ktvt","hcns"].includes(cr))p._role=cr});
     return{projects,dec,uid:session.user.id,isBoard:!!(ok(me)||{}).is_board,role:cr,name:((ok(me)||{}).full_name)||"",gender:((ok(me)||{}).gender)||"",email:((ok(me)||{}).email)||session.user.email||""}}
   /* Ghi có kiểm tra phiên bản. Nếu máy khác vừa lưu (phiên bản lệch): lấy bản trên máy chủ, giữ nguyên phần máy khác sửa,
      ghi đè lại đúng các mục máy này vừa sửa rồi lưu tiếp; số mới của máy khác cũng được nạp vào dự án đang mở */
@@ -4555,9 +4555,9 @@ const PROLES=[["cht","Chỉ huy trưởng"],["qs","QS dự án"]],prName=r=>(PRO
 /* Danh sách người hợp vai trò: CHT, QS dự án chọn người chưa có vai trò công ty (người đã có vai trò công ty xếp sau), bỏ người đã phân ở dự án này */
 function admUOpts(P,MA,pid,role,nm){nm=nm||(id=>{const x=P.find(y=>y.id===id);return x?(x.full_name?x.full_name+" · ":"")+String(x.email||"").split("@")[0]:id});const used=new Set(MA.filter(m=>m.project_id===pid).map(m=>m.user_id)),L=P.filter(x=>!used.has(x.id)),cr=x=>x.role||(x.is_board?"tgd":"");
   const a=L.filter(x=>!cr(x)),b=L.filter(x=>cr(x));return(a.length?`<optgroup label="Chưa có vai trò công ty">${a.map(x=>`<option value="${esc(x.id)}">${esc(nm(x.id))}</option>`).join("")}</optgroup>`:"")+(b.length?`<optgroup label="Đã có vai trò công ty">${b.map(x=>`<option value="${esc(x.id)}">${esc(nm(x.id))} · ${esc(crName(cr(x)))}</option>`).join("")}</optgroup>`:"")||`<option value="">Không còn ai để phân</option>`}
-const CROLES=[["admin","Admin (quản trị hệ thống)"],["tgd","Tổng giám đốc"],["gd","GDDA - QS tổng"],["kt","Kế toán tổng hợp"],["ktvt","Kế toán vật tư"],["hcns","Hành chính nhân sự"],["","Chỉ huy trưởng (phân theo công trường)"]],crName=r=>(CROLES.find(x=>x[0]===(r||""))||[0,r])[1];
+const CROLES=[["admin","Admin (quản trị hệ thống)"],["tgd","Tổng giám đốc"],["gd","GDDA - QS tổng"],["qs","QS dự án (mọi dự án)"],["kt","Kế toán tổng hợp"],["ktvt","Kế toán vật tư"],["hcns","Hành chính nhân sự"],["","Chỉ huy trưởng (phân theo công trường)"]],crName=r=>(CROLES.find(x=>x[0]===(r||""))||[0,r])[1];
 /* Thứ tự vai trò để xếp danh sách (anh Chung 07/11/2026) */
-const CRORD=["admin","tgd","gd","kt","ktvt","hcns","qs",""],crOrd=x=>{const r=x.role||(x.is_board?"tgd":"");const i=CRORD.indexOf(r);return i<0?9:i};
+const CRORD=["admin","tgd","gd","qs","kt","ktvt","hcns",""],crOrd=x=>{const r=x.role||(x.is_board?"tgd":"");const i=CRORD.indexOf(r);return i<0?9:i};
 const crSel=(v,attr,lim)=>`<select class="fi sel rsel" data-rc="${v||"cht"}" ${attr} aria-label="Vai trò">${CROLES.filter(r=>!lim||!["admin","tgd"].includes(r[0])).map(r=>`<option value="${r[0]}"${r[0]===(v||"")?" selected":""}>${r[1]}</option>`).join("")}</select>`;
 const roleSel=(v,attr)=>`<select class="fi sel" ${attr} aria-label="Vai trò">${ROLES.map(r=>`<option value="${r[0]}"${r[0]===v?" selected":""}>${r[1]}</option>`).join("")}</select>`;
 let admTab="tk";
@@ -5102,7 +5102,7 @@ document.addEventListener("change",e=>{if(e.target.classList&&e.target.classList
 var AT={tab:"cc",ld:0,cfg:{},sites:[],shifts:[],face:null,logs:[],ros:[],lv:[],ppl:new Map(),mine:null,flist:[],mon:"",wk:0,msg:"",ok:0,busy:"",geo:null,form:{kind:"phep",part:"",d1:"",d2:""},sel:null};
 const ATLV=[["phep","Nghỉ phép năm","#12A150","P"],["om","Nghỉ ốm","#0E9F9A","Ô"],["kl","Nghỉ không lương","#5B6170","KL"],["cd","Nghỉ chế độ (cưới, tang, thai sản…)","#8B5CF6","CĐ"],["muon","Đi muộn / về sớm","#F08A24",""],["ct","Công tác, làm ngoài địa điểm","#2D3CE6","CT"],["quen","Quên chấm công / giải trình","#C21FC9",""],["doica","Đổi ca","#0A2486",""]];
 const atLv=k=>ATLV.find(x=>x[0]===k)||[k,k,"#5B6170",""];
-const atRole=()=>{if(!window.NGApp)return"";if(["gd","kt","ktvt","hcns"].includes(NGApp.crole))return NGApp.crole;const R=DB.projects.map(p=>p._role);return R.includes("qs")?"qs":R.includes("cht")?"cht":""};
+const atRole=()=>{if(!window.NGApp)return"";if(["gd","qs","kt","ktvt","hcns"].includes(NGApp.crole))return NGApp.crole;const R=DB.projects.map(p=>p._role);return R.includes("qs")?"qs":R.includes("cht")?"cht":""};
 /* Mức quyền chấm công của người đang dùng (0 Ẩn · 1 Xem · 2 Sửa) theo bảng Phân quyền; Admin, Tổng giám đốc luôn toàn quyền */
 const atPq=k=>{if(!window.NGApp||NGApp.guest||NGApp.board||NGApp.crole==="admin"||NGApp.crole==="tgd")return 2;const r=atRole();if(!r)return k==="cc"||k==="don"?2:0;return pqLv(r,"c:"+k)};
 const atAdm=()=>window.NGApp&&!NGApp.as&&(NGApp.board||["hcns","gd","admin"].includes(NGApp.crole)||atPq("cd")===2);
@@ -5362,7 +5362,7 @@ async function pqAdmLoad(){const box=document.getElementById("adm");if(!box)retu
   try{await pqLoad();const A=NGB.admin,[P,MA]=await Promise.all([A.people(),A.allMembers()]);PQA.P=P||[];PQA.MA=MA||[];pqAdmDraw()}
   catch(e){box.innerHTML=`<section class="card span3" style="color:#C0141B;font-size:15px">Không tải được: ${esc(e.message)}</section>`}}
 const pqNm=x=>x.full_name||String(x.email||"").split("@")[0];
-function pqWho(r){const P=PQA.P,MA=PQA.MA;if(["gd","kt","ktvt","hcns"].includes(r))return P.filter(x=>x.role===r&&!x.is_board).map(pqNm);
+function pqWho(r){const P=PQA.P,MA=PQA.MA;if(["gd","qs","kt","ktvt","hcns"].includes(r))return P.filter(x=>x.role===r&&!x.is_board).map(pqNm);
   return[...new Set(MA.filter(m=>m.role===r).map(m=>{const x=P.find(y=>y.id===m.user_id);return x?pqNm(x):"?"}))]}
 function pqCell(r,a){const v=pqLv(r,a),d=pqDef(r,a),C=["#A9AEBB","#2D3CE6","#12A150"];return`<select class="pqc pqs l${v}${v!==d?" chg":""}" data-pqr="${r}" data-pqa="${a}" title="${PQL[v]}${v!==d?" · mặc định: "+PQL[d]:" · mặc định"}" aria-label="Quyền">${[0,1,2].map(k=>`<option value="${k}" data-c="${C[k]}"${k===v?" selected":""}>${PQL[k]}</option>`).join("")}</select>`}
 function pqDo(r){const t=v=>PQTOP.filter(([k])=>pqLv(r,"t:"+k)===v).map(x=>x[1]).concat(PQC.filter(([k])=>pqLv(r,"c:"+k)===v).map(x=>x[1])).concat(BSHEETS.filter(([k])=>pqLv(r,"p:"+k)===v).map(x=>x[1])).join(", ")||"-";return[t(2),t(1)]}
@@ -5378,7 +5378,7 @@ function pqAdmDraw(){const box=document.getElementById("adm");if(!box)return;con
    <div class="sub" style="margin-top:10px">Chấm công: Chỉ huy trưởng xem, xếp ca cho người ở công trường được phân; chức danh khác được cho Xem/Sửa Bảng công, Phân ca thì thấy cả công ty; Sửa Cài đặt chấm công là quyền quản trị chấm công. Chỉ huy trưởng, QS dự án áp theo dự án được phân; các chức danh khác áp cho mọi dự án. Chức danh không xem giá vốn (Chỉ huy trưởng, Kế toán vật tư, Hành chính nhân sự) chỉ thấy các tab công trường; cho Xem một tab có giá vốn thì máy chủ mở cho đọc giá vốn của dự án.</div>`,"span3");
   const pr=[];PQA.P.forEach(x=>{const cr=x.role||(x.is_board?"tgd":""),ms=PQA.MA.filter(m=>m.user_id===x.id);
     if(x.is_board||cr==="admin"||cr==="tgd"){pr.push([pqNm(x),crName(cr),"Mọi dự án","Toàn quyền · cài đặt phân quyền","-",1]);return}
-    if(["gd","kt","ktvt","hcns"].includes(cr))pr.push([pqNm(x),crName(cr),"Mọi dự án",...pqDo(cr)]);
+    if(["gd","qs","kt","ktvt","hcns"].includes(cr))pr.push([pqNm(x),crName(cr),"Mọi dự án",...pqDo(cr)]);
     ms.forEach(m=>{const pj=DB.projects.find(p=>p.id===m.project_id);pr.push([pqNm(x),prName(m.role),pj?pj.code:m.project_id,...pqDo(m.role)])});
     if(!cr&&!ms.length)pr.push([pqNm(x),"Chưa có vai trò","-","-","Chỉ Tài khoản của tôi"])});
   const t2=card("Ai được làm gì","Theo từng tài khoản · đổi chức danh, phân dự án ở tab Tài khoản & vai trò",`<div class="tw"><table class="t pqp"><thead><tr><th>Người</th><th>Chức danh</th><th>Dự án</th><th>Được sửa</th><th>Chỉ xem</th></tr></thead><tbody>${pr.map(r=>`<tr><td><b>${esc(r[0])}</b></td><td>${esc(r[1])}</td><td class="tc">${esc(r[2])}</td><td>${r[5]?"<b>"+esc(r[3])+"</b>":esc(r[3])}</td><td>${esc(r[4])}</td></tr>`).join("")}</tbody></table></div>`,"span3");
@@ -7120,7 +7120,7 @@ document.addEventListener("toggle",e=>{const d=e.target;if(!d||d.id!=="pkold")re
 /* ---------- Tạo nhiều tài khoản từ danh sách Họ tên · Chức vụ ---------- */
 var ADMB={txt:"",pw:"",busy:0,res:{},P:null};
 const admRole=cv=>{const t=noAcc(cv).toLowerCase().replace(/\s+/g," ").trim();
-  if(/^(admin|quan tri he thong)\b/.test(t))return"admin";if(/^(tong giam doc|tgd)\b/.test(t))return"tgd";if(/^(gdda|giam doc du an|gd du an|qs tong)\b/.test(t))return"gd";if(/^(kttc|ktth|ke toan tong hop)\b/.test(t))return"kt";
+  if(/^(admin|quan tri he thong)\b/.test(t))return"admin";if(/^(tong giam doc|tgd)\b/.test(t))return"tgd";if(/^(gdda|giam doc du an|gd du an|qs tong)\b/.test(t))return"gd";if(/^(kttc|ktth|ke toan tong hop)\b/.test(t))return"kt";if(/^(qs|qs du an|ky su qs|khoi luong)\b/.test(t))return"qs";
   if(/^(ktvt|ke toan vat tu)\b/.test(t))return"ktvt";if(/^(hcns|hanh chinh nhan su)\b/.test(t))return"hcns";if(/^(cht|chi huy truong)\b/.test(t))return"cht";return""};
 const admUser=n=>{const w=noAcc(n).toLowerCase().replace(/[^a-z\s]/g," ").split(/\s+/).filter(Boolean);if(!w.length)return"";const last=w.pop();return last+w.map(x=>x[0]).join("")};
 const admProj=cv=>{const t=noAcc(cv).toLowerCase(),M=[...t.matchAll(/\b(?:da|du an)\s+(?=((?:[a-z0-9]+\s?){1,3}))/g)];if(!M.length)return null;const N=p=>noAcc((p.name||"")+" "+(p.code||"")).toLowerCase().replace(/[^a-z0-9]+/g," ");let miss="";
@@ -7736,7 +7736,7 @@ function asBtn(){const b=document.getElementById("asBtn");if(b)b.hidden=!(NGApp.
 function asApply(){const a=NGApp.as;if(!NGApp.real)NGApp.real={board:NGApp.board,uid:NGApp.uid,P:DB.projects.slice(),roles:Object.fromEntries(DB.projects.map(p=>[p.id,p._role]))};const R0=NGApp.real;
   DB.projects=R0.P.slice();if(!a){NGApp.board=R0.board;NGApp.uid=R0.uid;DB.projects.forEach(p=>{p._role=R0.roles[p.id]});return}
   NGApp.board=["admin","tgd"].includes(a.role);NGApp.uid=a.uid||"preview";
-  DB.projects.forEach(p=>{p._role=(a.cht||[]).includes(p.id)?"cht":["gd","kt","ktvt","hcns"].includes(a.role)?a.role:undefined});
+  DB.projects.forEach(p=>{p._role=(a.cht||[]).includes(p.id)?"cht":["gd","qs","kt","ktvt","hcns"].includes(a.role)?a.role:undefined});
   if(!NGApp.board)DB.projects=DB.projects.filter(p=>p._role)}
 function asBar(){let b=document.getElementById("asbar");if(!NGApp.as){if(b)b.remove();return}if(!b){b=document.createElement("div");b.id="asbar";document.body.appendChild(b)}
   b.innerHTML=`<span>👁 Đang xem như <b>${esc(NGApp.as.label)}</b> · chỉ xem, không lưu thay đổi</span><button type="button" class="back sm" data-asx="1" style="margin:0">Thoát</button>`}
