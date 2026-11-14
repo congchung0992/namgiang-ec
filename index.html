@@ -59,7 +59,7 @@ body.sfull:not(.edmode) #sfx{display:none}
 .sfx2{display:none;margin-left:auto;align-self:center;border:0;border-radius:999px;padding:7px 14px;background:#E1141B;color:#fff;font:600 12px/1 Arial,sans-serif;box-shadow:0 6px 16px -8px rgba(225,20,27,.7);cursor:pointer}.sfx2:hover{background:#C0111A}body.sfull .sfx2{display:inline-flex}
 body.sfull .sgsub{padding-right:4px!important}
 body.edmode .top,body.edmode .phd,body.edmode .sheets,body.edmode .sgsub,body.edmode .note{display:none!important}
-body.edmode #view>*:not(:has(.edfull)):not(.edfull),body.edmode .vgrid>*:not(:has(.edfull)):not(.edfull),body.edmode :has(>.edfull)>*:not(.edfull){display:none!important}
+body.edmode #view>*:not(:has(.edfull)):not(.edfull),body.edmode .vgrid>*:not(:has(.edfull)):not(.edfull),body.edmode :has(>.edfull)>*:not(.edfull):not(:has(.edfull)){display:none!important}
 body.edmode .edfull{grid-column:1/-1;margin:0 0 96px;border-radius:20px}body.edmode #view{padding-top:8px}
 .edor{display:inline-flex;gap:2px;padding:3px;border-radius:99px;background:#EEF1F8;flex:none}.edor button{border:0;background:transparent;border-radius:99px;padding:6px 12px;font:600 15px var(--f);color:#4B5170;cursor:pointer}
 body:not(.edland) .edor [data-edor=doc],body.edland .edor [data-edor=ngang]{background:#0A2486;color:#fff}
@@ -6614,7 +6614,7 @@ async function ttReadX(f){await needX();const wb=XLSX.read(await f.arrayBuffer()
 /* Chế độ soạn phiếu (anh chốt 06/11/2026): bấm tạo mới / sửa phiếu (yêu cầu vật tư, đề nghị thanh toán, so sánh giá, claim, nghiệm thu, phát sinh) thì phiếu chiếm cả màn hình
    (ẩn thanh trên, menu, các khối khác), nội dung trên tờ giấy A4 dọc hoặc ngang tuỳ người dùng chọn, thanh Huỷ / Lưu luôn nổi ở đáy */
 let edWas=false;new MutationObserver(()=>{const on=!!view.querySelector(".edfull");if(on!==edWas){edWas=on;document.body.classList.toggle("edmode",on);if(on)scrollTo(0,0)}
-  const src=view.querySelector(".edbar");let f=document.getElementById("edbarF");if(!src){if(f)f.remove();return}
+  const src=[...view.querySelectorAll(".edbar")].pop();let f=document.getElementById("edbarF");if(!src){if(f)f.remove();return}
   if(!f){f=document.createElement("div");f.id="edbarF";f.className="edbar edbarF";document.body.appendChild(f);f.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=[...b.attributes].find(a=>a.name.startsWith("data-"));const o=b.dataset.fid?document.getElementById(b.dataset.fid):k&&view.querySelector(`.edbar button[${k.name}="${k.value}"]`);if(o)o.click()})}
   const h=src.innerHTML.replace(/ id="([^"]*)"/g,' data-fid="$1"');if(f.innerHTML!==h)f.innerHTML=h}).observe(view,{childList:true,subtree:true,characterData:true});
 try{if(localStorage.getItem("ng_or")==="ngang")document.body.classList.add("edland")}catch(e){}
