@@ -1909,6 +1909,17 @@ html body .gtfw .pvp.bqk.bqkf>.bqf{justify-content:space-between}html body .gtfw
 .gtrpl{background:#F6F7FA;border-radius:14px;padding:6px 10px;display:flex;flex-direction:column;max-height:220px;overflow:auto}.gtrpl div{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0}.gtrpl span{flex:1;min-width:0}.gtrpl button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:13px}
 .gtrpt2{display:flex;align-items:baseline}.gtrpt2 span{font-size:13px;color:var(--muted)}.gtrpt2 b{margin-left:auto;font-size:26px;font-weight:700}.gtrpt2 small{font-size:13px}
 .gtrpsel{height:40px;border-radius:12px;border:1px solid #D6DBEA;padding:0 10px;font:400 14px var(--f);background:#fff}.gtrpgo{height:42px;font-size:14px!important}.gtrpmsg{font-size:13px;color:#0E7A3D;font-weight:600}
+/* kẻ viền bảng cho danh sách gạt (anh Chung 16/11/2026) */
+.gtll{gap:0!important;border:1px solid #D2D9EE;border-radius:14px;padding:0!important;background:#fff}
+.gtll .gtlr{column-gap:0!important;row-gap:0!important;padding:0!important;border-radius:0;align-items:stretch;border-bottom:1px solid #E6E9F1}
+.gtll .gtlr>*{padding:8px 9px;border-right:1px solid #E6E9F1;min-width:0}:where(.gtll .gtlr)>*{display:flex;flex-direction:column;justify-content:center}.gtll .gtlr>.c-tot{text-align:right;align-self:center}
+.gtll .gtlr>input{border:0;padding:0;margin:0 auto;align-self:center}:where(.gtll .gtlr)>input{display:block}
+.gtll .gtlr>:last-child{border-right:0}.gtll .gtlr .gtlu{display:flex;flex-direction:row;flex-wrap:wrap;align-content:center;gap:4px}.gtll .gtlr .gtlt{align-items:center}
+.gtll .gtlr .gtls{align-items:center;border-left:1px solid #E6E9F1}.gtll .gtlq,.gtll .gtln3,.gtll .gtlv2{align-items:flex-end}
+.gtlhw{border-radius:13px 13px 0 0!important;border-bottom:1px solid #D2D9EE}.gtll .gtlhd{border-bottom:0!important}.gtll .gtlhd>*{border-right-color:#D2D9EE;padding:7px 9px;align-items:center;text-align:center}.gtll .gtlhd>.l{align-items:flex-start}
+.gtll .gtlhd>:empty{border-right-color:transparent}.gtll .gtlhd>:nth-child(2):empty{border-left-color:transparent}.gtll .gtlh2>*{padding-top:4px}.gtll .gtlhd .gl3{border-bottom:1px solid #D2D9EE}
+.gtll .gtlh{margin:0!important;border-radius:0!important;border-bottom:1px solid #D2D9EE;padding:8px 12px!important}
+@media(max-width:1760px){.gtll .gtlr .gtlu{justify-content:flex-start;border-top:1px dashed #E6E9F1;border-right:0;padding:6px 9px}}
 @media(max-width:1760px){.gtlr{grid-template-columns:20px 34px minmax(150px,1fr) 80px 100px 96px 104px 192px;row-gap:4px}.gtlr .c-dg{display:none}.gtlu{grid-column:3/-1}.gtlu:empty,.gtlhd .gtlhu{display:none}}
 @media(max-width:1500px){.gtlr{grid-template-columns:20px 34px minmax(140px,1fr) 88px 136px 196px}.gtlr .c-tt,.gtlh2{display:none}.gtlr .c-tot{display:block}.gtlh{top:38px!important}.gtlr .gttg button{padding:6px 10px;font-size:12.5px}}
 @media(max-width:1180px){.gtlv{flex-wrap:wrap}.gtlv .gtmain{flex:1 1 0}.gtrp{width:100%;position:static;max-height:none}.gtlr{grid-template-columns:20px 34px minmax(0,1fr) 88px 136px 196px}}
