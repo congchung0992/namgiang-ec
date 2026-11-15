@@ -2016,6 +2016,7 @@ html body .gtd .gtseg,html body .gtd .gtseg button,html body .gtd .gddb,html bod
 @media(min-width:1001px){
  html.ngnav .ngws{grid-template-columns:minmax(0,1fr)!important;column-gap:0!important;padding-left:20px}
  html.ngnav .ngside{display:flex!important;position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:290px!important;max-height:none!important;border-radius:0 26px 26px 0!important;z-index:10040!important;transform:translateX(-104%)!important;transition:transform .24s cubic-bezier(.2,.8,.2,1),box-shadow .24s!important;overflow:auto!important;padding:18px 14px!important}
+ html.ngnav .ngside{overflow-x:hidden!important}
  html.ngnav body.ngpeek .ngside{transform:none!important;box-shadow:28px 0 60px -24px rgba(10,36,134,.45)}
  .ngnt{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:55;width:24px;min-height:120px;border:0;border-radius:0 14px 14px 0;background:linear-gradient(180deg,#1D3BB8,#0A2486);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 0;cursor:pointer;box-shadow:6px 0 16px -8px rgba(10,36,134,.6);font-family:var(--f)}
  .ngnt svg{width:14px;height:14px;flex:none}.ngnt span{writing-mode:vertical-rl;transform:rotate(180deg);font:700 12.5px var(--f);letter-spacing:.02em;max-height:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2048,6 +2049,27 @@ html.ngv4 .ngmt{padding:4px 14px 4px 4px;border-radius:99px}html.ngv4 .ngmti{wid
 /* PA5: dải kính gradient như đầu bảng ứng dụng */
 html.ngv5 .top{background:linear-gradient(110deg,#2D3CE6,#5B37C9 60%,#7B2FD0)!important;border-radius:0 0 24px 24px}
 html.ngv5 .ngmt{background:rgba(255,255,255,.16);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}html.ngv5 .ngmt small{color:rgba(255,255,255,.75)}html.ngv5 .ngmt.on{background:#fff;color:#16171C}html.ngv5 .ngmt.on small{color:var(--muted)}
+
+/* Thẻ mở cột trái: 5 kiểu thử (ng_nh) */
+.ngnt.ngh1,.ngnt.ngh2,.ngnt.ngh3,.ngnt.ngh4,.ngnt.ngh5{min-height:0;padding:0;gap:0}
+.ngnt .nghl{writing-mode:vertical-rl;transform:rotate(180deg);font:700 12.5px var(--f);letter-spacing:.06em;white-space:nowrap}
+.ngnt .nghi,.ngnt .nghd,.ngnt .nghb{writing-mode:horizontal-tb!important;transform:none;max-height:none}.ngnt .nghtip{writing-mode:horizontal-tb!important;max-height:none}.ngnt.ngh5 .nghb{transform:translateY(-50%)}
+.ngnt .nghi{display:inline-flex;align-items:center;justify-content:center}.ngnt .nghi svg{width:18px;height:18px}
+.ngnt .ngha{width:13px;height:13px;animation:ngNudge 1.6s ease-in-out infinite}
+@keyframes ngNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+.ngnt .nghtip{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);white-space:nowrap;background:#16171C;color:#fff;font:600 12px var(--f);padding:6px 10px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .15s}
+.ngnt:hover .nghtip,.ngnt:focus-visible .nghtip{opacity:1}
+.ngnt.ngh1{width:34px;padding:12px 0;gap:10px;border-radius:0 18px 18px 0;background:linear-gradient(180deg,#2D3CE6,#0A2486)}
+.ngnt.ngh2{width:30px;height:64px;border-radius:0 32px 32px 0;background:linear-gradient(135deg,#2D3CE6,#7B2FD0);box-shadow:4px 0 18px -4px rgba(45,60,230,.55)}
+.ngnt.ngh2::after{content:"";position:absolute;inset:-6px -6px -6px 0;border-radius:0 40px 40px 0;border:2px solid rgba(45,60,230,.35);animation:ngPulse 2s ease-out infinite;pointer-events:none}
+@keyframes ngPulse{0%{opacity:.9;transform:scale(.9)}100%{opacity:0;transform:scale(1.25)}}
+.ngnt.ngh3{width:32px;padding:12px 0;gap:10px;border-radius:0 16px 16px 0;background:#fff;color:#0A2486;box-shadow:0 6px 20px -6px rgba(10,36,134,.35),inset -1px 0 0 #E1E4EE}
+.ngnt.ngh3 .nghd{display:flex;flex-direction:column;gap:4px}.ngnt.ngh3 .nghd i{width:10px;height:10px;border-radius:4px;display:block}
+.ngnt.ngh4{width:36px;padding:12px 0;gap:9px;border-radius:0 16px 16px 0;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);color:#0A2486;box-shadow:0 8px 22px -8px rgba(10,36,134,.4),inset 0 0 0 1.5px #C9D2F2}
+.ngnt.ngh5{width:12px;top:0;bottom:0;height:auto;transform:none;border-radius:0;background:linear-gradient(180deg,#2D3CE6,#7B2FD0,#C21FC9);box-shadow:none;overflow:visible}
+.ngnt.ngh5 .nghb{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:#fff;color:#2D3CE6;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(45,60,230,.35)}
+.ngnt.ngh5 .nghb svg{width:16px;height:16px}
+.ngnt.ngh5 .nghtip{opacity:.95;left:42px;font-size:11.5px;background:rgba(22,23,28,.85)}
 </style>
 
 <script>/* Tăng tốc (09/11/2026): định dạng số dùng lại bộ Intl.NumberFormat thay vì tạo mới mỗi lần gọi toLocaleString */
@@ -5621,7 +5643,7 @@ const NGSI={"cham-cong":"att","cham-cong-don":"xform","cham-cong-bang":"week","c
 var NGC={vid:["#DB2777","#F472B6","#FCE7F3","#9D174D"],hdoc:["#0E9F9A","#59D6CE","#D7F3F1","#0A6E6A"],kh:["#9333EA","#B97AF1","#F4EBFD","#602198"],nt:["#155E75","#6796A5","#E8EFF1","#0E3D4C"],lk:["#14B8A6","#66D1C5","#E8F8F6","#0D786C"],week:["#06B6D4","#5DD0E3","#E6F8FB","#04768A"],pyc:["#3B82F6","#80AEF9","#EBF2FE","#2654A0"],cl:["#854D0E","#B08B62","#F3EDE7","#563209"],dc:["#831843","#AE6985","#F3E8EC","#55102C"]};
 window.NGI=NGI;window.NGC=NGC;if(typeof COL!=="undefined"&&!COL.cv)COL.cv=COL.inbox;if(typeof FCI!=="undefined"&&!FCI.cv)FCI.cv=FCI.nt;
 function ngIcons(){Object.assign(I,NGI);if(typeof COL!=="undefined")Object.assign(COL,NGC);I.cyan=I.house;I.adm=I.xgear;if(typeof COL!=="undefined"&&!COL.adm)COL.adm=COL.hr}ngIcons();
-const NGPG=[["Tổng quan",["home"]],["Hồ sơ",["files","lk"]],["1. Dự toán & giao thầu",["boq","goi","kh","bg"]],["2. Thi công",["prog","week","bcn","pyc","mat","hr"]],["3. Doanh thu – chủ đầu tư",["rev","nt","cl","dc"]],["4. Chi phí – NCC, NTP",["cost","tt"]]];
+const NGPG=[["Tổng quan · Hồ sơ",["home","files","lk"]],["1. Dự toán & giao thầu",["boq","goi","kh","bg"]],["2. Thi công",["prog","week","bcn","pyc","mat","hr"]],["3. Doanh thu – chủ đầu tư",["rev","nt","cl","dc"]],["4. Chi phí – NCC, NTP",["cost","tt"]]];
 const NGATT={"":"Hằng ngày","don":"Hằng ngày","bang":"Quản lý","ca":"Quản lý","cd":"Quản lý"};
 const NGADM={"quan-tri":"Người dùng","quan-tri-pq":"Người dùng","quan-tri-wf":"Người dùng","quan-tri-mk":"Người dùng","quan-tri-ai":"Trí tuệ nhân tạo","quan-tri-do":"Trí tuệ nhân tạo","quan-tri-bc":"Trí tuệ nhân tạo","quan-tri-bh":"Trí tuệ nhân tạo","quan-tri-hd":"Trợ giúp"};
 const ngLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
@@ -5747,7 +5769,12 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-ngdelp]");
 let ngNT=0;const ngPeekOn=()=>{clearTimeout(ngNT);document.body.classList.add("ngpeek")};
 function ngNavTab(){let t=document.getElementById("ngnt");const has=NGNAV&&!!document.querySelector(".ngws .ngside");if(!has){if(t)t.remove();return}
   if(!t){t=document.createElement("button");t.id="ngnt";t.type="button";t.className="ngnt";t.setAttribute("aria-label","Mở danh mục màn");t.addEventListener("mouseenter",ngPeekOn);t.addEventListener("click",ngPeekOn);document.body.appendChild(t)}
-  const a=document.querySelector(".ngside .ngit[aria-current='true'] .ngtx");t.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg><span>${esc(a?a.textContent.trim():"Danh mục")}</span>`}
+  const a=document.querySelector(".ngside .ngit[aria-current='true'] .ngtx");const V=+(ngLS("ng_nh")||1),D=["#94A3B8","#22B8E8","#F97316","#22C55E","#EC4899"];t.className="ngnt ngh"+V;
+  t.innerHTML=V===1?`<span class="nghi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><span class="nghl">Menu</span><svg class="ngha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`
+  :V===2?`<span class="nghi"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></span><span class="nghtip">Rê chuột để mở danh mục</span>`
+  :V===3?`<span class="nghd">${D.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="nghl">Mở menu</span>`
+  :V===4?`<span class="nghi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M5.5 8h1.5M5.5 11h1.5M5.5 14h1.5"/></svg></span><span class="nghl">Danh mục màn</span><svg class="ngha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`
+  :`<span class="nghb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span><span class="nghtip">Menu · rê chuột vào mép trái</span>`}
 document.addEventListener("mouseover",e=>{if(!NGNAV||!document.body.classList.contains("ngpeek"))return;const t=e.target;if(t.closest&&(t.closest(".ngside")||t.closest("#ngnt"))){clearTimeout(ngNT);return}clearTimeout(ngNT);ngNT=setTimeout(()=>document.body.classList.remove("ngpeek"),350)});
 function ngTab(){try{ngNavTab()}catch(e){}const o=document.getElementById("ngtab");if(o)o.remove();const P=document.getElementById("pills");if(!P)return;let m=P.querySelector(".ngmuc");if(!ngHasSide()){if(m)m.remove();return}
   const a=[...document.querySelectorAll(".ngside .ngit")].find(x=>x.getAttribute("aria-current")==="true"&&!x.closest("[hidden]")),lab=a?a.textContent.replace(/★/g,"").trim():"Chọn mục";
