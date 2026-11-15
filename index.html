@@ -2050,6 +2050,7 @@ html body .gtd .gtseg,html body .gtd .gtseg button,html body .gtd .gddb,html bod
 /* ===== Điều hướng mới ===== */
 @media(min-width:1001px){
  html.ngnav .ngws{grid-template-columns:minmax(0,1fr)!important;column-gap:0!important;padding-left:20px}
+ html.ngnav body:not(.nghome-on):has(#view .ngws) .ngmts{margin-left:18px} /* thẻ chính thẳng mép khung nội dung (anh Chung 15/11/2026) */
  html.ngnav .ngside{display:flex!important;position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:290px!important;max-height:none!important;border-radius:0 26px 26px 0!important;z-index:10040!important;transform:translateX(-104%)!important;transition:transform .24s cubic-bezier(.2,.8,.2,1),box-shadow .24s!important;overflow:auto!important;padding:18px 14px!important}
  html.ngnav .ngside{overflow-x:hidden!important}
  html.ngnav body.ngpeek .ngside{transform:none!important;box-shadow:28px 0 60px -24px rgba(10,36,134,.45)}
