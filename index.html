@@ -2079,7 +2079,9 @@ html.ngv5 .ngmt{background:rgba(255,255,255,.16);color:#fff;box-shadow:inset 0 0
 .ngnt.ngh31 .nghm{writing-mode:horizontal-tb;display:flex;flex-direction:column;gap:4px;align-items:flex-start;width:16px;padding:6px 5px;border-radius:8px;background:#F2F4FA}.ngnt.ngh31 .nghm i{height:4px;border-radius:3px;display:block}
 .ngnt.ngh32{width:40px;border-radius:0 18px 18px 0;box-shadow:0 10px 24px -10px rgba(10,36,134,.45);border-left:4px solid transparent;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(180deg,#2D3CE6,#7B2FD0) border-box}
 .ngnt.ngh32 .nghg{writing-mode:horizontal-tb;display:grid;grid-template-columns:repeat(2,8px);gap:4px}.ngnt.ngh32 .nghg i{width:8px;height:8px;border-radius:3px;display:block}
-.ngnt.ngh33{width:36px;border-radius:0 22px 22px 0;border:2px solid transparent;border-left:0;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(180deg,#94A3B8,#22B8E8,#F97316,#22C55E,#EC4899) border-box;box-shadow:0 10px 24px -10px rgba(10,36,134,.4)}
+.ngnt.ngh33{width:36px;border-radius:0 22px 22px 0;border:2.5px solid transparent;border-left:0;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(180deg,#94A3B8,#22B8E8,#F97316,#22C55E,#EC4899,#7B2FD0,#94A3B8) border-box;background-size:100% 100%,100% 260px;background-repeat:no-repeat,repeat-y;animation:ngRain 3.2s linear infinite;box-shadow:0 10px 24px -10px rgba(10,36,134,.4)}
+@keyframes ngRain{from{background-position:0 0,0 0}to{background-position:0 0,0 260px}}
+@media(prefers-reduced-motion:reduce){.ngnt.ngh33{animation:none}}
 .ngnt.ngh33 .nghr{writing-mode:horizontal-tb;display:flex;flex-direction:column;align-items:center;position:relative}.ngnt.ngh33 .nghr::before{content:"";position:absolute;top:4px;bottom:4px;width:2px;background:#E3E7F3;left:50%;margin-left:-1px}
 .ngnt.ngh33 .nghr i{position:relative;width:9px;height:9px;border-radius:50%;display:block;margin:2px 0;box-shadow:0 0 0 2px #fff}
 .ngnt.ngh34{width:44px;border-radius:0 20px 20px 0;background:linear-gradient(180deg,#F6F7FD,#fff);box-shadow:0 12px 28px -10px rgba(10,36,134,.45),inset -1px 0 0 #E3E7F3}
@@ -5790,11 +5792,11 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-ngdelp]");
 let ngNT=0;const ngPeekOn=()=>{clearTimeout(ngNT);document.body.classList.add("ngpeek")};
 function ngNavTab(){let t=document.getElementById("ngnt");const has=NGNAV&&!!document.querySelector(".ngws .ngside");if(!has){if(t)t.remove();return}
   if(!t){t=document.createElement("button");t.id="ngnt";t.type="button";t.className="ngnt";t.setAttribute("aria-label","Mở danh mục màn");t.addEventListener("mouseenter",ngPeekOn);t.addEventListener("click",ngPeekOn);document.body.appendChild(t)}
-  const a=document.querySelector(".ngside .ngit[aria-current='true'] .ngtx");const V=+(ngLS("ng_nh")||1),D=["#94A3B8","#22B8E8","#F97316","#22C55E","#EC4899"];t.className="ngnt ngh"+V;
+  const a=document.querySelector(".ngside .ngit[aria-current='true'] .ngtx");const V=+(ngLS("ng_nh")||33),D=["#94A3B8","#22B8E8","#F97316","#22C55E","#EC4899"];t.className="ngnt ngh"+V;
   const NG=[...document.querySelectorAll(".ngside .ngg")].map(g=>getComputedStyle(g).getPropertyValue("--g").trim()).filter(Boolean),DC=NG.length?NG:D,ns=document.querySelectorAll(".ngside .ngit").length,chev=`<svg class="ngha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`;
   if(V>30){t.innerHTML=V===31?`<span class="nghm">${DC.map((c,i)=>`<i style="background:${c};width:${[14,10,12,8,11,9,13][i%7]}px"></i>`).join("")}</span><span class="nghl">Mở menu</span>`
    :V===32?`<span class="nghg">${DC.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="nghl">Mở menu</span>${chev}`
-   :V===33?`<span class="nghr">${DC.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="nghl">Menu dự án</span>`
+   :V===33?`<span class="nghr">${DC.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="nghl">${/^#?da-/.test(location.hash)?"Menu dự án":/^#?cham-cong/.test(location.hash)?"Menu chấm công":/^#?quan-tri/.test(location.hash)?"Menu quản trị":"Menu"}</span>`
    :V===34?`<span class="nght">${DC.map(c=>`<i><b style="background:${c}"></b></i>`).join("")}</span><span class="nghl">Mở menu</span>`
    :`<em class="nghp"></em><span class="nghd">${DC.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="nghl">Mở menu</span><span class="nghc">${ns}</span>`;return}
   t.innerHTML=V===1?`<span class="nghi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><span class="nghl">Menu</span><svg class="ngha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`
