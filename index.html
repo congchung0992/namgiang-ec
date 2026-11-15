@@ -2166,6 +2166,8 @@ window.NGB=(function(){
   /* Mạng chập chờn (kết nối bị ngắt giữa chừng): tự thử lại yêu cầu đọc 3 lần, cách 0,6s rồi 1,5s rồi 3s */
   const retryFetch=async(u,o={})=>{const m=(o.method||"GET").toUpperCase(),safe=m==="GET"||m==="HEAD";for(let i=0;;i++){try{return await fetch(u,o)}catch(e){if(!safe||i>=3||o.signal&&o.signal.aborted)throw e;await new Promise(r=>setTimeout(r,[600,1500,3000][i]))}}};
   const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY,{global:{fetch:retryFetch}}):null;
+  /* Phiên đăng nhập bị huỷ hoặc hết hạn mà không gia hạn được: về màn đăng nhập thay vì báo lỗi "permission denied" */
+  if(sb)sb.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT"&&!window.__ngOut){window.__ngOut=1;try{sessionStorage.setItem("ngExpired","1")}catch(e){}location.hash="";location.reload()}});
   const need=()=>{if(!sb)throw new Error("Không tải được bộ đăng nhập, anh kiểm tra kết nối mạng");return window.NGApp&&NGApp.as?roClient(sb):sb};
   /* Chế độ "Xem như" người dùng khác: chỉ đọc. Ghi (insert, update, upsert, delete) và hàm máy chủ ghi dữ liệu đều trả lỗi, không chạm dữ liệu thật */
   const roErr=()=>Object.assign(new Error("Đang xem như "+((NGApp.as||{}).label||"người dùng khác")+" · chỉ xem, không lưu"),{code:"preview"}),
@@ -2227,7 +2229,7 @@ window.NGB=(function(){
   return{
     session:async()=>sb?(await sb.auth.getSession()).data.session:null,
     async signIn(email,pw){const {error}=await need().auth.signInWithPassword({email,password:pw});if(error)throw new Error(/invalid login/i.test(error.message)?"Sai tên đăng nhập hoặc mật khẩu":"Không đăng nhập được, anh kiểm tra mạng rồi thử lại")},
-    signOut:async()=>{if(sb)await sb.auth.signOut({scope:"local"})},
+    signOut:async()=>{window.__ngOut=1;if(sb)await sb.auth.signOut({scope:"local"})},
     /* Đo lường AI: ghi lượt gọi Claude (qua Cloudflare) vào bảng ai_usage; lượt gọi qua máy chủ do máy chủ tự ghi */
     async logAI(row){try{if(!sb)return;const {data:{session}}=await sb.auth.getSession();if(!session)return;await sb.from("ai_usage").insert({...row,user_id:session.user.id,project_id:row.project_id||window.NG_PID||null})}catch(e){}},
     /* Khoá Claude đặt trên Cloudflare: chuyển sang kho khoá Supabase (máy chủ Cloudflare đọc khoá, trình duyệt không thấy) */
