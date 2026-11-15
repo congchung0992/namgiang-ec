@@ -2070,6 +2070,27 @@ html.ngv5 .ngmt{background:rgba(255,255,255,.16);color:#fff;box-shadow:inset 0 0
 .ngnt.ngh5 .nghb{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:#fff;color:#2D3CE6;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(45,60,230,.35)}
 .ngnt.ngh5 .nghb svg{width:16px;height:16px}
 .ngnt.ngh5 .nghtip{opacity:.95;left:42px;font-size:11.5px;background:rgba(22,23,28,.85)}
+
+/* Thẻ mở menu kiểu 3 · 5 biến thể (31–35) */
+.ngnt .nghm,.ngnt .nghg,.ngnt .nghr,.ngnt .nght{writing-mode:horizontal-tb!important;transform:none!important;max-height:none!important;overflow:visible!important}
+.ngnt.ngh31,.ngnt.ngh32,.ngnt.ngh33,.ngnt.ngh34,.ngnt.ngh35{background:#fff;color:#0A2486;padding:14px 0;gap:11px;min-height:0;transition:width .18s,box-shadow .18s}
+.ngnt.ngh31 .nghl,.ngnt.ngh32 .nghl,.ngnt.ngh33 .nghl,.ngnt.ngh34 .nghl,.ngnt.ngh35 .nghl{font-size:12.5px;letter-spacing:.08em}
+.ngnt.ngh31{width:38px;border-radius:0 20px 20px 0;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);box-shadow:0 10px 26px -10px rgba(10,36,134,.45),inset -1px 0 0 #E3E7F3}
+.ngnt.ngh31 .nghm{writing-mode:horizontal-tb;display:flex;flex-direction:column;gap:4px;align-items:flex-start;width:16px;padding:6px 5px;border-radius:8px;background:#F2F4FA}.ngnt.ngh31 .nghm i{height:4px;border-radius:3px;display:block}
+.ngnt.ngh32{width:40px;border-radius:0 18px 18px 0;box-shadow:0 10px 24px -10px rgba(10,36,134,.45);border-left:4px solid transparent;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(180deg,#2D3CE6,#7B2FD0) border-box}
+.ngnt.ngh32 .nghg{writing-mode:horizontal-tb;display:grid;grid-template-columns:repeat(2,8px);gap:4px}.ngnt.ngh32 .nghg i{width:8px;height:8px;border-radius:3px;display:block}
+.ngnt.ngh33{width:36px;border-radius:0 22px 22px 0;border:2px solid transparent;border-left:0;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(180deg,#94A3B8,#22B8E8,#F97316,#22C55E,#EC4899) border-box;box-shadow:0 10px 24px -10px rgba(10,36,134,.4)}
+.ngnt.ngh33 .nghr{writing-mode:horizontal-tb;display:flex;flex-direction:column;align-items:center;position:relative}.ngnt.ngh33 .nghr::before{content:"";position:absolute;top:4px;bottom:4px;width:2px;background:#E3E7F3;left:50%;margin-left:-1px}
+.ngnt.ngh33 .nghr i{position:relative;width:9px;height:9px;border-radius:50%;display:block;margin:2px 0;box-shadow:0 0 0 2px #fff}
+.ngnt.ngh34{width:44px;border-radius:0 20px 20px 0;background:linear-gradient(180deg,#F6F7FD,#fff);box-shadow:0 12px 28px -10px rgba(10,36,134,.45),inset -1px 0 0 #E3E7F3}
+.ngnt.ngh34 .nght{writing-mode:horizontal-tb;display:flex;flex-direction:column;gap:5px}.ngnt.ngh34 .nght i{width:22px;height:22px;border-radius:7px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px -2px rgba(10,36,134,.3),inset 0 0 0 1px rgba(10,36,134,.06)}.ngnt.ngh34 .nght b{width:10px;height:10px;border-radius:4px;display:block}
+.ngnt.ngh35{width:38px;border-radius:0 20px 20px 0;box-shadow:0 10px 24px -10px rgba(10,36,134,.45),inset -1px 0 0 #E3E7F3;overflow:visible}
+.ngnt.ngh35 .nghd{writing-mode:horizontal-tb;display:flex;flex-direction:column;gap:4px}.ngnt.ngh35 .nghd i{width:10px;height:10px;border-radius:50%;display:block}
+.ngnt.ngh35 .nghc{writing-mode:horizontal-tb!important;transform:none!important;font:700 10.5px var(--f);background:#0A2486;color:#fff;border-radius:99px;padding:2px 6px}
+.ngnt.ngh35 .nghp{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:ngDot 1.8s infinite}
+@keyframes ngDot{0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}100%{box-shadow:0 0 0 10px rgba(34,197,94,0)}}
+.ngnt.ngh31:hover,.ngnt.ngh32:hover,.ngnt.ngh33:hover,.ngnt.ngh34:hover,.ngnt.ngh35:hover{box-shadow:0 14px 32px -8px rgba(10,36,134,.55)}
+.ngnt.ngh32 .ngha{color:#7B2FD0}
 </style>
 
 <script>/* Tăng tốc (09/11/2026): định dạng số dùng lại bộ Intl.NumberFormat thay vì tạo mới mỗi lần gọi toLocaleString */
@@ -5770,6 +5791,12 @@ let ngNT=0;const ngPeekOn=()=>{clearTimeout(ngNT);document.body.classList.add("n
 function ngNavTab(){let t=document.getElementById("ngnt");const has=NGNAV&&!!document.querySelector(".ngws .ngside");if(!has){if(t)t.remove();return}
   if(!t){t=document.createElement("button");t.id="ngnt";t.type="button";t.className="ngnt";t.setAttribute("aria-label","Mở danh mục màn");t.addEventListener("mouseenter",ngPeekOn);t.addEventListener("click",ngPeekOn);document.body.appendChild(t)}
   const a=document.querySelector(".ngside .ngit[aria-current='true'] .ngtx");const V=+(ngLS("ng_nh")||1),D=["#94A3B8","#22B8E8","#F97316","#22C55E","#EC4899"];t.className="ngnt ngh"+V;
+  const NG=[...document.querySelectorAll(".ngside .ngg")].map(g=>getComputedStyle(g).getPropertyValue("--g").trim()).filter(Boolean),DC=NG.length?NG:D,ns=document.querySelectorAll(".ngside .ngit").length,chev=`<svg class="ngha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`;
+  if(V>30){t.innerHTML=V===31?`<span class="nghm">${DC.map((c,i)=>`<i style="background:${c};width:${[14,10,12,8,11,9,13][i%7]}px"></i>`).join("")}</span><span class="nghl">Mở menu</span>`
+   :V===32?`<span class="nghg">${DC.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="nghl">Mở menu</span>${chev}`
+   :V===33?`<span class="nghr">${DC.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="nghl">Menu dự án</span>`
+   :V===34?`<span class="nght">${DC.map(c=>`<i><b style="background:${c}"></b></i>`).join("")}</span><span class="nghl">Mở menu</span>`
+   :`<em class="nghp"></em><span class="nghd">${DC.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="nghl">Mở menu</span><span class="nghc">${ns}</span>`;return}
   t.innerHTML=V===1?`<span class="nghi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><span class="nghl">Menu</span><svg class="ngha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`
   :V===2?`<span class="nghi"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></span><span class="nghtip">Rê chuột để mở danh mục</span>`
   :V===3?`<span class="nghd">${D.map(c=>`<i style="background:${c}"></i>`).join("")}</span><span class="nghl">Mở menu</span>`
