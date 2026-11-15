@@ -2227,7 +2227,7 @@ window.NGB=(function(){
   return{
     session:async()=>sb?(await sb.auth.getSession()).data.session:null,
     async signIn(email,pw){const {error}=await need().auth.signInWithPassword({email,password:pw});if(error)throw new Error(/invalid login/i.test(error.message)?"Sai tên đăng nhập hoặc mật khẩu":"Không đăng nhập được, anh kiểm tra mạng rồi thử lại")},
-    signOut:async()=>{if(sb)await sb.auth.signOut()},
+    signOut:async()=>{if(sb)await sb.auth.signOut({scope:"local"})},
     /* Đo lường AI: ghi lượt gọi Claude (qua Cloudflare) vào bảng ai_usage; lượt gọi qua máy chủ do máy chủ tự ghi */
     async logAI(row){try{if(!sb)return;const {data:{session}}=await sb.auth.getSession();if(!session)return;await sb.from("ai_usage").insert({...row,user_id:session.user.id,project_id:row.project_id||window.NG_PID||null})}catch(e){}},
     /* Khoá Claude đặt trên Cloudflare: chuyển sang kho khoá Supabase (máy chủ Cloudflare đọc khoá, trình duyệt không thấy) */
@@ -2254,8 +2254,9 @@ window.NGB=(function(){
       async aiModels(){return ok(await need().rpc("ai_models"))||{}},
       async setAiModel(act,model){ok(await need().rpc("set_ai_model",{act,model:model||""}))},
       /* Tạo, khoá, đặt lại mật khẩu tài khoản: chạy ở Supabase Edge Function admin-users, máy chủ kiểm tra quyền Tổng giám đốc */
-      async users(body){const {data:{session}}=await need().auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");
-        let r;try{r=await fetch(SB_URL+"/functions/v1/admin-users",{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,authorization:"Bearer "+session.access_token},body:JSON.stringify(body)})}catch(e){throw new Error("Không kết nối được máy chủ, anh kiểm tra mạng")}
+      async users(body){let {data:{session}}=await need().auth.getSession();if(!session)throw new Error("Phiên đăng nhập đã hết, anh đăng nhập lại");
+        const call=t=>fetch(SB_URL+"/functions/v1/admin-users",{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,authorization:"Bearer "+t},body:JSON.stringify(body)});
+        let r;try{r=await call(session.access_token);if(r.status===401){const {data:rf}=await need().auth.refreshSession();if(rf&&rf.session)r=await call(rf.session.access_token)}}catch(e){throw new Error("Không kết nối được máy chủ, anh kiểm tra mạng")}
         let j={};try{j=await r.json()}catch(e){}if(r.ok)return j;
         throw new Error({auth:"Phiên đăng nhập đã hết, anh đăng nhập lại",forbidden:"Anh/chị chưa được quyền làm việc này với tài khoản (tài khoản Ban giám đốc, khoá, xoá chỉ Admin, Tổng giám đốc làm được)",bad_email:"Email chưa đúng dạng, ví dụ ten@congty.vn",bad_phone:"Số điện thoại chỉ gồm chữ số (8–20 ký tự), ví dụ 0912 345 678",bad_username:"Tên đăng nhập 3–40 ký tự, chỉ chữ không dấu, số, dấu chấm, gạch ngang",bad_password:"Mật khẩu từ 8 ký tự",exists:"Tên đăng nhập này đã có",self:"Không khoá hoặc xoá tài khoản của chính mình"}[j.error]||"Máy chủ đang lỗi, anh thử lại sau")},
       async people(){return ok(await need().from("profiles").select("id,email,full_name,is_board,role,contact_email,phone,gender").order("email"))},
