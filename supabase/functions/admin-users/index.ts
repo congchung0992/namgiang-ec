@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
   if (!token) return json({ error: "auth" }, 401);
   const { data: who, error: whoErr } = await admin.auth.getUser(token);
   if (whoErr || !who?.user) return json({ error: "auth" }, 401);
-  const { data: me } = await admin.from("profiles").select("is_board").eq("id", who.user.id).maybeSingle();
+  const { data: me } = await admin.from("profiles").select("is_board,role").eq("id", who.user.id).maybeSingle();
   if (!me?.is_board) return json({ error: "forbidden" }, 403);
 
   let b: Record<string, unknown>;
@@ -45,13 +45,19 @@ Deno.serve(async (req) => {
     if (!pwOk) return json({ error: "bad_password" }, 400);
     const full = String(b.full_name || "").trim().slice(0, 100);
     const { data, error } = await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: full } });
-    if (error) return json({ error: /already|registered|exists/i.test(error.message) ? "exists" : "server", detail: error.message }, 400);
-    await admin.from("profiles").update({ full_name: full || null, is_board: b.is_board === true }).eq("id", data.user.id);
+    if (error) { console.error("createUser", error.message); return json({ error: /already|registered|exists/i.test(error.message) ? "exists" : "server" }, 400); }
+    // Chỉ Admin quản trị hệ thống mới tạo được tài khoản Ban giám đốc
+    await admin.from("profiles").update({ full_name: full || null, is_board: b.is_board === true && me.role === "admin" }).eq("id", data.user.id);
     return json({ id: data.user.id, email });
   }
 
   if (!uid) return json({ error: "bad_request" }, 400);
   if (uid === who.user.id && (action === "ban" || action === "delete")) return json({ error: "self" }, 400);
+  // Tài khoản Ban giám đốc khác (TGĐ, Admin): chỉ Admin quản trị hệ thống mới đặt lại mật khẩu, khoá, xoá được
+  if (uid !== who.user.id && ["password", "ban", "unban", "delete"].includes(action) && me.role !== "admin") {
+    const { data: t } = await admin.from("profiles").select("is_board").eq("id", uid).maybeSingle();
+    if (t?.is_board) return json({ error: "forbidden" }, 403);
+  }
 
   if (action === "password") {
     if (!pwOk) return json({ error: "bad_password" }, 400);

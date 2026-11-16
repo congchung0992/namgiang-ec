@@ -5,7 +5,9 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "authorization, content-type, apikey, x-client-info", "access-control-allow-methods": "POST, OPTIONS" };
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, "content-type": "application/json; charset=utf-8" } });
-const OK_HOST = /^(maps\.app\.goo\.gl|goo\.gl|g\.co|maps\.google\.[a-z.]+|(www\.)?google\.[a-z.]+)$/i;
+// Chỉ đúng các tên miền Google Maps (không dùng mẫu lỏng kiểu google.<gì cũng được> vì khớp cả google.attacker.com)
+const OK_SET = new Set(["maps.app.goo.gl", "goo.gl", "g.co", "maps.google.com", "www.google.com", "google.com", "maps.google.com.vn", "www.google.com.vn", "google.com.vn"]);
+const OK_HOST = { test: (h: string) => OK_SET.has(String(h).toLowerCase()) };
 const UA = "Mozilla/5.0 (compatible; NamGiangEC/1.0; +https://namgiang-ec.pages.dev)";
 
 function coords(s: string): { lat: number; lng: number } | null {
@@ -35,10 +37,11 @@ Deno.serve(async (req) => {
       if (!/^https?:$/.test(h.protocol) || !OK_HOST.test(h.hostname)) return json({ error: "Chỉ nhận link Google Maps" }, 400);
       const c = coords(url);
       if (c) return json({ ...c, name: placeName(url), url });
-      const r = await fetch(url, { redirect: "manual", headers: { "user-agent": UA, "accept-language": "vi" } });
+      const r = await fetch(url, { redirect: "manual", headers: { "user-agent": UA, "accept-language": "vi" }, signal: AbortSignal.timeout(8000) });
       const loc = r.headers.get("location");
       if (loc && r.status >= 300 && r.status < 400) { url = new URL(loc, url).toString(); continue; }
-      const html = (await r.text()).slice(0, 400000);
+      let html = "";
+      { const rd = r.body?.getReader(), dec = new TextDecoder(); if (rd) while (html.length < 400000) { const { done, value } = await rd.read(); if (done) break; html += dec.decode(value, { stream: true }); } try { await rd?.cancel(); } catch (_) { /* bỏ qua */ } }
       const c2 = coords(html);
       if (c2) return json({ ...c2, name: placeName(url), url });
       break;

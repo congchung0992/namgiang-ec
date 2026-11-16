@@ -313,6 +313,7 @@ Deno.serve(async (req) => {
   // Đọc theo quyền của người gọi (RLS): hồ sơ, bản chữ tài liệu
   const uc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: "Bearer " + token } } });
   if (whoErr || !who?.user) return json({ error: "auth" }, 401);
+  { const { data: qok } = await admin.rpc("ai_quota_ok", { uid: who.user.id }); if (qok === false) return json({ error: "het_luot_ngay" }, 429); }
   let b: any;
   try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
   // Khoá và mẫu: đọc bảng app_secrets (giữ 1 phút trong bộ nhớ; kiểm tra kết nối thì đọc lại ngay)
@@ -330,7 +331,9 @@ Deno.serve(async (req) => {
   try {
     const sc = SC[b.action];
     if (sc) {
-      const { data: R } = await admin.from("ai_lessons").select("l").eq("kind", "rule").in("q", [sc, "all"]).order("at", { ascending: false }).limit(60);
+      // Chỉ nạp ghi nhớ do Ban giám đốc ghi (chặn người khác chèn "luật" vào câu hỏi của mọi người)
+      const { data: B } = await admin.from("profiles").select("id").eq("is_board", true);
+      const { data: R } = await admin.from("ai_lessons").select("l").eq("kind", "rule").in("q", [sc, "all"]).in("user_id", (B || []).map((x: any) => x.id)).order("at", { ascending: false }).limit(60);
       if (R && R.length) (env as any).R = "GHI NHỚ TỪ ANH CHUNG (các lần anh đã sửa hoặc dặn; ưu tiên làm theo khi phù hợp với tài liệu đang đọc):\n" + R.reverse().map((x: any) => "- " + String(x.l).slice(0, 400)).join("\n");
     }
   } catch (e) { console.error("rules", String(e).slice(0, 100)); }

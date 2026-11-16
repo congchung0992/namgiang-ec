@@ -33,6 +33,7 @@ Deno.serve(async (req) => {
   if (!token) return json({ error: "auth" }, 401);
   const { data: who, error: whoErr } = await admin.auth.getUser(token);
   if (whoErr || !who?.user) return json({ error: "auth" }, 401);
+  { const { data: qok } = await admin.rpc("ai_quota_ok", { uid: who.user.id }); if (qok === false) return json({ error: "het_luot_ngay" }, 429); }
   let b: any;
   try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
   const { data: S } = await admin.from("app_secrets").select("name,value").in("name", ["claude", "claude_model", "claude_models"]);

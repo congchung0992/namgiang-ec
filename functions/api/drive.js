@@ -132,6 +132,23 @@ async function projectFolders(api, tok, pid) {
   throw new Error("drive_map_" + ins.status);
 }
 
+/* Chặn dùng drive_id lạ: file phải nằm trong cây thư mục Drive của đúng dự án (đi ngược thư mục cha tối đa 5 cấp tới thư mục gốc dự án) */
+async function inProject(api, T, pid, driveId) {
+  const d = (await (await api(`project_drive?project_id=eq.${encodeURIComponent(pid)}&select=root_id`)).json())[0];
+  if (!d || !d.root_id || !driveId) return false;
+  let ids = [driveId];
+  for (let lv = 0; lv < 6 && ids.length; lv++) {
+    const r = await fetch(`${G}/drive/v3/files/${encodeURIComponent(ids[0])}?fields=parents,mimeType&supportsAllDrives=true`, { headers: { authorization: "Bearer " + T } });
+    if (!r.ok) return false;
+    const j = await r.json();
+    if (lv === 0 && j.mimeType === FOLDER_MIME) return false;
+    ids = j.parents || [];
+    if (ids.includes(d.root_id)) return true;
+  }
+  return false;
+}
+const notMine = () => json({ error: "forbidden" }, 403);
+
 async function trash(tok, id) {
   return fetch(`${G}/drive/v3/files/${encodeURIComponent(id)}`, {
     method: "PATCH",
@@ -219,20 +236,22 @@ export async function verifyOffice(env, token) {
 }
 export { googleToken };
 
-async function officeLink(env, api, url, id) {
-  const r = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=name,drive_id,size`);
+async function officeLink(env, api, tok, url, id) {
+  const r = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=project_id,name,drive_id,size`);
   if (r.status === 401) return json({ error: "auth" }, 401);
   const row = r.ok ? (await r.json())[0] : null;
   if (!row) return json({ error: "not_found" }, 404); // không có quyền cũng trả về như không tồn tại
+  if (!(await inProject(api, await tok(), row.project_id, row.drive_id))) return notMine();
   const token = await signOffice(env, { d: row.drive_id, e: Math.floor(Date.now() / 1000) + OFFICE_TTL });
   return json({ url: `${url.origin}/api/office/${token}/${encodeURIComponent(row.name)}`, size: row.size });
 }
 
 async function download(api, tok, id) {
-  const r = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=name,mime,drive_id`);
+  const r = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=project_id,name,mime,drive_id`);
   if (r.status === 401) return json({ error: "auth" }, 401);
   const row = r.ok ? (await r.json())[0] : null;
   if (!row) return json({ error: "not_found" }, 404); // không có quyền cũng trả về như không tồn tại
+  if (!(await inProject(api, await tok(), row.project_id, row.drive_id))) return notMine();
   const g = await fetch(`${G}/drive/v3/files/${encodeURIComponent(row.drive_id)}?alt=media`, { headers: { authorization: "Bearer " + await tok() } });
   if (!g.ok) throw new Error("google_get_" + g.status);
   return new Response(g.body, {
@@ -246,10 +265,16 @@ async function download(api, tok, id) {
 }
 
 async function remove(api, tok, id) {
+  const r1 = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=project_id,drive_id`);
+  if (r1.status === 401) return json({ error: "auth" }, 401);
+  const cur = r1.ok ? (await r1.json())[0] : null;
+  if (!cur) return json({ error: "forbidden" }, 403);
+  const own = await inProject(api, await tok(), cur.project_id, cur.drive_id);
   const r = await api(`project_files?id=eq.${encodeURIComponent(id)}`, { method: "DELETE", headers: { prefer: "return=representation" } });
   if (r.status === 401) return json({ error: "auth" }, 401);
   const row = r.ok ? (await r.json())[0] : null;
   if (!row) return json({ error: "forbidden" }, 403);
+  if (!own) return json({ ok: true, trashed: false }); // bản ghi lạ: chỉ xoá bản ghi, không đụng file Drive
   const t = await trash(await tok(), row.drive_id); // vào thùng rác của Drive, còn khôi phục được
   return json({ ok: true, trashed: t.ok });
 }
@@ -258,10 +283,11 @@ async function remove(api, tok, id) {
 async function rename(api, tok, id, name) {
   name = cleanName(name);
   if (!id || !name) return json({ error: "bad_request" }, 400);
-  const r0 = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=name,drive_id`);
+  const r0 = await api(`project_files?id=eq.${encodeURIComponent(id)}&select=project_id,name,drive_id`);
   if (r0.status === 401) return json({ error: "auth" }, 401);
   const old = r0.ok ? (await r0.json())[0] : null;
   if (!old) return json({ error: "not_found" }, 404);
+  if (!(await inProject(api, await tok(), old.project_id, old.drive_id))) return notMine();
   const r = await api(`project_files?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify({ name }) });
   const row = r.ok ? (await r.json())[0] : null;
   if (!row) return json({ error: "forbidden" }, 403);
@@ -281,6 +307,7 @@ async function move(api, tok, id, folder0, sub0) {
   const old = r0.ok ? (await r0.json())[0] : null;
   if (!old) return json({ error: "not_found" }, 404);
   if (old.folder === folder && (old.sub || "") === sub) return json({ ok: true, folder, sub: sub || null });
+  if (!(await inProject(api, await tok(), old.project_id, old.drive_id))) return notMine();
   const r = await api(`project_files?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify({ folder, sub: sub || null }) });
   const row = r.ok ? (await r.json())[0] : null;
   if (!row) return json({ error: "forbidden" }, 403);
@@ -302,6 +329,7 @@ export async function onRequest({ request, env }) {
   const url = new URL(request.url), action = url.searchParams.get("action") || "";
   const connected = !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN);
   if (action === "status") {
+    if (!/^Bearer .+/.test(request.headers.get("authorization") || "")) return json({ error: "auth" }, 401);
     if (!connected) return json({ connected: false, reason: "chua_ket_noi" });
     try { await googleToken(env); return json({ connected: true }); } // thử xin quyền thật, khoá hết hạn thì báo ngay
     catch (e) { console.error("drive status", e && e.message); return json({ connected: false, reason: "google_auth" }); }
@@ -317,7 +345,7 @@ export async function onRequest({ request, env }) {
   try {
     if (action === "upload" && request.method === "POST") return await upload(request, api, tok, url);
     if (action === "download" && request.method === "GET") return await download(api, tok, url.searchParams.get("id") || "");
-    if (action === "office" && request.method === "GET") return await officeLink(env, api, url, url.searchParams.get("id") || "");
+    if (action === "office" && request.method === "GET") return await officeLink(env, api, tok, url, url.searchParams.get("id") || "");
     if (action === "rename" && request.method === "POST") { const b = await request.json().catch(() => ({})); return await rename(api, tok, String(b.id || ""), String(b.name || "")); }
     if (action === "move" && request.method === "POST") { const b = await request.json().catch(() => ({})); return await move(api, tok, String(b.id || ""), String(b.folder || ""), String(b.sub || "")); }
     if (action === "delete" && request.method === "DELETE") return await remove(api, tok, url.searchParams.get("id") || "");

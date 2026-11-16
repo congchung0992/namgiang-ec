@@ -1,3 +1,11 @@
+/*
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self'; base-uri 'self'; form-action 'self'
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=(self), payment=(), usb=()
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+
 /cham-cong.mobileconfig
   Content-Type: application/x-apple-aspen-config
   Content-Disposition: attachment; filename="Cham-cong.mobileconfig"
