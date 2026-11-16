@@ -5409,7 +5409,7 @@ function atDay(uid,ds){const dt=new Date(ds+"T00:00:00"),sun=dt.getDay()===0,r=A
   const o={ds,sh,tin,tout,code:"",work:0,late:0,early:0,lv:lv||ct||null,cls:""};const today=atYmd(new Date()),st0=atStart();
   if(lv){const k=atLv(lv.kind);o.code=lv.part?"½"+k[3]:k[3];o.cls="lv";o.work=lv.part&&sh?sh.work/2:0;return o}
   if(ct||(qn&&sh)){o.code=ct?"CT":"✓";o.work=sh?+sh.work:1;o.cls="ok";return o}
-  if(!sh){if(tin){o.code="✓";o.work=1;o.cls="ok"}else o.cls=r&&r.off?"off":"";return o}
+  if(!sh){if(tin&&tout&&tout!==tin){o.code="✓";o.work=1;o.cls="ok"}else if(tin){o.code=ds<today?"T":"…";o.cls=ds<today?"bad":"run"}else o.cls=r&&r.off?"off":"";return o} /* ngày nghỉ (CN, không ca): phải có cả vào và ra mới tính công (16/11/2026) */
   if(tin&&tout&&tout!==tin){const a=new Date(tin.at),b=new Date(tout.at),m1=a.getHours()*60+a.getMinutes(),m2=b.getHours()*60+b.getMinutes();
     o.late=mu?0:Math.max(0,m1-(atMin(sh.t1)+(sh.grace||0)));o.early=mu?0:Math.max(0,atMin(sh.t2)-m2);o.work=+sh.work;o.code=o.late?"M":o.early?"S":"✓";o.cls=o.late||o.early?"warn":"ok";return o}
   if(tin){o.code=ds<today?"T":"…";o.cls=ds<today?"bad":"run";return o}
