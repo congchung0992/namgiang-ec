@@ -46,11 +46,14 @@ QUY TẮC:
 - Chỉ dùng đúng mã chức danh và mã khu vực có trong danh sách; tên trong lời dặn/ảnh có thể viết tắt hoặc khác chữ, hãy ghép với mục gần nghĩa nhất.
 - Chỉ trả các ô CẦN ĐỔI so với "hien_tai". Lời dặn dạng "chỉ X được…" nghĩa là các chức danh khác về mức thấp hơn nếu đang cao hơn.
 - Ảnh: đọc chữ ghi chú, mũi tên, khoanh đỏ để hiểu ý; ô bị gạch hoặc ghi "ẩn" là mức 0.
-- Không chắc thì không đổi, ghi điều chưa rõ vào "ghi_chu" (tối đa 40 chữ). "ly_do" tối đa 12 chữ.`;
+- Lời dặn có thể là lời than khi thử vai (vd "đóng vai X mà không làm được Y"): hiểu là muốn X được làm Y.
+- "tom_tat": 1 câu nói lại ý anh dặn bằng lời thường (ai, được làm gì), không dùng mã.
+- "ghi_chu": viết cho người không rành máy tính đọc là hiểu, xưng "anh", câu đầy đủ, KHÔNG dùng mã (t:, c:, p:, hcns…) và từ kỹ thuật ("khu vực", "danh sách", "mức 2"); gọi màn hình, chức danh bằng tên trên bảng quyền. Nếu đổi được: để trống hoặc nhắc điều cần lưu ý. Nếu không đổi ô nào: nói rõ vì sao (đã đúng sẵn: ai đã được làm gì; hoặc bảng quyền chưa có mục đó: nói tên việc anh dặn chưa có trên bảng, cần nhờ người làm phần mềm bổ sung) và anh cần làm gì tiếp (vd tải lại trang, đăng nhập lại, kiểm tra ô nào). Tối đa 60 chữ.
+- Không chắc thì không đổi, nói điều chưa rõ trong "ghi_chu". "ly_do" tối đa 12 chữ, lời thường.`;
 const SCHEMA_PQ = {
   type: "object",
-  properties: { thay_doi: { type: "array", items: { type: "object", properties: { chuc_danh: { type: "string" }, khu_vuc: { type: "string" }, muc: { type: "integer", enum: [0, 1, 2] }, ly_do: { type: "string" } }, required: ["chuc_danh", "khu_vuc", "muc", "ly_do"], additionalProperties: false } }, ghi_chu: { type: "string" } },
-  required: ["thay_doi", "ghi_chu"],
+  properties: { thay_doi: { type: "array", items: { type: "object", properties: { chuc_danh: { type: "string" }, khu_vuc: { type: "string" }, muc: { type: "integer", enum: [0, 1, 2] }, ly_do: { type: "string" } }, required: ["chuc_danh", "khu_vuc", "muc", "ly_do"], additionalProperties: false } }, tom_tat: { type: "string" }, ghi_chu: { type: "string" } },
+  required: ["thay_doi", "tom_tat", "ghi_chu"],
   additionalProperties: false
 };
 
@@ -92,7 +95,7 @@ Deno.serve(async (req) => {
     }
     try { await admin.from("ai_usage").insert({ user_id: who.user.id, provider: "claude", action: "pq_set", model: used, in_tok: tin, out_tok: tout, ms: Date.now() - t0, ok: !err, err: err || null, project_id: null }); } catch (_) { /* bỏ qua */ }
     if (err || !out) return json({ error: err || "ai_error" }, 502);
-    return json({ changes: (out.thay_doi || []).filter((c: any) => R.has(String(c.chuc_danh)) && A.has(String(c.khu_vuc)) && [0, 1, 2].includes(Number(c.muc))).map((c: any) => ({ role: String(c.chuc_danh), area: String(c.khu_vuc), lvl: Number(c.muc), why: s(c.ly_do, 120) })), note: s(out.ghi_chu, 300), model: used });
+    return json({ changes: (out.thay_doi || []).filter((c: any) => R.has(String(c.chuc_danh)) && A.has(String(c.khu_vuc)) && [0, 1, 2].includes(Number(c.muc))).map((c: any) => ({ role: String(c.chuc_danh), area: String(c.khu_vuc), lvl: Number(c.muc), why: s(c.ly_do, 120) })), note: s(out.ghi_chu, 400), sum: s(out.tom_tat, 200), model: used });
   }
   if (MG) {
     const it = (Array.isArray(b.items) ? b.items : []).slice(0, 900).map((x: any) => ({ k: s(x.k, 300), ten: s(x.name, 200), quy_cach: s(x.spec, 120), dvt: s(x.unit, 20), dg_vt: Number(x.uv) || 0, dg_nc: Number(x.un) || 0, dau_muc: s(x.dm, 120) }));

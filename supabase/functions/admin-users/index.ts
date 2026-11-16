@@ -1,5 +1,5 @@
 // Supabase Edge Function: admin-users
-// Ban giám đốc tạo, đặt lại mật khẩu, khoá/mở và xoá tài khoản đăng nhập.
+// Ban giám đốc tạo, đặt lại mật khẩu, khoá/mở và xoá tài khoản đăng nhập; HCNS (khi có quyền Tài khoản nhân viên) tạo, đặt lại mật khẩu, sửa thông tin tài khoản nhân viên.
 // Chỉ máy chủ mới có khoá quản trị (SUPABASE_SERVICE_ROLE_KEY, Supabase tự cấp cho Edge Function).
 // Tự kiểm tra người gọi: phải đăng nhập và có profiles.is_board = true.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
@@ -22,8 +22,15 @@ Deno.serve(async (req) => {
   if (!token) return json({ error: "auth" }, 401);
   const { data: who, error: whoErr } = await admin.auth.getUser(token);
   if (whoErr || !who?.user) return json({ error: "auth" }, 401);
+  // Admin/TGĐ toàn quyền; chức danh khác (mặc định HCNS) được quản lý tài khoản nhân viên nếu bảng quyền "Tài khoản nhân viên" = Sửa (anh Chung 13/11/2026)
   const { data: me } = await admin.from("profiles").select("is_board,role").eq("id", who.user.id).maybeSingle();
-  if (!me?.is_board) return json({ error: "forbidden" }, 403);
+  const board = !!me?.is_board, sysAdmin = me?.role === "admin";
+  let acct = board;
+  if (!board && me?.role) {
+    const { data: rp } = await admin.from("role_perms").select("lvl").eq("role", me.role).eq("area", "t:tai-khoan").maybeSingle();
+    acct = (rp ? Number(rp.lvl) : (me.role === "hcns" ? 2 : 0)) === 2;
+  }
+  if (!acct) return json({ error: "forbidden" }, 403);
 
   let b: Record<string, unknown>;
   try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
@@ -46,17 +53,22 @@ Deno.serve(async (req) => {
     const full = String(b.full_name || "").trim().slice(0, 100);
     const { data, error } = await admin.auth.admin.createUser({ email, password: pw, email_confirm: true, user_metadata: { full_name: full } });
     if (error) { console.error("createUser", error.message); return json({ error: /already|registered|exists/i.test(error.message) ? "exists" : "server" }, 400); }
-    // Chỉ Admin quản trị hệ thống mới tạo được tài khoản Ban giám đốc
-    await admin.from("profiles").update({ full_name: full || null, is_board: b.is_board === true && me.role === "admin" }).eq("id", data.user.id);
+    // Chỉ Admin quản trị hệ thống mới tạo được tài khoản Ban giám đốc (bảo mật 17/11/2026)
+    await admin.from("profiles").update({ full_name: full || null, is_board: sysAdmin && b.is_board === true }).eq("id", data.user.id);
     return json({ id: data.user.id, email });
   }
 
   if (!uid) return json({ error: "bad_request" }, 400);
   if (uid === who.user.id && (action === "ban" || action === "delete")) return json({ error: "self" }, 400);
-  // Tài khoản Ban giám đốc khác (TGĐ, Admin): chỉ Admin quản trị hệ thống mới đặt lại mật khẩu, khoá, xoá được
-  if (uid !== who.user.id && ["password", "ban", "unban", "delete"].includes(action) && me.role !== "admin") {
-    const { data: t } = await admin.from("profiles").select("is_board").eq("id", uid).maybeSingle();
-    if (t?.is_board) return json({ error: "forbidden" }, 403);
+  if (!board) {
+    // Không phải Ban giám đốc: không đụng tài khoản Ban giám đốc, không khoá / xoá
+    if (action === "ban" || action === "unban" || action === "delete") return json({ error: "forbidden" }, 403);
+    const { data: t } = await admin.from("profiles").select("is_board,role").eq("id", uid).maybeSingle();
+    if (t?.is_board || t?.role === "admin" || t?.role === "tgd") return json({ error: "forbidden" }, 403);
+  } else if (!sysAdmin && uid !== who.user.id && ["password", "ban", "unban", "delete"].includes(action)) {
+    // Ban giám đốc khác (TGĐ…): không đặt lại mật khẩu, khoá, xoá tài khoản Ban giám đốc khác; chỉ Admin quản trị hệ thống làm được (bảo mật 17/11/2026)
+    const { data: t } = await admin.from("profiles").select("is_board,role").eq("id", uid).maybeSingle();
+    if (t?.is_board || t?.role === "admin" || t?.role === "tgd") return json({ error: "forbidden" }, 403);
   }
 
   if (action === "password") {

@@ -113,7 +113,7 @@ grant execute on function public.ai_quota_ok(uuid) to service_role;
 create or replace function public.chat_react(mid uuid, emo text) returns jsonb language plpgsql security definer set search_path = '' as $$
 declare r jsonb; me text := auth.uid()::text; arr jsonb;
 begin
-  if emo is null or length(emo) = 0 or length(emo) > 8 or emo ~ '[<>"''&\s=/\A-Za-z0-9]' then raise exception 'bad_emoji'; end if;
+  if emo is null or length(emo) = 0 or length(emo) > 8 or emo ~ '[<>"''&\s=/\\A-Za-z0-9]' then raise exception 'bad_emoji'; end if;
   select reactions into r from public.chat_messages where id=mid and public.chat_in(room_id);
   if r is null then raise exception 'forbidden'; end if;
   arr := coalesce(r->emo, '[]'::jsonb);
@@ -134,3 +134,7 @@ begin
   if coalesce(p_sig, '') <> '' and (p_sig !~ '^data:image/png;base64,[A-Za-z0-9+/]+=*$' or length(p_sig) > 400000) then raise exception 'bad_sig'; end if;
   update public.profiles set sig = nullif(p_sig, '') where id = auth.uid();
 end $$;
+
+-- 14. Hai hàm trigger tạo sau vòng lặp mục 1: thu quyền gọi trực tiếp
+revoke execute on function public.chat_msg_guard() from public, anon, authenticated;
+revoke execute on function public.drive_map_guard() from public, anon, authenticated;
