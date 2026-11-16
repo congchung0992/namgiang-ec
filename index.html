@@ -4012,7 +4012,7 @@ function msTable(p,M,lab){const KN={tam_ung:"Tạm ứng",giai_doan:"Theo giai �
 /* ---------- Hợp đồng chủ đầu tư: Claude đọc điều khoản, anh xem lại rồi áp vào dòng tiền ---------- */
 async function ctRead(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),buf=await f.arrayBuffer(),body={action:"contract",name:f.name};
   if(ext==="pdf"||/^(jpe?g|png|webp)$/.test(ext)){if(f.size>30*1048576)throw new Error("File quá lớn để đọc (tối đa 30 MB)");body.doc={mime:ext==="pdf"?"application/pdf":/^jpe?g$/.test(ext)?"image/jpeg":"image/"+ext,data:b64(buf)}}
-  else if(ext==="docx"){await needX();const z=XLSX.CFB.read(new Uint8Array(buf),{type:"array"}),x=XLSX.CFB.find(z,"word/document.xml");if(!x)throw new Error("Không đọc được file Word này");body.text=xmlText(new TextDecoder().decode(new Uint8Array(x.content)))}
+  else if(ext==="docx"){await needX();body.text=docxText(buf)}
   else if(/^(xlsx|xls|xlsm)$/.test(ext)){await needX();const wb=XLSX.read(buf,{type:"array"});body.text=wb.SheetNames.map(n=>"[Sheet "+n+"]\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false})).join("\n")}
   else if(ext==="doc")throw new Error("File Word đời cũ (.doc) chưa đọc được, anh lưu lại thành .docx hoặc PDF");
   else throw new Error("Chỉ đọc được hợp đồng PDF, Word (.docx), Excel hoặc ảnh chụp");
@@ -4537,6 +4537,9 @@ const isUp=s=>s===s.toUpperCase()&&/[A-ZĐ]/.test(s);
 const tc=s=>!isUp(s)?s:s.split(/(\s+|,|\/)/).map(w=>!w.trim()||keepUp(w)?w:w.charAt(0)+w.slice(1).toLowerCase()).join("").replace(/\bCông Ty\b/g,"Công ty");
 const sc=(s,brand)=>{if(!isUp(s))return s;const b=(brand||"").split(/\s+/).filter(w=>w.length>3&&!keepUp(w));let t=s.toLowerCase();t=t.charAt(0).toUpperCase()+t.slice(1);b.forEach(w=>{t=t.replace(new RegExp("(^|\\s)"+w.toLowerCase()+"(?=\\s|$)","g"),(m,a)=>a+w.charAt(0)+w.slice(1).toLowerCase())});return t};
 let pending=null;
+function docxText(buf){const u=new Uint8Array(buf);if(u[0]!==0x50||u[1]!==0x4B)throw new Error(u[0]===0xD0&&u[1]===0xCF?"File Word cũ (.doc) hoặc đang đặt mật khẩu – anh mở bằng Word, lưu lại dạng .docx không mật khẩu rồi tải lên":"File này không phải Word .docx hợp lệ");
+  const z=XLSX.CFB.read(u,{type:"array"}),i=z.FullPaths.findIndex(p=>/(^|\/)word\/document\.xml$/i.test(p)),x=i<0?null:z.FileIndex[i];if(!x||!x.content)throw new Error("Không tìm thấy nội dung văn bản trong file Word này");
+  const t=xmlText(new TextDecoder().decode(new Uint8Array(x.content)));if(!t.trim())throw new Error("File Word không có chữ (có thể chỉ là ảnh scan) – anh xuất ra PDF rồi tải lên");return t}
 function needX(){return window.XLSX?Promise.resolve():new Promise((ok,er)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=ok;s.onerror=()=>er(new Error("Không tải được bộ đọc Excel, kiểm tra kết nối mạng"));document.head.appendChild(s)})}
 async function readBOQ(f){const m=document.getElementById("upmsg")||ngNote("Đang đọc "+f.name+"…");if(m)m.textContent="Đang đọc "+f.name+"…";
   try{await needX();const buf=await f.arrayBuffer();f=new File([buf],f.name,{type:f.type});const wb=XLSX.read(buf,{type:"array"});const r=BOQ.parse(wb,XLSX);
@@ -8216,7 +8219,7 @@ function clSt(p,c,today){const a=clAmt(c),pa=clPaid(c),du=clDue(p,c);if(a&&pa>=a
 /* Đọc hồ sơ: Claude đọc mọi loại file; Excel đọc thêm trên máy làm dự phòng */
 async function clRead(f){const ext=(f.name.split(".").pop()||"").toLowerCase(),buf=await f.arrayBuffer(),body={action:"claim",name:f.name};let wb=null;
   if(ext==="pdf"||/^(jpe?g|png|webp)$/.test(ext)){if(f.size>30*1048576)throw new Error("File quá lớn để đọc (tối đa 30 MB)");body.doc={mime:ext==="pdf"?"application/pdf":/^jpe?g$/.test(ext)?"image/jpeg":"image/"+ext,data:b64(buf)}}
-  else if(ext==="docx"){await needX();const z=XLSX.CFB.read(new Uint8Array(buf),{type:"array"}),x=XLSX.CFB.find(z,"word/document.xml");if(!x)throw new Error("Không đọc được file Word này");body.text=xmlText(new TextDecoder().decode(new Uint8Array(x.content)))}
+  else if(ext==="docx"){await needX();body.text=docxText(buf)}
   else if(/^(xlsx|xls|xlsm)$/.test(ext)){await needX();wb=XLSX.read(buf,{type:"array"});body.text=wb.SheetNames.map(n=>"[Sheet "+n+"]\n"+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false})).join("\n")}
   else throw new Error("Chỉ đọc được hồ sơ PDF, Word (.docx), Excel hoặc ảnh chụp");
   try{const r=await NGB.ai(body);return{src:"Claude",d:{dot:r.dot,kind:r.kind||"dot",no:r.doc_no||"",sent:r.sent_date||"",to:r.period_to||"",kk:r.value_period,kl:r.value_cum,vat:r.vat_rate,tu:r.advance_recovery,gl:r.retention,pb:r.paid_before,de:r.request_amount,due:r.due_date||"",note:r.notes||""},ev:r.evidence||[]}}
