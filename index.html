@@ -2186,6 +2186,11 @@ html.ngv5 .ngmt{background:rgba(255,255,255,.16);color:#fff;box-shadow:inset 0 0
 @media(min-width:761px) and (max-width:1500px){html body .gtbar.gtd{gap:4px}html body .gtbar.gtd .sgq{min-width:100px!important;flex:1 1 100px!important}html body .gtbar.gtd .gdd:not(.gunw){max-width:112px}html body .gtbar.gtd .gdd:not(.gunw)>.gddb{max-width:112px!important;overflow:hidden}html body .gtd .gtseg button{padding:0 8px!important}}
 @media(max-width:760px){div:has(>table.bcp){overflow-x:auto;-webkit-overflow-scrolling:touch}table.bcp{min-width:700px}}
 @media(max-width:760px){html body input[type=search],html body .sgq input,html body .search input,html body .chs input,html body #q,html body #q2,html body #q3,html body #chq,html body #hdq,html body #asq{font-size:16px!important}}
+/* Dấu X sắc ở mọi cỡ (anh Chung 17/11/2026): nút nhỏ 20–22px trước thu X còn 8px, nét lẻ 1,6px nên mờ; nay X tối thiểu 10px, nét đặc 2px không co giãn theo hình */
+html body button.xb.xb.xb>svg.xsv{width:max(11px,40%)!important;height:max(11px,40%)!important;overflow:visible}
+html body button.xb.xb.xb.sclr>svg.xsv path,html body button.xb.xb.xb.sgdel>svg.xsv path,html body .pqim button.xb.xb.xb>svg.xsv path{stroke-width:2.3px}
+svg.xsv path{stroke-width:2px;vector-effect:non-scaling-stroke;shape-rendering:geometricPrecision}
+html body button.xb.xb.xb.nglpx>svg.xsv path,html body .atdph button.xb.xb.xb>svg.xsv path{stroke-width:2.5px}
 </style>
 
 <script>/* Tăng tốc (09/11/2026): định dạng số dùng lại bộ Intl.NumberFormat thay vì tạo mới mỗi lần gọi toLocaleString */
