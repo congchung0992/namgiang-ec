@@ -7751,9 +7751,9 @@ function gtLvRows(p){const L=GT.L||[],W=GT.q?BOQ.nz(GT.q).split(/\s+/).filter(Bo
   return out.sort((a,b)=>a.mi-b.mi||a.ok-b.ok)}
 const gtTr=v=>v>=1e9?fm(v/1e9,2)+" tỷ":v>=1e6?fm(v/1e6,0)+" triệu":n0(v)+" đ";
 /* Bảng Lựa chọn cách giao thầu: bảng thật kiểu Excel như mọi bảng của app (anh Chung 18/11/2026, thay lưới div): mỗi công tác một dòng, đơn vị giao thầu là một cột (không xuống dòng phụ);
-   màn rộng (≥2100px) có thêm nhóm Đơn giá, màn hẹp hơn chỉ Thành tiền (đơn giá xem ở khung chi tiết bên phải); vẫn thiếu chỗ thì cả bảng tự thu nhỏ cho vừa (ssgFit) */
-function gtLvMid(p,rows){const dm=GT.pick.dm,nd=rows.filter(x=>!x.ok).length,DG=innerWidth>=2100;let lm="";
-  const W=[52,64,0,56,96,...(DG?[96,96,100]:[]),122,122,130,170],tw=W.reduce((a,b)=>a+b,0)+220,NC=W.length;
+   luôn có nhóm Đơn giá và Thành tiền (anh chốt 18/11/2026); vẫn thiếu chỗ thì cả bảng tự thu nhỏ cho vừa (ssgFit) */
+function gtLvMid(p,rows){const dm=GT.pick.dm,nd=rows.filter(x=>!x.ok).length,DG=1;let lm="";
+  const W=[52,64,0,56,96,...(DG?[100,100,104]:[]),122,122,130,170],tw=W.reduce((a,b)=>a+b,0)+210,NC=W.length;
   const cap=GT.lvn||150,more=Math.max(0,rows.length-cap);
   const sumOf=m=>{let v=0,n=0;rows.forEach(y=>{if(y.m===m){v+=y.c.c.vt;n+=y.c.c.nc+(y.c.c.mm||0)}});return[v,n]};
   const body=rows.slice(0,cap).map(x=>{const {c,R,ck}=x,G=[...new Map(R.map(r=>[r.o.g.key,r.o])).values()];let h="";
