@@ -42,7 +42,10 @@ Deno.serve(async (req) => {
   if (action === "list") {
     const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (error) return json({ error: "server" }, 500);
-    return json({ users: data.users.map(u => ({ id: u.id, email: u.email, last: u.last_sign_in_at, created: u.created_at, banned: !!u.banned_until && new Date(u.banned_until) > new Date() })) });
+    // "Dùng gần nhất": cả lần mở web tự đăng nhập (gia hạn phiên), không chỉ lần gõ mật khẩu (18/11/2026)
+    const { data: ls } = await admin.rpc("user_last_seen");
+    const seen = new Map((ls || []).map((x: any) => [x.id, x.seen]));
+    return json({ users: data.users.map(u => ({ id: u.id, email: u.email, last: u.last_sign_in_at, seen: seen.get(u.id) || u.last_sign_in_at, created: u.created_at, banned: !!u.banned_until && new Date(u.banned_until) > new Date() })) });
   }
 
   if (action === "create") {
