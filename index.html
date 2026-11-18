@@ -382,6 +382,9 @@ i.gly.grip3{display:inline-block;width:10px;height:16px;vertical-align:-3px;back
 .gtdcg .gtdlk{margin:0;padding:2px 8px}
 .gtdcg .gtrpcg{flex:1;min-width:0}
 .gtrp2 .gtdcg .gtrpcg .gttg button{padding:7px 10px}
+.gtpcl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.gtpnb{display:inline-flex;align-items:center;gap:4px;border:1px solid #DCE2F6;background:#fff;border-radius:99px;padding:3px 6px 3px 10px;font:700 12px var(--f);color:#0E1638;cursor:pointer}
+.gtpnb:hover{background:#EEF1FA;border-color:#9AA8DA}.gtpnb.dft{color:var(--muted);border-style:dashed}.gtpnb svg{width:13px;height:13px;color:#0A2486}.gtpnb .gtaim{font-style:normal}
 </style>
 
 
@@ -7862,12 +7865,12 @@ function gtLvDet(p,rows,today){const x=rows.find(r=>r.ck===GT.act)||rows[0];if(!
     due=o=>{if(!o.dss||o.s==="hd")return"";const n=Math.round((o.dss-today)/864e5);return o.s==="ok"?`<small class="gtrpd">Hạn so sánh ${fd(o.dss)}</small>`:`<small class="gtrpd ${n<0?"bad":n<=7?"warn":""}">Hạn so sánh ${fd(o.dss)} · ${n<0?"quá "+(-n)+" ngày":"còn "+n+" ngày"}</small>`};
   const PN=(p.pk||{}).pn||{},PA=(p.pk||{}).pna||{};
   const G=new Map();R.forEach(r=>{const k=r.o.g.key;if(!G.has(k))G.set(k,{o:r.o,v:0,K:new Set(),N:[],R:[]});const g=G.get(k);g.v+=r.v;g.K.add(kd(r));g.R.push(r);
-    const nm=r.pt&&r.pt.vs?r.pt.name:PN[r.pnk]?gtCap(String(PN[r.pnk]).replace(/^(vật tư|nhân công)\s*[:·-]?\s*/i,""))+(PA[r.pnk]?" ✨":""):"";if(nm&&!g.N.includes(nm))g.N.push(nm)});
+    const t=r.t||r.o.g.t,it=r.pt&&r.pt.vs?{n:r.pt.name,ai:0,e:"vs\u0001"+vsKeys(c).join("\u0002")+"\u0001"+t+"\u0001"+String(r.pt.k).slice(3)}:r.pt||r.bv!=null||r.o.ty==="tg"?null:{n:PN[r.pnk]?gtCap(String(PN[r.pnk]).replace(/^(vật tư|nhân công)\s*[:·-]?\s*/i,"")):c.n,ai:PA[r.pnk]?1:0,own:!!PN[r.pnk],e:"pn\u0001"+r.pnk+"\u0001"+t};if(it&&!g.N.some(y=>y.e===it.e))g.N.push(it)});
   const GL=[...G.values()].sort((a,b)=>(a.K.has("Vật tư")?0:1)-(b.K.has("Vật tư")?0:1)),nHd=GL.filter(g=>g.o.s==="hd").length,seen=new Set();
   const parts=GL.map(g=>{const K=[...g.K],k=K.length>1?"Vật tư + nhân công":K[0],cl=k==="Vật tư"?"v":k==="Nhân công"?"n":"g";
     const us=new Set(g.R.map(r=>r.u||c.u)),q=us.size===1?Math.max(...g.R.map(r=>r.q||0)):c.q,u=us.size===1?[...us][0]:c.u,dg=q?g.v/q:0;
     const T=cl==="v"||cl==="n"?cl:"",first=T&&!seen.has(T);if(first)seen.add(T);
-    return`<div class="gtpc ${cl}"><div class="gtpch"><span class="gvn ${cl}">${k}</span><b class="gtpcn">${esc(g.o.g.name)}</b><span class="gtpcv"><b class="num">${dg?n0(dg):"-"} <small>đ/${esc(u||"")}</small></b><small class="num">${n0(g.v)} đ</small></span></div>${g.N.length?`<small class="gtpcl">Tên phần giao: <b>${g.N.map(esc).join(", ")}</b></small>`:""}
+    return`<div class="gtpc ${cl}"><div class="gtpch"><span class="gvn ${cl}">${k}</span><b class="gtpcn">${esc(g.o.g.name)}</b><span class="gtpcv"><b class="num">${dg?n0(dg):"-"} <small>đ/${esc(u||"")}</small></b><small class="num">${n0(g.v)} đ</small></span></div>${g.N.length?`<div class="gtpcl">Tên phần giao: ${g.N.map(y=>`<button type="button" class="gtpnb${y.own||y.ai||y.e.startsWith("vs")?"":" dft"}" data-pne="${esc(y.e)}" title="${y.ai?"Tên do Claude đặt · ":y.own||y.e.startsWith("vs")?"":"Đang dùng tên công tác BOQ · "}bấm để chọn hoặc đổi tên">${esc(y.n)}${y.ai?`<i class="gtaim">✨</i>`:""}${PENI}</button>`).join("")}</div>`:""}
       <div class="gtpcg"><div><small>Đơn vị giao thầu</small>${gtUn(p,g.o)}</div><div><small>Tình trạng</small><div class="gtrps">${gtSt(p,g.o)}</div>${due(g.o)}</div></div>${first?gtVsBlock(p,x,T):""}</div>`}).join("");
   const tg=gtTogC(c,R,GT.LK||(()=>""))||(c.rt?gtTog(GT.SCM,c.sc):""),lock=tg&&(tg.match(/ disabled/g)||[]).length>1,ak=vsKeys(c)[0];
   const canAi=ak&&!c.rt&&R.some(r=>!r.pt&&r.bv==null&&r.o.ty!=="tg");
@@ -8622,7 +8625,7 @@ function vsDdFill(m){const q=m.querySelector("[data-vsdq]"),W=BOQ.nz(q.value).sp
   const hit=L.filter(n=>W.every(w=>BOQ.nz(n).includes(w))),ex=L.some(n=>BOQ.nz(n)===BOQ.nz(q.value.trim()));
   m.querySelector(".gddl").innerHTML=(q.value.trim()&&!ex?`<button type="button" data-vsdv="${esc(q.value.trim())}" class="vsnew">＋ ${m.dataset.f==="goi"?"Tạo gói mới":"Dùng tên mới"}: <b>${esc(q.value.trim())}</b></button>`:"")+hit.slice(0,200).map(n=>`<button type="button" data-vsdv="${esc(n)}" class="${n===cur0?"on":""}">${esc(n)}</button>`).join("")+(hit.length||q.value.trim()?"":`<small class="gtpnh" style="padding:6px 12px">Chưa có tên nào · gõ để thêm</small>`)}
 document.addEventListener("click",e=>{const t=e.target;if(!t.closest)return;const b=t.closest("[data-vsdd]"),v=t.closest("[data-vsdv]"),E=GT.vse;
-  if(v&&E){const m=document.getElementById("vsdm"),[i,f]=m.dataset.k.split("|");E.rows[+i][f]=v.dataset.vsdv;vsDdClose();const p=cur&&DB.projects.find(x=>x.id===cur.id);if(p)gtRe(p);return}
+  if(v&&E&&document.getElementById("vsdm")&&document.getElementById("vsdm").dataset.mode!=="pne"){const m=document.getElementById("vsdm"),[i,f]=m.dataset.k.split("|");E.rows[+i][f]=v.dataset.vsdv;vsDdClose();const p=cur&&DB.projects.find(x=>x.id===cur.id);if(p)gtRe(p);return}
   if(b&&!b.disabled&&E){e.stopPropagation();const open=document.getElementById("vsdm");if(open&&open.dataset.k===b.dataset.vsdd){vsDdClose();return}vsDdClose();const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;
     const [i,f]=b.dataset.vsdd.split("|"),r=b.getBoundingClientRect(),m=document.createElement("div");m.id="vsdm";m.className="gddp gunm";m.dataset.k=b.dataset.vsdd;m.dataset.f=f;m.dataset.cur=E.rows[+i][f]||"";m.dataset.o=JSON.stringify(vsOpts(p,E.t,f));
     m.innerHTML=`<input type="search" class="gddq" data-vsdq placeholder="${f==="goi"?"Gõ tìm gói…":"Gõ tìm tên (không dấu cũng được)…"}"><div class="gddl"></div>`;document.body.appendChild(m);vsDdFill(m);
@@ -8631,6 +8634,17 @@ document.addEventListener("click",e=>{const t=e.target;if(!t.closest)return;cons
 document.addEventListener("input",e=>{if(e.target.matches&&e.target.matches("[data-vsdq]"))vsDdFill(e.target.closest("#vsdm"))});
 addEventListener("scroll",e=>{const m=document.getElementById("vsdm");if(m&&!m.contains(e.target))vsDdClose()},true);
 document.addEventListener("keydown",e=>{if(!e.target.matches||!e.target.matches("[data-vsdq]"))return;if(e.key==="Escape"){e.preventDefault();e.stopPropagation();vsDdClose()}else if(e.key==="Enter"){e.preventDefault();const f=e.target.closest("#vsdm").querySelector("[data-vsdv]");if(f)f.click()}},true);
+/* Đổi tên phần giao ngay trên thẻ gói (anh Chung 18/11/2026): bấm tên → danh sách chọn có ô tìm (tên đã dùng trong dự án) hoặc "＋ Dùng tên mới";
+   phần thường lưu p.pk.pn (bỏ dấu ✨ của Claude), loại đã tách thì sửa tên trong p.pk.vs */
+document.addEventListener("click",e=>{const t=e.target;if(!t.closest)return;const v=t.closest("[data-vsdv]"),m=document.getElementById("vsdm");
+  if(v&&m&&m.dataset.mode==="pne"){e.stopPropagation();const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const P=m.dataset.k.split("\u0001"),name=v.dataset.vsdv.trim();vsDdClose();if(!name)return;
+    if(P[0]==="pn"){const k=P[1],N={...((p.pk||{}).pn||{})},A={...((p.pk||{}).pna||{})};N[k]=name;delete A[k];p.pk={...(p.pk||{}),pn:N,pna:A}}
+    else{const VS={...((p.pk||{}).vs||{})};P[1].split("\u0002").forEach(k=>{const kk=k+"|"+P[2];if(VS[kk])VS[kk]={...VS[kk],L:VS[kk].L.map(r=>String(r.id)===P[3]?{...r,name}:r)}});p.pk={...(p.pk||{}),vs:VS}}
+    if(cur!==p)cur.pk=p.pk;persist();gtRe(p);return}
+  const b=t.closest("[data-pne]");if(!b)return;e.stopPropagation();const open=document.getElementById("vsdm");if(open&&open.dataset.k===b.dataset.pne){vsDdClose();return}vsDdClose();const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;
+  const P=b.dataset.pne.split("\u0001"),tt=P[0]==="pn"?P[2]:P[2],r=b.getBoundingClientRect(),n=document.createElement("div");n.id="vsdm";n.className="gddp gunm";n.dataset.mode="pne";n.dataset.k=b.dataset.pne;n.dataset.f="name";n.dataset.cur=b.textContent.replace(/✨/g,"").trim();n.dataset.o=JSON.stringify(vsOpts(p,tt,"name"));
+  n.innerHTML=`<input type="search" class="gddq" data-vsdq placeholder="Gõ tìm tên (không dấu cũng được)…"><div class="gddl"></div>`;document.body.appendChild(n);vsDdFill(n);
+  const w=Math.max(320,r.width);n.style.cssText=`position:fixed;top:${Math.max(10,Math.min(r.bottom+6,innerHeight-n.offsetHeight-10))}px;left:${Math.min(r.left,innerWidth-w-10)}px;width:${w}px`;n.querySelector("[data-vsdq]").focus()},true);
 /* Bảng so sánh giá vừa một khung (anh Chung 18/11/2026): khung rộng thì các cột tự giãn; bảng rộng hơn khung thì thu nhỏ cả bảng cho vừa bề ngang, không phải kéo sang phải */
 function ssgFit(){const on=innerWidth>760;document.querySelectorAll(".sstw").forEach(w=>{const t=w.querySelector("table.sst");if(!t)return;const need=parseFloat(t.style.minWidth)||0,av=w.clientWidth;if(!need||!av)return;const z=on&&need>av?Math.max(.55,Math.floor(av/need*1000)/1000):1,cur=parseFloat(t.style.zoom)||1;if(Math.abs(cur-z)>.001)t.style.zoom=z===1?"":String(z)})}
 {let q=0;const f=()=>{q=0;ssgFit()},k=()=>{if(!q)q=requestAnimationFrame(f)};new MutationObserver(k).observe(view,{childList:true,subtree:true});addEventListener("resize",k)}
