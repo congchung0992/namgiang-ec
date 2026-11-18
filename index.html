@@ -410,6 +410,9 @@ html body .gunpn{width:720px;max-width:92vw;padding:12px}
 .gunnm{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:2px 4px;margin:-2px -4px;border-radius:8px;font:700 15px var(--f);color:#0E1638;cursor:pointer;text-align:left}
 .gunnm svg{width:13px;height:13px;color:#0A2486;opacity:.55;flex:none}.gunnm:hover{background:#EEF1FA}.gunnm:hover svg{opacity:1}.gunnm.lk{background:#FFE7E5;color:#C0141B}
 .gunin{width:100%;box-sizing:border-box;height:34px;padding:4px 10px;font:700 15px var(--f);border-radius:10px;box-shadow:inset 0 0 0 2px #2D3CE6;border:0;outline:0;line-height:1.5}.gunin.bad{box-shadow:inset 0 0 0 2px #E1141B}
+#vsdm b,#vsdm strong,.gtpc b b,.gunt b b{font-weight:700}
+#vsdm .vsnew{font-weight:700;color:#0E1638}#vsdm .vsnew .vsnp{color:#0A2486;font-weight:400}
+.gunin{height:auto!important;min-height:34px;padding:6px 10px!important;line-height:1.4!important;box-sizing:border-box;resize:none;overflow:hidden;white-space:normal;word-break:break-word;display:block}
 </style>
 
 
@@ -8656,7 +8659,7 @@ function vsOpts(p,t,f){if(f==="goi")return gtPkNames(p,t);const M=new Map(),add=
 function vsDdClose(){const m=document.getElementById("vsdm");if(m)m.remove()}
 function vsDdFill(m){const q=m.querySelector("[data-vsdq]"),W=BOQ.nz(q.value).split(/\s+/).filter(Boolean),L=JSON.parse(m.dataset.o),cur0=m.dataset.cur;
   const hit=L.filter(n=>W.every(w=>BOQ.nz(n).includes(w))),ex=L.some(n=>BOQ.nz(n)===BOQ.nz(q.value.trim()));
-  m.querySelector(".gddl").innerHTML=(q.value.trim()&&!ex?`<button type="button" data-vsdv="${esc(q.value.trim())}" class="vsnew">＋ ${m.dataset.f==="goi"?"Tạo gói mới":"Dùng tên mới"}: <b>${esc(q.value.trim())}</b></button>`:"")+hit.slice(0,200).map(n=>`<button type="button" data-vsdv="${esc(n)}" class="${n===cur0?"on":""}">${esc(n)}</button>`).join("")+(hit.length||q.value.trim()?"":`<small class="gtpnh" style="padding:6px 12px">Chưa có tên nào · gõ để thêm</small>`)}
+  m.querySelector(".gddl").innerHTML=(q.value.trim()&&!ex?`<button type="button" data-vsdv="${esc(q.value.trim())}" class="vsnew"><span class="vsnp">${m.dataset.f==="goi"?"Tạo gói mới":"Lưu tên mới"}:</span> ${esc(q.value.trim())}</button>`:"")+hit.slice(0,200).map(n=>`<button type="button" data-vsdv="${esc(n)}" class="${n===cur0?"on":""}">${esc(n)}</button>`).join("")+(hit.length||q.value.trim()?"":`<small class="gtpnh" style="padding:6px 12px">Chưa có tên nào · gõ để thêm</small>`)}
 document.addEventListener("click",e=>{const t=e.target;if(!t.closest)return;const b=t.closest("[data-vsdd]"),v=t.closest("[data-vsdv]"),E=GT.vse;
   if(v&&E&&document.getElementById("vsdm")&&document.getElementById("vsdm").dataset.mode!=="pne"){const m=document.getElementById("vsdm"),[i,f]=m.dataset.k.split("|");E.rows[+i][f]=v.dataset.vsdv;vsDdClose();const p=cur&&DB.projects.find(x=>x.id===cur.id);if(p)gtRe(p);return}
   if(b&&!b.disabled&&E){e.stopPropagation();const open=document.getElementById("vsdm");if(open&&open.dataset.k===b.dataset.vsdd){vsDdClose();return}vsDdClose();const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;
@@ -8693,7 +8696,7 @@ function gtUnRename(p,o,n){const P=p.pk||{},rn=x=>x===o?n:x,un={};Object.entries
 document.addEventListener("click",e=>{const b=e.target.closest("[data-gunren]");if(!b||b.querySelector("input"))return;e.stopPropagation();const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;const o=b.dataset.gunren;
   let lk="";try{const o2=gtData(p).R.find(x=>x.g.key==="u:"+o);if(o2&&["run","ok","hd"].includes(o2.s))lk=o2.s==="hd"?"đã có hợp đồng":"đã có phiếu so sánh giá"}catch(er){}
   if(lk){b.title="Đơn vị "+lk+" nên không đổi tên được";b.classList.add("lk");setTimeout(()=>b.classList.remove("lk"),1500);return}
-  const i=document.createElement("input");i.className="fi gunin";i.value=o;b.replaceWith(i);i.focus();i.setSelectionRange(o.length,o.length);let done=false;
+  const i=document.createElement("textarea");i.className="fi gunin";i.rows=1;i.value=o;b.replaceWith(i);const fit=()=>{i.style.height="auto";i.style.height=i.scrollHeight+"px"};fit();requestAnimationFrame(fit);i.addEventListener("input",fit);i.focus();i.setSelectionRange(o.length,o.length);let done=false;
   const fin=save=>{if(done)return;done=true;const v=i.value.trim().replace(/\s+/g," ");if(!save||!v||v===o){gtRe(p);const Q=document.querySelector(".gunpn");if(Q)Q.hidden=false;return}
     if(gtUnits(p).some(u=>u!==o&&BOQ.nz(u)===BOQ.nz(v))){done=false;i.value=v;i.classList.add("bad");i.title="Đã có đơn vị tên này";return}gtUnRename(p,o,v)};
   i.addEventListener("keydown",ev=>{ev.stopPropagation();if(ev.key==="Enter"){ev.preventDefault();fin(true)}else if(ev.key==="Escape"){ev.preventDefault();fin(false)}});i.addEventListener("blur",()=>fin(true));i.addEventListener("click",ev=>ev.stopPropagation())},true);
