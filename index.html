@@ -413,6 +413,12 @@ html body .gunpn{width:720px;max-width:92vw;padding:12px}
 #vsdm b,#vsdm strong,.gtpc b b,.gunt b b{font-weight:700}
 #vsdm .vsnew{font-weight:700;color:#0E1638}#vsdm .vsnew .vsnp{color:#0A2486;font-weight:400}
 .gunin{height:auto!important;min-height:34px;padding:6px 10px!important;line-height:1.4!important;box-sizing:border-box;resize:none;overflow:hidden;white-space:normal;word-break:break-word;display:block}
+/* Thẻ gói: đơn vị giao thầu đưa lên đầu thẻ thay tên gói (18/11/2026) */
+.gtpcu{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.gtpcu .gtun{margin:0}
+.gtpcu .gunb{max-width:100%;height:32px;font-size:15px!important;font-weight:700;padding:0 12px 0 14px}
+.gtpcgn{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gtpcs{display:flex;align-items:center;flex-wrap:wrap;gap:8px;background:#F7F8FC;border-radius:12px;padding:6px 10px}.gtpcs>small{font-size:12px;color:var(--muted);font-weight:700}
+.gtpcs .gtrpd{margin-left:auto}
 </style>
 
 
@@ -7906,8 +7912,8 @@ function gtLvDet(p,rows,today){const x=rows.find(r=>r.ck===GT.act)||rows[0];if(!
   const parts=GL.map(g=>{const K=[...g.K],k=K.length>1?"Vật tư + nhân công":K[0],cl=k==="Vật tư"?"v":k==="Nhân công"?"n":"g";
     const us=new Set(g.R.map(r=>r.u||c.u)),q=us.size===1?Math.max(...g.R.map(r=>r.q||0)):c.q,u=us.size===1?[...us][0]:c.u,dg=q?g.v/q:0;
     const T=cl==="v"||cl==="n"?cl:"",first=T&&!seen.has(T);if(first)seen.add(T);
-    return`<div class="gtpc ${cl}"><div class="gtpch"><span class="gvn ${cl}">${k}</span><b class="gtpcn">${esc(g.o.g.name)}</b><span class="gtpcv"><b class="num">${dg?n0(dg):"-"} <small>đ/${esc(u||"")}</small></b><small class="num">${n0(g.v)} đ</small></span></div>${g.N.length?`<div class="gtpcl">Tên phần giao: ${g.N.map(y=>`<button type="button" class="gtpnb${y.own||y.ai||y.e.startsWith("vs")?"":" dft"}${y.x&&y.x.length?" mix":""}" data-pne="${esc(y.e)}" data-cur="${esc(y.n)}" title="${esc((new Set(g.N.map(z=>z.t)).size>1?(y.t==="v"?"Phần vật tư · ":"Phần nhân công · "):"")+(y.k>1?"Công tác gộp "+y.k+" dòng BOQ, tên này áp cho cả "+y.k+" dòng · ":"")+(y.x&&y.x.length?"Các dòng đang có tên khác nhau: "+[y.n,...y.x].join("; ")+" · sửa một lần để thống nhất · ":"")+(y.ai?"Tên do Claude đặt · ":y.own||y.e.startsWith("vs")?"":"Tên mặc định (chưa đặt) · ")+"bấm để sửa")}">${new Set(g.N.map(z=>z.t)).size>1?`<i class="gtpnt ${y.t}">${y.t==="v"?"VT":"NC"}</i>`:""}${esc(y.n)}${y.x&&y.x.length?`<i class="gtpnx">+${y.x.length} tên khác</i>`:""}${y.ai?`<i class="gtaim">✨</i>`:""}${PENI}</button>`).join("")}</div>`:""}
-      <div class="gtpcg"><div><small>Đơn vị giao thầu</small>${gtUn(p,g.o)}</div><div><small>Tình trạng</small><div class="gtrps">${gtSt(p,g.o)}</div>${due(g.o)}</div></div>${first?gtVsBlock(p,x,T):""}</div>`}).join("");
+    return`<div class="gtpc ${cl}"><div class="gtpch"><span class="gvn ${cl}">${k}</span><div class="gtpcu" title="Đơn vị giao thầu · bấm để chọn">${gtUn(p,g.o)}${gtUnCur(p,g.o.g)?"":`<small class="gtpcgn">Gói: ${esc(g.o.g.name)}</small>`}</div><span class="gtpcv"><b class="num">${dg?n0(dg):"-"} <small>đ/${esc(u||"")}</small></b><small class="num">${n0(g.v)} đ</small></span></div>${g.N.length?`<div class="gtpcl">Tên phần giao: ${g.N.map(y=>`<button type="button" class="gtpnb${y.own||y.ai||y.e.startsWith("vs")?"":" dft"}${y.x&&y.x.length?" mix":""}" data-pne="${esc(y.e)}" data-cur="${esc(y.n)}" title="${esc((new Set(g.N.map(z=>z.t)).size>1?(y.t==="v"?"Phần vật tư · ":"Phần nhân công · "):"")+(y.k>1?"Công tác gộp "+y.k+" dòng BOQ, tên này áp cho cả "+y.k+" dòng · ":"")+(y.x&&y.x.length?"Các dòng đang có tên khác nhau: "+[y.n,...y.x].join("; ")+" · sửa một lần để thống nhất · ":"")+(y.ai?"Tên do Claude đặt · ":y.own||y.e.startsWith("vs")?"":"Tên mặc định (chưa đặt) · ")+"bấm để sửa")}">${new Set(g.N.map(z=>z.t)).size>1?`<i class="gtpnt ${y.t}">${y.t==="v"?"VT":"NC"}</i>`:""}${esc(y.n)}${y.x&&y.x.length?`<i class="gtpnx">+${y.x.length} tên khác</i>`:""}${y.ai?`<i class="gtaim">✨</i>`:""}${PENI}</button>`).join("")}</div>`:""}
+      <div class="gtpcs"><small>Tình trạng</small><div class="gtrps">${gtSt(p,g.o)}</div>${due(g.o)}</div>${first?gtVsBlock(p,x,T):""}</div>`}).join("");
   const tg=gtTogC(c,R,GT.LK||(()=>""))||(c.rt?gtTog(GT.SCM,c.sc):""),lock=tg&&(tg.match(/ disabled/g)||[]).length>1,ak=vsKeys(c)[0];
   const canAi=ak&&!c.rt&&R.some(r=>!r.pt&&r.bv==null&&r.o.ty!=="tg");
   return`<aside class="gtrp gtrp2"><div class="gtrpt"><span class="on">Chi tiết công tác</span><span title="Giữ Ctrl rồi bấm các dòng trong bảng để chọn nhiều, gán cách giao / đơn vị một lần">Gán nhiều dòng</span></div>
