@@ -311,7 +311,7 @@ i.gly.grip3{display:inline-block;width:10px;height:16px;vertical-align:-3px;back
 .gtvsi.lk{background:#F3F4F8}
 .gtvsh{display:flex;align-items:center;gap:8px}.gtvsh .fi{flex:1;min-width:0}
 .gtvsn{flex:none;width:22px;height:22px;border-radius:99px;background:#0A2486;color:#fff;font:700 12px var(--f);display:grid;place-items:center}
-.gtvsg{display:grid;grid-template-columns:96px 1fr 64px;gap:6px}
+.gtvsg{display:grid;grid-template-columns:72px 1fr 1.35fr;gap:6px}.gtvse .fi.ro{display:block;background:#EEF1FA;color:#0A2486;font-weight:700;border:1px solid #DCE2F6;border-radius:10px}.gtvsm.bad{color:#C0141B;font-weight:700}.gtvsd b{color:#0E1638}
 .gtvsg label,.gtvsk{display:flex;flex-direction:column;gap:3px;min-width:0}.gtvsg small,.gtvsk small{font-size:12px;color:var(--muted)}
 .gtvse .fi{width:100%;box-sizing:border-box;padding:7px 9px;line-height:1.5;font-size:15px;font-weight:400}
 .gtvse .fi.num{text-align:right}
@@ -3767,7 +3767,7 @@ function pkBuild0(p){const O=p.pk||{},MV=O.mv||{},NM=O.nm||{},G={v:new Map(),n:n
       /* Tách thêm loại vật tư / nhân công do người dùng đặt (anh Chung 18/11/2026): p.pk.vs["<công tác>|v|n"] = {qt: khối lượng công tác lúc lưu, L:[{id,name,sh %,q,u,goi}]};
          mỗi loại nhận sh% giá trị phần đó của dòng BOQ, vào gói "goi"; có khối lượng cần mua thì quy đổi theo tỷ lệ q/qt. Tổng các loại = 100% nên tổng vẫn khớp BOQ */
       {const VS=O.vs&&!tron&&!wh&&!hs&&!ct?O.vs[pkCk(h,l)+"|"+t]:null;if(VS&&(VS.L||[]).length){VS.L.forEach(c=>{const sh=(+c.sh||0)/100;if(sh<=0)return;const gn=String(c.goi||"").trim()||name.replace(PKRI,""),qq=+c.q||0,dm=qq&&VS.qt?qq/VS.qt:1;
-        put(t+":"+gn,gn,cu*sh,(gv||0)*sh,{k:"vs:"+c.id,vs:1,name:String(c.name||"").trim()||l.name,unit:qq?(c.u||l.unit||""):(l.unit||""),goi:gn,dm,code:[fm(sh*100,1)+"% giá trị "+(t==="v"?"vật tư":"nhân công")+" dòng BOQ"+(qq?"":" · khối lượng theo BOQ")]})});return}}
+        put(t+":"+gn,gn,cu*sh,(gv||0)*sh,{k:"vs:"+c.id,vs:1,name:String(c.name||"").trim()||l.name,unit:qq?(c.u||l.unit||""):(l.unit||""),goi:gn,dm,code:[(c.a!=null?"thành tiền "+n0(c.a)+" đ":fm(sh*100,1)+"% giá trị "+(t==="v"?"vật tư":"nhân công")+" dòng BOQ")+(qq?"":" · khối lượng theo BOQ")]})});return}}
       /* Vật tư của công tác tổng hợp (xây, trát, láng, lát, ốp, sơn): tách gạch, xi măng, cát, sơn theo định mức, giá trị chia theo giá tham khảo */
       /* "Thép và bản mã đầu cọc, mũi cọc": mũi cọc do nhà thầu cọc làm (vật tư theo gói Cọc bê tông, nhân công theo gói Ép cọc); bản mã đầu cọc tổng thầu mua thép + tổ đội hàn. BOQ không tách khối lượng: chia theo tỷ lệ mũi cọc (sửa được, mặc định PKMS%) */
       if(!tron&&!wh&&!hs&&!ct&&!sep&&!MV[l.code+"|"+t]&&/ban ma/.test(BOQ.nz(l.name))&&/mui coc/.test(BOQ.nz(l.name))){const sm=Math.min(100,Math.max(0,O.ms!=null?O.ms:PKMS))/100;
@@ -8524,48 +8524,58 @@ function gtPnEdit(b){if(!b||!cur||b.querySelector("input"))return;const p=DB.pro
   i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();fin(true)}else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();fin(false)}});i.addEventListener("blur",()=>fin(true));i.addEventListener("click",e=>e.stopPropagation())}
 document.addEventListener("dblclick",e=>{const b=e.target.closest("[data-gtpn]");if(!b)return;e.preventDefault();e.stopPropagation();gtPnEdit(b)},true);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-gtpn]");if(!b)return;e.stopPropagation();if(e.target.closest(".gtpe"))gtPnEdit(b)},true);
-/* Tách thêm loại vật tư / nhân công cho một công tác (anh Chung 18/11/2026): khung sửa ở Chi tiết công tác; dữ liệu p.pk.vs (xem pkBuild0) */
+/* Tách thêm loại vật tư / nhân công cho một công tác (anh Chung 18/11/2026): khung sửa ở Chi tiết công tác; dữ liệu p.pk.vs (xem pkBuild0).
+   Mỗi loại: tên, ĐVT, khối lượng, thành tiền, gói. Loại 1 tự nhận phần còn lại = giá trị BOQ − các loại khác, nên tổng không bao giờ vượt BOQ.
+   ĐVT khác ĐVT công tác thì bắt buộc nhập khối lượng quy đổi. Lưu sh = thành tiền / giá trị BOQ × 100 (pkBuild0 chia theo sh) */
 const vsKeys=c=>c.ct&&c.ct.k?String(c.ct.k).split("\u0002"):[];
 const vsGet=(p,c,t)=>{const K=vsKeys(c),VS=(p.pk||{}).vs||{};for(const k of K){const v=VS[k+"|"+t];if(v&&(v.L||[]).length)return v}return null};
 function vsSt(R,t,goi){const a=(cur&&GT.vse&&gtPkMap(DB.projects.find(x=>x.id===cur.id)||cur,t).get(String(goi||"").trim()))||String(goi||"").trim(),key=t+":"+a;const r=R.find(r=>(r.o.g.parts||[r.o.g]).some(g=>g.key===key||g.key===key+PKRI));return r?r.o.s:"need"}
-const vsF=v=>fm(v,Math.abs(v%1)>1e-9?1:0);
-function vsTot(E){return E.rows.reduce((a,r)=>a+(parseVN(r.sh)||0),0)}
-function vsOk(E){return Math.abs(vsTot(E)-100)<.05&&E.rows.every(r=>String(r.name).trim()&&String(r.goi).trim()&&(parseVN(r.sh)||0)>0)}
+const vsU=u=>BOQ.nz(String(u||"")).replace(/[³]/g,"3").replace(/[²]/g,"2").replace(/\s+/g,"");
+const vsDiffU=(E,r)=>!!String(r.u||"").trim()&&vsU(r.u)!==vsU(E.u);
+/* Số liệu sống của khung tách: thành tiền từng loại (loại 1 = phần còn lại), lỗi từng dòng */
+function vsCalc(E){const A=E.rows.map((r,i)=>i?Math.max(0,Math.round(parseVN(r.a)||0)):0),oth=A.reduce((a,b)=>a+b,0),rest=Math.round(E.val)-oth;A[0]=rest;
+  const err=E.rows.map((r,i)=>!String(r.name).trim()?"Chưa có tên":!String(r.goi).trim()?"Chưa chọn gói":i&&!A[i]?"Chưa nhập thành tiền":vsDiffU(E,r)&&!(parseVN(r.q)>0)?`Khác ĐVT công tác (${E.u}): nhập khối lượng quy đổi ra ${String(r.u).trim()}`:"");
+  return{A,oth,rest,err,ok:rest>0&&err.every(x=>!x)}}
+function vsNote(E,r,a){const q=parseVN(r.q)>0?parseVN(r.q):vsDiffU(E,r)?0:E.qt,u=String(r.u||"").trim()||E.u;return q&&a?`Đơn giá ${n0(a/q)} đ/${esc(u)}`:""}
 function gtVsBlock(p,x){const {c,R}=x;if(!c.ct||c.ct.m!=="tach"||c.rt)return"";const E=GT.vse&&GT.vse.ck===x.ck?GT.vse:null,nc=c.c.nc+(c.c.mm||0);
   const btn=t=>{const v=vsGet(p,c,t),val=t==="v"?c.c.vt:nc;if(!val)return"";return`<button type="button" class="gtvsb${E&&E.t===t?" on":""}" data-vso="${t}">${v?`Sửa tách ${t==="v"?"vật tư":"nhân công"} · ${v.L.length} loại`:`＋ Tách thêm loại ${t==="v"?"vật tư":"nhân công"}`}</button>`};
   const bt=btn("v")+btn("n");if(!E)return bt?`<div class="gtvsr">${bt}</div>`:"";
-  const val=E.t==="v"?c.c.vt:nc,P=gtPkNames(p,E.t),tot=vsTot(E),ok=vsOk(E),lb=E.t==="v"?"vật tư":"nhân công",ex=E.t==="v"?"Lưới thép hàn D6a200":"Nhân công cắt khe";
-  const rows=E.rows.map((r,i)=>{const st=vsSt(R,E.t,r.goi),lk=E.had.has(r.id)&&["run","ok","hd"].includes(st),qw=E.had.has(r.id)&&st==="quote",sh=parseVN(r.sh)||0,D=lk?" disabled":"";
-    return`<div class="gtvsi${lk?" lk":""}"><div class="gtvsh"><span class="gtvsn">${i+1}</span><input class="fi" data-vsf="${i}|name" value="${esc(r.name)}" placeholder="Tên ${lb}, ví dụ ${ex}"${D}>${E.rows.length>1&&!lk?`<button type="button" class="xb" data-vsdel="${i}" title="Bỏ loại này" aria-label="Bỏ">${XSV}</button>`:""}</div>
-      <div class="gtvsg"><label><small>Tỷ lệ giá trị</small><span class="gtvsp"><input class="fi num" inputmode="decimal" data-vsf="${i}|sh" value="${esc(r.sh)}"${D}><i>%</i></span></label><label><small>Khối lượng</small><input class="fi num" inputmode="decimal" data-vsf="${i}|q" value="${esc(r.q)}" placeholder="như BOQ" title="Để trống: lấy khối lượng BOQ"${D}></label><label><small>ĐVT</small><input class="fi" data-vsf="${i}|u" value="${esc(r.u)}" placeholder="${esc(c.u)}"${D}></label></div>
+  const P=gtPkNames(p,E.t),K=vsCalc(E),lb=E.t==="v"?"vật tư":"nhân công",ex=E.t==="v"?"Lưới thép hàn D6a200":"Nhân công cắt khe";
+  const rows=E.rows.map((r,i)=>{const st=vsSt(R,E.t,r.goi),lk=E.had.has(r.id)&&["run","ok","hd"].includes(st),qw=E.had.has(r.id)&&st==="quote",D=lk?" disabled":"";
+    return`<div class="gtvsi${lk?" lk":""}"><div class="gtvsh"><span class="gtvsn">${i+1}</span><input class="fi" data-vsf="${i}|name" value="${esc(r.name)}" placeholder="Tên ${lb}, ví dụ ${ex}"${D}>${i&&!lk?`<button type="button" class="xb" data-vsdel="${i}" title="Bỏ loại này" aria-label="Bỏ">${XSV}</button>`:""}</div>
+      <div class="gtvsg"><label><small>ĐVT</small><input class="fi" data-vsf="${i}|u" value="${esc(r.u)}" placeholder="${esc(E.u)}"${D}></label><label><small>Khối lượng</small><input class="fi num" inputmode="decimal" data-vsf="${i}|q" value="${esc(r.q)}" placeholder="${vsDiffU(E,r)?"quy đổi":nq(E.qt)}"${D}></label><label><small>${i?"Thành tiền (đ)":"Thành tiền · phần còn lại"}</small>${i?`<input class="fi num" inputmode="numeric" data-vsf="${i}|a" value="${esc(r.a)}" placeholder="0"${D}>`:`<span class="fi num ro" data-vsa0>${n0(K.A[0])}</span>`}</label></div>
       <label class="gtvsk"><small>Gói giao thầu</small><input class="fi" list="gtvsdl" data-vsf="${i}|goi" value="${esc(r.goi)}" placeholder="Chọn gói có sẵn hoặc gõ tên gói mới"${D}></label>
-      <small class="gtvsm" data-vsv="${i}">≈ ${n0(val*sh/100)} đ${lk?" · đã có so sánh giá hoặc hợp đồng nên không đổi được":qw?" · gói đã có báo giá: sau khi tách kiểm lại phần ghép báo giá":""}</small></div>`}).join("");
+      <small class="gtvsm${K.err[i]?" bad":""}" data-vsv="${i}">${K.err[i]||vsNote(E,r,K.A[i])}${lk?" · đã có so sánh giá hoặc hợp đồng nên không đổi được":qw?" · gói đã có báo giá: sau khi tách kiểm lại phần ghép báo giá":""}</small></div>`}).join("");
   const offLk=[...E.had].some(id=>{const r=E.rows.find(y=>y.id===id);return r&&["run","ok","hd"].includes(vsSt(R,E.t,r.goi))});
-  return`<div class="gtvse"><div class="gtvst"><b>Tách ${lb} · ${esc(c.n)}</b><button type="button" class="xb" data-vsx="1" title="Đóng (Esc)" aria-label="Đóng">${XSV}</button></div><small class="gtvsd">Giá trị ${lb} BOQ ${n0(val)} đ chia cho các loại theo tỷ lệ (giả định, sửa được) · mỗi loại vào một gói, có báo giá, so sánh giá, hợp đồng riêng · tổng vẫn khớp BOQ</small>
+  return`<div class="gtvse"><div class="gtvst"><b>Tách ${lb} · ${esc(c.n)}</b><button type="button" class="xb" data-vsx="1" title="Đóng (Esc)" aria-label="Đóng">${XSV}</button></div><small class="gtvsd">Giá trị ${lb} BOQ <b>${n0(E.val)} đ</b> · ${nq(E.qt)} ${esc(E.u)} · nhập thành tiền các loại tách thêm, loại 1 tự nhận phần còn lại nên tổng luôn bằng giá trị BOQ · mỗi loại vào một gói, có báo giá, so sánh giá, hợp đồng riêng</small>
     <datalist id="gtvsdl">${P.map(n=>`<option value="${esc(n)}">`).join("")}</datalist>${rows}
-    <div class="gtvsf"><button type="button" class="gtvsb" data-vsadd="1"${E.rows.length>=8?" disabled":""}>＋ Thêm loại</button><span class="gtvss ${Math.abs(tot-100)<.05?"ok":"bad"}">Tổng ${fm(tot,1)}%${Math.abs(tot-100)<.05?"":" · phải bằng 100%"}</span></div>
-    <div class="gtvsf">${E.had.size?`<button type="button" class="back sm" data-vsoff="1"${offLk?" disabled":""} title="Gộp lại như BOQ, một gói">Bỏ tách</button>`:""}<span style="flex:1"></span><button type="button" class="back sm" data-vsx="1">Huỷ</button><button type="button" class="pill" data-vsok="1"${ok?"":" disabled"} style="${sv("rev")}"><span class="dot">${icc("ok",2)}</span>Lưu tách</button></div></div>`}
+    <div class="gtvsf"><button type="button" class="gtvsb" data-vsadd="1"${E.rows.length>=8?" disabled":""}>＋ Thêm loại</button><span class="gtvss ${K.rest>0?"ok":"bad"}" data-vstot>${vsTotTxt(E,K)}</span></div>
+    <div class="gtvsf">${E.had.size?`<button type="button" class="back sm" data-vsoff="1"${offLk?" disabled":""} title="Gộp lại như BOQ, một gói">Bỏ tách</button>`:""}<span style="flex:1"></span><button type="button" class="back sm" data-vsx="1">Huỷ</button><button type="button" class="pill" data-vsok="1"${K.ok?"":" disabled"} style="${sv("rev")}"><span class="dot">${icc("ok",2)}</span>Lưu tách</button></div></div>`}
+const vsTotTxt=(E,K)=>K.rest>0?`Tách thêm ${n0(K.oth)} đ · còn ${n0(K.rest)} đ`:`Vượt giá trị BOQ ${n0(-K.rest)} đ`;
 /* Tên gói hiển thị (đã đổi tên) ↔ tên gốc làm khoá gói */
 function gtPkMap(p,t){const P=pkBuild(p),M=new Map();(P[t]||[]).forEach(g=>{const a=String(g.auto||g.name).replace(PKRI,""),n=String(g.name||a).replace(PKRI,"");if(!M.has(n))M.set(n,a)});return M}
 function gtPkNames(p,t){return[...gtPkMap(p,t).keys()].sort((a,b)=>a.localeCompare(b,"vi"))}
 const vsShow=(p,t,a)=>{for(const [n,x] of gtPkMap(p,t))if(x===a)return n;return a};
-function vsSave(p,E,off){const VS={...((p.pk||{}).vs||{})},PM=gtPkMap(p,E.t),ga=n=>{n=String(n).trim();return PM.get(n)||n};E.keys.forEach(k=>{const kk=k+"|"+E.t;if(off||E.rows.length<2)delete VS[kk];else VS[kk]={qt:E.qt,L:E.rows.map(r=>({id:r.id,name:String(r.name).trim(),sh:parseVN(r.sh)||0,q:parseVN(r.q)||null,u:String(r.u||"").trim(),goi:ga(r.goi)}))}});
+function vsSave(p,E,off){const VS={...((p.pk||{}).vs||{})},PM=gtPkMap(p,E.t),ga=n=>{n=String(n).trim();return PM.get(n)||n},K=vsCalc(E);
+  E.keys.forEach(k=>{const kk=k+"|"+E.t;if(off||E.rows.length<2)delete VS[kk];else VS[kk]={qt:E.qt,L:E.rows.map((r,i)=>({id:r.id,name:String(r.name).trim(),sh:K.A[i]/E.val*100,a:K.A[i],q:parseVN(r.q)||null,u:String(r.u||"").trim(),goi:ga(r.goi)}))}});
   p.pk={...(p.pk||{}),vs:VS};if(cur!==p)cur.pk=p.pk;GT.vse=null;persist()}
 document.addEventListener("click",e=>{const t=e.target;if(!t.closest)return;const b=t.closest("[data-vso],[data-vsadd],[data-vsdel],[data-vsx],[data-vsok],[data-vsoff]");if(!b||b.disabled)return;const p=cur&&DB.projects.find(x=>x.id===cur.id);if(!p)return;e.stopPropagation();
-  if(b.dataset.vso){const tt=b.dataset.vso;if(GT.vse&&GT.vse.ck===GT.act&&GT.vse.t===tt){GT.vse=null;gtRe(p);return}const x=gtLvRows(p).find(r=>r.ck===GT.act);if(!x)return;const c=x.c,v=vsGet(p,c,tt);
+  if(b.dataset.vso){const tt=b.dataset.vso;if(GT.vse&&GT.vse.ck===GT.act&&GT.vse.t===tt){GT.vse=null;gtRe(p);return}const x=gtLvRows(p).find(r=>r.ck===GT.act);if(!x)return;const c=x.c,v=vsGet(p,c,tt),val=tt==="v"?c.c.vt:c.c.nc+(c.c.mm||0);
     const r0=x.R.find(r=>(r.t||r.o.g.t)===tt),g0=r0&&((r0.o.g.parts||[r0.o.g]).find(g=>g.t===tt)||r0.o.g),gn=g0?String(g0.auto||g0.name).replace(PKRI,""):"";
-    const rows=v?v.L.map(r=>({id:String(r.id),name:r.name,sh:vsF(+r.sh||0),q:r.q?fm(r.q,2):"",u:r.u||"",goi:vsShow(p,tt,r.goi)})):[{id:"1",name:c.n,sh:"100",q:"",u:"",goi:vsShow(p,tt,gn)}];
-    GT.vse={ck:x.ck,t:tt,keys:vsKeys(c),qt:c.q,rows,had:new Set(v?v.L.map(r=>String(r.id)):[])};gtRe(p);return}
+    const rows=v?v.L.map(r=>({id:String(r.id),name:r.name,a:n0(Math.round((+r.sh||0)/100*val)),q:r.q?fm(r.q,2):"",u:r.u||"",goi:vsShow(p,tt,r.goi)})):[{id:"1",name:c.n,a:"",q:"",u:"",goi:vsShow(p,tt,gn)}];
+    GT.vse={ck:x.ck,t:tt,keys:vsKeys(c),qt:c.q,u:c.u||"",val,rows,had:new Set(v?v.L.map(r=>String(r.id)):[])};gtRe(p);return}
   const E=GT.vse;if(!E)return;
   if(b.dataset.vsx){GT.vse=null;gtRe(p);return}
-  if(b.hasAttribute("data-vsadd")){const id=String(Math.max(0,...E.rows.map(r=>+r.id||0))+1),last=E.rows[E.rows.length-1],h=(parseVN(last.sh)||0)/2;last.sh=vsF(h);E.rows.push({id,name:"",sh:vsF(h),q:"",u:"",goi:""});gtRe(p);return}
-  if(b.dataset.vsdel!=null){const i=+b.dataset.vsdel,x=E.rows[i];E.rows.splice(i,1);const tg=E.rows[E.rows.length-1];if(tg&&x)tg.sh=vsF((parseVN(tg.sh)||0)+(parseVN(x.sh)||0));gtRe(p);return}
-  if(b.dataset.vsok){if(!vsOk(E))return;vsSave(p,E,false);gtRe(p);const a=document.querySelector("tr.gtrw.act");if(a)a.scrollIntoView({block:"center"});return}
+  if(b.hasAttribute("data-vsadd")){const id=String(Math.max(0,...E.rows.map(r=>+r.id||0))+1);E.rows.push({id,name:"",a:"",q:"",u:"",goi:""});gtRe(p);const n=document.querySelector(`[data-vsf='${E.rows.length-1}|name']`);if(n)n.focus();return}
+  if(b.dataset.vsdel!=null){E.rows.splice(+b.dataset.vsdel,1);gtRe(p);return}
+  if(b.dataset.vsok){if(!vsCalc(E).ok)return;vsSave(p,E,false);gtRe(p);const a=document.querySelector("tr.gtrw.act");if(a)a.scrollIntoView({block:"center"});return}
   if(b.dataset.vsoff){vsSave(p,E,true);gtRe(p);return}},true);
 document.addEventListener("input",e=>{const t=e.target,E=GT.vse;if(!E||!t.dataset||t.dataset.vsf==null)return;const [i,f]=t.dataset.vsf.split("|");E.rows[+i][f]=t.value;
-  const tot=vsTot(E),ok=vsOk(E),s=document.querySelector(".gtvss"),bt=document.querySelector("[data-vsok]");
-  if(s){const g=Math.abs(tot-100)<.05;s.className="gtvss "+(g?"ok":"bad");s.textContent="Tổng "+fm(tot,1)+"%"+(g?"":" · phải bằng 100%")}if(bt)bt.disabled=!ok;
-  if(f==="sh"){const m=document.querySelector(`[data-vsv="${i}"]`),x=gtLvRows(cur&&DB.projects.find(y=>y.id===cur.id)||cur).find(r=>r.ck===E.ck);if(m&&x){const val=E.t==="v"?x.c.c.vt:x.c.c.nc+(x.c.c.mm||0);m.textContent="≈ "+n0(val*(parseVN(t.value)||0)/100)+" đ"}}});
+  const K=vsCalc(E),a0=document.querySelector("[data-vsa0]"),s=document.querySelector("[data-vstot]"),bt=document.querySelector("[data-vsok]");if(a0)a0.textContent=n0(K.A[0]);
+  if(s){s.className="gtvss "+(K.rest>0?"ok":"bad");s.textContent=vsTotTxt(E,K)}if(bt)bt.disabled=!K.ok;
+  E.rows.forEach((r,j)=>{const m=document.querySelector(`[data-vsv="${j}"]`);if(m&&!/không đổi được|báo giá:/.test(m.textContent)){m.textContent=(K.err[j]||vsNote(E,r,K.A[j])).replace(/&amp;/g,"&");m.classList.toggle("bad",!!K.err[j])}
+    const q=document.querySelector(`[data-vsf='${j}|q']`);if(q)q.placeholder=vsDiffU(E,r)?"quy đổi":nq(E.qt)})});
+document.addEventListener("change",e=>{const t=e.target,E=GT.vse;if(!E||!t.dataset||t.dataset.vsf==null)return;const [i,f]=t.dataset.vsf.split("|");if(f==="a"){const v=parseVN(t.value);if(v!=null){E.rows[+i].a=n0(Math.round(v));t.value=E.rows[+i].a}}if(f==="q"){const v=parseVN(t.value);if(v!=null){E.rows[+i].q=fm(v,2);t.value=E.rows[+i].q}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&GT.vse&&document.querySelector(".gtvse")){e.preventDefault();e.stopPropagation();const p=cur&&DB.projects.find(x=>x.id===cur.id);GT.vse=null;if(p)gtRe(p)}},true);
 /* Bảng so sánh giá vừa một khung (anh Chung 18/11/2026): khung rộng thì các cột tự giãn; bảng rộng hơn khung thì thu nhỏ cả bảng cho vừa bề ngang, không phải kéo sang phải */
 function ssgFit(){const on=innerWidth>760;document.querySelectorAll(".sstw").forEach(w=>{const t=w.querySelector("table.sst");if(!t)return;const need=parseFloat(t.style.minWidth)||0,av=w.clientWidth;if(!need||!av)return;const z=on&&need>av?Math.max(.55,Math.floor(av/need*1000)/1000):1,cur=parseFloat(t.style.zoom)||1;if(Math.abs(cur-z)>.001)t.style.zoom=z===1?"":String(z)})}
