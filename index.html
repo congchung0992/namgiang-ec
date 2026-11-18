@@ -8713,7 +8713,10 @@ function gtUnCt(p,g,x){const o=g.o;if(o.g.sp||g.R.some(r=>r.pt||r.bv!=null||r.o.
   const CS=new Set(codes),ks=[...new Set((o.g.lines||[]).filter(y=>CS.has(y.c)&&!y.pt).map(y=>(y.t||o.g.t)+"|"+y.c))];if(!ks.length)return gtUn(p,o);/* chỉ các dòng của công tác NẰM TRONG gói của thẻ này */
   return`<div class="gtun"><button type="button" class="gunb${cur0?" on":""}" data-gunp="${esc("ct\u0002"+ks.join("\u0001"))}" data-cur="${esc(cur0)}"${lock?" disabled title=\"Gói đã có so sánh giá hoặc hợp đồng, không đổi đơn vị được\"":""}><span>${esc(cur0||"Chọn đơn vị")}</span><i>▾</i></button></div>`}
 function gtUnSetCt(p,L,v){const P=p.pk||{},mv={...(P.mv||{})},un={...(P.un||{})};L.forEach(k=>{const i=k.indexOf("|"),t=k.slice(0,i),code=k.slice(i+1);if(v)mv[code+"|"+t]=t+":"+v;else delete mv[code+"|"+t]});
-  if(v)["v","n"].forEach(t=>{if(L.some(k=>k.startsWith(t+"|")))un[t+":"+v]=v});p.pk={...P,mv,un};if(cur!==p)cur.pk=p.pk;persist();gtRe(p)}
+  if(v)["v","n"].forEach(t=>{if(L.some(k=>k.startsWith(t+"|")))un[t+":"+v]=v});p.pk={...P,mv,un};
+  /* Bỏ chọn đơn vị cho công tác (anh Chung 18/11/2026): dòng trở về gói gốc mà gói gốc đang gán đơn vị cho cả gói thì tách dòng của công tác này ra gói "… · giao riêng" chưa gán đơn vị */
+  if(!v){const B=pkBuild(p),mv2={...mv};L.forEach(k=>{const i=k.indexOf("|"),t=k.slice(0,i),code=k.slice(i+1),g=(B[t]||[]).find(g=>g.lines.some(y=>y.c===code));if(g&&un[g.key]){let nk=g.key.endsWith(PKRI)?g.key+" · chưa giao":g.key+PKRI;mv2[code+"|"+t]=nk}});p.pk={...p.pk,mv:mv2}}
+  if(cur!==p)cur.pk=p.pk;persist();gtRe(p)}
 /* Bảng so sánh giá vừa một khung (anh Chung 18/11/2026): khung rộng thì các cột tự giãn; bảng rộng hơn khung thì thu nhỏ cả bảng cho vừa bề ngang, không phải kéo sang phải */
 function ssgFit(){const on=innerWidth>760;document.querySelectorAll(".sstw").forEach(w=>{const t=w.querySelector("table.sst");if(!t)return;const need=parseFloat(t.style.minWidth)||0,av=w.clientWidth;if(!need||!av)return;const z=on&&need>av?Math.max(.55,Math.floor(av/need*1000)/1000):1,cur=parseFloat(t.style.zoom)||1;if(Math.abs(cur-z)>.001)t.style.zoom=z===1?"":String(z)})}
 {let q=0;const f=()=>{q=0;ssgFit()},k=()=>{if(!q)q=requestAnimationFrame(f)};new MutationObserver(k).observe(view,{childList:true,subtree:true});addEventListener("resize",k)}
